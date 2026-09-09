@@ -1,0 +1,26 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Captures (large binary; tracked selectively via Git LFS or excluded by default)
+*.pcap
+*.pcapng
+!testbed/**/samples/*.pcap
+!testbed/**/samples/*.pcapng
+
+# Secrets
+*.pem
+*.key
+!testbed/**/certs/README.md
+
+# Docker volumes / runtime state
+testbed/**/run/
+testbed/**/ipsec.d/private/
+
+# tool outputs
+results/**/*.tmp
