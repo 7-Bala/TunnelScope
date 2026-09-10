@@ -1,0 +1,16 @@
+{
+  "_comment": "Declarative experiment matrix. Each entry becomes one swanctl connection on both alice and bob, named identically (conn == child name) so `swanctl --initiate --child <name>` is unambiguous. This file is the single source of truth for testbed config generation (testbed/scripts/gen_swanctl_conf.py) — see EXPERIMENT-REGISTER.md for which arms feed which experiment.",
+  "ike_proposal_default": "aes256-sha256-modp2048",
+  "psk": "0sIhtestlab2026SIH26160presharedkeydonotusehere",
+  "arms": [
+    { "name": "cs-aes128gcm16",      "experiment": "EXP-01,EXP-02", "mode": "tunnel", "esp_proposal": "aes128gcm16",        "note": "AEAD, 128-bit key. Paired with cs-aes256gcm16 for the EXP-02 negative control." },
+    { "name": "cs-aes256gcm16",      "experiment": "EXP-01,EXP-02", "mode": "tunnel", "esp_proposal": "aes256gcm16",        "note": "AEAD, 256-bit key. Identical structure to cs-aes128gcm16 except key length -> the negative control pair." },
+    { "name": "cs-aes128cbc-sha256", "experiment": "EXP-01,EXP-02", "mode": "tunnel", "esp_proposal": "aes128-sha256",      "note": "CBC+HMAC, 128-bit key." },
+    { "name": "cs-aes256cbc-sha256", "experiment": "EXP-01,EXP-02", "mode": "tunnel", "esp_proposal": "aes256-sha256",      "note": "CBC+HMAC, 256-bit key. Paired with cs-aes128cbc-sha256." },
+    { "name": "cs-aes128ctr-sha256", "experiment": "EXP-01",        "mode": "tunnel", "esp_proposal": "aes128ctr-sha256",  "note": "Counter mode, non-AEAD, 4-byte alignment like AEAD but 12-byte ICV like CBC — the interesting sieve case." },
+    { "name": "cs-chacha20poly1305", "experiment": "EXP-01",        "mode": "tunnel", "esp_proposal": "chacha20poly1305",  "note": "AEAD, shares (8,16,4) length signature with aes*gcm16 -> tests the stated F-04 indistinguishability limit." },
+    { "name": "cs-transport-aes256gcm16", "experiment": "EXP-01,A7", "mode": "transport", "esp_proposal": "aes256gcm16",   "note": "Transport-mode arm for header-length-shift mode inference (A7 / EXP-06 adjacent)." },
+    { "name": "cs-pfs-off-aes256gcm16",   "experiment": "EXP-03",   "mode": "tunnel", "esp_proposal": "aes256gcm16",        "note": "No DH group on the child SA -> PFS disabled on rekey. Baseline for EXP-03." },
+    { "name": "cs-pfs-on-aes256gcm16",    "experiment": "EXP-03",   "mode": "tunnel", "esp_proposal": "aes256gcm16-modp2048","note": "DH group modp2048 on the child SA -> PFS enabled; CREATE_CHILD_SA rekey carries a KE payload. Compare rekey-message length against cs-pfs-off-aes256gcm16." }
+  ]
+}

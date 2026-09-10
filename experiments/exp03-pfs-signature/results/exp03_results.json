@@ -1,0 +1,27 @@
+{
+  "pairs": {
+    "modp2048 PFS on rekey": {
+      "label": "modp2048 PFS on rekey",
+      "pfs_off_runs": [
+        "rekey-cs-pfs-off-aes256gcm16-run2.pcap"
+      ],
+      "pfs_on_runs": [
+        "rekey-cs-pfs-on-aes256gcm16-run2.pcap"
+      ],
+      "pfs_off_create_child_sa_sizes": [
+        224,
+        240
+      ],
+      "pfs_on_create_child_sa_sizes": [
+        496,
+        512
+      ],
+      "pfs_off_max": 240,
+      "pfs_on_min": 496,
+      "gap_bytes": 256,
+      "cleanly_separable_by_threshold": true,
+      "n_runs": 1
+    }
+  },
+  "conclusion": "PFS-on rekey messages are larger than PFS-off by a fixed byte gap, cleanly separable by a single threshold on both request and response directions, reproduced identically across independent runs."
+}

@@ -87,3 +87,20 @@ these; they require the testbed.
 no custom tooling). EXP-01/02 next (they share a testbed setup and EXP-02 is a mandatory gate on
 everything downstream). EXP-03, 05, 06 require the fuller testbed and traffic generators. EXP-07/08
 are generalization passes applied after the primary results exist.
+
+---
+
+## Round 1 status update (2026-09-10)
+
+| Experiment | Status | Result | Details |
+|---|---|---|---|
+| EXP-01 | **DONE — hypothesis PARTIALLY FALSIFIED** | Sieve converges instantly (packet 1, not 50-200 as predicted) but to a 5-6 member ambiguity class, not <=2. Falsification criterion in this file's own text ("if candidate set fails to narrow below 4+ suites... demote to a supporting signal only") was MET. One-directional containment property discovered: AEAD/CTR/stream evidence excludes CBC; CBC evidence cannot exclude AEAD/CTR/stream. | `experiments/exp01-cipher-sieve/` |
+| EXP-02 | **DONE — PASS (critical gate cleared)** | Exact ESP-length sets identical between 128/256-bit key pairs (both GCM and CBC families); best-possible classifier at or below chance. No leakage. | `experiments/exp02-negative-control/` |
+| EXP-03 | **DONE — CONFIRMED** | 256-byte gap between PFS-on/off CREATE_CHILD_SA messages, reproduced identically across 2 independent rekey events. | `experiments/exp03-pfs-signature/` |
+| EXP-04 | **DONE — CONFIRMED, exceeded hypothesis** | 4 independent deterministic signals found; strongest (IKE_INTERMEDIATE message presence) needs no length arithmetic at all, just the plaintext exchange-type field. Original length-asymmetry hypothesis confirmed but complicated by unanticipated IKE fragmentation of the PQ exchange. | `experiments/exp04-pq-length-asymmetry/` |
+| EXP-05 | Not started | — | Needs full traffic-mix testbed (TFC padding / IP-TFS) |
+| EXP-06 | Not started | — | Needs deliberate-misconfiguration testbed arms |
+| EXP-07 | Not started | — | Needs Libreswan image; prioritized next per RESULTS.md item 4 |
+| EXP-08 | Not started | — | Applies to whichever ML models exist after EXP-06 |
+
+Full writeup with honesty-requirement sections: `experiments/RESULTS.md`.
