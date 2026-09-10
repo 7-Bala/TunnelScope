@@ -104,3 +104,12 @@ are generalization passes applied after the primary results exist.
 | EXP-08 | Not started | — | Applies to whichever ML models exist after EXP-06 |
 
 Full writeup with honesty-requirement sections: `experiments/RESULTS.md`.
+
+### EXP-06 Round 1 (2026-09-10): INCONCLUSIVE — testbed design flaw found, not a hypothesis result
+Both deliberate misconfigurations (proposal-mismatch, TS-mismatch) correctly triggered their
+intended failure notify. However, all testbed arms share the SAME traffic selector (the two host
+addresses), so a leftover successful SA from an earlier arm (`cs-aes256gcm16`) shared the XFRM
+policy with the failure arms during capture, contaminating the capture window with unrelated
+traffic. A secondary confound (differing IKE identity string lengths across arms) was also found.
+Reported honestly rather than forced into a conclusion. Full writeup, root cause, and the concrete
+generator fix needed for round 2: `experiments/exp06-failure-diagnosis/RESULT.md`.

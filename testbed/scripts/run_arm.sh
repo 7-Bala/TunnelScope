@@ -58,8 +58,20 @@ ALICE_XFRM=$(docker exec sih26-alice ip -j xfrm state 2>/dev/null || docker exec
 ALICE_XFRM_POLICY=$(docker exec sih26-alice ip xfrm policy 2>/dev/null || true)
 
 echo "=== [$TAG] stopping capture ==="
-docker exec sih26-router pkill -INT tcpdump >/dev/null 2>&1 || true
+# Hardened kill: pkill -INT was observed to be intermittently ineffective on
+# the first try (tcpdump kept running, file stayed 0 bytes until a LATER
+# unrelated pkill call finally flushed it, contaminating that capture's time
+# window). Retry with verification instead of a single fire-and-forget signal.
+for _ in 1 2 3 4 5; do
+    docker exec sih26-router pkill -INT tcpdump >/dev/null 2>&1 || true
+    sleep 1
+    if ! docker exec sih26-router pgrep tcpdump >/dev/null 2>&1; then
+        break
+    fi
+done
 sleep 1
+# captures/ is a bind mount (./captures:/captures), so the host file is
+# already current; docker cp is a redundant safety net for edge cases.
 docker cp sih26-router:"$PCAP" "$HOST_PCAP" 2>&1 || echo "WARNING: pcap copy failed"
 
 python3 - "$GT_JSON" "$ARM" "$TAG" <<'PYEOF'
