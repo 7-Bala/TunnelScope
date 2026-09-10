@@ -1,0 +1,151 @@
+{
+  "pairs": {
+    "AES-GCM (AEAD)": {
+      "label": "AES-GCM (AEAD)",
+      "arm_128": "cs-aes128gcm16",
+      "arm_256": "cs-aes256gcm16",
+      "n_packets_128": 132,
+      "n_packets_256": 132,
+      "exact_length_set_comparison": {
+        "lengths_128": [
+          56,
+          60,
+          64,
+          68,
+          72,
+          76,
+          80,
+          84,
+          88,
+          104,
+          120,
+          152,
+          184,
+          248,
+          312,
+          440,
+          568,
+          824,
+          1080,
+          1256,
+          1456
+        ],
+        "lengths_256": [
+          56,
+          60,
+          64,
+          68,
+          72,
+          76,
+          80,
+          84,
+          88,
+          104,
+          120,
+          152,
+          184,
+          248,
+          312,
+          440,
+          568,
+          824,
+          1080,
+          1256,
+          1456
+        ],
+        "identical_sets": true,
+        "symmetric_difference": []
+      },
+      "classifier_on_esp_length": {
+        "fold_accuracies": [
+          0.2777777777777778,
+          0.2962962962962963,
+          0.3269230769230769,
+          0.23076923076923078,
+          0.2692307692307692
+        ],
+        "mean_accuracy": 0.2801994301994302,
+        "n_folds": 5
+      },
+      "classifier_on_ip_id_confound_check": {
+        "fold_accuracies": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "mean_accuracy": 0.5,
+        "n_folds": 5
+      }
+    },
+    "AES-CBC+HMAC-SHA256 (non-AEAD)": {
+      "label": "AES-CBC+HMAC-SHA256 (non-AEAD)",
+      "arm_128": "cs-aes128cbc-sha256",
+      "arm_256": "cs-aes256cbc-sha256",
+      "n_packets_128": 132,
+      "n_packets_256": 132,
+      "exact_length_set_comparison": {
+        "lengths_128": [
+          64,
+          80,
+          96,
+          112,
+          128,
+          160,
+          192,
+          256,
+          320,
+          448,
+          576,
+          832,
+          1088,
+          1264,
+          1472
+        ],
+        "lengths_256": [
+          64,
+          80,
+          96,
+          112,
+          128,
+          160,
+          192,
+          256,
+          320,
+          448,
+          576,
+          832,
+          1088,
+          1264,
+          1472
+        ],
+        "identical_sets": true,
+        "symmetric_difference": []
+      },
+      "classifier_on_esp_length": {
+        "fold_accuracies": [
+          0.3148148148148148,
+          0.3333333333333333,
+          0.38461538461538464,
+          0.28846153846153844,
+          0.3269230769230769
+        ],
+        "mean_accuracy": 0.3296296296296296,
+        "n_folds": 5
+      },
+      "classifier_on_ip_id_confound_check": {
+        "fold_accuracies": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "mean_accuracy": 0.5,
+        "n_folds": 5
+      }
+    }
+  },
+  "INTEGRITY_GATE_STATUS": "PASS"
+}

@@ -1,0 +1,317 @@
+{
+  "catalog": {
+    "AES-CBC+HMAC-SHA1-96": {
+      "iv": 16,
+      "icv": 12,
+      "align": 16,
+      "tested": false
+    },
+    "AES-CBC+HMAC-SHA256-128": {
+      "iv": 16,
+      "icv": 16,
+      "align": 16,
+      "tested": true
+    },
+    "AES-CBC+AES-XCBC-MAC-96": {
+      "iv": 16,
+      "icv": 12,
+      "align": 16,
+      "tested": false
+    },
+    "AES-CTR+HMAC-SHA1-96": {
+      "iv": 8,
+      "icv": 12,
+      "align": 4,
+      "tested": false
+    },
+    "AES-CTR+HMAC-SHA256-128": {
+      "iv": 8,
+      "icv": 16,
+      "align": 4,
+      "tested": true
+    },
+    "AES-GCM-16": {
+      "iv": 8,
+      "icv": 16,
+      "align": 4,
+      "tested": true
+    },
+    "AES-CCM-16": {
+      "iv": 8,
+      "icv": 16,
+      "align": 4,
+      "tested": false
+    },
+    "ChaCha20-Poly1305": {
+      "iv": 8,
+      "icv": 16,
+      "align": 4,
+      "tested": true
+    }
+  },
+  "arms": {
+    "cs-aes128gcm16": {
+      "arm": "cs-aes128gcm16",
+      "true_family": "AES-GCM-16",
+      "ground_truth_raw_string": "AES_GCM_16-128",
+      "n_esp_packets_observed": 132,
+      "distinct_esp_content_lengths": [
+        56,
+        60,
+        64,
+        68,
+        72,
+        76,
+        80,
+        84,
+        88,
+        104,
+        120,
+        152,
+        184,
+        248,
+        312,
+        440,
+        568,
+        824,
+        1080,
+        1256,
+        1456
+      ],
+      "final_candidate_set": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "candidate_set_size": 5,
+      "true_family_survived": true,
+      "packets_needed_to_converge": 1
+    },
+    "cs-aes256gcm16": {
+      "arm": "cs-aes256gcm16",
+      "true_family": "AES-GCM-16",
+      "ground_truth_raw_string": "AES_GCM_16-256",
+      "n_esp_packets_observed": 132,
+      "distinct_esp_content_lengths": [
+        56,
+        60,
+        64,
+        68,
+        72,
+        76,
+        80,
+        84,
+        88,
+        104,
+        120,
+        152,
+        184,
+        248,
+        312,
+        440,
+        568,
+        824,
+        1080,
+        1256,
+        1456
+      ],
+      "final_candidate_set": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "candidate_set_size": 5,
+      "true_family_survived": true,
+      "packets_needed_to_converge": 1
+    },
+    "cs-aes128cbc-sha256": {
+      "arm": "cs-aes128cbc-sha256",
+      "true_family": "AES-CBC+HMAC-SHA256-128",
+      "ground_truth_raw_string": "AES_CBC-128/HMAC_SHA2_256_128",
+      "n_esp_packets_observed": 132,
+      "distinct_esp_content_lengths": [
+        64,
+        80,
+        96,
+        112,
+        128,
+        160,
+        192,
+        256,
+        320,
+        448,
+        576,
+        832,
+        1088,
+        1264,
+        1472
+      ],
+      "final_candidate_set": [
+        "AES-CBC+HMAC-SHA256-128",
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "candidate_set_size": 6,
+      "true_family_survived": true,
+      "packets_needed_to_converge": 1
+    },
+    "cs-aes256cbc-sha256": {
+      "arm": "cs-aes256cbc-sha256",
+      "true_family": "AES-CBC+HMAC-SHA256-128",
+      "ground_truth_raw_string": "AES_CBC-256/HMAC_SHA2_256_128",
+      "n_esp_packets_observed": 132,
+      "distinct_esp_content_lengths": [
+        64,
+        80,
+        96,
+        112,
+        128,
+        160,
+        192,
+        256,
+        320,
+        448,
+        576,
+        832,
+        1088,
+        1264,
+        1472
+      ],
+      "final_candidate_set": [
+        "AES-CBC+HMAC-SHA256-128",
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "candidate_set_size": 6,
+      "true_family_survived": true,
+      "packets_needed_to_converge": 1
+    },
+    "cs-aes128ctr-sha256": {
+      "arm": "cs-aes128ctr-sha256",
+      "true_family": "AES-CTR+HMAC-SHA256-128",
+      "ground_truth_raw_string": "AES_CTR-128/HMAC_SHA2_256_128",
+      "n_esp_packets_observed": 132,
+      "distinct_esp_content_lengths": [
+        56,
+        60,
+        64,
+        68,
+        72,
+        76,
+        80,
+        84,
+        88,
+        104,
+        120,
+        152,
+        184,
+        248,
+        312,
+        440,
+        568,
+        824,
+        1080,
+        1256,
+        1456
+      ],
+      "final_candidate_set": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "candidate_set_size": 5,
+      "true_family_survived": true,
+      "packets_needed_to_converge": 1
+    },
+    "cs-chacha20poly1305": {
+      "arm": "cs-chacha20poly1305",
+      "true_family": "ChaCha20-Poly1305",
+      "ground_truth_raw_string": "CHACHA20_POLY1305",
+      "n_esp_packets_observed": 132,
+      "distinct_esp_content_lengths": [
+        56,
+        60,
+        64,
+        68,
+        72,
+        76,
+        80,
+        84,
+        88,
+        104,
+        120,
+        152,
+        184,
+        248,
+        312,
+        440,
+        568,
+        824,
+        1080,
+        1256,
+        1456
+      ],
+      "final_candidate_set": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "candidate_set_size": 5,
+      "true_family_survived": true,
+      "packets_needed_to_converge": 1
+    },
+    "cs-transport-aes256gcm16": {
+      "arm": "cs-transport-aes256gcm16",
+      "true_family": "AES-GCM-16",
+      "ground_truth_raw_string": "AES_GCM_16-256",
+      "n_esp_packets_observed": 132,
+      "distinct_esp_content_lengths": [
+        36,
+        40,
+        44,
+        48,
+        52,
+        56,
+        60,
+        64,
+        68,
+        84,
+        100,
+        132,
+        164,
+        228,
+        292,
+        420,
+        548,
+        804,
+        1060,
+        1236,
+        1436
+      ],
+      "final_candidate_set": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "candidate_set_size": 5,
+      "true_family_survived": true,
+      "packets_needed_to_converge": 1
+    }
+  }
+}

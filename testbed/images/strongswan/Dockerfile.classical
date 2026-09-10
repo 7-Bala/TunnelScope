@@ -1,0 +1,37 @@
+# Classical strongSwan image (Debian bookworm apt package, strongSwan 5.9.8).
+# Used for experiments that do not require RFC 9370 / ML-KEM support:
+# EXP-01 (cipher-family sieve), EXP-02 (AES-128/256 negative control),
+# EXP-03 (PFS length signature), EXP-05/06 (leakage, failure diagnosis).
+#
+# Reproducibility: pinned base image digest recorded in testbed/MANIFEST.md after first build.
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        strongswan \
+        strongswan-swanctl \
+        strongswan-pki \
+        libcharon-extra-plugins \
+        libstrongswan-extra-plugins \
+        libstrongswan-standard-plugins \
+        iproute2 \
+        iputils-ping \
+        iperf3 \
+        tcpdump \
+        tshark \
+        python3 \
+        python3-pip \
+        curl \
+        ca-certificates \
+        procps \
+        vim-tiny \
+    && rm -rf /var/lib/apt/lists/*
+
+# Disable the default starter/ipsec init scripts; we drive charon directly via swanctl/vici.
+RUN mkdir -p /etc/swanctl/conf.d /etc/swanctl/x509 /etc/swanctl/private /etc/swanctl/rsa \
+    && rm -f /etc/ipsec.conf /etc/ipsec.secrets
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["charon"]

@@ -1,0 +1,62 @@
+{
+  "classical_baseline": {
+    "arm": "classical-baseline",
+    "signal1_intermediate_exchange_supported_notify_present": false,
+    "signal2_ike_sa_init_sizes_by_src": {
+      "10.10.1.20": 492,
+      "10.10.2.20": 500
+    },
+    "signal3_n_ike_intermediate_messages": 0,
+    "signal3_ike_intermediate_present": false,
+    "signal4_ike_intermediate_sizes_by_src": {},
+    "signal4_fragmentation_observed": false
+  },
+  "pq_mlkem768": {
+    "arm": "pq-mlkem768",
+    "signal1_intermediate_exchange_supported_notify_present": true,
+    "signal2_ike_sa_init_sizes_by_src": {
+      "10.10.1.20": 508,
+      "10.10.2.20": 516
+    },
+    "signal3_n_ike_intermediate_messages": 3,
+    "signal3_ike_intermediate_present": true,
+    "signal4_ike_intermediate_sizes_by_src": {
+      "10.10.1.20": [
+        1268,
+        132
+      ],
+      "10.10.2.20": [
+        1200
+      ]
+    },
+    "signal4_fragmentation_observed": true
+  },
+  "ground_truth_check": {
+    "pq_capture_confirmed_ml_kem_768_in_swanctl_log": true,
+    "classical_capture_confirmed_no_ml_kem": true
+  },
+  "signal1_verdict": {
+    "classical_has_notify": false,
+    "pq_has_notify": true,
+    "discriminates": true,
+    "caveat": "Empirically observed in strongSwan 6.0.2: this notify appeared ONLY when the LOCAL connection config actually proposes an ADDKE, not as an unconditional software-capability flag. Not guaranteed by RFC 9242 text alone across all implementations \u2014 verify per-implementation before relying on this signal (OQ-07-new)."
+  },
+  "signal2_verdict": {
+    "ike_sa_init_size_delta_bytes": {
+      "10.10.1.20": 16,
+      "10.10.2.20": 16
+    },
+    "discriminates": true
+  },
+  "signal3_verdict": {
+    "classical_ike_intermediate_count": 0,
+    "pq_ike_intermediate_count": 3,
+    "discriminates": true,
+    "note": "Strongest signal: plaintext ISAKMP exchange-type field, zero decoding required, works even though Wireshark cannot render the ML-KEM transform ID (issue #21072)."
+  },
+  "signal4_verdict": {
+    "pq_fragmentation_observed": true,
+    "classical_fragmentation_observed": false,
+    "note": "Original PQ-6 hypothesis (clean initiator/responder KE-payload length asymmetry) is CONFIRMED IN PRINCIPLE but COMPLICATED: ML-KEM-768's ~1184-byte public key pushed the encrypted IKE_INTERMEDIATE message over the IKEv2 fragmentation threshold (RFC 7383) for the initiator only in this run, so a clean per-packet comparison requires fragment reassembly first. This interaction was NOT anticipated in the original hypothesis. Fragmentation-occurred-at-all is itself an additional (weaker, corroborating) signal."
+  }
+}

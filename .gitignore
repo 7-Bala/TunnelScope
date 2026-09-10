@@ -7,9 +7,14 @@ __pycache__/
 .venv/
 venv/
 
-# Captures (large binary; tracked selectively via Git LFS or excluded by default)
+# Captures: excluded by default (can get large from real deployments), but
+# our own testbed experiment captures are small (tens of KB, synthetic lab
+# traffic only) and ARE the primary evidence artifact for reproducibility —
+# tracked explicitly.
 *.pcap
 *.pcapng
+!testbed/captures/*.pcap
+!testbed/captures/*.pcapng
 !testbed/**/samples/*.pcap
 !testbed/**/samples/*.pcapng
 
