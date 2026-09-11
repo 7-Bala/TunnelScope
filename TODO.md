@@ -100,7 +100,7 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 | T-011 | EXP-07 Libreswan 5.4 — 7/7 predictions held; protocol facts generalise; notify + fragmentation implementation-dependent (DEC-020) | `experiments/exp07-libreswan-generalization/RESULT.md` |
 | T-014 | 09-DEFINE updated with EXP-01/03/04/05/06/07 outcomes; 8 of 13 capability rows now deterministic | `research/09-DEFINE.md` |
 | T-015 | **DEVELOP / GATE-5** — 8 concepts + 2 composites; weights committed before scoring; K1 selected (wins 22/23 weighting scenarios); red team; staged build order (DEC-023) | `research/12-DEVELOP.md`, `research/data/develop_*.json` |
-| T-043 | User request: finish every pre-build item before building — all done | this table; commits `982da43`→final |
+| T-043 | User request: finish every pre-build item before building — all done | commits `982da43` → `32ca480` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
