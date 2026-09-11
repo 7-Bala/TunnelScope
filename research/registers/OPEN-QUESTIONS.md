@@ -39,4 +39,4 @@
 | OQ-26 | Do Zeek/Suricata handle IKE_INTERMEDIATE/ADDKE? | — | Source read 2026-09-11 | — | **CLOSED — NO for Zeek spicy-ipsec, Suricata/ipsec-parser, nDPI; no ADDKE in Arkime; YES Wireshark master (RL-029/030)** |
 | OQ-27 | Is a fix for Wireshark #21072 in flight? | — | GitLab API | — | **CLOSED — fixed 2026-03-14; naming on master, partial in 4.6.4 (RL-029)** |
 | OQ-30 | Does Palo Alto's Quantum Readiness view assess THIRD-PARTY IPsec passing through the firewall, or only its own tunnels? | Decides whether a commercial product already covers fleet-wide IPsec PQ assessment | Palo Alto docs / a demo / practitioner | GATE-5 | OPEN |
-| OQ-31 | Is the CVE-2026-78135 pattern (CREATE_CHILD_SA on an IKE SA that never authenticated) passively detectable? | A CVE-backed capability no tool has | Testbed experiment (T-022) | — | OPEN [EXP] |
+| OQ-31 | Is the CVE-2026-78135 pattern passively detectable? | A CVE-backed capability no tool has | EXP-09 | — | **PARTIAL — detector designed, 0 FP on 69 captures, vantage-aware UNKNOWN handling; TP validation needs a malicious IKE stack (deferred)** |
