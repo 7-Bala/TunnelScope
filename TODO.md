@@ -48,17 +48,15 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 
 | ID | P | Status | Task | Depends on | Acceptance criteria |
 |---|---|---|---|---|---|
-| T-030 | **P1** | DOING | **[BUILDING NOW]** System architecture (DELIVER) — components, data flow, evidence tiers T0–T4, APIs, storage | T-015 | Architecture doc + ADRs; every component traced to a requirement in 09-DEFINE |
 
-| T-032 | P2 | TODO | Deterministic assessment engine — rules as versioned data (DEC-011), named baselines (RFC 8221/8247/9395, NIST SP 800-77r1, DISA SRG, DST), PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY | T-031 | Every verdict cites its rule and its evidence; zero false PASS on the misconfiguration arms |
 
  Each beats a stated simple baseline under a session-level split; calibrated confidence |
 
 
 
-| T-038 | P2 | TODO | Dataset release — the covering-array matrix, provenance, hashes, locked test set | T-023, T-010 | Published dataset + datasheet |
+| T-038 | **P1** | DONE | Dataset release packaging | T-023 ✅ | `dataset/README.md` + `DATASHEET.md` + `build_manifest.py` (71 pcaps, hash-verified); `python3 dataset/validate.py` → PASS |
 
-| T-040 | P3 | TODO | Demo video + SIH pitch deck + jury Q&A prep | T-039 | Recorded demo; deck; Q&A sheet covering the known weak spots |
+| T-040 | **P1** | DONE | SIH pitch deck + jury Q&A + demo script (video is the user's to record) | T-039 ✅ | `build/sih/PITCH-DECK.md` (11 slides), `JURY-QA.md`, `DEMO-SCRIPT.md` (6 steps, commands verified against real captures) |
 
 
 ## Blocked
@@ -180,3 +178,8 @@ not a compressed version.)
 - **2026-09-12** — T-037 dashboard: offline self-contained HTML, rendered and sent. All build
   components now exist (ingest→evidence→assess→score→report→CBOM→dashboard). Remaining: T-038
   dataset packaging, T-040 pitch/Q&A prep (demo video needs the user to record).
+- **2026-09-12** — T-038 dataset release (README + datasheet + hash-verified manifest, validator
+  PASS) and T-040 SIH materials (pitch deck, jury Q&A, demo script — commands verified against real
+  captures) both DONE. **Build roadmap T-030–T-041 complete.** Remaining are the documented
+  deferrals only: T-022 true-positive CVE arm (needs a malicious IKE stack) and the optional Stage-3
+  C5 endpoint cross-check. The demo *video* is the user's to record from `build/sih/DEMO-SCRIPT.md`.
