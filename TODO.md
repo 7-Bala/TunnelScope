@@ -22,7 +22,7 @@
 
 ## Current focus
 
-**T-020 done** (existing-solutions deep dive). **Next up: T-021** (patch the lab's PQ image for
+**T-042 done** (project named + repo renamed). **Next up: T-021** (patch the lab's PQ image for
 CVE-2026-78133), then **T-010 / T-022** (EXP-06 round 2 and the CVE-2026-78135 detection
 experiment, which share a testbed change).
 
@@ -94,6 +94,7 @@ demo video, technical documentation, dataset. None has started; each waits on DE
 | T-020f | Synthesis + corrections (DEC-016, DEC-017) | Doc 11 §6–7 |
 | T-020g | Registers updated; correction banner on doc 07; README fixed; committed and pushed | `research/registers/*`, doc 07, commit `c39dc60` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
+| T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
 ---
 
@@ -107,3 +108,6 @@ demo video, technical documentation, dataset. None has started; each waits on DE
   found and read. New: T-021–T-025. Still carried over: T-010–T-017.
 - **2026-09-11** — User asked "what's left". Added the roadmap to submission (T-030–T-041), covering
   every PS deliverable not yet started. Recorded the unknown SIH deadline under Blocked.
+- **2026-09-11** — Project named **TunnelScope** (user's choice, from a list of Tunnel-themed
+  options). GitHub repo renamed `SIH26` → `TunnelScope`; local remote updated; top-level
+  `README.md` added.
