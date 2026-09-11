@@ -52,7 +52,7 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 
 | T-032 | P2 | TODO | Deterministic assessment engine — rules as versioned data (DEC-011), named baselines (RFC 8221/8247/9395, NIST SP 800-77r1, DISA SRG, DST), PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY | T-031 | Every verdict cites its rule and its evidence; zero false PASS on the misconfiguration arms |
 
-| T-034 | **P1** | TODO | **[NEXT — Stage 2]** The ML leakage-measurement component (CS-01) wired into the pipeline | T-012 ✅ | Reproduces EXP-05 MI/BER as a pipeline module; reports bits, never a traffic label | Each beats a stated simple baseline under a session-level split; calibrated confidence |
+ Each beats a stated simple baseline under a session-level split; calibrated confidence |
 
 
 | T-037 | P2 | TODO | Analyst dashboard — built after the engine exists; every panel justified by a job-to-be-done | T-032, T-036 | Walkthrough of one capture end to end |
@@ -110,6 +110,7 @@ not a compressed version.)
 | T-033 | PQ posture + downgrade assessor + CBOM (CS-05, DEC-017) — `tunnelscope/pq/cbom.py` emits CycloneDX 1.6. Full chain proven on a dedicated **downgrade arm** (`pq-downgrade.pcap`: ML-KEM offered, MODP-2048 selected, 0 IKE_INTERMEDIATE): extractor→`offered-but-not-used`, DST-PQ-DOWNGRADE→FAIL, CBOM posture→DOWNGRADED. CBOM never overstates (gaps recorded). 4 tests | `tunnelscope/pq/cbom.py`, `tests/test_pq_cbom.py`, `testbed/captures/pq-downgrade.pcap` |
 | T-035 | Security score — `tunnelscope/score/score.py` + `build/01-SCORING-METHODOLOGY.md`. Per-baseline (never one number), severity-weighted pass rate over ASSESSABLE rules, coverage reported alongside, sensitivity-tested (stable/fragile). Returns None (not a fake score) when nothing is assessable. 3 tests | `tunnelscope/score/`, `build/01-SCORING-METHODOLOGY.md` |
 | T-036 | Reports — `tunnelscope/report/report.py`: executive + technical from the evidence graph (I8). Every finding tagged observed/inferred/not-observable; every verdict cites its authority; multi-baseline scores + fragility note; downgrade + high-severity surfaced. CLI `report`. 2 tests | `tunnelscope/report/`, `tests/test_report.py` |
+| T-034 | Leakage-measurement module (CS-01, Stage 2) — `tunnelscope/leakage/leakage.py`: per-capture size/timing entropy in bits + TFC-padding detection, wired into the pipeline. Verified: unpadded leaks size+timing; TFC-padded → size 0 bits, timing remains (EXP-05). Reports bits, never a traffic label (DEC-021). Also fixed ESP-only flow handling (T0 forensic). 3 tests | `tunnelscope/leakage/`, `tests/test_leakage.py` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -168,3 +169,6 @@ not a compressed version.)
 - **2026-09-12** — T-035 score (per-baseline, coverage-aware, sensitivity-tested) and T-036 reports
   (exec + technical from evidence graph) done. 21 tests pass. Stage 1 MVP is essentially complete
   (ingest→evidence→assess→score→report→CBOM, all deterministic). Next: T-034 leakage module (Stage 2).
+- **2026-09-12** — T-034 leakage module done (Stage 2): size/timing bits + padding detection wired
+  into the pipeline; ESP-only forensic captures now produce records. 24 tests pass. Next: T-037
+  dashboard (Stage 3), T-039 validation, T-041 docs.
