@@ -29,9 +29,10 @@ selected on the record in `research/12-DEVELOP.md` (DEC-023).
 Stage 1 = C3 posture engine + C6 PQ/downgrade assessor (deterministic, fully validated) →
 Stage 2 = C8 leakage module → Stage 3 (optional) = C5 endpoint cross-check.
 
-**Remaining open (non-gating):** T-023 (dataset hygiene), T-025 (Palo Alto question), and the
-true-positive side of T-022 (needs a malicious IKE stack). User asked to finish ALL processes
-before building — working through these.
+**All pre-build processes complete (2026-09-12).** The only deferred item is the true-positive
+side of T-022 (reproducing CVE-2026-78135 needs a malicious IKE stack), documented and tracked.
+Everything else — every experiment, dataset hygiene, oracles, and all open questions — is closed.
+**Ready to build: T-030 system architecture.** Still need the SIH deadline from the user.
 
 ---
 
@@ -39,8 +40,6 @@ before building — working through these.
 
 | ID | P | Status | Task | Acceptance criteria | Evidence |
 |---|---|---|---|---|---|
-| T-023 | P2 | TODO | Adopt dataset-hygiene practices seen in `naman9271/ipsec-pcap-lab`: per-file SHA-256, a locked test set, an OOD set, a strict validator (credited) | Dataset manifest with hashes; validator script exits non-zero on violations | — |
-| T-025 | P3 | TODO | Resolve OQ-30 — does Palo Alto's Quantum Readiness view assess third-party IPsec transiting the firewall? | Cited answer, or recorded as UNKNOWN with the reason | — |
 
 ## Roadmap to submission (not yet started)
 
@@ -102,6 +101,8 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 | T-013 | EXP-04 follow-up — reassembled the fragmented IKE_INTERMEDIATE: initiator KE plaintext 1216 B vs responder 1112 B = **104 B asymmetry**, matching ML-KEM-768 ek(1184)−ct(1088)=96 B. PQ-6 confirmed as secondary signal | `experiments/exp04-pq-length-asymmetry/reassemble_ke.py` + `results/t013_ke_asymmetry.json` |
 | T-024 | EXP-04 oracle — **four independent sources** agree ADDKE1 ID 36 = ML-KEM-768: IANA registry (RFC-ietf-ipsecme-ikev2-mlkem-09), Wireshark master `packet-ike.c`, tshark 4.6.4/4.6.8 parsing our capture, strongSwan T2 log | this table; IANA + Wireshark master verified |
 | T-022 | EXP-09 CVE-2026-78135 detector — deterministic + vantage-aware: 0 FP on 69 captures, correct UNKNOWN when SA predates capture. TP validation (needs a malicious IKE stack) deferred; OQ-31 partial | `experiments/exp09-early-childsa-cve/RESULT.md` |
+| T-023 | Dataset hygiene — `dataset/build_manifest.py` (69 pcaps, per-file SHA-256, causal T2 ground truth, vantage, train/val/locked-test split by session/config) + `dataset/DATASHEET.md` + strict `dataset/validate.py` (exits non-zero on hash/provenance/leakage violations; **PASS**). Credits `naman9271/ipsec-pcap-lab` | `dataset/` |
+| T-025 | OQ-30 closed — Palo Alto Quantum Readiness inventories TLS/SSH via decryption logs + its OWN VPN tunnels; third-party IPsec merely transiting is NOT inventoried. The doc-11 assessment gap stands | `research/11-...md`, OQ-30 |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -144,3 +145,6 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 - **2026-09-12** — User: finish all processes before building. Closed T-044 (mode NOT-OBSERVABLE at
   T0 — last ML row resolved), T-013 (KE asymmetry 104 B ≈ 96 B theoretical), T-024 (4-source ML-KEM
   oracle), T-022/EXP-09 (CVE detector, 0 FP, vantage-aware). Remaining: T-023, T-025.
+- **2026-09-12** — T-023 (dataset manifest + datasheet + strict validator, PASS) and T-025 (Palo
+  Alto does NOT assess transiting third-party IPsec) done. **All pre-build processes finished.**
+  Next: T-030 architecture.
