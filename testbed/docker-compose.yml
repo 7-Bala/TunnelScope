@@ -113,6 +113,42 @@ services:
     depends_on: [router]
     command: ["charon"]
 
+  # --- EXP-07: Libreswan 5.4 (Fedora rawhide, pinned) — second implementation.
+  # Same router and networks; one ipsec.conf serves both peers.
+  lsw-a:
+    build:
+      context: ./images/libreswan
+    container_name: sih26-lsw-a
+    hostname: lsw-a
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-a: { ipv4_address: 10.10.1.30 }
+    environment:
+      ROUTE_CIDR: 10.10.2.0/24
+      ROUTE_GW: 10.10.1.1
+    volumes:
+      - ./configs/exp07/ipsec.conf:/etc/ipsec.conf:ro
+      - ./configs/exp07/ipsec.secrets:/etc/ipsec.secrets:ro
+      - ./captures:/captures
+    depends_on: [router]
+
+  lsw-b:
+    build:
+      context: ./images/libreswan
+    container_name: sih26-lsw-b
+    hostname: lsw-b
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-b: { ipv4_address: 10.10.2.30 }
+    environment:
+      ROUTE_CIDR: 10.10.1.0/24
+      ROUTE_GW: 10.10.2.1
+    volumes:
+      - ./configs/exp07/ipsec.conf:/etc/ipsec.conf:ro
+      - ./configs/exp07/ipsec.secrets:/etc/ipsec.secrets:ro
+      - ./captures:/captures
+    depends_on: [router]
+
 networks:
   net-a:
     driver: bridge

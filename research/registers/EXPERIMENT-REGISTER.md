@@ -201,3 +201,33 @@ metric proves unstable (P5-5 fails), CS-01 doesn't earn its place.
 data = decision tree: macro-F1 1.000 with F2/F3 merged, 0.809 with them separate (the ceiling, since
 F2 and F3 have identical feature vectors, as predicted by P-e). The notify-only response is exactly
 112 bytes, as derived beforehand. **CS-02 needs no ML.** `experiments/exp06-failure-diagnosis/RESULT_R2.md`.
+
+---
+
+## EXP-07 — PRE-REGISTRATION (written 2026-09-12, BEFORE any EXP-07 capture)
+
+**Question:** which of our structural findings are *protocol facts* and which are *strongSwan
+behaviour*? Re-run EXP-01/02/03/04 on a second implementation — **Libreswan 5.4** (Fedora rawhide
+`libreswan-5.4-5.fc46`, NSS 3.127, image pinned by digest; `testbed/images/libreswan/`), Libreswan to
+Libreswan through the same keyless router. Arms: `testbed/configs/exp07/arms.json`.
+
+**Already observed while setting up (not yet a measurement, recorded here so it can't be quietly
+absorbed):** Libreswan's ML-KEM IKE_INTERMEDIATE response arrived *"reassembled from 3 fragments"*;
+strongSwan's initiator split its KE message into 2 and its responder sent 1. Libreswan also negotiates
+ESN by default (strongSwan: none) — this doesn't change wire lengths.
+
+**Predictions** (from protocol structure: which quantities the RFCs fix vs leave to the implementation):
+
+| # | Prediction | Reasoning | Falsified if |
+|---|---|---|---|
+| P7-1 | **EXP-01 sieve ambiguity classes identical** on Libreswan: GCM/CTR/ChaCha → the same 5-member class; CBC → the same 6-member class; the true family never eliminated | IV/ICV/alignment are fixed by RFCs 3602/4106/3686/7634, not by implementations | A different class, or a false elimination |
+| P7-2 | **EXP-02 holds:** AES-128 vs AES-256 ESP length sets identical; classifier ≤ chance | Key length never reaches the wire | Any separation |
+| P7-3 | **EXP-03 holds in direction, not magnitude:** PFS-on CREATE_CHILD_SA is larger than PFS-off by at least the MODP-2048 KE payload (≥ 264 B before encryption); the exact byte gap may differ from strongSwan's 256 B | KE size is fixed by the group; the other payloads and padding are implementation choices | PFS-on not larger, or overlap |
+| P7-4a | **EXP-04 Signal 3 holds:** IKE_INTERMEDIATE present iff ADDKE negotiated | Exchange type is fixed by RFC 9242 | Present in classical or absent in PQ |
+| P7-4b | **EXP-04 Signal 2 holds in direction:** IKE_SA_INIT grows when ADDKE is proposed; the byte delta may differ from +16 | An extra transform substructure must be encoded | No growth |
+| P7-4c | **EXP-04 Signal 1 is IMPLEMENTATION-DEPENDENT:** whether INTERMEDIATE_EXCHANGE_SUPPORTED appears in the *classical* arm depends on Libreswan's policy (our classical arm sets `intermediate=yes`) | RFC 9242 makes it a capability notice, not a commitment | — (descriptive; whichever way it falls, the verdict is "implementation-dependent" unless it tracks ADDKE exactly) |
+| P7-4d | **EXP-04 Signal 4 (fragmentation pattern) is IMPLEMENTATION-DEPENDENT** | Fragment sizing is local policy (RFC 7383) | — (already indicated by the 3-fragment observation) |
+
+**Method:** captures at the keyless router, filtered per arm; same analysis code as EXP-01/02/03/04,
+pointed at Libreswan captures. Verdict per signal: **holds** / **holds in direction only** /
+**implementation-dependent** / **fails**.

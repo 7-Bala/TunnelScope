@@ -28,3 +28,32 @@ that the selection is made *against* them, not in ignorance of them.
 | **C8** | **Metadata-leakage auditor** | Measure what a passive observer learns (classifier as instrument, BER/MI), recommend padding | Not an identification tool (CS-01) |
 
 *(Composite options are evaluated in §4 after the individual scoring, not smuggled in as a 9th row.)*
+
+---
+
+## 2. Criteria and weights — fixed BEFORE scoring
+
+> **Written 2026-09-12, before any concept was scored**, and not edited after. This is the guard
+> against tuning the matrix to fit a preferred answer. §5 tests how sensitive the winner is to the
+> weights instead of arguing for these particular ones.
+
+Scale: each concept gets 1–5 on each criterion, and every score cites its evidence. Weights sum to 100.
+
+| # | Criterion | Weight | Why this weight |
+|---|---|---:|---|
+| W1 | **Problem fit** — coverage of PS sections A–E under 09-DEFINE's dispositions | 12 | It has to answer the PS the jury wrote |
+| W2 | **Evidence strength** — how much of the concept is experimentally validated (EXP-01…07) | 12 | The project's whole method; the thing competitors lack (doc 11 §3.F) |
+| W3 | **Gap fit / innovation** — does it fill a verified gap (doc 11 §6), or duplicate an existing tool? | 10 | Novelty that survives "doesn't Wireshark/Suricata already do this?" |
+| W4 | **Technical feasibility** in our testbed and time | 9 | A concept that can't be built doesn't win |
+| W5 | **Impact** — the jobs-to-be-done it serves (doc 03 J1–J7), and national-policy alignment (DST/NQM) | 9 | Why anyone would use it |
+| W6 | **AI justification** — AI used where it measurably beats a non-AI baseline, and nowhere else | 7 | The PS title says "AI-driven"; only *honest* AI earns this |
+| W7 | **Explainability** — every output traceable to evidence and a named standard | 7 | DL-03, DEC-007/008; analyst trust |
+| W8 | **Safety of the tool itself** — false-assurance risk, active-probing risk, privacy | 6 | An assessment tool that invents a PASS is worse than none (DEC-008) |
+| W9 | **Deployment feasibility** — offline/air-gapped, no cloud, NTRO-realistic | 6 | Government deployment context |
+| W10 | **Demonstration value** — a live, falsifiable proof in front of a jury | 6 | SIH is judged live |
+| W11 | **Dataset feasibility** — can we generate the ground truth it needs? | 5 | No public IPsec dataset exists (doc 05) |
+| W12 | **Development complexity** (inverse: 5 = simplest) | 4 | Matters, but less than whether it's right |
+| W13 | **Scalability** — fleet-scale use | 3 | Real but secondary for a prototype |
+| W14 | **Maintainability / extensibility** | 2 | Rules-as-data (DEC-011) etc. |
+| W15 | **Cost** — licences, hardware, cloud | 2 | Open-source stack assumed |
+| | **Total** | **100** | |

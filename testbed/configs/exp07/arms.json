@@ -1,0 +1,92 @@
+{
+  "e7-gcm128": {
+    "k": 1,
+    "lsw_a": "10.10.1.31",
+    "lsw_b": "10.10.2.31",
+    "esp": "aes_gcm128",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01, EXP-02"
+  },
+  "e7-gcm256": {
+    "k": 2,
+    "lsw_a": "10.10.1.32",
+    "lsw_b": "10.10.2.32",
+    "esp": "aes_gcm256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01, EXP-02"
+  },
+  "e7-cbc128": {
+    "k": 3,
+    "lsw_a": "10.10.1.33",
+    "lsw_b": "10.10.2.33",
+    "esp": "aes128-sha2_256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01, EXP-02"
+  },
+  "e7-cbc256": {
+    "k": 4,
+    "lsw_a": "10.10.1.34",
+    "lsw_b": "10.10.2.34",
+    "esp": "aes256-sha2_256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01, EXP-02"
+  },
+  "e7-chacha": {
+    "k": 5,
+    "lsw_a": "10.10.1.35",
+    "lsw_b": "10.10.2.35",
+    "esp": "chacha20_poly1305",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01"
+  },
+  "e7-ctr128": {
+    "k": 6,
+    "lsw_a": "10.10.1.36",
+    "lsw_b": "10.10.2.36",
+    "esp": "aes_ctr128-sha2_256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01"
+  },
+  "e7-pfs-off": {
+    "k": 7,
+    "lsw_a": "10.10.1.37",
+    "lsw_b": "10.10.2.37",
+    "esp": "aes_gcm256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-03"
+  },
+  "e7-pfs-on": {
+    "k": 8,
+    "lsw_a": "10.10.1.38",
+    "lsw_b": "10.10.2.38",
+    "esp": "aes_gcm256",
+    "pfs": "yes",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-03"
+  },
+  "e7-classical": {
+    "k": 9,
+    "lsw_a": "10.10.1.39",
+    "lsw_b": "10.10.2.39",
+    "esp": "aes_gcm256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-04 baseline"
+  },
+  "e7-pq": {
+    "k": 10,
+    "lsw_a": "10.10.1.40",
+    "lsw_b": "10.10.2.40",
+    "esp": "aes_gcm256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048;addke1=ml_kem_768",
+    "feeds": "EXP-04 PQ"
+  }
+}
