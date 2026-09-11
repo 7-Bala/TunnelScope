@@ -32,3 +32,6 @@ results/**/*.tmp
 
 # EXP-05: raw pcaps are large and hashed in captures/exp05/manifest.csv; the per-packet tables (*.pkts.csv.gz) are committed instead.
 testbed/captures/exp05/*.pcap
+# EXP-06 r2 and EXP-07 captures are small (KB) and are primary evidence: tracked.
+!testbed/captures/exp06r2/*.pcap
+!testbed/captures/exp07/*.pcap

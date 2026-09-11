@@ -77,9 +77,16 @@ def main():
     # ---- P7-4: EXP-04 PQ signals ----
     c = e04.analyze_capture(cap / "e7-classical.pcap", "e7-classical")
     p = e04.analyze_capture(cap / "e7-pq.pcap", "e7-pq")
-    srcs = set(c["signal2_ike_sa_init_sizes_by_src"]) & set(p["signal2_ike_sa_init_sizes_by_src"])
-    delta = {s: p["signal2_ike_sa_init_sizes_by_src"][s] - c["signal2_ike_sa_init_sizes_by_src"][s] for s in srcs}
-    R["exp04_pq"] = {"classical": c, "pq": p, "ike_sa_init_delta_bytes": delta,
+    # Compare by ROLE, not by address. First run keyed this by ip.src and got an
+    # empty delta (-> false "FAILS"): unlike EXP-04 on strongSwan, here the
+    # classical and PQ arms use different alias pairs (.39 vs .40), so no
+    # address is common to both. Initiators live on 10.10.1.x, responders on 10.10.2.x.
+    role = lambda ip: "initiator" if ip.startswith("10.10.1.") else "responder"
+    by_role = lambda d: {role(k): v for k, v in d.items()}
+    cr, pr = by_role(c["signal2_ike_sa_init_sizes_by_src"]), by_role(p["signal2_ike_sa_init_sizes_by_src"])
+    delta = {r: pr[r] - cr[r] for r in set(cr) & set(pr)}
+    R_sizes = {"classical_ike_sa_init_by_role": cr, "pq_ike_sa_init_by_role": pr}
+    R["exp04_pq"] = {"classical": c, "pq": p, "ike_sa_init_delta_bytes": delta, **R_sizes,
                      "strongswan_reference": {"delta_bytes": 16, "intermediate_msgs": "0 vs 3",
                                               "notify_16438": "PQ arm only", "fragmentation": "initiator 2, responder 1"}}
     R["verdicts"]["P7-4a IKE_INTERMEDIATE presence"] = (

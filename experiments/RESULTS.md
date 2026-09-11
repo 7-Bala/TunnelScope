@@ -156,3 +156,43 @@ cipher-family classifier. Full data: `experiments/exp01-cipher-sieve/results/exp
 - `experiments/exp03-pfs-signature/results/exp03_results.json`
 - `experiments/exp04-pq-length-asymmetry/results/exp04_results.json`
 - Raw captures + T2 ground truth: `testbed/captures/*.pcap`, `*.groundtruth.json`
+
+---
+
+# Round 2 (2026-09-12) — every registered experiment now has a result
+
+| # | Experiment | Result | Detail |
+|---|---|---|---|
+| EXP-04 (re-run) | PQ signals on strongSwan **6.1.0** | ✅ byte-for-byte identical to 6.0.2 | `exp04-pq-length-asymmetry/results/exp04_6.1.0_confirmation.md` |
+| EXP-06 r2 | Failure-mode diagnosis | ✅ **all 6 pre-registered predictions held**; rules = decision tree (macro-F1 1.000, proposal/TS mismatch merged); **no ML needed** | `exp06-failure-diagnosis/RESULT_R2.md` |
+| EXP-05 | Metadata leakage | ✅ **all 5 held**; TFC padding zeroes size leakage (+54% bytes) and **leaves class inference at F1 0.995**; ML justified *only* as a measuring instrument | `exp05-metadata-leakage/RESULT.md` |
+| EXP-07 | Libreswan 5.4 generalisation | ✅ **7/7 held**; every "protocol fact" holds on a second implementation; notify + fragmentation are implementation-dependent | `exp07-libreswan-generalization/RESULT.md` |
+| EXP-08 | Dataset leakage audit | **Applied inside every experiment rather than run separately:** session-level (leave-one-repetition-out) splits throughout, the EXP-02 negative control, and EXP-05's permutation null | — |
+| EXP-09 | CVE-2026-78135 pattern detection | **Deferred** (T-022): needs a crafted CREATE_CHILD_SA before IKE_AUTH, which no stock implementation will send | `TODO.md` |
+
+## Honest round-2 summary
+
+**Worked:** 18 of 18 pre-registered predictions across EXP-05/06/07 held, and in two cases the data
+matched protocol arithmetic written down beforehand (the 112-byte error-only response; the 256-byte
+PFS gap on both implementations).
+
+**Failed or weakened:** nothing against a pre-registration. But four **analysis bugs** were caught
+before final numbers (EXP-05 size-MI keyed on direction; EXP-05 partial final window; EXP-07
+address-keyed comparison; EXP-06 round 1's shared traffic selectors). Each is documented in the code
+and the RESULT file, not quietly fixed.
+
+**Surprising:** padding bought zero protection; mixtures produced confident wrong labels; a PQ
+detector keyed on the notify would have false-positived on Libreswan; Docker's kernel silently
+black-holes IP-TFS while strongSwan reports it installed.
+
+**Invalidated:** "failure diagnosis needs ML", "PFS needs ML", and "vendor fingerprinting needs ML".
+All three turned out to be exact structural signatures.
+
+**Became more likely:** a deterministic evidence engine is the core, with exactly one justified ML
+component (leakage measurement).
+
+**Became less likely:** any claim that a tool can name the application inside an IPsec tunnel as a
+fact.
+
+**Still untested:** tunnel/transport mode inference (A7), constant-rate IP-TFS (kernel), vendor
+stacks (Cisco/Palo Alto/Fortinet), real WAN conditions.

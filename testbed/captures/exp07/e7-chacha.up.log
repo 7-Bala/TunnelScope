@@ -1,0 +1,7 @@
+"e7-chacha" #16: initiating IKEv2 connection to 10.10.2.35 using UDP
+"e7-chacha" #16: sent IKE_SA_INIT request to 10.10.2.35:UDP/500
+"e7-chacha" #16: processed IKE_SA_INIT response from 10.10.2.35:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_256_128 prf=HMAC_SHA2_256 ke=MODP2048}, initiating IKE_AUTH
+"e7-chacha" #16: sent IKE_AUTH request to 10.10.2.35:UDP/500 with shared-key-mac and FQDN '@a-e7-chacha'; Child SA #17 {ESP <0xa7b9b062} [10.10.1.35/32===10.10.2.35/32]
+"e7-chacha" #16: processing IKE_AUTH response from 10.10.2.35:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}
+"e7-chacha" #16: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-chacha'
+"e7-chacha" #17: initiator established Child SA using #16; IPsec tunnel [10.10.1.35/32===10.10.2.35/32] {ESP/ESN=>0x64bb2a86 <0xa7b9b062 xfrm=CHACHA20_POLY1305 DPD=passive}

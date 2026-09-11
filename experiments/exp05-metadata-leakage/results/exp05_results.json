@@ -1,0 +1,168 @@
+{
+  "n_sessions": 52,
+  "window_s": 2.0,
+  "arms": {
+    "base": {
+      "n_sessions": 20,
+      "n_windows": 189,
+      "rf_macro_f1_LORO_mean": 1.0,
+      "rf_macro_f1_LORO_std": 0.0,
+      "rf_macro_f1_per_fold": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "depth2_tree_macro_f1_LORO_mean": 0.5074,
+      "rf_per_class_f1": {
+        "voip": 1.0,
+        "web": 1.0,
+        "bulk": 1.0,
+        "interactive": 1.0,
+        "video": 1.0
+      },
+      "one_nn_error_LORO": 0.0053,
+      "bayes_error_lower_bound_cover_hart": 0.0026,
+      "permutation_null_rf_macro_f1_mean": 0.1217,
+      "mi_size_bits_per_packet": 1.0061,
+      "mi_timing_bits_per_packet": 1.0069,
+      "mi_direction_bits_per_packet": 0.0527,
+      "mi_max_bits": 2.3219,
+      "distinct_esp_lengths": 244,
+      "top_esp_lengths": [
+        [
+          1500,
+          152218
+        ],
+        [
+          108,
+          84493
+        ],
+        [
+          1156,
+          11665
+        ],
+        [
+          256,
+          8011
+        ],
+        [
+          112,
+          441
+        ]
+      ],
+      "total_bytes": 253425640
+    },
+    "tfc": {
+      "n_sessions": 20,
+      "n_windows": 191,
+      "rf_macro_f1_LORO_mean": 0.9947,
+      "rf_macro_f1_LORO_std": 0.0092,
+      "rf_macro_f1_per_fold": [
+        0.9787,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "depth2_tree_macro_f1_LORO_mean": 0.506,
+      "rf_per_class_f1": {
+        "voip": 1.0,
+        "web": 0.986,
+        "bulk": 1.0,
+        "interactive": 1.0,
+        "video": 0.988
+      },
+      "one_nn_error_LORO": 0.0052,
+      "bayes_error_lower_bound_cover_hart": 0.0026,
+      "permutation_null_rf_macro_f1_mean": 0.136,
+      "mi_size_bits_per_packet": 0.0,
+      "mi_timing_bits_per_packet": 1.0059,
+      "mi_direction_bits_per_packet": 0.0539,
+      "mi_max_bits": 2.3219,
+      "distinct_esp_lengths": 1,
+      "top_esp_lengths": [
+        [
+          1500,
+          259710
+        ]
+      ],
+      "total_bytes": 389565000
+    }
+  },
+  "tfc_bandwidth_overhead_ratio": 1.537,
+  "mux": {
+    "hit_rate_top1_in_present_pair": 0.6552,
+    "chance_hit_rate": 0.4,
+    "windows": 116,
+    "per_pair": {
+      "voip+web": {
+        "hit_rate": 1.0,
+        "predictions": {
+          "web": 21,
+          "voip": 15
+        }
+      },
+      "video+interactive": {
+        "hit_rate": 0.0,
+        "predictions": {
+          "web": 40
+        }
+      },
+      "bulk+voip": {
+        "hit_rate": 1.0,
+        "predictions": {
+          "bulk": 40
+        }
+      }
+    },
+    "base_single_class_rf_f1_for_comparison": 1.0
+  },
+  "secondary_all_windows_incl_partial_tail": {
+    "arms": {
+      "base": {
+        "rf_macro_f1_LORO_mean": 0.9462,
+        "rf_macro_f1_LORO_std": 0.0,
+        "rf_macro_f1_per_fold": [
+          0.9462,
+          0.9462,
+          0.9462,
+          0.9462
+        ],
+        "depth2_tree_macro_f1_LORO_mean": 0.4922,
+        "rf_per_class_f1": {
+          "voip": 1.0,
+          "web": 1.0,
+          "bulk": 0.899,
+          "interactive": 0.92,
+          "video": 0.909
+        },
+        "one_nn_error_LORO": 0.0622,
+        "bayes_error_lower_bound_cover_hart": 0.0317,
+        "permutation_null_rf_macro_f1_mean": 0.1303
+      },
+      "tfc": {
+        "rf_macro_f1_LORO_mean": 0.9546,
+        "rf_macro_f1_LORO_std": 0.0159,
+        "rf_macro_f1_per_fold": [
+          0.927,
+          0.9636,
+          0.9643,
+          0.9636
+        ],
+        "depth2_tree_macro_f1_LORO_mean": 0.483,
+        "rf_per_class_f1": {
+          "voip": 1.0,
+          "web": 0.987,
+          "bulk": 0.943,
+          "interactive": 0.92,
+          "video": 0.923
+        },
+        "one_nn_error_LORO": 0.0474,
+        "bayes_error_lower_bound_cover_hart": 0.0241,
+        "permutation_null_rf_macro_f1_mean": 0.1425
+      }
+    },
+    "mux_hit_rate": 0.6719
+  },
+  "window_definition": "complete 2-s windows only (final partial window dropped); secondary block = all windows"
+}

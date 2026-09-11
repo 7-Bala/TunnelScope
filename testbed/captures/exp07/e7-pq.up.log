@@ -1,0 +1,10 @@
+"e7-pq" #30: initiating IKEv2 connection to 10.10.2.40 using UDP
+"e7-pq" #30: sent IKE_SA_INIT request to 10.10.2.40:UDP/500
+"e7-pq" #30: processed IKE_SA_INIT response from 10.10.2.40:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_256_128 prf=HMAC_SHA2_256 ke=MODP2048 addke1=ML_KEM_768}, initiating IKE_INTERMEDIATE
+"e7-pq" #30: sent IKE_INTERMEDIATE request to 10.10.2.40:UDP/500 {addke1=ML_KEM_768}
+"e7-pq" #30: processing IKE_INTERMEDIATE response from 10.10.2.40:UDP/500 containing SK{KE} reassembled from 3 fragments
+"e7-pq" #30: initiator processed IKE_INTERMEDIATE, initiating IKE_AUTH
+"e7-pq" #30: sent IKE_AUTH request to 10.10.2.40:UDP/500 with shared-key-mac and FQDN '@a-e7-pq'; Child SA #31 {ESP <0xd9f0c69f} [10.10.1.40/32===10.10.2.40/32]
+"e7-pq" #30: processing IKE_AUTH response from 10.10.2.40:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}
+"e7-pq" #30: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-pq'
+"e7-pq" #31: initiator established Child SA using #30; IPsec tunnel [10.10.1.40/32===10.10.2.40/32] {ESP/ESN=>0x525b69f8 <0xd9f0c69f xfrm=AES_GCM_16_256 DPD=passive}

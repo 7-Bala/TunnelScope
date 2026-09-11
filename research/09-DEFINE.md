@@ -1,6 +1,7 @@
-> **Updated 2026-09-12 (T-014):** rows R5, R8, R14 and the matching AI-Necessity rows now reflect
-> EXP-01 (narrowed), EXP-03 (confirmed) and EXP-04 (confirmed); the failure-diagnosis row reflects
-> EXP-06 round 2. Original wording preserved in git history.
+> **Updated 2026-09-12 (T-014):** requirement rows R5, R8, R10, R14, R15 and the AI Necessity Matrix
+> now reflect EXP-01 (narrowed), EXP-03 (confirmed), EXP-04 (confirmed; reconfirmed on 6.1.0),
+> EXP-05 (leakage), EXP-06 round 2 (failure diagnosis) and EXP-07 (Libreswan). Original wording is
+> preserved in git history.
 
 # Define — Refined Problem, Requirements, AI Necessity, Success Metrics, Rejected Scope
 
@@ -51,12 +52,12 @@ Every PS-derived requirement gets one of: **ACCEPT** (as stated) / **RE-SCOPE** 
 | R7 | Identify authentication algorithm | **RE-SCOPE** — disambiguate ESP integrity alg. (I at T0/T1) vs IKE peer-auth method (I at T1 via CERTREQ/SIGHASH presence) | A8 |
 | R8 | Identify key exchange method | **ACCEPT, validated by EXP-04** — O at T1 (plaintext IKE SA transform). RFC 9370 ADDKE/PQ use is **deterministically detectable by four plaintext signals** (INTERMEDIATE_EXCHANGE_SUPPORTED notify, +16 B IKE_SA_INIT, presence of IKE_INTERMEDIATE, fragmentation), reproduced on strongSwan 6.0.2 and 6.1.0. Dissection itself is solved in Wireshark master (DEC-017); our capability is PQ **posture + downgrade assessment** | A9, EXP-04, DEC-017 |
 | R9 | Identify SA characteristics | **RE-SCOPE** — split into O items (SPI, proposals) and **measured** items (lifecycle, rekey cadence) | A11, CS-03 |
-| R10 | Predict traffic type inside ESP | **RE-SCOPE, substantially** — replace "predict identity" with "measure adversary inference capability / metadata leakage in bits" (CS-01); retain a capped, caveated classifier only as a secondary, explicitly-labelled-uncertain output | 04-DISCOVER §6, G-12 |
+| R10 | Predict traffic type inside ESP | **RE-SCOPE, confirmed by EXP-05** — delivered as *measured adversary capability / leakage in bits*, never as an asserted label. EXP-05 showed why: a tunnel carrying video + interactive traffic was labelled "web" in 100% of windows — a confident, wrong answer | 04-DISCOVER §6, G-12, EXP-05 |
 | R11 | Cryptographic strength / compliance | **ACCEPT, RE-SCOPED** — verdict always names its baseline (DEC-007); never an unqualified "compliant" | S-02, DEC-007 |
 | R12 | Key lifetime | **RE-SCOPE** — IKEv2 negotiates none (F-02); report **measured** effective rekey behaviour, not a "compliant/non-compliant" lifetime check, except for IKEv1 Main Mode where it is genuinely observable | F-02, RL-003 |
 | R13 | Replay protection | **RE-SCOPE** — passive: sequence-hygiene only (O); enforcement is **NOT-OBSERVABLE** below T2/T4 despite being a named DISA control (V-207212) | A12/A13, DEC-008 |
 | R14 | PFS configuration | **ACCEPT at T0/T1 when a rekey is observed, validated by EXP-03** — PFS-on CREATE_CHILD_SA messages are larger by a fixed 256-byte gap (the KE payload), cleanly separable by one threshold, reproduced across runs. Before any rekey is observed: NOT-OBSERVABLE. O at T2 | A10, EXP-03 |
-| R15 | Metadata exposure | **ACCEPT, this is CS-01's home** — the strongest, best-evidenced deliverable in the whole set | G-04, E-06/E-07 |
+| R15 | Metadata exposure | **ACCEPT, validated by EXP-05** — per-channel leakage (size / timing / direction, bits per packet), adversary capability and a Bayes-error bound; stable across folds, null at chance. Headline finding: TFC padding to MTU zeroes the size channel (+54% bandwidth) and leaves class inference at F1 0.995 via timing | G-04, E-06/E-07, EXP-05 |
 | R16 | Executive + technical reports, risk score, threat matrix, AI confidence score | **ACCEPT, RE-SCOPED** — score is a weighted, cited, sensitivity-tested construction (not invented); confidence score is calibrated/conformal, not raw softmax | DL-03, §4.4 |
 | R17 | "AI-driven" framing (title) | **RE-SCOPE** — AI used only where the AI Necessity Matrix (§3) justifies it; framed publicly as "evidence-driven, AI-assisted" | E-01–E-05, DEC-006 |
 
@@ -78,18 +79,22 @@ independently by practitioner behaviour (PE-01).
 | AES-128 vs 256 at T0/T1 | No — provably impossible | N/A | N/A | No | **Explicitly decline**; report NOT-OBSERVABLE | F-05 |
 | SA lifecycle / effective lifetime | Yes | No | No | No | Time-series change-point detection on SPI transitions | Not a learning problem |
 | PQ key-exchange / downgrade detection | Yes | No | No | No | Deterministic: transform ID where the parser supports ADDKE (Wireshark master); EXP-04's plaintext structural signals where it doesn't (Suricata, Zeek, nDPI, Arkime) | Zero AI needed; **validated by EXP-04** on two strongSwan versions |
-| Tunnel vs transport (no endpoint) | Weakly | Possibly | **Yes, narrow** | No | Calibrated statistical classifier w/ conformal confidence over a small feature set (header length shift, MTU behaviour) | Genuine residual uncertainty after deterministic methods exhausted |
+| Tunnel vs transport (no endpoint) | Weakly | Possibly | **Yes, narrow** | No | Calibrated statistical classifier w/ conformal confidence over a small feature set (header length shift, MTU behaviour) | **UNTESTED** — the only candidate ML row with no experiment yet; the transport-mode capture exists (`cs-transport-aes256gcm16`) but mode inference was never run. Must not ship as a claim until tested |
 | PFS at rekey (no keys) | **Yes** | **No** | No | No | Single length threshold on CREATE_CHILD_SA (**EXP-03**: 256-byte gap) | **Changed from 'ML, narrow' to deterministic** — the signal is a fixed structural gap, not a distribution |
 | Failure-mode diagnosis (CS-02) | **Yes** | **No** | No | No | Rules over plaintext structure with thresholds derived from protocol arithmetic (**EXP-06 r2**: 6-way separation at macro-F1 1.000; a fitted tree does no better). Proposal- vs TS-mismatch reported as one class — *provably* inseparable at T0/T1 | **Changed from 'genuine ML need' to deterministic** — zero-variance structural signatures, nothing to learn |
-| Metadata-leakage quantification (CS-01) | No | **Yes, as instrument not oracle** | **Yes — the strongest ML justification in the project** | No | Classifier used to *estimate* Bayes error rate / mutual information (WeFDE/Cherubin methodology) | Low classifier accuracy = good security finding; immune to the accuracy-inflation crisis |
-| Implementation/vendor fingerprinting | Partially (VID lookup) | Possibly | **Yes, narrow** | No | Shallow similarity match over VID + backoff timing + payload ordering | Small, interpretable feature space |
+| Metadata-leakage quantification (CS-01) | No | **Yes, as instrument not oracle** | **Yes — validated by EXP-05** | No | Random Forest as the adversary-capability instrument + 1-NN Bayes-error bound + per-channel mutual information | **The one place ML measurably beats the simple baseline:** a depth-2 rule measures ~half the leakage (F1 0.51 vs 0.995), so a weak instrument would *understate* exposure — false assurance |
+| Implementation/vendor fingerprinting | **Yes** | No | No | No | Exact signature lookup: VIDs, notify policy, IKE fragment size (strongSwan ~1280 B vs Libreswan 576 B), PQ notify behaviour | **Changed to deterministic by EXP-07** — the observed differences are exact, not statistical |
 | Report narrative generation | No | **Yes, strictly bounded** | No | **Yes** | LLM templated **exclusively** from the evidence graph; never a source of facts, only phrasing | DL-03; explainability requires the evidence graph to already be correct before the LLM touches it |
 | Inner-traffic *identity* classification (literal PS R10) | No | N/A | **Rejected as core claim** | No | Not built as a truth oracle; subsumed into CS-01 | E-01–E-05, DEC-006, G-12 |
 
-**Summary judgment:** of thirteen capability rows, **six are purely deterministic**, **one is
-explicitly declined**, **four use ML as a narrow, justified, calibrated instrument** (two of which —
-CS-01, CS-02 — are the project's actual technical contributions), and **one uses an LLM strictly for
-templated narrative, never for facts.** No component uses AI merely because the PS says "AI-driven."
+**Summary judgment (revised 2026-09-12 after EXP-01…07):** of thirteen capability rows, **eight are
+purely deterministic** (up from six — PFS, failure diagnosis and implementation fingerprinting moved
+from "ML" to "deterministic" on evidence), **one is declined** (AES key length — provably
+unrecoverable), **one is rejected** (inner-traffic identity as a fact), **one uses ML as a validated
+measuring instrument** (metadata leakage, EXP-05), **one statistical row is still untested** (mode
+inference), and **one uses an LLM strictly for templated narrative, never for facts.** Every change
+from the original matrix moved *away* from ML, because the experiments found exact structural
+signatures where we had assumed distributions.
 
 ---
 

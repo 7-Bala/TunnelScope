@@ -50,11 +50,11 @@ Rule: ship no ML claim before its experiment lands.
 | T-023 | P2 | TODO | Adopt dataset-hygiene practices seen in `naman9271/ipsec-pcap-lab`: per-file SHA-256, a locked test set, an OOD set, a strict validator (credited) | Dataset manifest with hashes; validator script exits non-zero on violations | — |
 | T-024 | P2 | TODO | Cross-check EXP-04 against Wireshark master's ADDKE/ML-KEM output (build or container) as an independent oracle | Master's tshark names ML-KEM-768 on our capture; recorded in EXP-04 results | — |
 | T-025 | P3 | TODO | Resolve OQ-30 — does Palo Alto's Quantum Readiness view assess third-party IPsec transiting the firewall? | Cited answer, or recorded as UNKNOWN with the reason | — |
-| T-011 | P0 | TODO | EXP-07 — Libreswan cross-implementation check of EXP-01/03/04 (+EXP-06 relations). Use Fedora rawhide: libreswan **5.4**-5.fc46 + NSS 3.127 (first Libreswan with ML-KEM/RFC 9370); pin package version + image digest | Libreswan image; the same arms rerun; per-signal verdict: holds / implementation-dependent | — |
+| T-011 | P0 | DOING | EXP-07 — Libreswan cross-implementation check of EXP-01/03/04 (+EXP-06 relations). Use Fedora rawhide: libreswan **5.4**-5.fc46 + NSS 3.127 (first Libreswan with ML-KEM/RFC 9370); pin package version + image digest | Libreswan image; the same arms rerun; per-signal verdict: holds / implementation-dependent | Pre-registered (P7-1..P7-4d); image + harness + analysis committed `6425af2`; captures queued to start automatically when EXP-05 frees the router |
 | T-012 | P0 | DOING | EXP-05 — metadata leakage (MI / Bayes error / RF as instrument). **IP-TFS arm dropped: Docker kernel lacks CONFIG_XFRM_IPTFS** (NOTES.md #13) | Pre-registered P5-1..P5-5 tested; MI and BER for base vs `tfc_padding=mtu`; mux arm; null control | Pre-registration in EXPERIMENT-REGISTER; captures running |
 | T-013 | P2 | TODO | EXP-04 follow-up — reassemble IKE fragments for a clean KE-length asymmetry number | Asymmetry measured on reassembled messages | — |
 | T-014 | **P0** | DOING | Update 09-DEFINE.md with experiment outcomes | R5/R8/R14 + matrix rows for sieve/PQ/PFS/failure-diagnosis done; **remaining:** summary-judgment line + EXP-05 row after T-012 | `research/09-DEFINE.md` |
-| T-015 | **P0** | TODO | **[GATE-5 — blocks building]** DEVELOP — generate ≥5 concepts, weighted matrix, red team | Doc with matrix and selection rationale | — |
+| T-015 | **P0** | DOING | **[GATE-5 — blocks building]** DEVELOP — generate ≥5 concepts, weighted matrix, red team | Doc with matrix and selection rationale | `research/12-DEVELOP.md`: 8 concepts + criteria/weights **committed before scoring** (`6425af2`); scoring waits on EXP-05/07 |
 
 ## Roadmap to submission (not yet started)
 
@@ -139,3 +139,7 @@ demo video, technical documentation, dataset. None has started; each waits on DE
   failure diagnosis both moved from "ML" to deterministic, DEC-019). Found that Docker's kernel lacks
   IP-TFS (NOTES.md #13) — EXP-05's IP-TFS arm dropped; EXP-05 now running. Libreswan 5.4 (PQ-capable)
   located in Fedora rawhide for EXP-07.
+- **2026-09-12** — EXP-05 captures running (27/52); a dry run caught an analysis bug (direction
+  leaking into the "size" MI) — fixed before the final analysis, and logged in the code. Added a
+  depth-2 tree baseline for the AI-necessity question. EXP-07 queued behind EXP-05. DEVELOP weights
+  committed before scoring.
