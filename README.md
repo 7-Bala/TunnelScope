@@ -19,9 +19,11 @@ it's judged against and admits what it couldn't see.
 
 ## Current phase
 
-Broad research is frozen; active work is experimentation (`research/registers/EXPERIMENT-REGISTER.md`)
-and, next, DEVELOP (concept generation). See `TODO.md` for exactly what's done, in progress, and
-queued.
+**Planning is complete (2026-09-12).** Every registered experiment has a result
+([`experiments/RESULTS.md`](experiments/RESULTS.md)), and the DEVELOP gate has selected the design on
+the record ([`research/12-DEVELOP.md`](research/12-DEVELOP.md)): an evidence-tiered IPsec posture
+engine with a post-quantum/downgrade assessor and a metadata-leakage measurement module. **Next phase:
+building**, starting with the system architecture (T-030). See [`TODO.md`](TODO.md).
 
 ## Why "TunnelScope"
 
