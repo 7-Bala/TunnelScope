@@ -46,9 +46,29 @@ experiment, which share a testbed change).
 | T-016 | P3 | TODO | Fix the `utcnow()` deprecation warning in `run_arm.sh` | Warning gone | — |
 | T-017 | P3 | TODO | Confirm the PS ID (SIH26160 vs SIH26161) — OQ-16 | Official portal checked | — |
 
+## Roadmap to submission (not yet started)
+
+These map to the PS's deliverables: working prototype, AI engine, dashboard, assessment report,
+demo video, technical documentation, dataset. None has started; each waits on DEVELOP (T-015).
+
+| ID | P | Status | Task | Depends on | Acceptance criteria |
+|---|---|---|---|---|---|
+| T-030 | P2 | TODO | System architecture (DELIVER) — components, data flow, evidence tiers T0–T4, APIs, storage | T-015 | Architecture doc + ADRs; every component traced to a requirement in 09-DEFINE |
+| T-031 | P2 | TODO | Evidence extraction layer — tshark/pcap ingestion → per-SA evidence records (reusing parsers, not rebuilding them) | T-030 | Runs on all testbed captures; output validated against the `swanctl` ground truth |
+| T-032 | P2 | TODO | Deterministic assessment engine — rules as versioned data (DEC-011), named baselines (RFC 8221/8247/9395, NIST SP 800-77r1, DISA SRG, DST), PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY | T-031 | Every verdict cites its rule and its evidence; zero false PASS on the misconfiguration arms |
+| T-033 | P2 | TODO | PQ posture + downgrade assessor (CS-05, DEC-017) | T-031, T-021 | Detects offered-vs-selected downgrade on a dedicated testbed arm |
+| T-034 | P2 | TODO | ML components, only where the AI Necessity Matrix justifies them (leakage measurement CS-01, failure diagnosis CS-02) | T-012, T-010 | Each beats a stated simple baseline under a session-level split; calibrated confidence |
+| T-035 | P2 | TODO | Security score — a defensible, cited, sensitivity-tested construction (not an invented 0–100) | T-032 | Written methodology; sensitivity analysis |
+| T-036 | P2 | TODO | Reports — executive + technical, generated from the evidence graph | T-032 | Both reports produced for ≥3 captures; observed / inferred / unknown kept separate |
+| T-037 | P2 | TODO | Analyst dashboard — built after the engine exists; every panel justified by a job-to-be-done | T-032, T-036 | Walkthrough of one capture end to end |
+| T-038 | P2 | TODO | Dataset release — the covering-array matrix, provenance, hashes, locked test set | T-023, T-010 | Published dataset + datasheet |
+| T-039 | P2 | TODO | End-to-end validation — capture → verdict against ground truth across all arms, including stress cases (truncated, mid-SA start, loss, NAT) | T-032–T-036 | Validation report with per-capability metrics from 09-DEFINE §4 |
+| T-040 | P3 | TODO | Demo video + SIH pitch deck + jury Q&A prep | T-039 | Recorded demo; deck; Q&A sheet covering the known weak spots |
+| T-041 | P3 | TODO | Technical documentation (install, usage, architecture, limitations) | T-037 | Docs a new user can follow cold |
+
 ## Blocked
 
-_None._
+- **SIH deadline / internal milestones unknown** — needed to schedule T-030+ realistically. Asked the user 2026-09-11.
 
 ---
 
@@ -85,3 +105,5 @@ _None._
   wrong** — the issue was fixed 2026-03-14 — withdrawn, and CS-05 restated (DEC-017); (2) the gap is
   confirmed in *assessment* (PS columns D/E), not parsing; (3) an actual competing PS-26160 repo was
   found and read. New: T-021–T-025. Still carried over: T-010–T-017.
+- **2026-09-11** — User asked "what's left". Added the roadmap to submission (T-030–T-041), covering
+  every PS deliverable not yet started. Recorded the unknown SIH deadline under Blocked.
