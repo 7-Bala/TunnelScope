@@ -72,7 +72,7 @@ _None._
 | T-020d | Competing projects → a PS-26160 repo with synthetic-Gaussian ML and fabricated defaults; a strong but confounded dataset lab | Doc 11 §3.F, RL-034 |
 | T-020e | PS A–E coverage matrix | Doc 11 §5 |
 | T-020f | Synthesis + corrections (DEC-016, DEC-017) | Doc 11 §6–7 |
-| T-020g | Registers updated; correction banner on doc 07; README fixed | `research/registers/*`, doc 07, `research/README.md` |
+| T-020g | Registers updated; correction banner on doc 07; README fixed; committed and pushed | `research/registers/*`, doc 07, commit `c39dc60` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 
 ---
