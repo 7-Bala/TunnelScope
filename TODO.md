@@ -22,9 +22,19 @@
 
 ## Current focus
 
-**T-042 done** (project named + repo renamed). **Next up: T-021** (patch the lab's PQ image for
-CVE-2026-78133), then **T-010 / T-022** (EXP-06 round 2 and the CVE-2026-78135 detection
-experiment, which share a testbed change).
+**Readiness check (2026-09-11): planning is NOT complete.** One hard gate is unfinished.
+
+**GATE TO BUILDING — must clear first:**
+1. **T-015 DEVELOP** (GATE-5) — ≥5 concepts, weighted matrix, red team. Never run. This is the
+   blocker: the direction is currently de facto, not selected on the record.
+2. **T-014** — `09-DEFINE.md` still states the stronger EXP-01 claim that EXP-01 disproved.
+3. **T-021** — PQ lab image has a known potential-RCE CVE.
+
+**Then:** T-030 architecture, written as the first act of building, not as more planning.
+
+**Parallel with early build** (constrain only the ML components + generalization claims, not the
+deterministic core): T-012 (EXP-05 leakage), T-010 (EXP-06 r2), T-011 (EXP-07 Libreswan).
+Rule: ship no ML claim before its experiment lands.
 
 ---
 
@@ -41,8 +51,8 @@ experiment, which share a testbed change).
 | T-011 | P1 | TODO | EXP-07 — Libreswan cross-implementation check of EXP-01/03/04 | Libreswan image; the same arms rerun; per-signal verdict: holds / implementation-dependent | — |
 | T-012 | P2 | TODO | EXP-05 — metadata leakage with TFC padding / IP-TFS (mutual information / Bayes error) | MI and BER before/after for `tfc_padding=0/mtu` and `mode=iptfs` | — |
 | T-013 | P2 | TODO | EXP-04 follow-up — reassemble IKE fragments for a clean KE-length asymmetry number | Asymmetry measured on reassembled messages | — |
-| T-014 | P2 | TODO | Update 09-DEFINE.md R5 and the AI Necessity Matrix with EXP-01's narrower claim | Edited rows cite EXP-01 | — |
-| T-015 | P2 | TODO | DEVELOP — generate ≥5 concepts, weighted matrix, red team | Doc with matrix and selection rationale | — |
+| T-014 | **P0** | TODO | Update 09-DEFINE.md R5 and the AI Necessity Matrix with EXP-01's narrower claim | Edited rows cite EXP-01 | — |
+| T-015 | **P0** | TODO | **[GATE-5 — blocks building]** DEVELOP — generate ≥5 concepts, weighted matrix, red team | Doc with matrix and selection rationale | — |
 | T-016 | P3 | TODO | Fix the `utcnow()` deprecation warning in `run_arm.sh` | Warning gone | — |
 | T-017 | P3 | TODO | Confirm the PS ID (SIH26160 vs SIH26161) — OQ-16 | Official portal checked | — |
 
@@ -111,3 +121,8 @@ demo video, technical documentation, dataset. None has started; each waits on DE
 - **2026-09-11** — Project named **TunnelScope** (user's choice, from a list of Tunnel-themed
   options). GitHub repo renamed `SIH26` → `TunnelScope`; local remote updated; top-level
   `README.md` added.
+- **2026-09-11** — User asked directly whether planning is over. Honest answer: **no**. T-015
+  (DEVELOP/GATE-5) never ran, so no concept was ever formally selected; 3 of 8 experiments are
+  unstarted and EXP-06 is inconclusive, leaving 2 of 3 candidate ML components unvalidated and all
+  findings strongSwan-only. Raised T-014 and T-015 to P0 and marked the gate to building above.
+  Counter-risk noted: over-planning is now the bigger danger than under-planning.
