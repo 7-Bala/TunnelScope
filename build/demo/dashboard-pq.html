@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TunnelScope — testbed/captures/pq-mlkem768.pcap</title><style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1a2230;--muted:#6b7684;--line:#e3e7 ;
+--pass:#1a7f4b;--fail:#c0392b;--warn:#b8860b;--unk:#8a94a3;--pq:#6c3fc4;--accent:#0b6bcb}
+@media(prefers-color-scheme:dark){:root{--bg:#12151a;--card:#1b2028;--ink:#e8ecf1;--muted:#9aa4b2;--line:#2a313c}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1080px;margin:0 auto;padding:24px}
+h1{font-size:22px;margin:0 0 2px}.sub{color:var(--muted);margin-bottom:20px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.sa-h{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.posture{font-weight:600;padding:4px 10px;border-radius:20px;font-size:12px;background:rgba(108,63,196,.12);color:var(--pq)}
+.posture.dg{background:rgba(192,57,43,.14);color:var(--fail)}
+.scores{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.score{flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.score .b{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.score .v{font-size:22px;font-weight:700}.score .c{font-size:11px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.t-observed{background:rgba(26,127,75,.14);color:var(--pass)}
+.t-inferred{background:rgba(11,107,203,.12);color:var(--accent)}
+.t-measured{background:rgba(11,107,203,.12);color:var(--accent)}
+.t-unknown,.t-not-observable{background:rgba(138,148,163,.16);color:var(--unk)}
+.t-contradictory{background:rgba(184,134,11,.16);color:var(--warn)}
+.t-pass{background:rgba(26,127,75,.14);color:var(--pass)}.t-fail{background:rgba(192,57,43,.14);color:var(--fail)}
+.note{color:var(--muted);font-size:12px}.foot{color:var(--muted);font-size:12px;margin-top:18px}
+h3{font-size:13px;margin:16px 0 4px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+</style></head><body><div class="wrap"><h1>TunnelScope — IPsec Posture</h1>
+<div class="sub">Source: testbed/captures/pq-mlkem768.pcap · 1 security association(s) · every finding shows its status, vantage and evidence; verdicts cite their standard</div>
+<div class="card">
+<div class="sa-h"><div><b>SA 1</b> &nbsp;10.10.1.20 ↔ 10.10.2.20</div><span class="posture ">post-quantum (hybrid)</span></div>
+<div class="scores">
+<div class="score"><div class="b">DISA-VPN-SRG-V2R6</div><div class="v">38.5</div><div class="c">coverage 100% · 1✓ 2✗ 0?</div></div>
+<div class="score"><div class="b">DST-NQM-2026</div><div class="v">100.0</div><div class="c">coverage 100% · 2✓ 0✗ 0?</div></div>
+<div class="score"><div class="b">RFC-8247</div><div class="v">100.0</div><div class="c">coverage 100% · 2✓ 0✗ 0?</div></div>
+</div>
+<div class="note">Scores rest on few rules and shift under re-weighting — read the verdicts, not the number.</div>
+<h3>Verdicts</h3><table><tr><th>Result</th><th>Baseline</th><th>Rule</th><th>Detail</th></tr>
+<tr><td><span class="tag t-fail">fail</span></td><td>DISA-VPN-SRG-V2R6</td><td>V-207193</td><td>DH group below 16 for the IKE SA (DISA baseline; note RFC 8247 permits group 14)</td></tr>
+<tr><td><span class="tag t-fail">fail</span></td><td>DISA-VPN-SRG-V2R6</td><td>V-207223</td><td>IKE integrity below SHA2-384</td></tr>
+<tr><td><span class="tag t-pass">pass</span></td><td>DISA-VPN-SRG-V2R6</td><td>V-207205</td><td>observed IKEv2</td></tr>
+<tr><td><span class="tag t-pass">pass</span></td><td>DST-NQM-2026</td><td>DST-PQ-KE</td><td>observed [&#x27;ML-KEM-768&#x27;]</td></tr>
+<tr><td><span class="tag t-pass">pass</span></td><td>DST-NQM-2026</td><td>DST-PQ-DOWNGRADE</td><td>observed [&#x27;ML-KEM-768&#x27;]</td></tr>
+<tr><td><span class="tag t-pass">pass</span></td><td>RFC-8247</td><td>RFC8247-DH-MUST</td><td>observed MODP-2048</td></tr>
+<tr><td><span class="tag t-pass">pass</span></td><td>RFC-8247</td><td>RFC8247-ENCR</td><td>observed AES-CBC-256</td></tr>
+</table>
+<h3>Evidence</h3><table><tr><th>Attribute</th><th>Status</th><th>Value</th><th>Vantage</th><th>Method</th></tr>
+<tr><td>ike_version</td><td><span class="tag t-observed">observed</span></td><td>IKEv2</td><td>T1</td><td class="note">ike_meta</td></tr>
+<tr><td>ike_exchanges</td><td><span class="tag t-observed">observed</span></td><td>[&#x27;IKE_AUTH&#x27;, &#x27;IKE_INTERMEDIATE&#x27;, &#x27;IKE_SA_INIT&#x27;]</td><td>T1</td><td class="note">ike_meta</td></tr>
+<tr><td>ike_encr</td><td><span class="tag t-observed">observed</span></td><td>AES-CBC-256</td><td>T1</td><td class="note">ike_crypto</td></tr>
+<tr><td>ike_integ</td><td><span class="tag t-observed">observed</span></td><td>HMAC-SHA2-256-128</td><td>T1</td><td class="note">ike_crypto</td></tr>
+<tr><td>ike_dh_group</td><td><span class="tag t-observed">observed</span></td><td>MODP-2048</td><td>T1</td><td class="note">ike_crypto</td></tr>
+<tr><td>pq_key_exchange</td><td><span class="tag t-observed">observed</span></td><td>[&#x27;ML-KEM-768&#x27;]</td><td>T1</td><td class="note">pq_addke (EXP-04 signal 2+3)</td></tr>
+<tr><td>esp_cipher_family</td><td><span class="tag t-inferred">inferred</span></td><td>[&#x27;AES-CTR+HMAC-SHA256-128&#x27;, &#x27;AES-GCM-16&#x27;, &#x27;AES-CCM-16&#x27;, &#x27;ChaCha20-Poly1305&#x27;]</td><td>T0</td><td class="note">cipher_sieve (EXP-01)</td></tr>
+<tr><td>pfs</td><td><span class="tag t-not-observable">not observable</span></td><td>—</td><td>T1</td><td class="note">pfs (EXP-03)</td></tr>
+<tr><td>mode</td><td><span class="tag t-not-observable">not observable</span></td><td>—</td><td>T0</td><td class="note">mode (EXP-08)</td></tr>
+<tr><td>negotiation_outcome</td><td><span class="tag t-observed">observed</span></td><td>success</td><td>T1</td><td class="note">failure_diag F0</td></tr>
+<tr><td>metadata_exposure</td><td><span class="tag t-measured">measured</span></td><td>{&#x27;size_bits&#x27;: 4.112, &#x27;timing_bits&#x27;: 1.0, &#x27;tfc_padding_active&#x27;: False}</td><td>T0</td><td class="note">leakage (EXP-05)</td></tr>
+</table>
+</div>
+<div class="foot">Generated by TunnelScope. Findings are labelled observed / inferred / measured / not-observable / contradictory. Absence of evidence is never scored as compliance.</div></div></body></html>

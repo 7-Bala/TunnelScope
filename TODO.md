@@ -55,7 +55,7 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
  Each beats a stated simple baseline under a session-level split; calibrated confidence |
 
 
-| T-037 | **P1** | TODO | **[NEXT]** Analyst dashboard — built after the engine exists; every panel justified by a job-to-be-done | T-032, T-036 | Walkthrough of one capture end to end |
+
 | T-038 | P2 | TODO | Dataset release — the covering-array matrix, provenance, hashes, locked test set | T-023, T-010 | Published dataset + datasheet |
 
 | T-040 | P3 | TODO | Demo video + SIH pitch deck + jury Q&A prep | T-039 | Recorded demo; deck; Q&A sheet covering the known weak spots |
@@ -113,6 +113,7 @@ not a compressed version.)
 | T-034 | Leakage-measurement module (CS-01, Stage 2) — `tunnelscope/leakage/leakage.py`: per-capture size/timing entropy in bits + TFC-padding detection, wired into the pipeline. Verified: unpadded leaks size+timing; TFC-padded → size 0 bits, timing remains (EXP-05). Reports bits, never a traffic label (DEC-021). Also fixed ESP-only flow handling (T0 forensic). 3 tests | `tunnelscope/leakage/`, `tests/test_leakage.py` |
 | T-039 | End-to-end validation — `build/validate_e2e.py`: runs the full pipeline over all 69 dataset captures, checks every finding vs causal ground truth. **69/69 pass, 0 mismatches**, both implementations; standing anti-overclaim checks (mode never valued at T0; no ESP key length) enforced. Exits non-zero on any mismatch | `build/validate_e2e.py`, `build/E2E-VALIDATION.md` |
 | T-041 | Technical documentation — `tunnelscope/README.md` (install, usage, design, the one ML component, trust/limits, tests) | `tunnelscope/README.md` |
+| T-037 | Analyst dashboard — `tunnelscope/report/dashboard.py`: self-contained, offline HTML (ADR-006), theme-aware, status-colour-coded (observed/inferred/not-observable/contradictory distinct, DEC-008). Per-SA posture badge, per-baseline scores+coverage, fragility note, verdict + evidence tables, "not observable" section. CLI `dashboard`. Rendered + verified | `tunnelscope/report/dashboard.py`, `build/demo/` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -176,3 +177,6 @@ not a compressed version.)
   dashboard (Stage 3), T-039 validation, T-041 docs.
 - **2026-09-12** — T-039 end-to-end validation: 69/69 captures match ground truth, zero overclaims.
   T-041 tool README. Next: T-037 dashboard, T-038 dataset release packaging, T-040 pitch/Q&A.
+- **2026-09-12** — T-037 dashboard: offline self-contained HTML, rendered and sent. All build
+  components now exist (ingest→evidence→assess→score→report→CBOM→dashboard). Remaining: T-038
+  dataset packaging, T-040 pitch/Q&A prep (demo video needs the user to record).

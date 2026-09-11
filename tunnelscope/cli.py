@@ -13,6 +13,7 @@ from .ingest.tshark import capture_summary
 from .assess.engine import assess_record, load_baselines
 from .pq.cbom import build_cbom
 from .report.report import analyze, executive_report, technical_report
+from .report.dashboard import render as render_dashboard
 
 
 def cmd_analyze(args):
@@ -72,6 +73,11 @@ def cmd_report(args):
         print(technical_report(a))
 
 
+def cmd_dashboard(args):
+    open(args.out, "w").write(render_dashboard(args.pcap))
+    print(f"wrote {args.out}")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tunnelscope")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -88,6 +94,9 @@ def main(argv=None):
     rp = sub.add_parser("report", help="executive + technical report for a pcap")
     rp.add_argument("pcap"); rp.add_argument("--level", choices=["exec","tech","both"], default="both")
     rp.set_defaults(func=cmd_report)
+    db = sub.add_parser("dashboard", help="self-contained HTML dashboard")
+    db.add_argument("pcap"); db.add_argument("-o", "--out", default="tunnelscope-dashboard.html")
+    db.set_defaults(func=cmd_dashboard)
     args = ap.parse_args(argv)
     return args.func(args)
 
