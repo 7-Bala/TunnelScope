@@ -163,7 +163,67 @@ def extract_failure(r: EvidenceRecord) -> None:
                   note="IKE up, no ESP; proposal or traffic-selector mismatch (reason needs T2)"))
 
 
-ALL_EXTRACTORS = [extract_ike_meta, extract_pq_addke, extract_pfs, extract_mode, extract_failure]
+
+def extract_ike_crypto(r: EvidenceRecord) -> None:
+    """R4/R6/R8 for the IKE SA: ENCR (+key length), PRF, INTEG, DH group. All
+    plaintext in the IKE_SA_INIT response -> O at T1. Note this is the IKE SA
+    key length (observable); the ESP key length is NOT (F-05)."""
+    c = tshark.ike_sa_crypto(r.source_pcap)
+    # c is {} (no response) or has None fields (a NO_PROPOSAL_CHOSEN response
+    # selected nothing). Either way, a field we could not read is UNKNOWN, never
+    # a value-less OBSERVED (ADR-002).
+    ev = [EvidencePtr(r.source_pcap, None, "isakmp IKE_SA_INIT response", str(c))]
+    enc = (f"{c.get('encr')}-{c['encr_keylen']}" if c.get("encr") and c.get("encr_keylen")
+           else c.get("encr"))
+    for attr, val, extra in (("ike_encr", enc, {}),
+                             ("ike_integ", c.get("integ"), {}),
+                             ("ike_dh_group", c.get("dh"), {"note": f"DH group id {c.get('dh_id')}"})):
+        if val:
+            r.add(Finding(attr, Status.OBSERVED, Vantage.T1, "ike_crypto", value=val, evidence=ev, **extra))
+        else:
+            r.add(Finding(attr, Status.UNKNOWN, Vantage.T0, "ike_crypto",
+                          note="no IKE SA suite selected (negotiation failed or no response visible)"))
+
+
+# ESP cipher-family sieve (EXP-01): IV/ICV/alignment constants per suite family.
+_SIEVE = {
+    "AES-CBC+HMAC-SHA256-128": dict(iv=16, icv=16, align=16),
+    "AES-CBC+HMAC-SHA1-96": dict(iv=16, icv=12, align=16),
+    "AES-CTR+HMAC-SHA256-128": dict(iv=8, icv=16, align=4),
+    "AES-GCM-16": dict(iv=8, icv=16, align=4),
+    "AES-CCM-16": dict(iv=8, icv=16, align=4),
+    "ChaCha20-Poly1305": dict(iv=8, icv=16, align=4),
+}
+
+
+def extract_cipher_sieve(r: EvidenceRecord) -> None:
+    """R5 ESP cipher family. EXP-01: a one-directional CBC-vs-AEAD/stream filter.
+    Reports the surviving candidate SET (never a single suite it cannot resolve)."""
+    esp = getattr(r, "_esp", [])
+    lengths = [p["esp_content"] for p in esp if p["esp_content"] > 0]
+    if len(lengths) < 5:
+        r.add(Finding("esp_cipher_family", Status.UNKNOWN, Vantage.T0, "cipher_sieve (EXP-01)",
+                      note=f"only {len(lengths)} ESP packets; need >=5 to constrain")); return
+    survivors = [name for name, s in _SIEVE.items()
+                 if all((c - s["iv"] - s["icv"]) >= 0 and (c - s["iv"] - s["icv"]) % s["align"] == 0
+                        for c in lengths)]
+    ev = [EvidencePtr(r.source_pcap, esp[0]["frame"], "esp content lengths", str(sorted(set(lengths))[:8]))]
+    is_cbc = survivors == ["AES-CBC+HMAC-SHA256-128"] or (len(survivors) == 1 and "CBC" in survivors[0])
+    if len(survivors) == 1:
+        r.add(Finding("esp_cipher_family", Status.INFERRED, Vantage.T0, "cipher_sieve (EXP-01)",
+                      value=survivors, confidence=0.95, evidence=ev))
+    else:
+        # the useful one-directional bit: block-mode(CBC) vs AEAD/stream
+        has_cbc = any("CBC" in s for s in survivors)
+        has_aead = any("CBC" not in s for s in survivors)
+        klass = "AEAD/stream (CBC excluded)" if (has_aead and not has_cbc) else                 "CBC or AEAD/stream (ambiguous)" if (has_cbc and has_aead) else "CBC-mode"
+        r.add(Finding("esp_cipher_family", Status.INFERRED, Vantage.T0, "cipher_sieve (EXP-01)",
+                      value=survivors, confidence=0.9, evidence=ev,
+                      note=f"one-directional sieve -> {klass}; {len(survivors)} candidate(s)"))
+
+
+ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,
+                  extract_cipher_sieve, extract_pfs, extract_mode, extract_failure]
 
 
 def build_records(pcap: str) -> list[EvidenceRecord]:

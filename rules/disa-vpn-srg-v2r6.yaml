@@ -1,0 +1,22 @@
+baseline: DISA-VPN-SRG-V2R6
+authority: "DISA Virtual Private Network (VPN) Security Requirements Guide, V2R6"
+url: "https://cyber.trackr.live/stig/Virtual_Private_Network_(VPN)_Security_Requirements_Guide/2/6"
+rules:
+  - id: V-207205
+    title: "The IPsec VPN Gateway must use IKEv2 for IPsec SAs"
+    attribute: ike_version
+    assert: {op: equals, value: "IKEv2"}
+    severity: high
+    fail_message: "IKEv1 (Historic per RFC 9395) or unknown IKE version"
+  - id: V-207193
+    title: "IKE Phase 1 must use a Diffie-Hellman group of 16 or greater"
+    attribute: ike_dh_group
+    assert: {op: dh_group_ge, value: 16}
+    severity: high
+    fail_message: "DH group below 16 for the IKE SA (DISA baseline; note RFC 8247 permits group 14)"
+  - id: V-207223
+    title: "IKE must use FIPS-validated SHA-2 at 384 bits or higher"
+    attribute: ike_integ
+    assert: {op: in, value: ["HMAC-SHA2-384-192", "HMAC-SHA2-512-256"]}
+    severity: medium
+    fail_message: "IKE integrity below SHA2-384"

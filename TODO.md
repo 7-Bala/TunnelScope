@@ -49,9 +49,9 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 | ID | P | Status | Task | Depends on | Acceptance criteria |
 |---|---|---|---|---|---|
 | T-030 | **P1** | DOING | **[BUILDING NOW]** System architecture (DELIVER) — components, data flow, evidence tiers T0–T4, APIs, storage | T-015 | Architecture doc + ADRs; every component traced to a requirement in 09-DEFINE |
-| T-032 | **P1** | TODO | **[NEXT]** Deterministic assessment engine — rules as versioned data (DEC-011), named baselines, PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY | T-031 ✅ | Every verdict cites its rule and evidence; zero false PASS on the misconfiguration arms |
+
 | T-032 | P2 | TODO | Deterministic assessment engine — rules as versioned data (DEC-011), named baselines (RFC 8221/8247/9395, NIST SP 800-77r1, DISA SRG, DST), PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY | T-031 | Every verdict cites its rule and its evidence; zero false PASS on the misconfiguration arms |
-| T-033 | P2 | TODO | PQ posture + downgrade assessor (CS-05, DEC-017) | T-031, T-021 | Detects offered-vs-selected downgrade on a dedicated testbed arm |
+| T-033 | **P1** | DOING | PQ posture + downgrade assessor + **CBOM export** (CS-05, DEC-017). Detection + downgrade rule done; remaining: CBOM document generation | T-031 ✅ | Detects offered-vs-selected downgrade; emits a CBOM entry |
 | T-034 | P2 | TODO | The ML component: leakage measurement (CS-01) only — failure diagnosis is deterministic (DEC-018) | T-012 ✅ | Each beats a stated simple baseline under a session-level split; calibrated confidence |
 | T-035 | P2 | TODO | Security score — a defensible, cited, sensitivity-tested construction (not an invented 0–100) | T-032 | Written methodology; sensitivity analysis |
 | T-036 | P2 | TODO | Reports — executive + technical, generated from the evidence graph | T-032 | Both reports produced for ≥3 captures; observed / inferred / unknown kept separate |
@@ -106,6 +106,7 @@ not a compressed version.)
 | T-025 | OQ-30 closed — Palo Alto Quantum Readiness inventories TLS/SSH via decryption logs + its OWN VPN tunnels; third-party IPsec merely transiting is NOT inventoried. The doc-11 assessment gap stands | `research/11-...md`, OQ-30 |
 | T-030 | System architecture — `build/00-ARCHITECTURE.md`: components, data flow, 9 design invariants, requirement traceability, 6 ADRs, staged build order, testing strategy | `build/00-ARCHITECTURE.md` |
 | T-031 | Evidence extraction layer — `tunnelscope/` package: tshark ingest (reuse, ADR-001), Finding/EvidenceRecord core with mandatory status (ADR-002), 5 extractors (ike_meta, pq_addke, pfs, mode, failure) + CLI. Reproduces EXP-03/04/06/08 on BOTH implementations; 9 tests vs ground truth pass | `tunnelscope/`, `tests/test_extract.py` |
+| T-032 | Deterministic assessment engine — `tunnelscope/assess/engine.py` + 3 versioned baseline files (`rules/`: DISA VPN SRG, RFC 8247, DST/NQM). Verdicts PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY, each citing authority+rule+evidence. Demonstrates the MODP-2048 multi-baseline split (PASS RFC 8247 / FAIL DISA). 4 tests incl. zero-false-PASS pass. Added `ike_crypto` + `cipher_sieve` extractors | `tunnelscope/assess/`, `rules/`, `tests/test_assess.py` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -156,3 +157,6 @@ not a compressed version.)
 - **2026-09-12** — BUILD started. T-030 architecture (9 invariants, 6 ADRs, traceability). T-031
   evidence extraction: tunnelscope package works end-to-end, reproduces every experiment finding on
   strongSwan AND Libreswan captures, 9 ground-truth tests pass. Next: T-032 assessment engine.
+- **2026-09-12** — T-032 assessment engine done: rules as versioned YAML, multi-baseline verdicts
+  with citations, zero-false-PASS validated, the MODP-2048 RFC-vs-DISA contradiction shown live.
+  13 tests pass. Building T-033 (PQ assessor + CBOM) next.

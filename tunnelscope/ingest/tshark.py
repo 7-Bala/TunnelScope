@@ -119,3 +119,37 @@ def capture_summary(pcap: str) -> dict:
     return {"pcap": str(pcap), "n_ike": len(ike), "n_esp": len(esp),
             "exchanges": exch,
             "has_ike_sa_init": any(m["exchange"] == 34 for m in ike)}
+
+
+# IKEv2 Encryption (Transform Type 1) and Integrity (Type 3) id -> name (IANA)
+IKE_ENCR = {12: "AES-CBC", 13: "AES-CTR", 14: "AES-CCM-8", 15: "AES-CCM-12",
+            16: "AES-CCM-16", 18: "AES-GCM-8", 19: "AES-GCM-12", 20: "AES-GCM-16",
+            28: "ChaCha20-Poly1305", 3: "3DES", 11: "NULL"}
+IKE_INTEG = {0: "NONE", 1: "HMAC-MD5-96", 2: "HMAC-SHA1-96", 5: "AES-XCBC-96",
+             12: "HMAC-SHA2-256-128", 13: "HMAC-SHA2-384-192", 14: "HMAC-SHA2-512-256"}
+IKE_PRF = {1: "PRF-HMAC-MD5", 2: "PRF-HMAC-SHA1", 5: "PRF-HMAC-SHA2-256",
+           6: "PRF-HMAC-SHA2-384", 7: "PRF-HMAC-SHA2-512"}
+
+
+def ike_sa_crypto(pcap: str) -> dict:
+    """The IKE SA's negotiated crypto suite from the plaintext IKE_SA_INIT
+    RESPONSE (the responder's single selected proposal). T1-observable. This is
+    the IKE SA key length (observable), NOT the ESP key length (F-05, unobservable)."""
+    fields = ["ip.src", "isakmp.flags", "isakmp.tf.id.encr", "isakmp.ike2.attr.key_length",
+              "isakmp.tf.id.prf", "isakmp.tf.id.integ", "isakmp.tf.id.dh"]
+    rows = _run_fields(pcap, "isakmp.exchangetype==34", fields)
+    for r in rows:
+        r = (r + [""] * len(fields))[:len(fields)]
+        src, flags, encr, klen, prf, integ, dh = r
+        if not (_int(flags, 0) & 0x20):   # responder message only = the selected suite
+            continue
+        e = _int(encr); d = _int(dh); i = _int(integ); pr = _int(prf); kl = _int(klen)
+        return {
+            "encr": IKE_ENCR.get(e, f"encr-{e}") if e is not None else None,
+            "encr_keylen": kl,
+            "prf": IKE_PRF.get(pr, f"prf-{pr}") if pr is not None else None,
+            "integ": IKE_INTEG.get(i, f"integ-{i}") if i is not None else None,
+            "dh": KE_METHOD.get(d, f"dh-{d}") if d is not None else None,
+            "dh_id": d,
+        }
+    return {}
