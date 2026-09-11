@@ -35,6 +35,7 @@ GT = {
     "cs-pfs-on-aes256gcm16": dict(ike="v2", cipher="AES-GCM-16", keylen=256, mode="tunnel", pfs=True),
     "classical-baseline": dict(ike="v2", cipher="AES-GCM-16", keylen=256, mode="tunnel", pfs=False, pq=False),
     "pq-mlkem768": dict(ike="v2", cipher="AES-GCM-16", keylen=256, mode="tunnel", pfs=False, pq="ML-KEM-768"),
+    "pq-downgrade": dict(ike="v2", cipher="AES-GCM-16", keylen=256, mode="tunnel", pfs=False, pq="offered-but-not-used"),
 }
 IMPL = {"exp07": "libreswan-5.4", "default_pq": "strongswan-6.1.0", "default": "strongswan-5.9.8"}
 
@@ -68,7 +69,7 @@ def experiment_of(relpath, name):
     if relpath.startswith("exp07"): return "EXP-07-libreswan"
     if name.startswith("rekey-"): return "EXP-03-pfs"
     if name.startswith("a7-"): return "EXP-08-mode"
-    if name.startswith(("classical-baseline", "pq-mlkem768")): return "EXP-04-pq"
+    if name.startswith(("classical-baseline", "pq-mlkem768", "pq-downgrade")): return "EXP-04-pq"
     if name.startswith("fail-"): return "EXP-06r1-superseded"
     return "EXP-01/02-cipher"
 
@@ -92,7 +93,7 @@ def main():
         arm = arm_of(name)
         experiment = experiment_of(rel, name)
         impl = (IMPL["exp07"] if rel.startswith("exp07")
-                else IMPL["default_pq"] if name.startswith(("classical-baseline", "pq-mlkem768"))
+                else IMPL["default_pq"] if name.startswith(("classical-baseline", "pq-mlkem768", "pq-downgrade"))
                 else IMPL["default"])
         gt = dict(GT.get(arm, {}))
         gtf = p.with_suffix(".groundtruth.json")

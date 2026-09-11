@@ -63,7 +63,7 @@ exp07/e7-pfs-on.pcap,21292bff6143be7dec4efce558e660b724419714d0219c35bcf28b7dc27
 exp07/e7-pq.pcap,55682b9e2005a3880ea35148f75185494f3a26e68ba3cfd5327071aa747d46cf,44948,142,EXP-07-libreswan,,libreswan-5.4,"T0/T1 (router, keyless)",e7-pq.groundtruth.json,,,,,,locked_test
 fail-proposal-mismatch.pcap,991565abc5dd0f3deb9f27f5054415ac0b3a66ff08deaddd2a42343f16eeda0c,45320,144,EXP-06r1-superseded,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,train
 fail-ts-mismatch.pcap,328afc27f4c88d633f7e0bbb5dc55821b4120e4d347197ff5bec9eb3d9aa019c,43648,140,EXP-06r1-superseded,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,train
-pq-downgrade.pcap,e6c0c9b407b82234800be6f4b22d67c5c66644b70d60539bdffdfc0fa62aa9d8,2820,10,EXP-01/02-cipher,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,train
+pq-downgrade.pcap,e6c0c9b407b82234800be6f4b22d67c5c66644b70d60539bdffdfc0fa62aa9d8,2820,10,EXP-04-pq,pq-downgrade,strongswan-6.1.0,"T0/T1 (router, keyless)",,AES-GCM-16,256,tunnel,False,offered-but-not-used,train
 pq-mlkem768-6.1.0.pcap,816b5c3a90f6a811898f749288653d2f6100c092971affc98244927f71bf693e,44730,139,EXP-04-pq,pq-mlkem768,strongswan-6.1.0,"T0/T1 (router, keyless)",pq-mlkem768-6.1.0.groundtruth.json,AES-GCM-16,256,tunnel,False,ML-KEM-768,train
 pq-mlkem768-run2.pcap,331165b1976c1b4637e26e6db5fba792165b8184653c93d50e58fcbb89c90583,44730,139,EXP-04-pq,pq-mlkem768,strongswan-6.1.0,"T0/T1 (router, keyless)",pq-mlkem768-run2.groundtruth.json,AES-GCM-16,256,tunnel,False,ML-KEM-768,train
 pq-mlkem768.pcap,87b45ab3934c437f0d80d3f268273b5f9083c6ff30cc718b2a26a9a3196eb683,44730,139,EXP-04-pq,pq-mlkem768,strongswan-6.1.0,"T0/T1 (router, keyless)",pq-mlkem768.groundtruth.json,AES-GCM-16,256,tunnel,False,ML-KEM-768,train
