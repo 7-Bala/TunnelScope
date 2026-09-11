@@ -23,7 +23,7 @@ _VMARK = {"PASS": "PASS", "FAIL": "FAIL", "UNKNOWN": "unknown",
 
 def analyze(pcap: str) -> dict:
     baselines = load_baselines()
-    recs = [r for r in build_records(pcap) if getattr(r, "_ike", [])]
+    recs = [r for r in build_records(pcap) if getattr(r, "_ike", []) or getattr(r, "_esp", [])]
     out = []
     for r in recs:
         verdicts = assess_record(r, baselines)

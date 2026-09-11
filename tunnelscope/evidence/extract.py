@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from .record import EvidenceRecord, Finding, Status, Vantage, EvidencePtr
 from ..ingest import tshark
+from ..leakage.leakage import extract_leakage
 
 
 # --------------------------------------------------------------------------- #
@@ -36,15 +37,26 @@ def group_sas(pcap: str) -> list[EvidenceRecord]:
         r._ike = getattr(r, "_ike", [])
         r._ike.append(m)
 
-    # attach ESP packets by SPI proximity (best-effort; ESP SPIs differ from IKE SPIs)
+    # attach ESP packets by address pair
     for r in recs.values():
         r._esp = []
     all_esp_by_pair = defaultdict(list)
     for p in esp:
         all_esp_by_pair[tuple(sorted([p["src"], p["dst"]]))].append(p)
     for r in recs.values():
-        pair = tuple(sorted([r.src, r.dst]))
-        r._esp = all_esp_by_pair.get(pair, [])
+        r._esp = all_esp_by_pair.get(tuple(sorted([r.src, r.dst])), [])
+
+    # ESP-only flows (T0: the SA predates the capture, no IKE visible) still get a
+    # record so size/timing leakage and the cipher sieve can run on them.
+    ike_pairs = {tuple(sorted([r.src, r.dst])) for r in recs.values()}
+    for pair, pkts in all_esp_by_pair.items():
+        if pair in ike_pairs:
+            continue
+        esp_r = EvidenceRecord(src=pkts[0]["src"], dst=pkts[0]["dst"], source_pcap=pcap)
+        esp_r._ike = []
+        esp_r._esp = pkts
+        esp_r._esp_only = True
+        recs[("esp", pair)] = esp_r
 
     return list(recs.values())
 
@@ -223,7 +235,8 @@ def extract_cipher_sieve(r: EvidenceRecord) -> None:
 
 
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,
-                  extract_cipher_sieve, extract_pfs, extract_mode, extract_failure]
+                  extract_cipher_sieve, extract_pfs, extract_mode, extract_failure,
+                  extract_leakage]
 
 
 def build_records(pcap: str) -> list[EvidenceRecord]:

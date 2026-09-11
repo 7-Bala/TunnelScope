@@ -88,9 +88,11 @@ def build_cbom(records: list[EvidenceRecord], source: str = "") -> dict:
     sas = []
     all_comps = []
     for rec in records:
-        if not getattr(rec, "_ike", []):
+        if not getattr(rec, "_ike", []) and not getattr(rec, "_esp", []):
             continue
         comps, gaps, posture = record_to_components(rec)
+        if getattr(rec, "_esp_only", False):
+            posture = "unknown (ESP-only capture; IKE not observed - SA predates capture)"
         all_comps += comps
         sas.append({"sa": rec.key(), "src": rec.src, "dst": rec.dst,
                     "quantum_posture": posture,

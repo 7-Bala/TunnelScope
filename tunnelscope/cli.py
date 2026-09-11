@@ -24,7 +24,7 @@ def cmd_analyze(args):
     print(f"# {args.pcap}")
     print(f"  IKE messages: {summ['n_ike']} | ESP packets: {summ['n_esp']} | exchanges: {', '.join(summ['exchanges']) or 'none'}")
     for r in recs:
-        if not getattr(r, "_ike", []):
+        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
             continue
         print(f"\n  SA {r.key()}  ({r.src} <-> {r.dst})")
         for attr, f in r.findings.items():
@@ -39,7 +39,7 @@ def cmd_assess(args):
     recs = build_records(args.pcap)
     all_v = []
     for r in recs:
-        if not getattr(r, "_ike", []):
+        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
             continue
         vs = assess_record(r, baselines)
         all_v += [v.to_dict() for v in vs]
