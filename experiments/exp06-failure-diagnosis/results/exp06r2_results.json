@@ -1,0 +1,795 @@
+{
+  "n_captures": 35,
+  "reps": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "rules_7class": {
+    "macro_f1": 0.8095,
+    "accuracy": 0.8571,
+    "confusion": {
+      "labels": [
+        "F0-success",
+        "F1-ike-proposal",
+        "F2-child-proposal",
+        "F3-ts-mismatch",
+        "F4-auth-fail",
+        "F5-pfs-mismatch",
+        "F6-unreachable"
+      ],
+      "matrix": [
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          5,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5
+        ]
+      ]
+    }
+  },
+  "rules_6class_F2F3_merged": {
+    "macro_f1": 1.0,
+    "accuracy": 1.0,
+    "confusion": {
+      "labels": [
+        "F0-success",
+        "F1-ike-proposal",
+        "F4-auth-fail",
+        "F5-pfs-mismatch",
+        "F6-unreachable",
+        "CHILD-FAIL(F2|F3)"
+      ],
+      "matrix": [
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          5,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          10
+        ]
+      ]
+    }
+  },
+  "tree_7class_LORO": {
+    "macro_f1": 0.8095,
+    "accuracy": 0.8571,
+    "confusion": {
+      "labels": [
+        "F0-success",
+        "F1-ike-proposal",
+        "F2-child-proposal",
+        "F3-ts-mismatch",
+        "F4-auth-fail",
+        "F5-pfs-mismatch",
+        "F6-unreachable"
+      ],
+      "matrix": [
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          5,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5
+        ]
+      ]
+    }
+  },
+  "tree_6class_F2F3_merged_LORO": {
+    "macro_f1": 1.0,
+    "accuracy": 1.0,
+    "confusion": {
+      "labels": [
+        "F0-success",
+        "F1-ike-proposal",
+        "F4-auth-fail",
+        "F5-pfs-mismatch",
+        "F6-unreachable",
+        "CHILD-FAIL(F2|F3)"
+      ],
+      "matrix": [
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          5,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          10
+        ]
+      ]
+    }
+  },
+  "P-e_F2_vs_F3": {
+    "F2_distinct_feature_vectors": [
+      [
+        1,
+        1,
+        0,
+        1,
+        1,
+        384,
+        256,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "F3_distinct_feature_vectors": [
+      [
+        1,
+        1,
+        0,
+        1,
+        1,
+        384,
+        256,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "overlap": true,
+    "features_that_ever_differ": []
+  },
+  "per_arm_feature_summary": {
+    "F0-success": {
+      "n_init_req": [
+        1
+      ],
+      "n_init_resp": [
+        1
+      ],
+      "init_resp_noprop": [
+        0
+      ],
+      "n_auth_req": [
+        1
+      ],
+      "n_auth_resp": [
+        1
+      ],
+      "auth_req_len": [
+        384
+      ],
+      "auth_resp_len": [
+        336
+      ],
+      "n_ccsa_req": [
+        0
+      ],
+      "n_ccsa_resp": [
+        0
+      ],
+      "ccsa_req_len": [
+        0
+      ],
+      "ccsa_resp_len": [
+        0
+      ],
+      "n_info": [
+        0
+      ],
+      "n_esp": [
+        10
+      ],
+      "init_retransmits": [
+        0
+      ]
+    },
+    "F1-ike-proposal": {
+      "n_init_req": [
+        1
+      ],
+      "n_init_resp": [
+        1
+      ],
+      "init_resp_noprop": [
+        1
+      ],
+      "n_auth_req": [
+        0
+      ],
+      "n_auth_resp": [
+        0
+      ],
+      "auth_req_len": [
+        0
+      ],
+      "auth_resp_len": [
+        0
+      ],
+      "n_ccsa_req": [
+        0
+      ],
+      "n_ccsa_resp": [
+        0
+      ],
+      "ccsa_req_len": [
+        0
+      ],
+      "ccsa_resp_len": [
+        0
+      ],
+      "n_info": [
+        0
+      ],
+      "n_esp": [
+        0
+      ],
+      "init_retransmits": [
+        0
+      ]
+    },
+    "F2-child-proposal": {
+      "n_init_req": [
+        1
+      ],
+      "n_init_resp": [
+        1
+      ],
+      "init_resp_noprop": [
+        0
+      ],
+      "n_auth_req": [
+        1
+      ],
+      "n_auth_resp": [
+        1
+      ],
+      "auth_req_len": [
+        384
+      ],
+      "auth_resp_len": [
+        256
+      ],
+      "n_ccsa_req": [
+        0
+      ],
+      "n_ccsa_resp": [
+        0
+      ],
+      "ccsa_req_len": [
+        0
+      ],
+      "ccsa_resp_len": [
+        0
+      ],
+      "n_info": [
+        0
+      ],
+      "n_esp": [
+        0
+      ],
+      "init_retransmits": [
+        0
+      ]
+    },
+    "F3-ts-mismatch": {
+      "n_init_req": [
+        1
+      ],
+      "n_init_resp": [
+        1
+      ],
+      "init_resp_noprop": [
+        0
+      ],
+      "n_auth_req": [
+        1
+      ],
+      "n_auth_resp": [
+        1
+      ],
+      "auth_req_len": [
+        384
+      ],
+      "auth_resp_len": [
+        256
+      ],
+      "n_ccsa_req": [
+        0
+      ],
+      "n_ccsa_resp": [
+        0
+      ],
+      "ccsa_req_len": [
+        0
+      ],
+      "ccsa_resp_len": [
+        0
+      ],
+      "n_info": [
+        0
+      ],
+      "n_esp": [
+        0
+      ],
+      "init_retransmits": [
+        0
+      ]
+    },
+    "F4-auth-fail": {
+      "n_init_req": [
+        1
+      ],
+      "n_init_resp": [
+        1
+      ],
+      "init_resp_noprop": [
+        0
+      ],
+      "n_auth_req": [
+        1
+      ],
+      "n_auth_resp": [
+        1
+      ],
+      "auth_req_len": [
+        384
+      ],
+      "auth_resp_len": [
+        112
+      ],
+      "n_ccsa_req": [
+        0
+      ],
+      "n_ccsa_resp": [
+        0
+      ],
+      "ccsa_req_len": [
+        0
+      ],
+      "ccsa_resp_len": [
+        0
+      ],
+      "n_info": [
+        0
+      ],
+      "n_esp": [
+        0
+      ],
+      "init_retransmits": [
+        0
+      ]
+    },
+    "F5-pfs-mismatch": {
+      "n_init_req": [
+        1
+      ],
+      "n_init_resp": [
+        1
+      ],
+      "init_resp_noprop": [
+        0
+      ],
+      "n_auth_req": [
+        1
+      ],
+      "n_auth_resp": [
+        1
+      ],
+      "auth_req_len": [
+        384
+      ],
+      "auth_resp_len": [
+        336
+      ],
+      "n_ccsa_req": [
+        1
+      ],
+      "n_ccsa_resp": [
+        1
+      ],
+      "ccsa_req_len": [
+        512
+      ],
+      "ccsa_resp_len": [
+        112
+      ],
+      "n_info": [
+        0
+      ],
+      "n_esp": [
+        10
+      ],
+      "init_retransmits": [
+        0
+      ]
+    },
+    "F6-unreachable": {
+      "n_init_req": [
+        6
+      ],
+      "n_init_resp": [
+        0
+      ],
+      "init_resp_noprop": [
+        0
+      ],
+      "n_auth_req": [
+        0
+      ],
+      "n_auth_resp": [
+        0
+      ],
+      "auth_req_len": [
+        0
+      ],
+      "auth_resp_len": [
+        0
+      ],
+      "n_ccsa_req": [
+        0
+      ],
+      "n_ccsa_resp": [
+        0
+      ],
+      "ccsa_req_len": [
+        0
+      ],
+      "ccsa_resp_len": [
+        0
+      ],
+      "n_info": [
+        0
+      ],
+      "n_esp": [
+        0
+      ],
+      "init_retransmits": [
+        5
+      ]
+    }
+  },
+  "t2_confirmation": {
+    "f00-rep1": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f00-rep2": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f00-rep3": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f00-rep4": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f00-rep5": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f01-rep1": [
+      "received NO_PROPOSAL_CHOSEN notify error"
+    ],
+    "f01-rep2": [
+      "received NO_PROPOSAL_CHOSEN notify error"
+    ],
+    "f01-rep3": [
+      "received NO_PROPOSAL_CHOSEN notify error"
+    ],
+    "f01-rep4": [
+      "received NO_PROPOSAL_CHOSEN notify error"
+    ],
+    "f01-rep5": [
+      "received NO_PROPOSAL_CHOSEN notify error"
+    ],
+    "f02-rep1": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f02-rep2": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f02-rep3": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f02-rep4": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f02-rep5": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f03-rep1": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f03-rep2": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f03-rep3": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f03-rep4": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f03-rep5": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f04-rep1": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f04-rep2": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f04-rep3": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f04-rep4": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f04-rep5": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f05-rep1": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f05-rep2": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f05-rep3": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f05-rep4": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f05-rep5": [
+      "received FRAGMENTATION_SUPPORTED notify",
+      "received SIGNATURE_HASH_ALGORITHMS notify",
+      "received CHILDLESS_IKEV2_SUPPORTED notify"
+    ],
+    "f06-rep1": [],
+    "f06-rep2": [],
+    "f06-rep3": [],
+    "f06-rep4": [],
+    "f06-rep5": []
+  }
+}

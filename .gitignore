@@ -29,3 +29,6 @@ testbed/**/ipsec.d/private/
 
 # tool outputs
 results/**/*.tmp
+
+# EXP-05: raw pcaps are large and hashed in captures/exp05/manifest.csv; the per-packet tables (*.pkts.csv.gz) are committed instead.
+testbed/captures/exp05/*.pcap

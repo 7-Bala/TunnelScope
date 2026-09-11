@@ -1,0 +1,63 @@
+{
+  "f00": {
+    "label": "F0-success",
+    "alice_alias": "10.10.1.100",
+    "bob_alias": "10.10.2.100",
+    "alice_overrides": {},
+    "bob_overrides": {}
+  },
+  "f01": {
+    "label": "F1-ike-proposal",
+    "alice_alias": "10.10.1.101",
+    "bob_alias": "10.10.2.101",
+    "alice_overrides": {},
+    "bob_overrides": {
+      "ike": "aes128-sha256-ecp256"
+    }
+  },
+  "f02": {
+    "label": "F2-child-proposal",
+    "alice_alias": "10.10.1.102",
+    "bob_alias": "10.10.2.102",
+    "alice_overrides": {},
+    "bob_overrides": {
+      "esp": "aes128-sha256"
+    }
+  },
+  "f03": {
+    "label": "F3-ts-mismatch",
+    "alice_alias": "10.10.1.103",
+    "bob_alias": "10.10.2.103",
+    "alice_overrides": {},
+    "bob_overrides": {
+      "remote_ts": "10.10.1.199/32"
+    }
+  },
+  "f04": {
+    "label": "F4-auth-fail",
+    "alice_alias": "10.10.1.104",
+    "bob_alias": "10.10.2.104",
+    "alice_overrides": {},
+    "bob_overrides": {
+      "psk": "0sWRONGwrongWRONGwrongWRONGwrongWRONGwrongWRONG0"
+    }
+  },
+  "f05": {
+    "label": "F5-pfs-mismatch",
+    "alice_alias": "10.10.1.105",
+    "bob_alias": "10.10.2.105",
+    "alice_overrides": {
+      "esp": "aes256gcm16-modp2048"
+    },
+    "bob_overrides": {}
+  },
+  "f06": {
+    "label": "F6-unreachable",
+    "alice_alias": "10.10.1.106",
+    "bob_alias": "10.10.2.199",
+    "alice_overrides": {
+      "remote_addr": "10.10.2.199"
+    },
+    "bob_overrides": null
+  }
+}
