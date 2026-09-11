@@ -36,3 +36,7 @@
 | OQ-24 | Indian government crypto baselines | — | DST/NQM Task Force report found | — | **CLOSED — DST Feb 2026 Task Force report is the anchor (RL-028)** |
 | OQ-28 | Licence of github.com/hypergalois/pqc-tls-observability — can we adopt its JSON schema shapes and registry pattern? | Engineering head start + citation | Check repo | GATE-5 | OPEN |
 | OQ-29 | Can PQ key exchange be detected from KE payload LENGTH alone, without transform-ID decoding? | Would work despite Wireshark #21072; cheapest early experiment in the project | Suricata rule on ike.key_exchange_payload_length + strongSwan x25519-ke1_mlkem768 | GATE-1 | **OPEN — DO THIS FIRST** (see PQ-6) |
+| OQ-26 | Do Zeek/Suricata handle IKE_INTERMEDIATE/ADDKE? | — | Source read 2026-09-11 | — | **CLOSED — NO for Zeek spicy-ipsec, Suricata/ipsec-parser, nDPI; no ADDKE in Arkime; YES Wireshark master (RL-029/030)** |
+| OQ-27 | Is a fix for Wireshark #21072 in flight? | — | GitLab API | — | **CLOSED — fixed 2026-03-14; naming on master, partial in 4.6.4 (RL-029)** |
+| OQ-30 | Does Palo Alto's Quantum Readiness view assess THIRD-PARTY IPsec passing through the firewall, or only its own tunnels? | Decides whether a commercial product already covers fleet-wide IPsec PQ assessment | Palo Alto docs / a demo / practitioner | GATE-5 | OPEN |
+| OQ-31 | Is the CVE-2026-78135 pattern (CREATE_CHILD_SA on an IKE SA that never authenticated) passively detectable? | A CVE-backed capability no tool has | Testbed experiment (T-022) | — | OPEN [EXP] |

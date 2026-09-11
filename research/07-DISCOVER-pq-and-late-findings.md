@@ -1,3 +1,9 @@
+> **⚠️ CORRECTION (2026-09-11, see `11-EXISTING-SOLUTIONS-DEEP-DIVE.md` §6):** PQ-3 below is
+> **out of date.** Wireshark issue #21072 was **closed on 2026-03-14**. Wireshark `master` now names
+> `IKE_INTERMEDIATE`, `ADDKE1–7` and ML-KEM-512/768/1024; the released tshark 4.6.4 shows `ADDKE1`
+> with a numeric transform ID. PQ *dissection* is solved. CS-05 is restated as **PQ posture
+> assessment + downgrade detection** (DEC-017). The DST/NQM policy findings (PQ-4) are unaffected.
+
 # Discover D7 — Late Findings: The Post-Quantum Observability Gap, and a Correction
 
 Two things happened at the end of this research session that materially change the picture. One is

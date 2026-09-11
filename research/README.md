@@ -35,8 +35,10 @@
    pretrained transformers. Pretrained traffic transformers are rejected (DEC-006).
 4. **The gap is real but not where the PS says it is.** It is in interpretation, evidence
    discipline, temporal measurement and exposure quantification — not identification-from-ciphertext.
-5. **strongSwan negotiates hybrid ML-KEM IPsec today; Wireshark cannot decode it (issue #21072);
-   India's DST Task Force mandates crypto inventory and downgrade prevention for CII by 2027.**
+5. **strongSwan negotiates hybrid ML-KEM IPsec today. Wireshark's master branch now parses it
+   (issue #21072 fixed 2026-03-14), but the tools SOCs run — Suricata, Zeek, nDPI, Arkime — do not,
+   and nothing *assesses* PQ posture or downgrade.** India's DST Task Force mandates crypto inventory
+   and downgrade prevention for CII by 2027. *(Corrected 2026-09-11 — see doc 11.)*
 
 ## Decisions on the record
 
@@ -57,3 +59,10 @@ DEC-010 CONTRADICTORY first-class · DEC-011 rules-as-versioned-data · DEC-012 
 **Current phase: broad Discover research frozen. Active work = EXPERIMENT-REGISTER, run against the
 testbed. DEVELOP (≥5 concepts) may proceed in parallel but no concept may be selected before EXP-02
 (the leakage/contamination gate) has run once on real data.**
+
+## Existing-solutions deep dive (added 2026-09-11)
+
+| # | Document | What it settles |
+|---|---|---|
+| 11 | [11-EXISTING-SOLUTIONS-DEEP-DIVE.md](11-EXISTING-SOLUTIONS-DEEP-DIVE.md) | Per-solution mechanism / build / maintenance / PS coverage for 20+ tools, products and competing SIH projects. **Withdraws "Wireshark can't decode PQ IKE"** (fixed 2026-03-14); CS-05 restated as PQ *assessment + downgrade detection* (DEC-017) |
+| — | [data/solutions-maintenance-2026-09-11.json](data/solutions-maintenance-2026-09-11.json) | Live GitHub maintenance metrics behind §4 |

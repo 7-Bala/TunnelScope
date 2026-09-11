@@ -177,3 +177,44 @@ Implication: G-08 upgraded from "no positive evidence" to a CONFIRMED, CITABLE t
 Finding: DST, "Implementation of Quantum Safe Ecosystem in India - Report of the Task Force", February 2026, under the National Quantum Mission, chaired by the CEO of C-DOT. Milestone 1 (CII by 2027, enterprises by 2028): "Inventory cryptographic assets and assess quantum risk"; CBOM adoption in procurement; "mandate CBOM submissions from vendors starting FY 2027-28". Names "Interoperability During Transition: Coexistence of classical and quantum-safe cryptography increases complexity and introduces risks of DOWNGRADE OR INSECURE FALLBACK"; "Assurance and Validation Gaps: Independent validation is critical to ensure correct implementation and PREVENT REVERSION TO VULNERABLE CRYPTOGRAPHY"; "Continuous Assurance: Independent validation, monitoring"; "Contingency Planning: Prepare interim quantum-safe solutions (e.g., proxies, TUNNELS, VPNs, GATEWAYS, QRNG, TRNG)". Medium-term: "validate migration through independent testing", "establish national testbeds". CBOM defined as "a detailed inventory of cryptographic components and configurations used by a system, including algorithms, modes of operation, key sizes, protocols, libraries, random number generators, and cryptographic parameters, covering both classical and quantum-safe cryptography". Operates under an "assume breach" principle recognising Harvest Now Decrypt Later.
 Source: dst.gov.in Report_TaskForce_PQMigration_4Feb26. Confidence: FACT (primary government document).
 Implication: The strongest policy alignment available for an NTRO problem statement. The Task Force's CBOM definition is close to a restatement of PS section C; its named "downgrade or insecure fallback" risk is exactly what CS-05 detects; its "prevent reversion to vulnerable cryptography" is exactly the assurance function. Also connects HNDL to why PFS and PQ key exchange matter now - which makes the PS's PFS requirement policy-relevant rather than academic.
+
+---
+**RL-029 — Wireshark now decodes RFC 9370 / ML-KEM (CORRECTS RL-027).**
+Finding: GitLab issue #21072 was closed 2026-03-14 (filed 2026-03-09). Wireshark master `epan/dissectors/packet-ike.c` (renamed from packet-isakmp.c in commit ff53d6096b, May 2026) defines IKE_INTERMEDIATE (43), ADDKE1-7, and names ML-KEM-512/768/1024 (IDs 35/36/37). Released tshark 4.6.4, run against our own pq-mlkem768.pcap, shows "IKE_INTERMEDIATE (43)" and "ADDKE1 (6)" but a bare "Transform ID: 36".
+Source: Wireshark source, GitLab API, local tshark test. Confidence: FACT.
+Implication: The "leading dissector cannot parse PQ IKE" novelty pillar is withdrawn. PQ *dissection* is solved; PQ *assessment* (offered vs selected, downgrade, policy mapping, fleet scale) is not. DEC-017.
+
+---
+**RL-030 — No SOC-side open-source parser handles IKE_INTERMEDIATE / ADDKE (closes OQ-26).**
+Finding: Zeek has no built-in IPsec analyzer (none of its 33 base protocols); corelight/zeek-spicy-ipsec cites RFC 4306 and has no IKE_INTERMEDIATE or ADDKE (4 commits in 12 months). Suricata delegates IKEv2 to rusticata/ipsec-parser v0.7, whose transform enum stops at ENCR/PRF/INTEG/DH/ESN (last commit 2025-09-16). Arkime isakmp.c indexes version/exchange/enc/hash/dh/auth/vendor-id, with no ADDKE handling found; esp.c sets stopSaving=1. nDPI ipsec.c added IKEv2 SA_INIT transform extraction in April 2026, with no ADDKE and no risk flags.
+Source: parser source code, read 2026-09-11. Confidence: FACT.
+Implication: EXP-04's four signals matter most exactly where SOCs work — in tools that can't parse the ADDKE fields.
+
+---
+**RL-031 — The commercial crypto-inventory market leader does not cover IPsec.**
+Finding: SandboxAQ AQtive Guard's Network Analyzer docs list TLS and SSH only; there is no mention of IPsec, IKE or ESP. Keyfactor AgileSec is agent-based. Palo Alto PAN-OS 12.1 supports RFC 8784/9242/9370 for its own tunnels; whether its Quantum Readiness view covers third-party IPsec is UNKNOWN from the docs.
+Source: vendor docs, 2026-09-11. Confidence: FACT (AQtive Guard docs), UNK (Palo Alto third-party coverage).
+Implication: IPsec is the uncovered protocol in cryptographic inventory / CBOM — a fact now, not an inference.
+
+---
+**RL-032 — Active IKE scanning is IKEv1-built across the board.**
+Finding: Greenbone's installed feed has 95,102 NVTs; 92 mention IKE, 89 of which are version→CVE matches. Only 3 are real protocol probes, and the shared ike_isakmp_func.inc has 0 IKEv2 references. ike-scan's last release was 1.9 in 2013, with 0 commits in 12 months. Nessus's IKE checks are IKEv1-centric. Meanwhile strongSwan 6.1.0 (2026-09-07) disabled IKEv1 by default.
+Source: local Greenbone feed, GitHub API, strongSwan release notes. Confidence: FACT.
+Implication: G-07 strengthened.
+
+---
+**RL-033 — strongSwan 6.1.0 security fixes relevant to us.**
+Finding: CVE-2026-78133 — IKEv2 rekey-collision use-after-free, potential RCE, affects 6.0.0+ (our PQ image runs 6.0.2). CVE-2026-78135 — CREATE_CHILD_SA on an unestablished IKE SA can create a usable Child SA before authentication completes (5.9.7+). 6.1.0 also supports lockdown-confidentiality kernels, where keys cannot be read back from XFRM.
+Source: https://github.com/strongswan/strongswan/releases/tag/6.1.0. Confidence: FACT.
+Implication: T-021 (upgrade the lab image); T-022 (HYP: the CVE-2026-78135 pattern is passively detectable, since exchange type, message ID and SPIs are plaintext); DEC-016 (T3 caveat).
+
+---
+**RL-034 — Competing SIH PS-26160 work exists publicly.**
+Finding: (1) Samarth2357-hacker/ipsec-analyzer (2026-09-07, explicitly "PS-26160"): its RandomForest is trained only on hand-parameterised np.random.normal vectors; it defaults to AES-256-GCM/MODP-2048/PFS=True when no IKE is parsed; it infers PFS as DH group ≥ 14; mode is hardcoded "Tunnel (Assumed)"; the score is uncited deductions; no PQ. (2) naman9271/ipsec-pcap-lab (2026-08-27): a strongSwan dataset lab with 5 profiles, 7 classes, OOD and anomaly sets, SHA-256 provenance, and run-level train/val/locked-test splits — but cipher/IKE version/mode/IP/encapsulation are confounded per profile, it captures one application per capture on an endpoint veth, and has no PQ/PFS/key-length arms.
+Source: repository code, read as data. Confidence: FACT (code contents).
+Implication: the predicted failure pattern is now observed. The competing lab's dataset hygiene is worth matching (T-023). Our differentiation is isolated-factor experimental design, a keyless vantage, and PQ.
+
+---
+**RL-035 — Independent corroboration of the EXP-04 fragmentation finding.**
+Finding: Mallick, Kundu & Kompella (arXiv:2603.28728, Mar 2026): IPsec PQ has "standardised mechanisms but lack[s] widespread production adoption"; "message size and fragmentation often dominate".
+Confidence: STRONG. Implication: our observed ML-KEM-768 IKE fragmentation matches the literature.
