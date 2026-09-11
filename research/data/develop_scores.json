@@ -1,0 +1,642 @@
+{
+ "weights": {
+  "W1": 12,
+  "W2": 12,
+  "W3": 10,
+  "W4": 9,
+  "W5": 9,
+  "W6": 7,
+  "W7": 7,
+  "W8": 6,
+  "W9": 6,
+  "W10": 6,
+  "W11": 5,
+  "W12": 4,
+  "W13": 3,
+  "W14": 2,
+  "W15": 2
+ },
+ "weights_committed_in": "6425af2 (before scoring)",
+ "concepts": {
+  "C1 ML classifier": {
+   "W1": [
+    3,
+    "Covers PS C/E on paper; D shallow"
+   ],
+   "W2": [
+    1,
+    "EXP-02: key length unrecoverable; EXP-05: mixtures give confident wrong labels; ET-BERT collapse (doc 04)"
+   ],
+   "W3": [
+    1,
+    "Duplicates the observed PS-26160 competitor and the crowded ETC field (doc 11 \u00a73.F)"
+   ],
+   "W4": [
+    4,
+    "Easy to build"
+   ],
+   "W5": [
+    2,
+    "Serves only J6, which is largely infeasible (doc 03)"
+   ],
+   "W6": [
+    1,
+    "ML where EXP-01/03/06 show exact deterministic answers, and where EXP-05 shows labels are unreliable"
+   ],
+   "W7": [
+    2,
+    "Black-box labels"
+   ],
+   "W8": [
+    1,
+    "Fabricated/confident-wrong outputs (competitor defaults to AES-256-GCM+PFS; EXP-05 mux)"
+   ],
+   "W9": [
+    4,
+    "Runs offline"
+   ],
+   "W10": [
+    3,
+    "Flashy, but falsifiable against it in Q&A"
+   ],
+   "W11": [
+    2,
+    "Needs large labelled real traffic; ours is synthetic shapes"
+   ],
+   "W12": [
+    4,
+    "Simple stack"
+   ],
+   "W13": [
+    4,
+    "Scales"
+   ],
+   "W14": [
+    2,
+    "Model drift"
+   ],
+   "W15": [
+    4,
+    "Cheap"
+   ]
+  },
+  "C2 Deterministic auditor": {
+   "W1": [
+    3,
+    "C (IKE fields) + part of D; no time dimension, no metadata, no AI"
+   ],
+   "W2": [
+    4,
+    "Signals validated by EXP-01/03/04/06/07; leaves out leakage/time"
+   ],
+   "W3": [
+    2,
+    "Overlaps Suricata weak-crypto rules and Zeek/Wireshark field extraction (doc 11 \u00a73.A)"
+   ],
+   "W4": [
+    5,
+    "Most feasible"
+   ],
+   "W5": [
+    3,
+    "Part of J1/J2"
+   ],
+   "W6": [
+    2,
+    "No AI: honest, but ignores the PS's AI requirement entirely"
+   ],
+   "W7": [
+    5,
+    "Rules cite evidence"
+   ],
+   "W8": [
+    4,
+    "Low false-assurance risk if UNKNOWN is supported"
+   ],
+   "W9": [
+    5,
+    "Offline"
+   ],
+   "W10": [
+    3,
+    "Credible but static"
+   ],
+   "W11": [
+    5,
+    "Testbed ground truth"
+   ],
+   "W12": [
+    5,
+    "Simplest"
+   ],
+   "W13": [
+    4,
+    "Scales"
+   ],
+   "W14": [
+    4,
+    "Rules as data"
+   ],
+   "W15": [
+    5,
+    "Free"
+   ]
+  },
+  "C3 Evidence-tiered engine": {
+   "W1": [
+    4,
+    "A-E mostly: deterministic assessment + reports; metadata/AI only via modules"
+   ],
+   "W2": [
+    5,
+    "Every structural finding feeds it: EXP-01/02/03/04/06/07"
+   ],
+   "W3": [
+    5,
+    "Fills G-05/06/09/13: no tool issues verdicts (doc 11 \u00a75, columns D/E empty)"
+   ],
+   "W4": [
+    4,
+    "Components already run in the testbed"
+   ],
+   "W5": [
+    4,
+    "J1 (EXP-06), J2, J3, J7"
+   ],
+   "W6": [
+    2,
+    "Deterministic by design"
+   ],
+   "W7": [
+    5,
+    "Every verdict cites evidence + named standard (DEC-007)"
+   ],
+   "W8": [
+    5,
+    "UNKNOWN / NOT-OBSERVABLE / CONTRADICTORY first-class (DEC-008/010)"
+   ],
+   "W9": [
+    5,
+    "Offline, passive-first"
+   ],
+   "W10": [
+    4,
+    "Hidden-config reconstruction vs ground truth"
+   ],
+   "W11": [
+    5,
+    "Testbed ground truth"
+   ],
+   "W12": [
+    3,
+    "Moderate"
+   ],
+   "W13": [
+    4,
+    "Per-SA records scale"
+   ],
+   "W14": [
+    5,
+    "Rules as versioned data (DEC-011)"
+   ],
+   "W15": [
+    5,
+    "Free"
+   ]
+  },
+  "C4 Active scanner": {
+   "W1": [
+    2,
+    "PS is about captured traffic; scanning covers gateways' C/D only"
+   ],
+   "W2": [
+    2,
+    "No experiment on active probing; only doc 11 gap evidence"
+   ],
+   "W3": [
+    4,
+    "G-07: every active IKE scanner is IKEv1-built (doc 11 \u00a73.B)"
+   ],
+   "W4": [
+    3,
+    "IKEv2 initiator crafting incl. ADDKE"
+   ],
+   "W5": [
+    3,
+    "J5"
+   ],
+   "W6": [
+    2,
+    "No AI"
+   ],
+   "W7": [
+    4,
+    "Probe/response evidence"
+   ],
+   "W8": [
+    2,
+    "Probing risk; per-target authorisation"
+   ],
+   "W9": [
+    3,
+    "Needs reach to targets"
+   ],
+   "W10": [
+    3,
+    "Moderate"
+   ],
+   "W11": [
+    4,
+    "Own gateways"
+   ],
+   "W12": [
+    2,
+    "Protocol crafting is hard"
+   ],
+   "W13": [
+    3,
+    "Per-target"
+   ],
+   "W14": [
+    3,
+    "-"
+   ],
+   "W15": [
+    5,
+    "Free"
+   ]
+  },
+  "C5 Telemetry auditor": {
+   "W1": [
+    3,
+    "D fully via config; little traffic analysis"
+   ],
+   "W2": [
+    3,
+    "T2 was ground truth in every experiment; IP-TFS contradiction (NOTES #13) shows cross-tier value"
+   ],
+   "W3": [
+    3,
+    "Config auditing exists (STIG checkers); traffic-vs-config cross-check is new"
+   ],
+   "W4": [
+    4,
+    "swanctl/vici, ipsec whack"
+   ],
+   "W5": [
+    4,
+    "J1, J2"
+   ],
+   "W6": [
+    2,
+    "No AI"
+   ],
+   "W7": [
+    5,
+    "Authoritative"
+   ],
+   "W8": [
+    4,
+    "Low"
+   ],
+   "W9": [
+    3,
+    "Needs endpoint credentials/access"
+   ],
+   "W10": [
+    4,
+    "IP-TFS black-hole contradiction demo"
+   ],
+   "W11": [
+    5,
+    "-"
+   ],
+   "W12": [
+    4,
+    "-"
+   ],
+   "W13": [
+    3,
+    "Per-endpoint"
+   ],
+   "W14": [
+    4,
+    "-"
+   ],
+   "W15": [
+    5,
+    "Free"
+   ]
+  },
+  "C6 PQ assurance monitor": {
+   "W1": [
+    2,
+    "Narrow slice of C/D (key exchange only)"
+   ],
+   "W2": [
+    5,
+    "EXP-04 on strongSwan 6.0.2 and 6.1.0; EXP-07 on Libreswan 5.4"
+   ],
+   "W3": [
+    3,
+    "PQ assessment unserved, but PQ dissection is solved in Wireshark master (DEC-017)"
+   ],
+   "W4": [
+    5,
+    "Signals are plaintext and exact"
+   ],
+   "W5": [
+    5,
+    "DST/NQM mandate: inventory + downgrade prevention, CII by 2027"
+   ],
+   "W6": [
+    2,
+    "No AI"
+   ],
+   "W7": [
+    5,
+    "Exact plaintext evidence"
+   ],
+   "W8": [
+    4,
+    "Must avoid notify-only false positives (DEC-020)"
+   ],
+   "W9": [
+    5,
+    "Offline"
+   ],
+   "W10": [
+    5,
+    "Offered-vs-selected downgrade is vivid"
+   ],
+   "W11": [
+    5,
+    "-"
+   ],
+   "W12": [
+    5,
+    "Small"
+   ],
+   "W13": [
+    5,
+    "Cheap per tunnel"
+   ],
+   "W14": [
+    4,
+    "-"
+   ],
+   "W15": [
+    5,
+    "Free"
+   ]
+  },
+  "C7 LLM copilot": {
+   "W1": [
+    2,
+    "Explains captures; no assessment of its own"
+   ],
+   "W2": [
+    1,
+    "No evidence; hallucination risk"
+   ],
+   "W3": [
+    1,
+    "Generic; many exist"
+   ],
+   "W4": [
+    4,
+    "Easy to prototype"
+   ],
+   "W5": [
+    2,
+    "-"
+   ],
+   "W6": [
+    2,
+    "LLM used for facts"
+   ],
+   "W7": [
+    2,
+    "Prose not traceable"
+   ],
+   "W8": [
+    1,
+    "Hallucinated verdicts = false assurance"
+   ],
+   "W9": [
+    2,
+    "Cloud LLM, or heavy local model"
+   ],
+   "W10": [
+    3,
+    "-"
+   ],
+   "W11": [
+    4,
+    "-"
+   ],
+   "W12": [
+    4,
+    "-"
+   ],
+   "W13": [
+    3,
+    "-"
+   ],
+   "W14": [
+    3,
+    "-"
+   ],
+   "W15": [
+    2,
+    "API cost"
+   ]
+  },
+  "C8 Leakage auditor": {
+   "W1": [
+    3,
+    "PS D metadata exposure + C traffic type, reframed"
+   ],
+   "W2": [
+    4,
+    "EXP-05: stable metric, null at chance; caveat synthetic shapes"
+   ],
+   "W3": [
+    5,
+    "G-04: nobody measures IPsec leakage (doc 11)"
+   ],
+   "W4": [
+    4,
+    "Built and run in EXP-05"
+   ],
+   "W5": [
+    3,
+    "J4"
+   ],
+   "W6": [
+    5,
+    "The one place ML beats the simple baseline (F1 0.995 vs 0.51, EXP-05)"
+   ],
+   "W7": [
+    4,
+    "Bits per channel; RF component less transparent"
+   ],
+   "W8": [
+    3,
+    "Privacy-sensitive capability; labels suppressed by design (DEC-021)"
+   ],
+   "W9": [
+    5,
+    "Offline"
+   ],
+   "W10": [
+    4,
+    "Padding on/off, measured"
+   ],
+   "W11": [
+    4,
+    "Needs traffic generation; synthetic"
+   ],
+   "W12": [
+    3,
+    "-"
+   ],
+   "W13": [
+    3,
+    "Per-tunnel windows"
+   ],
+   "W14": [
+    3,
+    "-"
+   ],
+   "W15": [
+    5,
+    "Free"
+   ]
+  },
+  "K1 = C3 + C6 + C8 + C5(opt)": {
+   "W1": [
+    5,
+    "A-E covered: deterministic assessment, PQ, metadata exposure, reports"
+   ],
+   "W2": [
+    5,
+    "Every module experimentally validated (EXP-01..07)"
+   ],
+   "W3": [
+    5,
+    "G-04/05/06/08/09/13"
+   ],
+   "W4": [
+    3,
+    "More to build than any single concept"
+   ],
+   "W5": [
+    5,
+    "J1-J4, J7 + DST/NQM"
+   ],
+   "W6": [
+    4,
+    "One validated ML instrument; deterministic elsewhere; AI where it earns it"
+   ],
+   "W7": [
+    5,
+    "Evidence + standard per verdict"
+   ],
+   "W8": [
+    5,
+    "UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY; DEC-020/021 guards"
+   ],
+   "W9": [
+    5,
+    "Core runs offline at T0/T1; T2 optional"
+   ],
+   "W10": [
+    5,
+    "Hidden-config + PQ downgrade + padding-leakage demos"
+   ],
+   "W11": [
+    5,
+    "Testbed ground truth"
+   ],
+   "W12": [
+    2,
+    "Largest scope"
+   ],
+   "W13": [
+    4,
+    "-"
+   ],
+   "W14": [
+    4,
+    "Modular"
+   ],
+   "W15": [
+    5,
+    "Free"
+   ]
+  },
+  "K2 = C1 + C3": {
+   "W1": [
+    5,
+    "Covers A-E"
+   ],
+   "W2": [
+    3,
+    "Engine validated; classifier labels not (EXP-05 mux)"
+   ],
+   "W3": [
+    4,
+    "-"
+   ],
+   "W4": [
+    3,
+    "-"
+   ],
+   "W5": [
+    4,
+    "-"
+   ],
+   "W6": [
+    2,
+    "ML where the evidence says no"
+   ],
+   "W7": [
+    3,
+    "Mixed"
+   ],
+   "W8": [
+    2,
+    "Confident wrong labels (EXP-05)"
+   ],
+   "W9": [
+    5,
+    "-"
+   ],
+   "W10": [
+    4,
+    "-"
+   ],
+   "W11": [
+    3,
+    "-"
+   ],
+   "W12": [
+    2,
+    "-"
+   ],
+   "W13": [
+    4,
+    "-"
+   ],
+   "W14": [
+    3,
+    "-"
+   ],
+   "W15": [
+    4,
+    "-"
+   ]
+  }
+ }
+}

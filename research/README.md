@@ -1,12 +1,12 @@
 # SIH26160 — Research Repository
 
 **Problem statement:** AI-Powered IPsec VPN Protocol Analyzer and Security Assessment Framework
-(NTRO). **Phase:** Discover + Define complete. **RESEARCH FROZEN — active work moved to
-`registers/EXPERIMENT-REGISTER.md`.** **Last updated:** 2026-09-09.
+(NTRO). **Phase:** Discover → Define → Experimentation → **DEVELOP complete; design selected
+(doc 12). Next: building.** **Last updated:** 2026-09-12.
 
-> ⚠️ **No architecture, technology stack, or ML model has been selected.** Concept generation is
-> Phase 3 (DEVELOP) and must produce ≥5 genuinely distinct concepts evaluated on a weighted matrix.
-> Everything below is evidence and analysis, not design.
+> **Design selected (doc 12, GATE-5 cleared 2026-09-12):** K1 — evidence-tiered posture engine +
+> PQ/downgrade assessor + metadata-leakage module (endpoint cross-check optional). Architecture and
+> technology stack are the first tasks of the build phase (T-030), not decided here.
 
 ## Reading order
 
@@ -56,9 +56,8 @@ DEC-010 CONTRADICTORY first-class · DEC-011 rules-as-versioned-data · DEC-012 
 | 10 | [10-RESEARCH-EXIT-REVIEW.md](10-RESEARCH-EXIT-REVIEW.md) | **Honest exit review; STATUS: RESEARCH FREEZE — MOVE TO EXPERIMENTATION** |
 | — | [registers/EXPERIMENT-REGISTER.md](registers/EXPERIMENT-REGISTER.md) | 8 sequenced experiments with hypotheses, ground truth, falsification criteria — replaces further literature search |
 
-**Current phase: broad Discover research frozen. Active work = EXPERIMENT-REGISTER, run against the
-testbed. DEVELOP (≥5 concepts) may proceed in parallel but no concept may be selected before EXP-02
-(the leakage/contamination gate) has run once on real data.**
+*(Historical: the experimentation phase that followed this review is complete — see
+`../experiments/RESULTS.md` and doc 12.)*
 
 ## Existing-solutions deep dive (added 2026-09-11)
 
@@ -66,3 +65,10 @@ testbed. DEVELOP (≥5 concepts) may proceed in parallel but no concept may be s
 |---|---|---|
 | 11 | [11-EXISTING-SOLUTIONS-DEEP-DIVE.md](11-EXISTING-SOLUTIONS-DEEP-DIVE.md) | Per-solution mechanism / build / maintenance / PS coverage for 20+ tools, products and competing SIH projects. **Withdraws "Wireshark can't decode PQ IKE"** (fixed 2026-03-14); CS-05 restated as PQ *assessment + downgrade detection* (DEC-017) |
 | — | [data/solutions-maintenance-2026-09-11.json](data/solutions-maintenance-2026-09-11.json) | Live GitHub maintenance metrics behind §4 |
+
+## DEVELOP (added 2026-09-12)
+
+| # | Document | What it settles |
+|---|---|---|
+| 12 | [12-DEVELOP.md](12-DEVELOP.md) | 8 concepts + 2 composites, weights committed before scoring, evidence-cited scores, 23-scenario sensitivity, red team, **selection (K1) and staged build order** |
+| — | [data/develop_scores.json](data/develop_scores.json) · [develop_matrix.py](data/develop_matrix.py) | Every score with its evidence; re-runnable arithmetic |
