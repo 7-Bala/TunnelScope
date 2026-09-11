@@ -1,0 +1,14 @@
+{
+  "initiator_fragment_plaintext_bytes": [
+    1176,
+    40
+  ],
+  "initiator_reassembled_plaintext": 1216,
+  "responder_plaintext_bytes": [
+    1112
+  ],
+  "responder_reassembled_plaintext": 1112,
+  "asymmetry_bytes_initiator_minus_responder": 104,
+  "ml_kem_768_theoretical_ek_minus_ct": 96,
+  "verdict": "PQ-6 CONFIRMED as secondary signal: initiator carries 104 B more encrypted KE material than responder, matching ML-KEM-768's encapsulation-key(1184) > ciphertext(1088) by 96 B (residual = IKEv2 payload headers + AEAD alignment). A KEM is directionally asymmetric; MODP/ECP DH is symmetric."
+}

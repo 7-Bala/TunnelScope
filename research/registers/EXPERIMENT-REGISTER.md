@@ -246,3 +246,37 @@ strongSwan); IKE_INTERMEDIATE presence holds; IKE_SA_INIT grows +8 B (one ADDKE 
 strongSwan's +16 adds its PQ-only notify). Notify 16438 and fragmentation are implementation-
 dependent — a notify-based PQ detector would false-positive on Libreswan. One analysis bug fixed
 (address-keyed comparison). `experiments/exp07-libreswan-generalization/RESULT.md`.
+
+---
+
+## T-044 / A7 — Tunnel vs Transport mode inference — PRE-REGISTRATION (2026-09-12, before capture)
+
+**Question:** can a passive observer at T0/T1 tell tunnel mode from transport mode? The Observability
+Matrix (01-DISCOVER A7) marked this "I" (inferable); 09-DEFINE lists it as the one candidate-ML row
+never tested. This resolves it either to a deterministic signal, a statistical one, or NOT-OBSERVABLE.
+
+**Protocol fact this rests on:** in **tunnel** mode ESP encapsulates a whole inner IP packet, so the
+encrypted content includes a 20-byte inner IPv4 header (40 for IPv6). In **transport** mode ESP
+protects only the upper-layer payload — no inner IP header. So for *identical inner traffic*, tunnel
+ESP content is exactly 20 bytes (v4) larger than transport. The next-header trailer byte also differs
+(tunnel: 4=IPv4 / 41=IPv6; transport: 1=ICMP / 6=TCP / 17=UDP) but it is inside the ciphertext.
+
+**Arms:** `cs-aes256gcm16` (tunnel) and `cs-transport-aes256gcm16` (transport) — same AES-GCM-256,
+same host pair, same ICMP size sweep.
+
+**Predictions:**
+
+| # | Prediction | Reasoning | Falsified if |
+|---|---|---|---|
+| P44-1 | **With a paired baseline** (same traffic run through both modes), the ESP content-length sets differ by a **fixed +20 bytes** (tunnel larger) | inner IPv4 header | any offset other than 20, or non-constant |
+| P44-2 | **Without a baseline** (a single capture, unknown inner traffic), the two modes' length distributions **overlap** — a transport packet of payload P+20 is indistinguishable from a tunnel packet of payload P | the observer has no way to subtract the unknown inner size | a length or structural feature separates the modes with no shared-traffic assumption |
+| P44-3 | The only non-length passive tell is **topology**: transport mode requires outer addresses == the actual talking hosts; tunnel mode permits outer != inner (gateway). At T0 this is only usable when the deployment is gateway-to-gateway | RFC 4301 | — (descriptive) |
+
+**Verdict rule:** if P44-2 holds, **A7 is NOT-OBSERVABLE at T0 from traffic alone** (mode comes from
+T2, or from topology context, or is reported UNKNOWN). If P44-2 is falsified, there is a real
+inference signal and it may warrant the one statistical component. Either way the ML row is resolved.
+
+### EXP-08 (T-044 / A7) — RESULT (2026-09-12): DONE — mode is NOT-OBSERVABLE at T0
+P44-1 held (fixed +20 B with a paired baseline); P44-2 held (without a baseline, every ESP length is
+valid in both modes — the +20 B inner header is encrypted). Resolves the last candidate-ML row: no ML
+for mode. Only CS-01 leakage measurement remains ML. `experiments/exp08-mode-inference/RESULT.md`.

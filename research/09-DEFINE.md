@@ -46,7 +46,7 @@ Every PS-derived requirement gets one of: **ACCEPT** (as stated) / **RE-SCOPE** 
 | R1 | Testbed: tunnel/transport, AES variants, DH groups, PFS, IPv4/IPv6, traffic types | **RE-SCOPE** — covering-array design, not full cross-product | DEC-004, 05-DISCOVER §5 |
 | R2 | Capture IKE, ESP, AH, normal traffic | **ACCEPT** | Standard; parsers exist to reuse (D2) |
 | R3 | Identify IPsec protocol / IKE version | **ACCEPT** — O at T1 | Observability Matrix A1–A2 |
-| R4 | Identify tunnel vs transport mode | **RE-SCOPE** — I at T0/T1 (inferred, confidence-tagged), O at T2 | A7 |
+| R4 | Identify tunnel vs transport mode | **RE-SCOPE, resolved by EXP-08** — **NOT-OBSERVABLE at T0** (every ESP length is valid in both modes; the +20 B inner header is encrypted). Reported from T2, or via gateway-vs-host topology with stated confidence, else NOT-OBSERVABLE | A7, EXP-08 |
 | R5 | Identify encryption algorithm (ESP) | **RE-SCOPE, narrowed by EXP-01** — at T0/T1 the sieve reliably answers one question: *block-cipher (CBC) mode vs AEAD/counter/stream* (and only in that direction; AEAD evidence rules out CBC, CBC evidence cannot rule out AEAD). It **cannot** separate AES-GCM / AES-CCM / ChaCha20-Poly1305 / AES-CTR+HMAC (a 5-way ambiguity class). Exact suite at T2 | A5, EXP-01, DEC-013 |
 | R6 | Identify AES-128 vs AES-256 | **DECLINE at T0/T1** (information-theoretically impossible, F-05); **ACCEPT at T1 for IKE SA / T2 for ESP SA** | F-05, headline negative result |
 | R7 | Identify authentication algorithm | **RE-SCOPE** — disambiguate ESP integrity alg. (I at T0/T1) vs IKE peer-auth method (I at T1 via CERTREQ/SIGHASH presence) | A8 |
@@ -79,7 +79,7 @@ independently by practitioner behaviour (PE-01).
 | AES-128 vs 256 at T0/T1 | No — provably impossible | N/A | N/A | No | **Explicitly decline**; report NOT-OBSERVABLE | F-05 |
 | SA lifecycle / effective lifetime | Yes | No | No | No | Time-series change-point detection on SPI transitions | Not a learning problem |
 | PQ key-exchange / downgrade detection | Yes | No | No | No | Deterministic: transform ID where the parser supports ADDKE (Wireshark master); EXP-04's plaintext structural signals where it doesn't (Suricata, Zeek, nDPI, Arkime) | Zero AI needed; **validated by EXP-04** on two strongSwan versions |
-| Tunnel vs transport (no endpoint) | Weakly | Possibly | **Yes, narrow** | No | Calibrated statistical classifier w/ conformal confidence over a small feature set (header length shift, MTU behaviour) | **UNTESTED** — the only candidate ML row with no experiment yet; the transport-mode capture exists (`cs-transport-aes256gcm16`) but mode inference was never run. Must not ship as a claim until tested |
+| Tunnel vs transport (no endpoint) | No | **No** | No | No | Report from T2; topology heuristic with confidence; else NOT-OBSERVABLE | **Resolved by EXP-08: NOT-OBSERVABLE at T0** — no ML warranted. Removed from the ML set |
 | PFS at rekey (no keys) | **Yes** | **No** | No | No | Single length threshold on CREATE_CHILD_SA (**EXP-03**: 256-byte gap) | **Changed from 'ML, narrow' to deterministic** — the signal is a fixed structural gap, not a distribution |
 | Failure-mode diagnosis (CS-02) | **Yes** | **No** | No | No | Rules over plaintext structure with thresholds derived from protocol arithmetic (**EXP-06 r2**: 6-way separation at macro-F1 1.000; a fitted tree does no better). Proposal- vs TS-mismatch reported as one class — *provably* inseparable at T0/T1 | **Changed from 'genuine ML need' to deterministic** — zero-variance structural signatures, nothing to learn |
 | Metadata-leakage quantification (CS-01) | No | **Yes, as instrument not oracle** | **Yes — validated by EXP-05** | No | Random Forest as the adversary-capability instrument + 1-NN Bayes-error bound + per-channel mutual information | **The one place ML measurably beats the simple baseline:** a depth-2 rule measures ~half the leakage (F1 0.51 vs 0.995), so a weak instrument would *understate* exposure — false assurance |
@@ -88,11 +88,10 @@ independently by practitioner behaviour (PE-01).
 | Inner-traffic *identity* classification (literal PS R10) | No | N/A | **Rejected as core claim** | No | Not built as a truth oracle; subsumed into CS-01 | E-01–E-05, DEC-006, G-12 |
 
 **Summary judgment (revised 2026-09-12 after EXP-01…07):** of thirteen capability rows, **eight are
-purely deterministic** (up from six — PFS, failure diagnosis and implementation fingerprinting moved
+purely deterministic**, **one more is NOT-OBSERVABLE at T0 (mode, EXP-08)**, (up from six — PFS, failure diagnosis and implementation fingerprinting moved
 from "ML" to "deterministic" on evidence), **one is declined** (AES key length — provably
 unrecoverable), **one is rejected** (inner-traffic identity as a fact), **one uses ML as a validated
-measuring instrument** (metadata leakage, EXP-05), **one statistical row is still untested** (mode
-inference), and **one uses an LLM strictly for templated narrative, never for facts.** Every change
+measuring instrument** (metadata leakage, EXP-05), **one uses an LLM strictly for templated narrative, never for facts.** Every change
 from the original matrix moved *away* from ML, because the experiments found exact structural
 signatures where we had assumed distributions.
 

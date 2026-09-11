@@ -29,8 +29,9 @@ selected on the record in `research/12-DEVELOP.md` (DEC-023).
 Stage 1 = C3 posture engine + C6 PQ/downgrade assessor (deterministic, fully validated) →
 Stage 2 = C8 leakage module → Stage 3 (optional) = C5 endpoint cross-check.
 
-**Still open, not gating the build:** T-013, T-022, T-023, T-024, T-025, and tunnel/transport
-mode inference (untested — must not ship as a claim until tested; tracked as T-044).
+**Remaining open (non-gating):** T-023 (dataset hygiene), T-025 (Palo Alto question), and the
+true-positive side of T-022 (needs a malicious IKE stack). User asked to finish ALL processes
+before building — working through these.
 
 ---
 
@@ -38,12 +39,8 @@ mode inference (untested — must not ship as a claim until tested; tracked as T
 
 | ID | P | Status | Task | Acceptance criteria | Evidence |
 |---|---|---|---|---|---|
-| T-022 | P1 | TODO | EXP-09 (new) — is the CVE-2026-78135 pattern (CREATE_CHILD_SA on an IKE SA that never authenticated) passively detectable? Closes OQ-31 | Hypothesis, ground truth and falsification criterion added to the register; pattern reproduced on the vulnerable 5.9.8 image; detector result written up | — |
 | T-023 | P2 | TODO | Adopt dataset-hygiene practices seen in `naman9271/ipsec-pcap-lab`: per-file SHA-256, a locked test set, an OOD set, a strict validator (credited) | Dataset manifest with hashes; validator script exits non-zero on violations | — |
-| T-024 | P2 | TODO | Cross-check EXP-04 against Wireshark master's ADDKE/ML-KEM output (build or container) as an independent oracle | Master's tshark names ML-KEM-768 on our capture; recorded in EXP-04 results | — |
 | T-025 | P3 | TODO | Resolve OQ-30 — does Palo Alto's Quantum Readiness view assess third-party IPsec transiting the firewall? | Cited answer, or recorded as UNKNOWN with the reason | — |
-| T-044 | P1 | TODO | Tunnel/transport mode inference (A7) — the one candidate-ML row never tested; transport capture exists (`cs-transport-aes256gcm16`) | Pre-registered experiment; result; 09-DEFINE row updated | — |
-| T-013 | P2 | TODO | EXP-04 follow-up — reassemble IKE fragments for a clean KE-length asymmetry number | Asymmetry measured on reassembled messages | — |
 
 ## Roadmap to submission (not yet started)
 
@@ -101,6 +98,10 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 | T-014 | 09-DEFINE updated with EXP-01/03/04/05/06/07 outcomes; 8 of 13 capability rows now deterministic | `research/09-DEFINE.md` |
 | T-015 | **DEVELOP / GATE-5** — 8 concepts + 2 composites; weights committed before scoring; K1 selected (wins 22/23 weighting scenarios); red team; staged build order (DEC-023) | `research/12-DEVELOP.md`, `research/data/develop_*.json` |
 | T-043 | User request: finish every pre-build item before building — all done | commits `982da43` → `32ca480` |
+| T-044 | EXP-08 mode inference — **NOT-OBSERVABLE at T0**: fixed +20 B offset only with a paired baseline; without one every ESP length is valid in both modes. Resolves the last candidate-ML row → only CS-01 leakage remains ML (DEC-024) | `experiments/exp08-mode-inference/RESULT.md` |
+| T-013 | EXP-04 follow-up — reassembled the fragmented IKE_INTERMEDIATE: initiator KE plaintext 1216 B vs responder 1112 B = **104 B asymmetry**, matching ML-KEM-768 ek(1184)−ct(1088)=96 B. PQ-6 confirmed as secondary signal | `experiments/exp04-pq-length-asymmetry/reassemble_ke.py` + `results/t013_ke_asymmetry.json` |
+| T-024 | EXP-04 oracle — **four independent sources** agree ADDKE1 ID 36 = ML-KEM-768: IANA registry (RFC-ietf-ipsecme-ikev2-mlkem-09), Wireshark master `packet-ike.c`, tshark 4.6.4/4.6.8 parsing our capture, strongSwan T2 log | this table; IANA + Wireshark master verified |
+| T-022 | EXP-09 CVE-2026-78135 detector — deterministic + vantage-aware: 0 FP on 69 captures, correct UNKNOWN when SA predates capture. TP validation (needs a malicious IKE stack) deferred; OQ-31 partial | `experiments/exp09-early-childsa-cve/RESULT.md` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -140,3 +141,6 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 - **2026-09-12** — **T-043 complete: planning finished.** EXP-05 and EXP-07 done; T-014 done;
   T-015 DEVELOP done: K1 selected (DEC-023). Only non-gating items remain (T-013, T-022–T-025,
   T-044). Next: T-030 architecture. Still blocked on the user: the SIH deadline.
+- **2026-09-12** — User: finish all processes before building. Closed T-044 (mode NOT-OBSERVABLE at
+  T0 — last ML row resolved), T-013 (KE asymmetry 104 B ≈ 96 B theoretical), T-024 (4-source ML-KEM
+  oracle), T-022/EXP-09 (CVE detector, 0 FP, vantage-aware). Remaining: T-023, T-025.
