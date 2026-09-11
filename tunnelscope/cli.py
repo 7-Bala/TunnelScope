@@ -12,6 +12,7 @@ from .evidence.extract import build_records
 from .ingest.tshark import capture_summary
 from .assess.engine import assess_record, load_baselines
 from .pq.cbom import build_cbom
+from .report.report import analyze, executive_report, technical_report
 
 
 def cmd_analyze(args):
@@ -61,6 +62,16 @@ def cmd_cbom(args):
     print(_j.dumps(build_cbom(build_records(args.pcap), source=args.pcap), indent=2))
 
 
+def cmd_report(args):
+    a = analyze(args.pcap)
+    if args.level in ("exec", "both"):
+        print(executive_report(a))
+    if args.level == "both":
+        print("\n\n")
+    if args.level in ("tech", "both"):
+        print(technical_report(a))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tunnelscope")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -74,6 +85,9 @@ def main(argv=None):
     cb = sub.add_parser("cbom", help="emit a CycloneDX CBOM for a pcap")
     cb.add_argument("pcap")
     cb.set_defaults(func=cmd_cbom)
+    rp = sub.add_parser("report", help="executive + technical report for a pcap")
+    rp.add_argument("pcap"); rp.add_argument("--level", choices=["exec","tech","both"], default="both")
+    rp.set_defaults(func=cmd_report)
     args = ap.parse_args(argv)
     return args.func(args)
 
