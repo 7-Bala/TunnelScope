@@ -11,6 +11,7 @@ import sys
 from .evidence.extract import build_records
 from .ingest.tshark import capture_summary
 from .assess.engine import assess_record, load_baselines
+from .pq.cbom import build_cbom
 
 
 def cmd_analyze(args):
@@ -55,6 +56,11 @@ def cmd_assess(args):
         import json as _j; print(_j.dumps(all_v, indent=2))
 
 
+def cmd_cbom(args):
+    import json as _j
+    print(_j.dumps(build_cbom(build_records(args.pcap), source=args.pcap), indent=2))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tunnelscope")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -65,6 +71,9 @@ def main(argv=None):
     s = sub.add_parser("assess", help="assess a pcap against named baselines")
     s.add_argument("pcap"); s.add_argument("--json", action="store_true")
     s.set_defaults(func=cmd_assess)
+    cb = sub.add_parser("cbom", help="emit a CycloneDX CBOM for a pcap")
+    cb.add_argument("pcap")
+    cb.set_defaults(func=cmd_cbom)
     args = ap.parse_args(argv)
     return args.func(args)
 
