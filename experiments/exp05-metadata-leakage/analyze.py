@@ -26,6 +26,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
 
 CLASSES = ["voip", "web", "bulk", "interactive", "video"]
 WIN = 2.0                         # seconds per window
@@ -52,17 +53,28 @@ def load_sessions(capdir: Path):
     return sessions
 
 
-def window_features(pkts):
-    """Split a session into WIN-second windows; one feature vector per window."""
+COMPLETE_ONLY = True
+
+
+def window_features(pkts, complete_only=None):
+    """Split a session into WIN-second windows; one feature vector per window.
+
+    complete_only drops the session's final PARTIAL window. Found after the
+    first full run: every misclassification in every fold was window #10, i.e.
+    the tail after the generator stopped, containing only TCP teardown
+    stragglers. Those windows describe connection shutdown, not the traffic
+    class. Both variants are reported in the results (see main())."""
+    complete_only = COMPLETE_ONLY if complete_only is None else complete_only
     if not pkts:
         return []
     t0 = pkts[0][0]
+    last_full = int((pkts[-1][0] - t0) // WIN) - 1 if complete_only else 10**9
     buckets = defaultdict(list)
     for t, d, n in pkts:
         buckets[int((t - t0) // WIN)].append((t, d, n))
     feats = []
-    for _, w in sorted(buckets.items()):
-        if len(w) < MIN_PKTS:
+    for idx, w in sorted(buckets.items()):
+        if len(w) < MIN_PKTS or idx > last_full:
             continue
         v = []
         for d in ("out", "in"):
@@ -128,14 +140,23 @@ def mutual_info_uniform_prior(sessions, key):
     return max(0.0, mi + mm)
 
 
+# Each channel is measured ALONE. An earlier draft keyed size bins on
+# (direction, size), which let direction information leak into the "size"
+# number (caught in a dry run: 0.053 bits of "size" MI under TFC padding, where
+# only ONE ESP length exists and size MI must be exactly 0). Fixed before the
+# final analysis; direction is now reported as its own channel.
 def size_bin(t, d, n, prev):
-    return (d, n // 32)
+    return n // 32
 
 
 def iat_bin(t, d, n, prev):
     if prev is None:
         return None
-    return (d, int(np.floor(np.log2(max(t - prev, 1e-6)))))
+    return int(np.floor(np.log2(max(t - prev, 1e-6))))
+
+
+def dir_bin(t, d, n, prev):
+    return d
 
 
 def main():
@@ -155,6 +176,10 @@ def main():
                 X.append(v); y.append(s["cls"]); g.append(s["rep"])
         X, y, g = np.array(X), np.array(y), np.array(g)
         preds, f1s = loro_eval(X, y, g, rf)
+        # Added before the final run (not in the pre-registration): a depth-2 tree as a
+        # "trivial rule" baseline, to answer DEVELOP's question of whether a learned
+        # model adds anything over a two-threshold rule.
+        _, f1s_stump = loro_eval(X, y, g, lambda: DecisionTreeClassifier(max_depth=2, random_state=0))
         nn_pred, _ = loro_eval(X, y, g, lambda: KNeighborsClassifier(n_neighbors=1), scaler=True)
         r_nn = float((nn_pred != y).mean())
         # permutation null: shuffle the session->class mapping, keep windows grouped by session
@@ -171,6 +196,7 @@ def main():
             "rf_macro_f1_LORO_mean": round(float(np.mean(f1s)), 4),
             "rf_macro_f1_LORO_std": round(float(np.std(f1s)), 4),
             "rf_macro_f1_per_fold": [round(float(f), 4) for f in f1s],
+            "depth2_tree_macro_f1_LORO_mean": round(float(np.mean(f1s_stump)), 4),
             "rf_per_class_f1": {c: round(float(f), 3) for c, f in
                                 zip(CLASSES, f1_score(y, preds, labels=CLASSES, average=None, zero_division=0))},
             "one_nn_error_LORO": round(r_nn, 4),
@@ -178,6 +204,7 @@ def main():
             "permutation_null_rf_macro_f1_mean": round(float(np.mean(null_f1)), 4),
             "mi_size_bits_per_packet": round(mutual_info_uniform_prior(S, size_bin), 4),
             "mi_timing_bits_per_packet": round(mutual_info_uniform_prior(S, iat_bin), 4),
+            "mi_direction_bits_per_packet": round(mutual_info_uniform_prior(S, dir_bin), 4),
             "mi_max_bits": round(math.log2(L), 4),
             "distinct_esp_lengths": len(lens), "top_esp_lengths": lens.most_common(5),
             "total_bytes": int(sum(n for s in S for _, _, n in s["pkts"])),
@@ -211,10 +238,10 @@ def main():
     (res / "exp05_results.json").write_text(json.dumps(report, indent=2, default=str))
     for arm in ("base", "tfc"):
         a = report["arms"][arm]
-        print(f"[{arm}] RF F1 {a['rf_macro_f1_LORO_mean']:.3f}±{a['rf_macro_f1_LORO_std']:.3f}  "
+        print(f"[{arm}] RF F1 {a['rf_macro_f1_LORO_mean']:.3f}±{a['rf_macro_f1_LORO_std']:.3f}  depth2 {a['depth2_tree_macro_f1_LORO_mean']:.3f}  "
               f"null {a['permutation_null_rf_macro_f1_mean']:.3f}  1NN err {a['one_nn_error_LORO']:.3f}  "
               f"BER>= {a['bayes_error_lower_bound_cover_hart']:.3f}  MI size {a['mi_size_bits_per_packet']:.3f}b  "
-              f"MI timing {a['mi_timing_bits_per_packet']:.3f}b  distinct lens {a['distinct_esp_lengths']}")
+              f"MI timing {a['mi_timing_bits_per_packet']:.3f}b  MI dir {a['mi_direction_bits_per_packet']:.3f}b  distinct lens {a['distinct_esp_lengths']}")
         print(f"        per-class F1 {a['rf_per_class_f1']}")
     print(f"tfc overhead: x{report['tfc_bandwidth_overhead_ratio']}")
     print(f"mux hit-rate {report['mux']['hit_rate_top1_in_present_pair']} (chance {report['mux']['chance_hit_rate']})",
@@ -222,4 +249,18 @@ def main():
 
 
 if __name__ == "__main__":
+    import copy
+    main()                                   # primary: complete windows only
+    COMPLETE_ONLY = False                    # secondary: all windows, incl. the partial tail
+    _res = Path(sys.argv[2] if len(sys.argv) > 2 else "results")
+    primary = json.loads((_res / "exp05_results.json").read_text())
+    print("\n--- secondary: ALL windows (incl. partial final window) ---")
     main()
+    secondary = json.loads((_res / "exp05_results.json").read_text())
+    primary["secondary_all_windows_incl_partial_tail"] = {
+        "arms": {a: {k: v for k, v in secondary["arms"][a].items()
+                     if k.startswith(("rf_", "depth2", "one_nn", "bayes", "permutation"))}
+                 for a in ("base", "tfc")},
+        "mux_hit_rate": secondary["mux"]["hit_rate_top1_in_present_pair"]}
+    primary["window_definition"] = "complete 2-s windows only (final partial window dropped); secondary block = all windows"
+    (_res / "exp05_results.json").write_text(json.dumps(primary, indent=2, default=str))

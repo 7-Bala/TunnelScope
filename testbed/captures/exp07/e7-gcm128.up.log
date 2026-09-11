@@ -1,0 +1,7 @@
+"e7-gcm128" #8: initiating IKEv2 connection to 10.10.2.31 using UDP
+"e7-gcm128" #8: sent IKE_SA_INIT request to 10.10.2.31:UDP/500
+"e7-gcm128" #8: processed IKE_SA_INIT response from 10.10.2.31:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_256_128 prf=HMAC_SHA2_256 ke=MODP2048}, initiating IKE_AUTH
+"e7-gcm128" #8: sent IKE_AUTH request to 10.10.2.31:UDP/500 with shared-key-mac and FQDN '@a-e7-gcm128'; Child SA #9 {ESP <0x82bde49e} [10.10.1.31/32===10.10.2.31/32]
+"e7-gcm128" #8: processing IKE_AUTH response from 10.10.2.31:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}
+"e7-gcm128" #8: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-gcm128'
+"e7-gcm128" #9: initiator established Child SA using #8; IPsec tunnel [10.10.1.31/32===10.10.2.31/32] {ESP/ESN=>0xe123ab43 <0x82bde49e xfrm=AES_GCM_16_128 DPD=passive}

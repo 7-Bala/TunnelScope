@@ -231,3 +231,18 @@ ESN by default (strongSwan: none) — this doesn't change wire lengths.
 **Method:** captures at the keyless router, filtered per arm; same analysis code as EXP-01/02/03/04,
 pointed at Libreswan captures. Verdict per signal: **holds** / **holds in direction only** /
 **implementation-dependent** / **fails**.
+
+### EXP-05 — RESULT (2026-09-12): DONE — all five predictions held; P5-3 stronger than predicted
+TFC padding to MTU: one ESP length, size MI exactly 0, +54% bytes — and RF macro-F1 0.995 vs 1.000
+unpadded (timing ≈ 1 bit/packet either way). Stable folds (std ≤ 0.009); permutation null at chance.
+Depth-2 rule measures ~half the leakage (0.51), so the learned instrument is justified (CS-01).
+Mixtures: video+interactive labelled "web" in 100% of windows. Absolute F1 is a property of the
+synthetic shapes, not of real traffic. Two analysis bugs caught before the final numbers
+(direction leaking into size MI; the partial final window). `experiments/exp05-metadata-leakage/RESULT.md`.
+
+### EXP-07 — RESULT (2026-09-12): DONE — 7/7 predictions held
+Libreswan 5.4: sieve classes identical; negative control holds; PFS gap exactly 256 B (same as
+strongSwan); IKE_INTERMEDIATE presence holds; IKE_SA_INIT grows +8 B (one ADDKE transform;
+strongSwan's +16 adds its PQ-only notify). Notify 16438 and fragmentation are implementation-
+dependent — a notify-based PQ detector would false-positive on Libreswan. One analysis bug fixed
+(address-keyed comparison). `experiments/exp07-libreswan-generalization/RESULT.md`.

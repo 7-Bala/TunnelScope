@@ -1,0 +1,18 @@
+{
+  "arm": "e7-classical",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 9,
+    "lsw_a": "10.10.1.39",
+    "lsw_b": "10.10.2.39",
+    "esp": "aes_gcm256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-04 baseline"
+  },
+  "pluto_log_T2": [
+    "\"e7-classical\" #28: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-classical'",
+    "\"e7-classical\" #29: initiator established Child SA using #28; IPsec tunnel [10.10.1.39/32===10.10.2.39/32] {ESP/ESN=>0x0d16657e <0x01b8f7d6 xfrm=AES_GCM_16_256 DPD=passive}"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}

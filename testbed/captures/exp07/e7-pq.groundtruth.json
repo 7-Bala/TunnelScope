@@ -1,0 +1,22 @@
+{
+  "arm": "e7-pq",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 10,
+    "lsw_a": "10.10.1.40",
+    "lsw_b": "10.10.2.40",
+    "esp": "aes_gcm256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048;addke1=ml_kem_768",
+    "feeds": "EXP-04 PQ"
+  },
+  "pluto_log_T2": [
+    "\"e7-pq\" #30: processed IKE_SA_INIT response from 10.10.2.40:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_256_128 prf=HMAC_SHA2_256 ke=MODP2048 addke1=ML_KEM_768}, initiating IKE_INTERMEDIATE",
+    "\"e7-pq\" #30: sent IKE_INTERMEDIATE request to 10.10.2.40:UDP/500 {addke1=ML_KEM_768}",
+    "\"e7-pq\" #30: processing IKE_INTERMEDIATE response from 10.10.2.40:UDP/500 containing SK{KE} reassembled from 3 fragments",
+    "\"e7-pq\" #30: initiator processed IKE_INTERMEDIATE, initiating IKE_AUTH",
+    "\"e7-pq\" #30: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-pq'",
+    "\"e7-pq\" #31: initiator established Child SA using #30; IPsec tunnel [10.10.1.40/32===10.10.2.40/32] {ESP/ESN=>0x525b69f8 <0xd9f0c69f xfrm=AES_GCM_16_256 DPD=passive}"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}

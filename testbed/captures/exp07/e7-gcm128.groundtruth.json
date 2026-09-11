@@ -1,0 +1,18 @@
+{
+  "arm": "e7-gcm128",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 1,
+    "lsw_a": "10.10.1.31",
+    "lsw_b": "10.10.2.31",
+    "esp": "aes_gcm128",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01, EXP-02"
+  },
+  "pluto_log_T2": [
+    "\"e7-gcm128\" #8: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-gcm128'",
+    "\"e7-gcm128\" #9: initiator established Child SA using #8; IPsec tunnel [10.10.1.31/32===10.10.2.31/32] {ESP/ESN=>0xe123ab43 <0x82bde49e xfrm=AES_GCM_16_128 DPD=passive}"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}

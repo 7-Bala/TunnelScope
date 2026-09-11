@@ -1,0 +1,18 @@
+{
+  "arm": "e7-chacha",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 5,
+    "lsw_a": "10.10.1.35",
+    "lsw_b": "10.10.2.35",
+    "esp": "chacha20_poly1305",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-01"
+  },
+  "pluto_log_T2": [
+    "\"e7-chacha\" #16: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-chacha'",
+    "\"e7-chacha\" #17: initiator established Child SA using #16; IPsec tunnel [10.10.1.35/32===10.10.2.35/32] {ESP/ESN=>0x64bb2a86 <0xa7b9b062 xfrm=CHACHA20_POLY1305 DPD=passive}"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}

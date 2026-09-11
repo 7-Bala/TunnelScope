@@ -1,0 +1,171 @@
+{
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127) <-> same",
+  "verdicts": {
+    "P7-1 sieve": "HOLDS",
+    "P7-2 negative control": "HOLDS",
+    "P7-3 PFS": "HOLDS",
+    "P7-4a IKE_INTERMEDIATE presence": "HOLDS",
+    "P7-4b IKE_SA_INIT growth": "HOLDS-IN-DIRECTION",
+    "P7-4c notify 16438": "IMPLEMENTATION-DEPENDENT (classical=True, pq=True)",
+    "P7-4d fragmentation pattern": "IMPLEMENTATION-DEPENDENT (libreswan IKE_INTERMEDIATE sizes by src: {'10.10.1.40': [576, 576, 336], '10.10.2.40': [576, 576, 240]})"
+  },
+  "exp01_sieve": {
+    "e7-gcm128": {
+      "n_esp": 132,
+      "final_candidates": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "true_family_survived": true,
+      "same_set_as_strongswan": true
+    },
+    "e7-gcm256": {
+      "n_esp": 132,
+      "final_candidates": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "true_family_survived": true,
+      "same_set_as_strongswan": true
+    },
+    "e7-cbc128": {
+      "n_esp": 132,
+      "final_candidates": [
+        "AES-CBC+HMAC-SHA256-128",
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "true_family_survived": true,
+      "same_set_as_strongswan": true
+    },
+    "e7-cbc256": {
+      "n_esp": 132,
+      "final_candidates": [
+        "AES-CBC+HMAC-SHA256-128",
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "true_family_survived": true,
+      "same_set_as_strongswan": true
+    },
+    "e7-chacha": {
+      "n_esp": 132,
+      "final_candidates": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "true_family_survived": true,
+      "same_set_as_strongswan": true
+    },
+    "e7-ctr128": {
+      "n_esp": 132,
+      "final_candidates": [
+        "AES-CCM-16",
+        "AES-CTR+HMAC-SHA1-96",
+        "AES-CTR+HMAC-SHA256-128",
+        "AES-GCM-16",
+        "ChaCha20-Poly1305"
+      ],
+      "true_family_survived": true,
+      "same_set_as_strongswan": true
+    }
+  },
+  "exp02_negative_control": {
+    "e7-gcm128 vs e7-gcm256": {
+      "identical_length_sets": true,
+      "symmetric_difference": [],
+      "classifier_mean_accuracy": 0.28
+    },
+    "e7-cbc128 vs e7-cbc256": {
+      "identical_length_sets": true,
+      "symmetric_difference": [],
+      "classifier_mean_accuracy": 0.33
+    }
+  },
+  "exp03_pfs": {
+    "pfs_off_create_child_sa_sizes": [
+      220,
+      220,
+      236,
+      236
+    ],
+    "pfs_on_create_child_sa_sizes": [
+      492,
+      492,
+      508,
+      508
+    ],
+    "min_gap_bytes": 256,
+    "strongswan_gap_bytes": 256
+  },
+  "exp04_pq": {
+    "classical": {
+      "arm": "e7-classical",
+      "signal1_intermediate_exchange_supported_notify_present": true,
+      "signal2_ike_sa_init_sizes_by_src": {
+        "10.10.1.39": 476,
+        "10.10.2.39": 484
+      },
+      "signal3_n_ike_intermediate_messages": 0,
+      "signal3_ike_intermediate_present": false,
+      "signal4_ike_intermediate_sizes_by_src": {},
+      "signal4_fragmentation_observed": false
+    },
+    "pq": {
+      "arm": "e7-pq",
+      "signal1_intermediate_exchange_supported_notify_present": true,
+      "signal2_ike_sa_init_sizes_by_src": {
+        "10.10.1.40": 484,
+        "10.10.2.40": 492
+      },
+      "signal3_n_ike_intermediate_messages": 6,
+      "signal3_ike_intermediate_present": true,
+      "signal4_ike_intermediate_sizes_by_src": {
+        "10.10.1.40": [
+          576,
+          576,
+          336
+        ],
+        "10.10.2.40": [
+          576,
+          576,
+          240
+        ]
+      },
+      "signal4_fragmentation_observed": true
+    },
+    "ike_sa_init_delta_bytes": {
+      "initiator": 8,
+      "responder": 8
+    },
+    "classical_ike_sa_init_by_role": {
+      "initiator": 476,
+      "responder": 484
+    },
+    "pq_ike_sa_init_by_role": {
+      "initiator": 484,
+      "responder": 492
+    },
+    "strongswan_reference": {
+      "delta_bytes": 16,
+      "intermediate_msgs": "0 vs 3",
+      "notify_16438": "PQ arm only",
+      "fragmentation": "initiator 2, responder 1"
+    }
+  }
+}
