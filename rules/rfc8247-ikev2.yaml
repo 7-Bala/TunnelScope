@@ -1,0 +1,16 @@
+baseline: RFC-8247
+authority: "RFC 8247 - Algorithm Implementation Requirements and Usage Guidance for IKEv2 (updated by RFC 9395)"
+url: "https://www.rfc-editor.org/rfc/rfc8247.html"
+rules:
+  - id: RFC8247-DH-MUST
+    title: "IKE SA key exchange must be at least MODP-2048 (group 14)"
+    attribute: ike_dh_group
+    assert: {op: dh_group_ge, value: 14}
+    severity: high
+    fail_message: "IKE DH group below the RFC 8247 mandatory-to-implement baseline (group 14)"
+  - id: RFC8247-ENCR
+    title: "IKE encryption should be AES (GCM preferred; CBC acceptable)"
+    attribute: ike_encr
+    assert: {op: matches_any, value: ["AES-GCM", "AES-CBC", "ChaCha20"]}
+    severity: medium
+    fail_message: "IKE encryption is not an approved AES/ChaCha20 mode"
