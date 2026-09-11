@@ -23,7 +23,7 @@
 ## Current focus
 
 **T-043 (user, 2026-09-11): finish every pre-build item completely before any building.**
-Order: ~~T-016/T-021~~ → **T-010 (next)** → T-012 → T-011 → T-017 → T-014 → **T-015 last** (it
+Order: ~~T-016/T-021~~ → ~~T-010~~ → **T-012 (running)** → T-011 → ~~T-017~~ → T-014 (partly done) → **T-015 last** (it
 consumes all the evidence). Nothing in the Roadmap (T-030+) starts until T-043 is DONE.
 
 **Readiness check (2026-09-11): planning is NOT complete.** One hard gate is unfinished.
@@ -50,13 +50,11 @@ Rule: ship no ML claim before its experiment lands.
 | T-023 | P2 | TODO | Adopt dataset-hygiene practices seen in `naman9271/ipsec-pcap-lab`: per-file SHA-256, a locked test set, an OOD set, a strict validator (credited) | Dataset manifest with hashes; validator script exits non-zero on violations | — |
 | T-024 | P2 | TODO | Cross-check EXP-04 against Wireshark master's ADDKE/ML-KEM output (build or container) as an independent oracle | Master's tshark names ML-KEM-768 on our capture; recorded in EXP-04 results | — |
 | T-025 | P3 | TODO | Resolve OQ-30 — does Palo Alto's Quantum Readiness view assess third-party IPsec transiting the firewall? | Cited answer, or recorded as UNKNOWN with the reason | — |
-| T-010 | P0 | TODO | EXP-06 round 2 — fix shared-traffic-selector contamination, then rerun failure diagnosis | Distinct traffic selector per arm; all other SAs terminated before each capture; clean captures; result written up | `experiments/exp06-failure-diagnosis/` |
-| T-011 | P0 | TODO | EXP-07 — Libreswan cross-implementation check of EXP-01/03/04 | Libreswan image; the same arms rerun; per-signal verdict: holds / implementation-dependent | — |
-| T-012 | P0 | TODO | EXP-05 — metadata leakage with TFC padding / IP-TFS (mutual information / Bayes error) | MI and BER before/after for `tfc_padding=0/mtu` and `mode=iptfs` | — |
+| T-011 | P0 | TODO | EXP-07 — Libreswan cross-implementation check of EXP-01/03/04 (+EXP-06 relations). Use Fedora rawhide: libreswan **5.4**-5.fc46 + NSS 3.127 (first Libreswan with ML-KEM/RFC 9370); pin package version + image digest | Libreswan image; the same arms rerun; per-signal verdict: holds / implementation-dependent | — |
+| T-012 | P0 | DOING | EXP-05 — metadata leakage (MI / Bayes error / RF as instrument). **IP-TFS arm dropped: Docker kernel lacks CONFIG_XFRM_IPTFS** (NOTES.md #13) | Pre-registered P5-1..P5-5 tested; MI and BER for base vs `tfc_padding=mtu`; mux arm; null control | Pre-registration in EXPERIMENT-REGISTER; captures running |
 | T-013 | P2 | TODO | EXP-04 follow-up — reassemble IKE fragments for a clean KE-length asymmetry number | Asymmetry measured on reassembled messages | — |
-| T-014 | **P0** | TODO | Update 09-DEFINE.md R5 and the AI Necessity Matrix with EXP-01's narrower claim | Edited rows cite EXP-01 | — |
+| T-014 | **P0** | DOING | Update 09-DEFINE.md with experiment outcomes | R5/R8/R14 + matrix rows for sieve/PQ/PFS/failure-diagnosis done; **remaining:** summary-judgment line + EXP-05 row after T-012 | `research/09-DEFINE.md` |
 | T-015 | **P0** | TODO | **[GATE-5 — blocks building]** DEVELOP — generate ≥5 concepts, weighted matrix, red team | Doc with matrix and selection rationale | — |
-| T-017 | P0 | TODO | Confirm the PS ID (SIH26160 vs SIH26161) — OQ-16 | Official portal checked | — |
 
 ## Roadmap to submission (not yet started)
 
@@ -107,6 +105,8 @@ demo video, technical documentation, dataset. None has started; each waits on DE
 | T-020g | Registers updated; correction banner on doc 07; README fixed; committed and pushed | `research/registers/*`, doc 07, commit `c39dc60` |
 | T-016 | Fixed `datetime.utcnow()` deprecation in `run_arm.sh` (already correct in `run_pq_arm.sh`); confirmed no other occurrences in testbed/ or experiments/ | `testbed/scripts/run_arm.sh` |
 | T-021 | Upgraded PQ lab image 6.0.2 → 6.1.0 (fixes CVE-2026-78133, potential RCE). Clean rebuild, no plugin regressions. Reran EXP-04: all 4 signals byte-for-byte identical to 6.0.2 | `testbed/images/strongswan-pq/Dockerfile`, `testbed/NOTES.md` #12, `experiments/exp04-pq-length-asymmetry/results/exp04_6.1.0_confirmation.md` |
+| T-010 | EXP-06 round 2 — all 6 pre-registered predictions held; rules = decision tree (macro-F1 1.000 with F2/F3 merged); F2 vs F3 provably inseparable passively; **CS-02 needs no ML** (DEC-018) | `experiments/exp06-failure-diagnosis/RESULT_R2.md`, `results/exp06r2_results.json`, 35 captures in `testbed/captures/exp06r2/` |
+| T-017 | PS ID confirmed **SIH26160** (NTRO, "AI-Powered IPsec VPN Protocol Analyzer…"); SIH26161 is an unrelated NTRO dam-break statement. Earlier doubt came from a search-engine summary | Raw dataset `NoBugNinja/Smart-India-Hackathon-SIH-2026-Problem-Statements/data/sih2026_ps_20260822_211225.json` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -134,3 +134,8 @@ demo video, technical documentation, dataset. None has started; each waits on DE
   T-010/T-011/T-012/T-016/T-017/T-021 to P0 alongside T-014/T-015. Started T-021 + T-016.
 - **2026-09-12** — T-016 and T-021 done (evidence above). EXP-04 reconfirmed on strongSwan 6.1.0,
   identical signals — the finding was not a build artifact. Moving to T-010 (EXP-06 round 2).
+- **2026-09-12** — T-010 done: EXP-06 r2 matched all six pre-registered predictions; failure
+  diagnosis is deterministic (DEC-018). T-017 done: SIH26160 confirmed. T-014 mostly done (PFS and
+  failure diagnosis both moved from "ML" to deterministic, DEC-019). Found that Docker's kernel lacks
+  IP-TFS (NOTES.md #13) — EXP-05's IP-TFS arm dropped; EXP-05 now running. Libreswan 5.4 (PQ-capable)
+  located in Fedora rawhide for EXP-07.

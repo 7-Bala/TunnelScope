@@ -1,0 +1,16 @@
+{
+  "arm": "f00",
+  "rep": 1,
+  "designed_label": "F0-success",
+  "captured_since_utc": "2026-09-11T07:12:55Z",
+  "charon_log_T2": [
+    "parsed IKE_SA_INIT response 0 [ SA KE No N(NATD_S_IP) N(NATD_D_IP) N(FRAG_SUP) N(HASH_ALG) N(CHDLESS_SUP) N(MULT_AUTH) ]",
+    "received FRAGMENTATION_SUPPORTED notify",
+    "received SIGNATURE_HASH_ALGORITHMS notify",
+    "received CHILDLESS_IKEV2_SUPPORTED notify",
+    "parsed IKE_AUTH response 1 [ IDr AUTH SA TSi TSr N(MOBIKE_SUP) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) ]",
+    "IKE_SA f00[8] established between 10.10.1.100[a-f00]...10.10.2.100[b-f00]",
+    "CHILD_SA f00{12} established with SPIs c6ce6f0b_i c3f9d17b_o and TS 10.10.1.100/32 === 10.10.2.100/32"
+  ],
+  "note": "designed_label is the ground truth (the misconfiguration we built); charon_log_T2 is the endpoint's own confirmation. Neither is derived from the capture."
+}

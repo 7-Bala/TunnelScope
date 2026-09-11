@@ -1,0 +1,15 @@
+{
+  "arm": "f06",
+  "rep": 2,
+  "designed_label": "F6-unreachable",
+  "captured_since_utc": "2026-09-11T17:19:32Z",
+  "charon_log_T2": [
+    "retransmit 1 of request with message ID 0",
+    "retransmit 2 of request with message ID 0",
+    "retransmit 3 of request with message ID 0",
+    "retransmit 4 of request with message ID 0",
+    "retransmit 5 of request with message ID 0",
+    "giving up after 5 retransmits"
+  ],
+  "note": "designed_label is the ground truth (the misconfiguration we built); charon_log_T2 is the endpoint's own confirmation. Neither is derived from the capture."
+}

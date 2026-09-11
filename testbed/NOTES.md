@@ -116,3 +116,19 @@ never used `gcrypt`, using `openssl` instead).
 `INTERMEDIATE_EXCHANGE_SUPPORTED` notify (16438) present only in the PQ capture, zero vs three
 `IKE_INTERMEDIATE` messages, and identical fragmentation (initiator 1268+132 bytes, responder 1200).
 See `experiments/exp04-pq-length-asymmetry/results/exp04_6.1.0_confirmation.md`.
+
+### 13. IP-TFS (RFC 9347) cannot run in this lab: the kernel lacks it — and strongSwan reports success anyway
+Docker Desktop's VM kernel (`7.0.12-linuxkit`) is built with **`# CONFIG_XFRM_IPTFS is not set`**
+(read-only check of `/proc/config.gz` in the VM, 2026-09-12). Linux gained AGGFRAG in 6.14, but only
+if that option is compiled in. Behaviour observed:
+- `swanctl --initiate` **succeeds**; `swanctl --list-sas` shows `INSTALLED, IPTFS`; `ip xfrm state`
+  shows `mode 5` (XFRM_MODE_IPTFS — old iproute2 has no name for it).
+- **Every outbound packet is dropped**: 0 bytes/0 packets on the SA, ping 100% loss, and
+  `/proc/net/xfrm_stat` shows **`XfrmOutStateModeError`** incrementing (7 after 7 pings).
+So the endpoint's own telemetry (T2) says the tunnel is up in IP-TFS mode, while the data plane
+carries nothing. That is a real **T2-vs-T0 CONTRADICTORY** case of exactly the kind DEC-010 exists
+for: a passive observer sees zero ESP where telemetry claims an installed SA.
+Consequence: EXP-05's IP-TFS arm is dropped (would need a custom kernel). strongSwan's own docs say
+Linux AGGFRAG implements only fixed-size aggregation/fragmentation, *not* constant-rate sending, so its
+effect on the **size** channel is already represented by the `tfc_padding = mtu` arm. Timing is
+unaffected by either.

@@ -113,3 +113,91 @@ policy with the failure arms during capture, contaminating the capture window wi
 traffic. A secondary confound (differing IKE identity string lengths across arms) was also found.
 Reported honestly rather than forced into a conclusion. Full writeup, root cause, and the concrete
 generator fix needed for round 2: `experiments/exp06-failure-diagnosis/RESULT.md`.
+
+---
+
+## EXP-06 Round 2 — PRE-REGISTRATION (written 2026-09-12, BEFORE any round-2 capture)
+
+**Fixes for round 1's design flaw** (`experiments/exp06-failure-diagnosis/RESULT.md`):
+1. **Per-arm isolation:** every arm gets its own alias address pair (alice `10.10.1.10k`, bob
+   `10.10.2.10k`) used both as IKE endpoints and as traffic selectors. No two arms share an XFRM
+   policy, and responder config selection is unambiguous by address.
+2. **Equal-length IKE identities** (`a-f0k` / `b-f0k`, 5 chars each) remove the ID-length confound
+   inside encrypted IKE_AUTH.
+3. **All SAs are terminated** before every capture, and each capture is filtered to that arm's alias
+   hosts only.
+4. **5 repetitions per arm**, so evaluation can use a session-level (leave-one-repetition-out) split.
+
+**Arms (ground truth = the designed misconfiguration, confirmed by charon's own log notify, T2):**
+
+| Arm | Misconfiguration | Expected failure |
+|---|---|---|
+| F0 | none (control) | success |
+| F1 | IKE proposal mismatch (bob only accepts aes128-sha256-ecp256) | NO_PROPOSAL_CHOSEN in IKE_SA_INIT |
+| F2 | Child (ESP) proposal mismatch (alice aes256gcm16, bob aes128-sha256) | NO_PROPOSAL_CHOSEN in IKE_AUTH |
+| F3 | Traffic-selector mismatch (bob only accepts 10.10.1.199/32) | TS_UNACCEPTABLE in IKE_AUTH |
+| F4 | PSK mismatch | AUTHENTICATION_FAILED in IKE_AUTH |
+| F5 | PFS mismatch (alice esp …-modp2048, bob none) | initial child OK; failure at CREATE_CHILD_SA rekey |
+| F6 | Peer unreachable (no host at the remote address) | IKE_SA_INIT retransmissions, no response |
+
+**Predictions, derived from protocol structure before seeing data (T0/T1 = passive, no keys):**
+
+| # | Prediction | Reasoning | Falsified if |
+|---|---|---|---|
+| P-a | **F1 separable, deterministically** | Its failure notify sits in the **plaintext** IKE_SA_INIT response; no IKE_AUTH follows | F1 confused with any other arm |
+| P-b | **F6 separable, deterministically** | Only initiator IKE_SA_INIT retransmissions, zero responses | F6 confused |
+| P-c | **F4 separable from F2/F3 by IKE_AUTH response size** | An AUTH_FAILED response carries only a notify (no IDr/AUTH/SA/TS), so it is much smaller | Response sizes overlap |
+| P-d | **F0 separable from F2/F3** | A success response carries SA+TSi+TSr, so it is larger, and ESP follows | Overlap |
+| P-e | **F2 vs F3 NOT separable at T0/T1** | Both responses are IDr+AUTH+one 8-byte data-less notify, identical encrypted sizes given equal ID lengths. Separable only at T2 (logs) | A passive feature separates F2 from F3 (would point to an unknown channel → investigate) |
+| P-f | **F5 separable only at rekey time** | Looks like F0 until a CREATE_CHILD_SA request carrying a KE payload gets a short response and no new ESP SPI | F5 indistinguishable from F0 even after rekey |
+
+**Method comparison (feeds the AI Necessity Matrix, CS-02):** a hand-written deterministic rule set
+vs a decision-tree classifier on the same structural features, both evaluated leave-one-repetition-out.
+If the rules match the tree's macro-F1, **CS-02 does not need ML** — and that will be reported as such.
+
+---
+
+## EXP-05 — PRE-REGISTRATION (written 2026-09-12, BEFORE any EXP-05 capture)
+
+**Question (CS-01 reframing):** how much can a passive T0 observer learn about the *class of traffic*
+inside an ESP tunnel — and how much does padding reduce it? The classifier is used as a
+**measuring instrument for adversary capability**, not as a truth oracle.
+
+**Setup:** strongSwan 6.1.0 PQ pair; per-arm alias addresses; capture at the keyless router; AES-GCM-256
+tunnel mode. Traffic from one stdlib traffic generator (`testbed/scripts/tgen.py`), seeded per session.
+- Classes (5): `voip` (bidirectional 172-B UDP every 20 ms), `web` (HTTP-like request/response,
+  lognormal object sizes, exponential think time), `bulk` (one saturating TCP stream),
+  `interactive` (1–50-byte keystrokes with exponential gaps, echoed), `video` (250 KB segment each 1 s).
+- Arms: **base** (no padding) · **tfc** (`tfc_padding = mtu`) · **mux** (base config, two classes
+  concurrently — the G-12 multiplexing case) · ~~iptfs~~ **dropped: kernel lacks CONFIG_XFRM_IPTFS**
+  (testbed/NOTES.md #13).
+- 4 repetitions × 5 classes × {base, tfc}, 20 s per session; mux: 3 class pairs × 4 repetitions.
+
+**Measures:** windows of 2 s; features = per-direction packet counts, size statistics and size
+histogram, inter-arrival statistics, byte rates.
+- Adversary capability: Random Forest macro-F1, **leave-one-repetition-out** (session-level split, DEC-009).
+- Bayes-error lower bound from leave-one-repetition-out 1-NN error (Cover–Hart bound, Cherubin PETS'17 approach).
+- Mutual information, bits per packet: I(class; size bin) and I(class; inter-arrival bin), Miller–Madow corrected. Maximum log2(5) = 2.32 bits.
+- **Null control:** permuted labels must score ≈ chance (0.20); otherwise the pipeline leaks (same role as EXP-02).
+- Cost: on-wire bytes, tfc ÷ base.
+
+**Predictions:**
+
+| # | Prediction | Falsified if |
+|---|---|---|
+| P5-1 | **base leaks heavily:** RF macro-F1 > 0.8; size MI > 1 bit/packet | F1 < 0.6 or size MI < 0.5 bit |
+| P5-2 | **tfc removes the size channel:** size MI ≈ 0 (all ESP packets one length) | size MI > 0.1 bit under tfc |
+| P5-3 | **…but tfc does NOT remove class leakage:** timing/volume still give F1 well above chance (> 0.5) | tfc F1 ≤ 0.35 (then size was the whole story) |
+| P5-4 | **multiplexing degrades the adversary:** single-class model's hit rate on mux windows (top-1 ∈ the two present classes; chance 0.4) is below base single-class accuracy | mux hit rate ≥ base accuracy |
+| P5-5 | **the metric is stable:** fold-to-fold std of F1 < 0.1, and the permutation null ≈ 0.20 | std ≥ 0.1, or null > 0.3 |
+
+**Why this matters for DEVELOP:** if P5-1/P5-3 hold, a leakage *measurement* tells an operator something
+a config check cannot ("your padding hides sizes, but a passive observer still identifies your traffic
+N% of the time"). That would be the concrete justification for an ML-based component (CS-01). If the
+metric proves unstable (P5-5 fails), CS-01 doesn't earn its place.
+
+### EXP-06 Round 2 — RESULT (2026-09-12): DONE — all six pre-registered predictions held
+35 captures (7 arms × 5 reps), all T2-confirmed. Rules written from protocol arithmetic before any
+data = decision tree: macro-F1 1.000 with F2/F3 merged, 0.809 with them separate (the ceiling, since
+F2 and F3 have identical feature vectors, as predicted by P-e). The notify-only response is exactly
+112 bytes, as derived beforehand. **CS-02 needs no ML.** `experiments/exp06-failure-diagnosis/RESULT_R2.md`.

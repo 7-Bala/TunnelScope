@@ -1,3 +1,7 @@
+> **Updated 2026-09-12 (T-014):** rows R5, R8, R14 and the matching AI-Necessity rows now reflect
+> EXP-01 (narrowed), EXP-03 (confirmed) and EXP-04 (confirmed); the failure-diagnosis row reflects
+> EXP-06 round 2. Original wording preserved in git history.
+
 # Define — Refined Problem, Requirements, AI Necessity, Success Metrics, Rejected Scope
 
 **Status:** DEFINE phase output, built directly on Discover (docs 00–08, registers/). This is the
@@ -42,16 +46,16 @@ Every PS-derived requirement gets one of: **ACCEPT** (as stated) / **RE-SCOPE** 
 | R2 | Capture IKE, ESP, AH, normal traffic | **ACCEPT** | Standard; parsers exist to reuse (D2) |
 | R3 | Identify IPsec protocol / IKE version | **ACCEPT** — O at T1 | Observability Matrix A1–A2 |
 | R4 | Identify tunnel vs transport mode | **RE-SCOPE** — I at T0/T1 (inferred, confidence-tagged), O at T2 | A7 |
-| R5 | Identify encryption algorithm (ESP) | **RE-SCOPE** — family-level sieve (F-04) at T0/T1; exact at T2 | A5 |
+| R5 | Identify encryption algorithm (ESP) | **RE-SCOPE, narrowed by EXP-01** — at T0/T1 the sieve reliably answers one question: *block-cipher (CBC) mode vs AEAD/counter/stream* (and only in that direction; AEAD evidence rules out CBC, CBC evidence cannot rule out AEAD). It **cannot** separate AES-GCM / AES-CCM / ChaCha20-Poly1305 / AES-CTR+HMAC (a 5-way ambiguity class). Exact suite at T2 | A5, EXP-01, DEC-013 |
 | R6 | Identify AES-128 vs AES-256 | **DECLINE at T0/T1** (information-theoretically impossible, F-05); **ACCEPT at T1 for IKE SA / T2 for ESP SA** | F-05, headline negative result |
 | R7 | Identify authentication algorithm | **RE-SCOPE** — disambiguate ESP integrity alg. (I at T0/T1) vs IKE peer-auth method (I at T1 via CERTREQ/SIGHASH presence) | A8 |
-| R8 | Identify key exchange method | **ACCEPT** — O at T1 (plaintext IKE SA transform); **extend** to RFC 9370 ADDKE/PQ detection incl. PQ-6 length-signature method | A9, PQ-1..PQ-6 |
+| R8 | Identify key exchange method | **ACCEPT, validated by EXP-04** — O at T1 (plaintext IKE SA transform). RFC 9370 ADDKE/PQ use is **deterministically detectable by four plaintext signals** (INTERMEDIATE_EXCHANGE_SUPPORTED notify, +16 B IKE_SA_INIT, presence of IKE_INTERMEDIATE, fragmentation), reproduced on strongSwan 6.0.2 and 6.1.0. Dissection itself is solved in Wireshark master (DEC-017); our capability is PQ **posture + downgrade assessment** | A9, EXP-04, DEC-017 |
 | R9 | Identify SA characteristics | **RE-SCOPE** — split into O items (SPI, proposals) and **measured** items (lifecycle, rekey cadence) | A11, CS-03 |
 | R10 | Predict traffic type inside ESP | **RE-SCOPE, substantially** — replace "predict identity" with "measure adversary inference capability / metadata leakage in bits" (CS-01); retain a capped, caveated classifier only as a secondary, explicitly-labelled-uncertain output | 04-DISCOVER §6, G-12 |
 | R11 | Cryptographic strength / compliance | **ACCEPT, RE-SCOPED** — verdict always names its baseline (DEC-007); never an unqualified "compliant" | S-02, DEC-007 |
 | R12 | Key lifetime | **RE-SCOPE** — IKEv2 negotiates none (F-02); report **measured** effective rekey behaviour, not a "compliant/non-compliant" lifetime check, except for IKEv1 Main Mode where it is genuinely observable | F-02, RL-003 |
 | R13 | Replay protection | **RE-SCOPE** — passive: sequence-hygiene only (O); enforcement is **NOT-OBSERVABLE** below T2/T4 despite being a named DISA control (V-207212) | A12/A13, DEC-008 |
-| R14 | PFS configuration | **RE-SCOPE** — I at T1 via CREATE_CHILD_SA KE-payload-length signature (untested hypothesis, needs T0 experiment); O at T2 | A10 |
+| R14 | PFS configuration | **ACCEPT at T0/T1 when a rekey is observed, validated by EXP-03** — PFS-on CREATE_CHILD_SA messages are larger by a fixed 256-byte gap (the KE payload), cleanly separable by one threshold, reproduced across runs. Before any rekey is observed: NOT-OBSERVABLE. O at T2 | A10, EXP-03 |
 | R15 | Metadata exposure | **ACCEPT, this is CS-01's home** — the strongest, best-evidenced deliverable in the whole set | G-04, E-06/E-07 |
 | R16 | Executive + technical reports, risk score, threat matrix, AI confidence score | **ACCEPT, RE-SCOPED** — score is a weighted, cited, sensitivity-tested construction (not invented); confidence score is calibrated/conformal, not raw softmax | DL-03, §4.4 |
 | R17 | "AI-driven" framing (title) | **RE-SCOPE** — AI used only where the AI Necessity Matrix (§3) justifies it; framed publicly as "evidence-driven, AI-assisted" | E-01–E-05, DEC-006 |
@@ -70,13 +74,13 @@ independently by practitioner behaviour (PE-01).
 |---|---|---|---|---|---|---|
 | IKE/ESP field parsing | Yes | No | No | No | Deterministic parser (reuse tshark/Zeek grammar as reference) | Solved problem; D2 |
 | Standards compliance verdicts | Yes | No | No | No | Rule engine over versioned, cited registries (DEC-011) | Deterministic mapping to RFC/NIST/DISA clauses |
-| ESP cipher-suite family (T0/T1) | **Partially** | No | No | No | Constraint sieve on IV/ICV/alignment (F-04) | Beats a classifier; explainable; zero training data needed |
+| ESP cipher-suite family (T0/T1) | **Partially** | No | No | No | Constraint sieve on IV/ICV/alignment (F-04) — **narrowed by EXP-01** to a one-directional CBC-vs-AEAD/stream test | Deterministic and converges at packet 1; ML cannot help because the ambiguity is structural (identical IV/ICV/alignment), not noisy |
 | AES-128 vs 256 at T0/T1 | No — provably impossible | N/A | N/A | No | **Explicitly decline**; report NOT-OBSERVABLE | F-05 |
 | SA lifecycle / effective lifetime | Yes | No | No | No | Time-series change-point detection on SPI transitions | Not a learning problem |
-| PQ key-exchange / downgrade detection | Yes | No | No | No | Deterministic: transform-ID where dissectable, length-signature (PQ-6) where not | Zero AI needed; strongest single capability found |
+| PQ key-exchange / downgrade detection | Yes | No | No | No | Deterministic: transform ID where the parser supports ADDKE (Wireshark master); EXP-04's plaintext structural signals where it doesn't (Suricata, Zeek, nDPI, Arkime) | Zero AI needed; **validated by EXP-04** on two strongSwan versions |
 | Tunnel vs transport (no endpoint) | Weakly | Possibly | **Yes, narrow** | No | Calibrated statistical classifier w/ conformal confidence over a small feature set (header length shift, MTU behaviour) | Genuine residual uncertainty after deterministic methods exhausted |
-| PFS at rekey (no keys) | Weakly (length hypothesis) | Possibly | **Yes, narrow** | No | Same as above, pending T0 experiment (OQ-03) | id. |
-| Failure-mode diagnosis (CS-02) | Partially | **Yes** | **Yes** | No | Supervised classifier over structural features (retransmission pattern, SPI churn, message counts) — ground truth is free from the testbed | Genuine ML need; PE-02 taxonomy is real and structurally distinguishable |
+| PFS at rekey (no keys) | **Yes** | **No** | No | No | Single length threshold on CREATE_CHILD_SA (**EXP-03**: 256-byte gap) | **Changed from 'ML, narrow' to deterministic** — the signal is a fixed structural gap, not a distribution |
+| Failure-mode diagnosis (CS-02) | **Yes** | **No** | No | No | Rules over plaintext structure with thresholds derived from protocol arithmetic (**EXP-06 r2**: 6-way separation at macro-F1 1.000; a fitted tree does no better). Proposal- vs TS-mismatch reported as one class — *provably* inseparable at T0/T1 | **Changed from 'genuine ML need' to deterministic** — zero-variance structural signatures, nothing to learn |
 | Metadata-leakage quantification (CS-01) | No | **Yes, as instrument not oracle** | **Yes — the strongest ML justification in the project** | No | Classifier used to *estimate* Bayes error rate / mutual information (WeFDE/Cherubin methodology) | Low classifier accuracy = good security finding; immune to the accuracy-inflation crisis |
 | Implementation/vendor fingerprinting | Partially (VID lookup) | Possibly | **Yes, narrow** | No | Shallow similarity match over VID + backoff timing + payload ordering | Small, interpretable feature space |
 | Report narrative generation | No | **Yes, strictly bounded** | No | **Yes** | LLM templated **exclusively** from the evidence graph; never a source of facts, only phrasing | DL-03; explainability requires the evidence graph to already be correct before the LLM touches it |

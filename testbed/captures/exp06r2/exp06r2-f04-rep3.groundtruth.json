@@ -1,0 +1,15 @@
+{
+  "arm": "f04",
+  "rep": 3,
+  "designed_label": "F4-auth-fail",
+  "captured_since_utc": "2026-09-11T17:22:45Z",
+  "charon_log_T2": [
+    "parsed IKE_SA_INIT response 0 [ SA KE No N(NATD_S_IP) N(NATD_D_IP) N(FRAG_SUP) N(HASH_ALG) N(CHDLESS_SUP) N(MULT_AUTH) ]",
+    "received FRAGMENTATION_SUPPORTED notify",
+    "received SIGNATURE_HASH_ALGORITHMS notify",
+    "received CHILDLESS_IKEV2_SUPPORTED notify",
+    "parsed IKE_AUTH response 1 [ N(AUTH_FAILED) ]",
+    "received AUTHENTICATION_FAILED notify error"
+  ],
+  "note": "designed_label is the ground truth (the misconfiguration we built); charon_log_T2 is the endpoint's own confirmation. Neither is derived from the capture."
+}

@@ -1,0 +1,16 @@
+{
+  "arm": "f03",
+  "rep": 2,
+  "designed_label": "F3-ts-mismatch",
+  "captured_since_utc": "2026-09-11T17:19:14Z",
+  "charon_log_T2": [
+    "parsed IKE_SA_INIT response 0 [ SA KE No N(NATD_S_IP) N(NATD_D_IP) N(FRAG_SUP) N(HASH_ALG) N(CHDLESS_SUP) N(MULT_AUTH) ]",
+    "received FRAGMENTATION_SUPPORTED notify",
+    "received SIGNATURE_HASH_ALGORITHMS notify",
+    "received CHILDLESS_IKEV2_SUPPORTED notify",
+    "parsed IKE_AUTH response 1 [ IDr AUTH N(MOBIKE_SUP) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(ADD_4_ADDR) N(TS_UNACCEPT) ]",
+    "IKE_SA f03[5] established between 10.10.1.103[a-f03]...10.10.2.103[b-f03]",
+    "received TS_UNACCEPTABLE notify, no CHILD_SA built"
+  ],
+  "note": "designed_label is the ground truth (the misconfiguration we built); charon_log_T2 is the endpoint's own confirmation. Neither is derived from the capture."
+}

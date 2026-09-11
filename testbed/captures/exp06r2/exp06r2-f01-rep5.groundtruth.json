@@ -1,0 +1,11 @@
+{
+  "arm": "f01",
+  "rep": 5,
+  "designed_label": "F1-ike-proposal",
+  "captured_since_utc": "2026-09-11T17:29:21Z",
+  "charon_log_T2": [
+    "parsed IKE_SA_INIT response 0 [ N(NO_PROP) ]",
+    "received NO_PROPOSAL_CHOSEN notify error"
+  ],
+  "note": "designed_label is the ground truth (the misconfiguration we built); charon_log_T2 is the endpoint's own confirmation. Neither is derived from the capture."
+}

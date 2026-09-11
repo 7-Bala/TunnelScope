@@ -47,6 +47,7 @@ services:
     volumes:
       - ./configs/alice/swanctl.conf:/etc/swanctl/swanctl.conf:ro
       - ./configs/alice/strongswan.conf:/etc/strongswan.conf:ro
+      - ./configs/exp06:/etc/swanctl/exp06:ro   # EXP-06 round 2 (gen_exp06_conf.py)
       - ./captures:/captures
     depends_on: [router]
     command: ["charon"]
@@ -66,11 +67,12 @@ services:
     volumes:
       - ./configs/bob/swanctl.conf:/etc/swanctl/swanctl.conf:ro
       - ./configs/bob/strongswan.conf:/etc/strongswan.conf:ro
+      - ./configs/exp06:/etc/swanctl/exp06:ro   # EXP-06 round 2 (gen_exp06_conf.py)
       - ./captures:/captures
     depends_on: [router]
     command: ["charon"]
 
-  # --- PQ arm (EXP-04): source-built strongSwan 6.0.2 with the native `ml`
+  # --- PQ arm (EXP-04, EXP-05): source-built strongSwan 6.1.0 with the native `ml`
   # (ML-KEM, RFC 9370 ADDKE) plugin. Same router, same networks, different
   # IPs, so the existing forwarding/capture setup is reused unchanged.
   alice-pq:
@@ -87,6 +89,7 @@ services:
     volumes:
       - ./configs/alice-pq/swanctl.conf:/etc/swanctl/swanctl.conf:ro
       - ./configs/alice-pq/strongswan.conf:/etc/strongswan.conf:ro
+      - ./configs/exp05:/etc/swanctl/exp05:ro   # EXP-05 (gen_exp05_conf.py)
       - ./captures:/captures
     depends_on: [router]
     command: ["charon"]
@@ -105,6 +108,7 @@ services:
     volumes:
       - ./configs/bob-pq/swanctl.conf:/etc/swanctl/swanctl.conf:ro
       - ./configs/bob-pq/strongswan.conf:/etc/strongswan.conf:ro
+      - ./configs/exp05:/etc/swanctl/exp05:ro   # EXP-05 (gen_exp05_conf.py)
       - ./captures:/captures
     depends_on: [router]
     command: ["charon"]

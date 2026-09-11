@@ -1,0 +1,22 @@
+{
+  "e5-base": {
+    "alice": "10.10.1.200",
+    "bob": "10.10.2.200",
+    "description": "tunnel mode, no TFC padding (strongSwan default tfc_padding=0)"
+  },
+  "e5-tfc": {
+    "alice": "10.10.1.201",
+    "bob": "10.10.2.201",
+    "description": "tunnel mode, every ESP packet padded to the path MTU (RFC 4303 sec 2.7)"
+  },
+  "e5-iptfs": {
+    "alice": "10.10.1.202",
+    "bob": "10.10.2.202",
+    "description": "AGGFRAG / IP-TFS mode (RFC 9347); charon.iptfs.packet_size set in strongswan.conf"
+  },
+  "e5-mux": {
+    "alice": "10.10.1.203",
+    "bob": "10.10.2.203",
+    "description": "tunnel mode, no padding; carries TWO concurrent traffic classes (G-12 multiplexing)"
+  }
+}
