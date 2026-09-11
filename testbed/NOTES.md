@@ -100,3 +100,19 @@ Not a bug — a real, useful finding. ML-KEM-768's ~1184-byte public key makes t
 log) where the classical-DH-only baseline never fragments anything. See
 `experiments/exp04-pq-length-asymmetry/` — this interaction was not anticipated in the original
 PQ-6 hypothesis and is reported as a correction, not smoothed over.
+
+### 12. strongSwan 6.0.2 → 6.1.0 upgrade (T-021, 2026-09-12): no regressions, EXP-04 signals identical
+6.1.0 (released 2026-09-07) fixes CVE-2026-78133 (IKEv2 rekey-collision use-after-free, potential
+RCE, affects 6.0.0+), which our original PQ image (6.0.2) was vulnerable to. Upgrade was a one-line
+`ARG STRONGSWAN_TAG` change; `docker compose build alice-pq bob-pq` reused cached builder layers
+(git clone/configure/make) and finished in under a minute. `charon` started cleanly with the same
+custom `strongswan.conf` explicit-load list (note #10) — none of the plugins we load were among
+6.1.0's removed set (af-alg, android-dns, blowfish, charon-xpc, duplicheck, **gcrypt**, keychain,
+led, libfast, manager, medsrv/medcli, padlock, smp, soup, tnc-ifmap, tnccs-11, tnccs-dynamic — we
+never used `gcrypt`, using `openssl` instead).
+
+**EXP-04 rerun on 6.1.0** reproduced all four signals byte-for-byte identical to the 6.0.2 run:
+`IKE_SA_INIT` sizes 492/500 (classical) vs 508/516 (PQ, +16 bytes both directions), the
+`INTERMEDIATE_EXCHANGE_SUPPORTED` notify (16438) present only in the PQ capture, zero vs three
+`IKE_INTERMEDIATE` messages, and identical fragmentation (initiator 1268+132 bytes, responder 1200).
+See `experiments/exp04-pq-length-asymmetry/results/exp04_6.1.0_confirmation.md`.
