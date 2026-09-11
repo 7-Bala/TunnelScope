@@ -1,0 +1,287 @@
+{
+ "corelight/zeek-spicy-ipsec": {
+  "description": "A Zeek IPSec protocol analyzer based on Spicy.",
+  "stars": 8,
+  "forks": 8,
+  "open_issues_incl_prs": 0,
+  "license": "BSD-3-Clause",
+  "archived": false,
+  "created": "2021-11-23T13:05:45Z",
+  "last_commit": "2025-09-22T23:37:46Z",
+  "commits_last_12mo": 4,
+  "latest_release": null,
+  "latest_tag": "v0.2.24",
+  "language": "Zeek"
+ },
+ "ukncsc/zeek-plugin-ikev2": {
+  "description": "A IKEv2 protocol analyzer for Zeek.",
+  "stars": 1,
+  "forks": 3,
+  "open_issues_incl_prs": 1,
+  "license": "NOASSERTION",
+  "archived": true,
+  "created": "2018-06-05T15:09:35Z",
+  "last_commit": "2020-01-27T17:49:26Z",
+  "commits_last_12mo": 0,
+  "latest_release": null,
+  "latest_tag": "v0.1",
+  "language": "Zeek"
+ },
+ "zeek/zeek": {
+  "description": "Zeek is a powerful network analysis framework that is much different from the typical IDS you may know.",
+  "stars": 7954,
+  "forks": 1411,
+  "open_issues_incl_prs": 258,
+  "license": "NOASSERTION",
+  "archived": false,
+  "created": "2012-07-06T20:30:16Z",
+  "last_commit": "2026-09-09T22:45:14Z",
+  "commits_last_12mo": 2264,
+  "latest_release": [
+   "v9.0.0-rc2",
+   "2026-08-21T20:24:47Z"
+  ],
+  "latest_tag": "v9.1.0-dev",
+  "language": "C++"
+ },
+ "OISF/suricata": {
+  "description": "Suricata is a network Intrusion Detection System, Intrusion Prevention System and Network Security Monitoring engine developed by the OISF and the Suricata community.",
+  "stars": 6627,
+  "forks": 1768,
+  "open_issues_incl_prs": 87,
+  "license": "GPL-2.0",
+  "archived": false,
+  "created": "2012-08-14T08:30:06Z",
+  "last_commit": "2026-09-05T15:32:43Z",
+  "commits_last_12mo": 1645,
+  "latest_release": [
+   "suricata-8.0.6",
+   "2026-07-07T19:26:37Z"
+  ],
+  "latest_tag": "suricata-8.0.6",
+  "language": "C"
+ },
+ "royhills/ike-scan": {
+  "description": "The IKE Scanner",
+  "stars": 420,
+  "forks": 63,
+  "open_issues_incl_prs": 23,
+  "license": "GPL-3.0",
+  "archived": false,
+  "created": "2013-08-15T17:28:19Z",
+  "last_commit": "2024-09-15T10:27:54Z",
+  "commits_last_12mo": 0,
+  "latest_release": [
+   "1.9",
+   "2013-11-24T18:40:54Z"
+  ],
+  "latest_tag": "1.9.5",
+  "language": "C"
+ },
+ "nmap/nmap": {
+  "description": "Nmap - the Network Mapper. Github mirror of official SVN repository.",
+  "stars": 13557,
+  "forks": 2903,
+  "open_issues_incl_prs": 684,
+  "license": "NOASSERTION",
+  "archived": false,
+  "created": "2012-03-09T14:47:43Z",
+  "last_commit": "2026-09-11T03:01:08Z",
+  "commits_last_12mo": 455,
+  "latest_release": null,
+  "latest_tag": "v7.991",
+  "language": "C"
+ },
+ "strongswan/strongswan": {
+  "description": "strongSwan - IPsec-based VPN",
+  "stars": 2975,
+  "forks": 933,
+  "open_issues_incl_prs": 168,
+  "license": "NOASSERTION",
+  "archived": false,
+  "created": "2010-10-28T08:57:10Z",
+  "last_commit": "2026-09-10T14:49:55Z",
+  "commits_last_12mo": 545,
+  "latest_release": [
+   "6.1.0",
+   "2026-09-07T12:03:02Z"
+  ],
+  "latest_tag": "android-2.6.2",
+  "language": "C"
+ },
+ "libreswan/libreswan": {
+  "description": "libreswan",
+  "stars": 1005,
+  "forks": 263,
+  "open_issues_incl_prs": 655,
+  "license": "NOASSERTION",
+  "archived": false,
+  "created": "2013-02-20T15:09:06Z",
+  "last_commit": "2026-09-11T01:49:21Z",
+  "commits_last_12mo": 2807,
+  "latest_release": [
+   "v5.4",
+   "2026-08-14T01:07:53Z"
+  ],
+  "latest_tag": "v5.4",
+  "language": "C"
+ },
+ "secdev/scapy": {
+  "description": "Scapy: the Python-based interactive packet manipulation program & library.",
+  "stars": 12533,
+  "forks": 2244,
+  "open_issues_incl_prs": 137,
+  "license": "GPL-2.0",
+  "archived": false,
+  "created": "2015-10-01T17:06:46Z",
+  "last_commit": "2026-09-10T22:34:50Z",
+  "commits_last_12mo": 300,
+  "latest_release": [
+   "v2.7.0",
+   "2025-12-26T22:01:47Z"
+  ],
+  "latest_tag": "v2.7.1rc1",
+  "language": "Python"
+ },
+ "ntop/nDPI": {
+  "description": "Open Source Deep Packet Inspection Software Toolkit",
+  "stars": 4600,
+  "forks": 1012,
+  "open_issues_incl_prs": 64,
+  "license": "LGPL-3.0",
+  "archived": false,
+  "created": "2015-04-19T04:56:52Z",
+  "last_commit": "2026-09-10T16:18:16Z",
+  "commits_last_12mo": 425,
+  "latest_release": [
+   "6.0",
+   "2026-08-28T10:01:19Z"
+  ],
+  "latest_tag": "6.0",
+  "language": "C"
+ },
+ "arkime/arkime": {
+  "description": "Arkime is an open source, large scale, full packet capturing, indexing, and database system.",
+  "stars": 7461,
+  "forks": 1163,
+  "open_issues_incl_prs": 39,
+  "license": "Apache-2.0",
+  "archived": false,
+  "created": "2012-07-06T16:10:55Z",
+  "last_commit": "2026-09-09T23:45:55Z",
+  "commits_last_12mo": 677,
+  "latest_release": [
+   "last-commit7",
+   "2026-05-07T14:38:54Z"
+  ],
+  "latest_tag": "v6.7.0",
+  "language": "C"
+ },
+ "hypergalois/pqc-tls-observability": {
+  "description": "Multi-surface observability framework for post-quantum TLS readiness, separating session negotiation, endpoint capability, certificate-chain evidence, and registry rules.",
+  "stars": 0,
+  "forks": 0,
+  "open_issues_incl_prs": 0,
+  "license": "MIT",
+  "archived": false,
+  "created": "2026-05-04T01:04:10Z",
+  "last_commit": "2026-05-04T01:04:39Z",
+  "commits_last_12mo": 1,
+  "latest_release": [
+   "v1.0.0",
+   "2026-05-04T01:06:25Z"
+  ],
+  "latest_tag": "v1.0.0",
+  "language": "Python"
+ },
+ "wireshark/wireshark": {
+  "description": "Read-only mirror of Wireshark's Git repository at https://gitlab.com/wireshark/wireshark. You're welcome to submit pull requests there.",
+  "stars": 9859,
+  "forks": 2207,
+  "open_issues_incl_prs": 2,
+  "license": "GPL-2.0",
+  "archived": false,
+  "created": "2014-06-29T18:37:22Z",
+  "last_commit": "2026-09-11T02:38:40Z",
+  "commits_last_12mo": 3968,
+  "latest_release": null,
+  "latest_tag": "wireshark-4.4.9",
+  "language": "C"
+ },
+ "5u5urrus/IkeProbe": {
+  "description": "IkeProbe is an IKE Service Detector, a specialized tool to detect IKE VPN services using multiple methods",
+  "stars": 0,
+  "forks": 0,
+  "open_issues_incl_prs": 0,
+  "license": null,
+  "archived": false,
+  "created": "2025-04-11T01:57:38Z",
+  "last_commit": "2025-08-29T12:44:03Z",
+  "commits_last_12mo": 0,
+  "latest_release": null,
+  "latest_tag": null,
+  "language": "Python"
+ },
+ "ptsankov/secfuzz": {
+  "description": "IKE fuzzer",
+  "stars": 31,
+  "forks": 7,
+  "open_issues_incl_prs": 1,
+  "license": "GPL-3.0",
+  "archived": false,
+  "created": "2015-02-06T15:51:23Z",
+  "last_commit": "2015-05-29T06:32:08Z",
+  "commits_last_12mo": 0,
+  "latest_release": null,
+  "latest_tag": null,
+  "language": "Python"
+ },
+ "nprint/nprint": {
+  "description": "nPrint provides a generalizable data representation for network packets that works directly with machine learning techniques",
+  "stars": 124,
+  "forks": 23,
+  "open_issues_incl_prs": 2,
+  "license": "Apache-2.0",
+  "archived": false,
+  "created": "2020-08-05T19:08:04Z",
+  "last_commit": "2025-12-04T14:23:37Z",
+  "commits_last_12mo": 2,
+  "latest_release": [
+   "v1.2.1",
+   "2021-11-16T23:13:47Z"
+  ],
+  "latest_tag": "v1.2.1",
+  "language": "C++"
+ },
+ "linwhitehat/ET-BERT": {
+  "description": "The repository of ET-BERT, a network traffic classification model on encrypted traffic. The work has been accepted as The Web Conference (WWW) 2022 accepted paper.",
+  "stars": 675,
+  "forks": 129,
+  "open_issues_incl_prs": 1,
+  "license": "MIT",
+  "archived": false,
+  "created": "2022-02-09T03:53:23Z",
+  "last_commit": "2026-07-23T09:04:52Z",
+  "commits_last_12mo": 4,
+  "latest_release": null,
+  "latest_tag": null,
+  "language": "Python"
+ },
+ "greenbone/openvas-scanner": {
+  "description": "This repository contains the scanner component for Greenbone Community Edition.",
+  "stars": 4822,
+  "forks": 801,
+  "open_issues_incl_prs": 23,
+  "license": "GPL-2.0",
+  "archived": false,
+  "created": "2018-01-22T07:49:57Z",
+  "last_commit": "2026-08-31T11:14:24Z",
+  "commits_last_12mo": 805,
+  "latest_release": [
+   "v23.50.24",
+   "2026-08-31T11:14:27Z"
+  ],
+  "latest_tag": "v23.50.24",
+  "language": "Rust"
+ }
+}
