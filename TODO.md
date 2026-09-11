@@ -22,13 +22,17 @@
 
 ## Current focus
 
+**T-043 (user, 2026-09-11): finish every pre-build item completely before any building.**
+Order: ~~T-016/T-021~~ → **T-010 (next)** → T-012 → T-011 → T-017 → T-014 → **T-015 last** (it
+consumes all the evidence). Nothing in the Roadmap (T-030+) starts until T-043 is DONE.
+
 **Readiness check (2026-09-11): planning is NOT complete.** One hard gate is unfinished.
 
 **GATE TO BUILDING — must clear first:**
 1. **T-015 DEVELOP** (GATE-5) — ≥5 concepts, weighted matrix, red team. Never run. This is the
    blocker: the direction is currently de facto, not selected on the record.
 2. **T-014** — `09-DEFINE.md` still states the stronger EXP-01 claim that EXP-01 disproved.
-3. **T-021** — PQ lab image has a known potential-RCE CVE.
+3. ~~T-021~~ — done, see Done table.
 
 **Then:** T-030 architecture, written as the first act of building, not as more planning.
 
@@ -42,19 +46,17 @@ Rule: ship no ML claim before its experiment lands.
 
 | ID | P | Status | Task | Acceptance criteria | Evidence |
 |---|---|---|---|---|---|
-| T-021 | P1 | TODO | Upgrade the lab's PQ strongSwan image 6.0.2 → 6.1.0 (CVE-2026-78133: rekey-collision use-after-free, potential RCE, affects 6.0.0+) and rerun EXP-04 to confirm the signals survive | Image rebuilt on tag 6.1.0; EXP-04 rerun, same 4 signals; MANIFEST.md updated | — |
 | T-022 | P1 | TODO | EXP-09 (new) — is the CVE-2026-78135 pattern (CREATE_CHILD_SA on an IKE SA that never authenticated) passively detectable? Closes OQ-31 | Hypothesis, ground truth and falsification criterion added to the register; pattern reproduced on the vulnerable 5.9.8 image; detector result written up | — |
 | T-023 | P2 | TODO | Adopt dataset-hygiene practices seen in `naman9271/ipsec-pcap-lab`: per-file SHA-256, a locked test set, an OOD set, a strict validator (credited) | Dataset manifest with hashes; validator script exits non-zero on violations | — |
 | T-024 | P2 | TODO | Cross-check EXP-04 against Wireshark master's ADDKE/ML-KEM output (build or container) as an independent oracle | Master's tshark names ML-KEM-768 on our capture; recorded in EXP-04 results | — |
 | T-025 | P3 | TODO | Resolve OQ-30 — does Palo Alto's Quantum Readiness view assess third-party IPsec transiting the firewall? | Cited answer, or recorded as UNKNOWN with the reason | — |
-| T-010 | P1 | TODO | EXP-06 round 2 — fix shared-traffic-selector contamination, then rerun failure diagnosis | Distinct traffic selector per arm; all other SAs terminated before each capture; clean captures; result written up | `experiments/exp06-failure-diagnosis/` |
-| T-011 | P1 | TODO | EXP-07 — Libreswan cross-implementation check of EXP-01/03/04 | Libreswan image; the same arms rerun; per-signal verdict: holds / implementation-dependent | — |
-| T-012 | P2 | TODO | EXP-05 — metadata leakage with TFC padding / IP-TFS (mutual information / Bayes error) | MI and BER before/after for `tfc_padding=0/mtu` and `mode=iptfs` | — |
+| T-010 | P0 | TODO | EXP-06 round 2 — fix shared-traffic-selector contamination, then rerun failure diagnosis | Distinct traffic selector per arm; all other SAs terminated before each capture; clean captures; result written up | `experiments/exp06-failure-diagnosis/` |
+| T-011 | P0 | TODO | EXP-07 — Libreswan cross-implementation check of EXP-01/03/04 | Libreswan image; the same arms rerun; per-signal verdict: holds / implementation-dependent | — |
+| T-012 | P0 | TODO | EXP-05 — metadata leakage with TFC padding / IP-TFS (mutual information / Bayes error) | MI and BER before/after for `tfc_padding=0/mtu` and `mode=iptfs` | — |
 | T-013 | P2 | TODO | EXP-04 follow-up — reassemble IKE fragments for a clean KE-length asymmetry number | Asymmetry measured on reassembled messages | — |
 | T-014 | **P0** | TODO | Update 09-DEFINE.md R5 and the AI Necessity Matrix with EXP-01's narrower claim | Edited rows cite EXP-01 | — |
 | T-015 | **P0** | TODO | **[GATE-5 — blocks building]** DEVELOP — generate ≥5 concepts, weighted matrix, red team | Doc with matrix and selection rationale | — |
-| T-016 | P3 | TODO | Fix the `utcnow()` deprecation warning in `run_arm.sh` | Warning gone | — |
-| T-017 | P3 | TODO | Confirm the PS ID (SIH26160 vs SIH26161) — OQ-16 | Official portal checked | — |
+| T-017 | P0 | TODO | Confirm the PS ID (SIH26160 vs SIH26161) — OQ-16 | Official portal checked | — |
 
 ## Roadmap to submission (not yet started)
 
@@ -103,6 +105,8 @@ demo video, technical documentation, dataset. None has started; each waits on DE
 | T-020e | PS A–E coverage matrix | Doc 11 §5 |
 | T-020f | Synthesis + corrections (DEC-016, DEC-017) | Doc 11 §6–7 |
 | T-020g | Registers updated; correction banner on doc 07; README fixed; committed and pushed | `research/registers/*`, doc 07, commit `c39dc60` |
+| T-016 | Fixed `datetime.utcnow()` deprecation in `run_arm.sh` (already correct in `run_pq_arm.sh`); confirmed no other occurrences in testbed/ or experiments/ | `testbed/scripts/run_arm.sh` |
+| T-021 | Upgraded PQ lab image 6.0.2 → 6.1.0 (fixes CVE-2026-78133, potential RCE). Clean rebuild, no plugin regressions. Reran EXP-04: all 4 signals byte-for-byte identical to 6.0.2 | `testbed/images/strongswan-pq/Dockerfile`, `testbed/NOTES.md` #12, `experiments/exp04-pq-length-asymmetry/results/exp04_6.1.0_confirmation.md` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -126,3 +130,7 @@ demo video, technical documentation, dataset. None has started; each waits on DE
   unstarted and EXP-06 is inconclusive, leaving 2 of 3 candidate ML components unvalidated and all
   findings strongSwan-only. Raised T-014 and T-015 to P0 and marked the gate to building above.
   Counter-risk noted: over-planning is now the bigger danger than under-planning.
+- **2026-09-11** — User: finish everything pre-build before building. Opened T-043 (umbrella). Raised
+  T-010/T-011/T-012/T-016/T-017/T-021 to P0 alongside T-014/T-015. Started T-021 + T-016.
+- **2026-09-12** — T-016 and T-021 done (evidence above). EXP-04 reconfirmed on strongSwan 6.1.0,
+  identical signals — the finding was not a build artifact. Moving to T-010 (EXP-06 round 2).

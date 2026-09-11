@@ -84,7 +84,7 @@ def run(cmd):
 record = {
     "arm": arm,
     "tag": tag,
-    "captured_at_utc": datetime.datetime.utcnow().isoformat() + "Z",
+    "captured_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     "alice_list_sas": run("docker exec sih26-alice swanctl --list-sas 2>&1"),
     "bob_list_sas": run("docker exec sih26-bob swanctl --list-sas 2>&1"),
     "alice_xfrm_state": run("docker exec sih26-alice ip xfrm state 2>&1"),

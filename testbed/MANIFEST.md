@@ -1,6 +1,7 @@
 # Testbed Manifest — Reproducibility Record
 
 Recorded after the first successful build/run of each image, 2026-09-10.
+**Updated 2026-09-12** (T-021): PQ image upgraded 6.0.2 → 6.1.0.
 
 ## Host environment
 - Host OS: macOS (Darwin 25.6.0), arm64 (Apple Silicon)
@@ -13,7 +14,7 @@ Recorded after the first successful build/run of each image, 2026-09-10.
 |---|---|---|---|---|
 | `testbed-router` | `debian:bookworm-slim` | apt | n/a (no IPsec) | iproute2, tcpdump, tshark |
 | `testbed-alice` / `testbed-bob` | `debian:bookworm-slim` | apt: `strongswan`, `strongswan-swanctl`, `strongswan-pki`, `libcharon-extra-plugins`, `libstrongswan-extra-plugins`, **`libstrongswan-standard-plugins`** (required for `gcm`/`openssl` — not pulled in by the others) | **5.9.8-5+deb12u5** | openssl, gcrypt, aes, sha1/2, gmp, curve25519, chapoly, ctr, ccm, gcm, hmac, xcbc, cmac |
-| `testbed-strongswan-pq` (`alice-pq`/`bob-pq`) | `debian:bookworm-slim` | **built from source**, tag `6.0.2` | **6.0.2** | Explicit `--enable-*` list incl. `ml` (native ML-KEM, RFC 9370 ADDKE — no liboqs/Botan dependency needed; see NOTES.md) |
+| `testbed-strongswan-pq` (`alice-pq`/`bob-pq`) | `debian:bookworm-slim` | **built from source**, tag `6.1.0` | **6.1.0** (was 6.0.2 until 2026-09-12 — upgraded to fix CVE-2026-78133, an IKEv2 rekey-collision use-after-free with potential RCE affecting 6.0.0+; see NOTES.md #12) | Explicit `--enable-*` list incl. `ml` (native ML-KEM, RFC 9370 ADDKE — no liboqs/Botan dependency needed; see NOTES.md) |
 
 ## Why two strongSwan builds
 Debian bookworm's `strongswan` apt package is 5.9.8, which predates RFC 9370 (May 2023) / ML-KEM

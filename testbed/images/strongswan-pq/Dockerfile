@@ -20,7 +20,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-ARG STRONGSWAN_TAG=6.0.2
+# 6.0.2 -> 6.1.0 (2026-09-07): fixes CVE-2026-78133 (IKEv2 rekey-collision
+# use-after-free, potential RCE, affects 6.0.0+) which our 6.0.2 image was
+# vulnerable to. See research/11-EXISTING-SOLUTIONS-DEEP-DIVE.md RL-033, T-021.
+ARG STRONGSWAN_TAG=6.1.0
 RUN git clone --depth 1 --branch ${STRONGSWAN_TAG} https://github.com/strongswan/strongswan.git /src/strongswan
 WORKDIR /src/strongswan
 RUN ./autogen.sh && ./configure \
