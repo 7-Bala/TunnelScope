@@ -17,7 +17,7 @@ the configuration we set, confirmed by the endpoint's own `swanctl`/`pluto` log 
 `*.groundtruth.json` files). It is **never** inferred from the capture — no circular validation.
 
 ## Contents
-- **70 pcaps** across: EXP-01/02-cipher (13), EXP-03-pfs (2), EXP-04-pq (6), EXP-06r1-superseded (2), EXP-06r2-failure-diagnosis (35), EXP-07-libreswan (10), EXP-08-mode (2).
+- **70 pcaps** across: EXP-01/02-cipher (12), EXP-03-pfs (2), EXP-04-pq (7), EXP-06r1-superseded (2), EXP-06r2-failure-diagnosis (35), EXP-07-libreswan (10), EXP-08-mode (2).
 - **52 EXP-05 rows** as per-packet tables (`testbed/captures/exp05/*.pkts.csv.gz`), raw pcaps
   hashed in `testbed/captures/exp05/manifest.csv`.
 
