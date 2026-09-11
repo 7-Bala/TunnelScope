@@ -35,3 +35,9 @@ testbed/captures/exp05/*.pcap
 # EXP-06 r2 and EXP-07 captures are small (KB) and are primary evidence: tracked.
 !testbed/captures/exp06r2/*.pcap
 !testbed/captures/exp07/*.pcap
+
+# Python build/runtime
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/

@@ -48,8 +48,8 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 
 | ID | P | Status | Task | Depends on | Acceptance criteria |
 |---|---|---|---|---|---|
-| T-030 | **P1** | TODO | **[NEXT]** System architecture (DELIVER) — components, data flow, evidence tiers T0–T4, APIs, storage | T-015 | Architecture doc + ADRs; every component traced to a requirement in 09-DEFINE |
-| T-031 | P2 | TODO | Evidence extraction layer — tshark/pcap ingestion → per-SA evidence records (reusing parsers, not rebuilding them) | T-030 | Runs on all testbed captures; output validated against the `swanctl` ground truth |
+| T-030 | **P1** | DOING | **[BUILDING NOW]** System architecture (DELIVER) — components, data flow, evidence tiers T0–T4, APIs, storage | T-015 | Architecture doc + ADRs; every component traced to a requirement in 09-DEFINE |
+| T-032 | **P1** | TODO | **[NEXT]** Deterministic assessment engine — rules as versioned data (DEC-011), named baselines, PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY | T-031 ✅ | Every verdict cites its rule and evidence; zero false PASS on the misconfiguration arms |
 | T-032 | P2 | TODO | Deterministic assessment engine — rules as versioned data (DEC-011), named baselines (RFC 8221/8247/9395, NIST SP 800-77r1, DISA SRG, DST), PASS/FAIL/UNKNOWN/NOT-OBSERVABLE/CONTRADICTORY | T-031 | Every verdict cites its rule and its evidence; zero false PASS on the misconfiguration arms |
 | T-033 | P2 | TODO | PQ posture + downgrade assessor (CS-05, DEC-017) | T-031, T-021 | Detects offered-vs-selected downgrade on a dedicated testbed arm |
 | T-034 | P2 | TODO | The ML component: leakage measurement (CS-01) only — failure diagnosis is deterministic (DEC-018) | T-012 ✅ | Each beats a stated simple baseline under a session-level split; calibrated confidence |
@@ -63,7 +63,8 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 
 ## Blocked
 
-- **SIH deadline / internal milestones unknown** — needed to schedule T-030+ realistically. Asked the user 2026-09-11.
+_None._ (2026-09-12: user confirmed **no deadline** → build the full staged system per DEC-023,
+not a compressed version.)
 
 ---
 
@@ -103,6 +104,8 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 | T-022 | EXP-09 CVE-2026-78135 detector — deterministic + vantage-aware: 0 FP on 69 captures, correct UNKNOWN when SA predates capture. TP validation (needs a malicious IKE stack) deferred; OQ-31 partial | `experiments/exp09-early-childsa-cve/RESULT.md` |
 | T-023 | Dataset hygiene — `dataset/build_manifest.py` (69 pcaps, per-file SHA-256, causal T2 ground truth, vantage, train/val/locked-test split by session/config) + `dataset/DATASHEET.md` + strict `dataset/validate.py` (exits non-zero on hash/provenance/leakage violations; **PASS**). Credits `naman9271/ipsec-pcap-lab` | `dataset/` |
 | T-025 | OQ-30 closed — Palo Alto Quantum Readiness inventories TLS/SSH via decryption logs + its OWN VPN tunnels; third-party IPsec merely transiting is NOT inventoried. The doc-11 assessment gap stands | `research/11-...md`, OQ-30 |
+| T-030 | System architecture — `build/00-ARCHITECTURE.md`: components, data flow, 9 design invariants, requirement traceability, 6 ADRs, staged build order, testing strategy | `build/00-ARCHITECTURE.md` |
+| T-031 | Evidence extraction layer — `tunnelscope/` package: tshark ingest (reuse, ADR-001), Finding/EvidenceRecord core with mandatory status (ADR-002), 5 extractors (ike_meta, pq_addke, pfs, mode, failure) + CLI. Reproduces EXP-03/04/06/08 on BOTH implementations; 9 tests vs ground truth pass | `tunnelscope/`, `tests/test_extract.py` |
 | T-009b | EXP-06 round 1 — inconclusive, root cause documented | `experiments/exp06-failure-diagnosis/RESULT.md`, commit `27a136d` |
 | T-042 | Project named **TunnelScope** (user choice, 2026-09-11); GitHub repo renamed `7-Bala/SIH26` → `7-Bala/TunnelScope`, local remote updated, top-level README added | `README.md`, `gh repo view 7-Bala/TunnelScope`, this commit |
 
@@ -148,3 +151,8 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 - **2026-09-12** — T-023 (dataset manifest + datasheet + strict validator, PASS) and T-025 (Palo
   Alto does NOT assess transiting third-party IPsec) done. **All pre-build processes finished.**
   Next: T-030 architecture.
+- **2026-09-12** — User: no deadline → full staged build (DEC-023). Blocker cleared. Starting the
+  build phase with T-030 (system architecture) as the first act of building.
+- **2026-09-12** — BUILD started. T-030 architecture (9 invariants, 6 ADRs, traceability). T-031
+  evidence extraction: tunnelscope package works end-to-end, reproduces every experiment finding on
+  strongSwan AND Libreswan captures, 9 ground-truth tests pass. Next: T-032 assessment engine.
