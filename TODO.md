@@ -42,7 +42,7 @@ detector reads is validated. See `experiments/exp09-.../RESULT.md`.
 
 | ID | P | Status | Task | Acceptance criteria | Evidence |
 |---|---|---|---|---|---|
-| T-046 | **P1** | BLOCKED (on user) | Kumaraguru internal ideathon deck (pptx) filled from real project evidence, all layout defects found+fixed; official SIH portal submission (sih.iqubekct.ac.in/submissions/63) — all 6 sections filled+saved, 100% readiness, every section "Strong" | Deck delivered; portal draft saved; PPT attached; user clicks Submit for review when ready | `/Users/bala/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.pptx`; portal shows "Draft saved – readiness 100%" |
+| T-046 | **P1** | DOING (near-done) | Kumaraguru internal ideathon deck (pptx) filled from real project evidence, all layout defects found+fixed; official SIH portal submission (sih.iqubekct.ac.in/submissions/63) — all 6 sections filled+saved, 100% readiness, every section "Strong". User has attached the PPT (2026-09-12). Demo video still to record (user's task) | Deck delivered; portal draft saved; PPT attached ✅; video recorded; user clicks Submit for review when ready | `/Users/bala/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.pptx`; portal shows "Draft saved – readiness 100%" |
 
 ## Roadmap to submission (not yet started)
 
@@ -73,6 +73,7 @@ not a compressed version.)
 
 | ID | Task | Evidence |
 |---|---|---|
+| T-047 | EXP-10 vendor-diversity via free/open-source alternative (user request). OpenIKED/OpenIKEv2/racoon2 each ruled out with evidence (dead/archived/unstable). Built a real OpenBSD 7.9 arm64 VM (Parallels, native, isolated network) running genuine `iked`; strongSwan 6.1.0 (macOS host) negotiated against it — a real, architecturally independent third codebase. `ike_meta`/`ike_crypto`/PQ-posture and EXP-06 failure-diagnosis all generalized correctly on a real auth failure (byte-exact to `iked`'s own log); **also found a genuine gap**: the same heuristic misdiagnosed a real success as rejected (no ESP sent) — reported honestly, not hidden. Also surfaced OpenBSD's own PQ mechanism (`sntrup761x25519`) our detector doesn't recognize (scoped follow-up). 74 pcaps, dataset validator PASS, e2e still 69/69 | `experiments/exp10-openbsd-iked-generalization/RESULT.md`, `testbed/captures/exp10/` (pcap + groundtruth.json), `research/registers/EXPERIMENT-REGISTER.md` |
 | T-001 | Research plan and methodology | `research/00-RESEARCH-PLAN.md` |
 | T-002 | Discover phase D1–D8 | `research/01`–`08-*.md` |
 | T-003 | Define phase | `research/09-DEFINE.md` |
@@ -212,3 +213,17 @@ not a compressed version.)
   validation (Cisco/Palo Alto/Fortinet)** — still genuinely blocked: needs licensed vendor VM images
   or hardware I have no way to obtain; not attempted because there is no legitimate path to do so
   without the user supplying access.
+- **2026-09-13** — User: for vendor-diversity, "see for any other free or open source alternative
+  and use it." Researched real alternatives (not assumed): OpenIKED's Linux port explicitly dropped
+  (confirmed from its own commit history), OpenIKEv2 archived since 2020, racoon2 self-described
+  unstable/abandoned ~15y — all ruled out with evidence, none faked as viable. Built a genuine
+  OpenBSD 7.9 arm64 VM (Parallels Desktop, native — no emulation, this Mac is Apple Silicon) running
+  real `iked`, on an isolated Host-Only network never touching the validated Docker testbed.
+  strongSwan 6.1.0 (installed via Homebrew on the macOS host) negotiated against it — first real
+  cross-check against a codebase outside the strongSwan/Libreswan lineage. User ran the one
+  root-requiring step themselves (tcpdump capture) since I do not enter sudo passwords. Result
+  (T-047/EXP-10): core deterministic extractors generalized correctly, including a byte-exact
+  failure diagnosis on a real auth error — but also caught a genuine false negative (a real success
+  misdiagnosed as rejected, because no ESP traffic had been sent) and a real generalization limit
+  (OpenBSD's own PQ mechanism, `sntrup761x25519`, isn't recognized by our ADDKE-based detector).
+  Both reported honestly, neither hidden. 74 pcaps, e2e still 69/69, dataset validator PASS.
