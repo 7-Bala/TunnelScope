@@ -234,9 +234,55 @@ def extract_cipher_sieve(r: EvidenceRecord) -> None:
                       note=f"one-directional sieve -> {klass}; {len(survivors)} candidate(s)"))
 
 
+def extract_early_childsa_cve(r: EvidenceRecord) -> None:
+    """CVE-2026-78135 (EXP-09): a usable Child SA obtained from a
+    CREATE_CHILD_SA *before IKE_AUTH completes* (strongSwan 5.9.7+, fixed
+    6.1.0). Exchange type, message ID and SPIs are plaintext, so the pattern is
+    passively observable (doc 11, RL-033). Deterministic, no ML.
+
+    Vantage discipline (DEC-003/008): the detector fires only when the SA was
+    seen from its IKE_SA_INIT. If the capture starts mid-tunnel it returns
+    UNKNOWN, never a detection — "I didn't see the handshake" must not read as
+    "the handshake was skipped". This is what makes it 0-false-positive.
+    """
+    ike = getattr(r, "_ike", [])
+    if not ike:
+        return  # ESP-only flow: no IKE to reason about
+    attr = "early_childsa_cve"
+    method = "EXP-09 early-Child-SA (CVE-2026-78135)"
+    init = [m for m in ike if m["exchange"] == 34]
+    auth = [m for m in ike if m["exchange"] == 35]
+    child = [m for m in ike if m["exchange"] == 36]
+
+    if not init:
+        r.add(Finding(attr, Status.UNKNOWN, Vantage.T0, method,
+                      note="SA not observed from IKE_SA_INIT; cannot tell whether a Child SA preceded auth"))
+        return
+    if not child:
+        r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method, value="not-applicable",
+                      note="no CREATE_CHILD_SA exchange in this capture"))
+        return
+    auth_mids = [m["message_id"] for m in auth if m["message_id"] is not None]
+    child_mids = [m["message_id"] for m in child if m["message_id"] is not None]
+    earliest_auth = min(auth_mids) if auth_mids else None
+    earliest_child = min(child_mids) if child_mids else None
+    # CVE pattern: a Child SA exchange with no IKE_AUTH at all, or one whose
+    # message id precedes the first IKE_AUTH.
+    pre_auth = earliest_auth is None or (earliest_child is not None and earliest_child < earliest_auth)
+    if pre_auth:
+        why = ("no IKE_AUTH observed for this SA" if earliest_auth is None
+               else f"IKE_AUTH not seen until msgid {earliest_auth}")
+        r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method,
+                      value="early-child-sa-before-auth",
+                      note=f"CREATE_CHILD_SA at msgid {earliest_child}, {why} — matches CVE-2026-78135"))
+    else:
+        r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method, value="not-detected",
+                      note=f"IKE_AUTH (msgid {earliest_auth}) precedes CREATE_CHILD_SA (msgid {earliest_child})"))
+
+
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,
                   extract_cipher_sieve, extract_pfs, extract_mode, extract_failure,
-                  extract_leakage]
+                  extract_early_childsa_cve, extract_leakage]
 
 
 def build_records(pcap: str) -> list[EvidenceRecord]:

@@ -42,6 +42,23 @@ tunnelscope analyze testbed/captures/exp06r2/exp06r2-f06-rep1.pcap | grep negoti
 **Point:** `ike-proposal-mismatch` vs `peer-unreachable` — diagnosed from structure alone, the thing
 practitioners currently do by hand-reading both configs.
 
+## 5b · CVE-2026-78135 detection, from the wire (30s)
+```bash
+tunnelscope assess testbed/captures/synthetic/cve-2026-78135-plaintext-positive.pcap | grep -A1 CVE
+```
+**Point:** a Child SA before IKE_AUTH → **FAIL (high)**, detected from plaintext headers alone — and
+on all 69 real captures it fires **zero** times (returns UNKNOWN when it can't see the handshake, not
+a false alarm). Say plainly: this capture forges the plaintext *pattern*; a live-crypto exploit is
+out of scope.
+
+## 5c · Higher vantage changes the answer — honestly (30s)
+```bash
+tunnelscope crosstier testbed/captures/classical-baseline.pcap testbed/telemetry/iptfs-contradiction.t2.json
+```
+**Point:** feeding the endpoint's own config resolves `mode` (invisible on the wire), and surfaces a
+**CONTRADICTORY** finding — the config says TFC padding is on, the wire says it's off (the real
+NOTES #13 IP-TFS bug). The tool trusts the endpoint and *flags the divergence* rather than hiding it.
+
 ## 6 · Prove it's not cherry-picked (30s)
 ```bash
 python3 build/validate_e2e.py        # 69/69 vs ground truth

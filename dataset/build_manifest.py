@@ -66,6 +66,7 @@ def arm_of(name):
 
 
 def experiment_of(relpath, name):
+    if relpath.startswith("synthetic/"): return "SYNTHETIC-detector-fixture"
     if relpath.startswith("exp06r2"): return "EXP-06r2-failure-diagnosis"
     if relpath.startswith("exp07"): return "EXP-07-libreswan"
     if name.startswith("rekey-"): return "EXP-03-pfs"
@@ -79,6 +80,9 @@ def experiment_of(relpath, name):
 def split_of(experiment, name):
     # Split by SESSION/CONFIGURATION, never by packet/flow (DEC-009).
     # Locked test set: one held-out repetition family per multi-rep experiment.
+    # Synthetic fixtures are hash-tracked but NEVER enter any ML split: they are
+    # forged plaintext headers for detector testing, not captured traffic.
+    if experiment == "SYNTHETIC-detector-fixture": return "excluded"
     if "rep5" in name: return "locked_test"
     if "rep4" in name: return "validation"
     if experiment == "EXP-07-libreswan": return "locked_test"   # cross-impl = generalisation test

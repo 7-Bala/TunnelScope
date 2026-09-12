@@ -29,10 +29,12 @@ selected on the record in `research/12-DEVELOP.md` (DEC-023).
 Stage 1 = C3 posture engine + C6 PQ/downgrade assessor (deterministic, fully validated) →
 Stage 2 = C8 leakage module → Stage 3 (optional) = C5 endpoint cross-check.
 
-**All pre-build processes complete (2026-09-12).** The only deferred item is the true-positive
-side of T-022 (reproducing CVE-2026-78135 needs a malicious IKE stack), documented and tracked.
-Everything else — every experiment, dataset hygiene, oracles, and all open questions — is closed.
-**Ready to build: T-030 system architecture.** Still need the SIH deadline from the user.
+**Build complete through Stage 3 (2026-09-12).** All stages built and validated, including the
+optional Stage-3 C5 cross-tier module (T-045) and the CVE detector now shipped in the package with
+its sensitivity validated (T-022). The ONLY remaining item is the demo *video*, which is the user's
+to record (`build/sih/DEMO-SCRIPT.md`). The single stated out-of-scope gap is a *live cryptographic*
+CVE-2026-78135 exploit capture (needs a malicious IKE stack); the plaintext-structural pattern the
+detector reads is validated. See `experiments/exp09-.../RESULT.md`.
 
 ---
 
@@ -99,7 +101,8 @@ not a compressed version.)
 | T-044 | EXP-08 mode inference — **NOT-OBSERVABLE at T0**: fixed +20 B offset only with a paired baseline; without one every ESP length is valid in both modes. Resolves the last candidate-ML row → only CS-01 leakage remains ML (DEC-024) | `experiments/exp08-mode-inference/RESULT.md` |
 | T-013 | EXP-04 follow-up — reassembled the fragmented IKE_INTERMEDIATE: initiator KE plaintext 1216 B vs responder 1112 B = **104 B asymmetry**, matching ML-KEM-768 ek(1184)−ct(1088)=96 B. PQ-6 confirmed as secondary signal | `experiments/exp04-pq-length-asymmetry/reassemble_ke.py` + `results/t013_ke_asymmetry.json` |
 | T-024 | EXP-04 oracle — **four independent sources** agree ADDKE1 ID 36 = ML-KEM-768: IANA registry (RFC-ietf-ipsecme-ikev2-mlkem-09), Wireshark master `packet-ike.c`, tshark 4.6.4/4.6.8 parsing our capture, strongSwan T2 log | this table; IANA + Wireshark master verified |
-| T-022 | EXP-09 CVE-2026-78135 detector — deterministic + vantage-aware: 0 FP on 69 captures, correct UNKNOWN when SA predates capture. TP validation (needs a malicious IKE stack) deferred; OQ-31 partial | `experiments/exp09-early-childsa-cve/RESULT.md` |
+| T-022 | EXP-09 CVE-2026-78135 detector — **shipped in the package** (`extract_early_childsa_cve` + `rules/cve-2026-78135.yaml`), deterministic + vantage-aware. Specificity 0 FP/69, sensitivity 1/1 on a synthetic plaintext-structural positive; correct UNKNOWN when SA predates capture. Only a *live-crypto* exploit capture stays out of scope (stated). OQ-31 closed | `experiments/exp09-early-childsa-cve/RESULT.md`, `tests/test_cve.py` (6), `testbed/captures/synthetic/`, `testbed/scripts/gen_cve_positive.py` |
+| T-045 | Stage-3 C5 cross-tier consistency — `tunnelscope/crosstier/` reconciles T2 endpoint telemetry vs T0/T1 findings: escalation (resolves NOT-OBSERVABLE mode), confirmation/refinement (ESP cipher family→exact), CONTRADICTORY (the real NOTES #13 IP-TFS case). CLI `crosstier`. Trust stays causal (T2 is ground truth). 8 tests | `tunnelscope/crosstier/crosstier.py`, `build/02-CROSSTIER.md`, `tests/test_crosstier.py`, `testbed/telemetry/` |
 | T-023 | Dataset hygiene — `dataset/build_manifest.py` (69 pcaps, per-file SHA-256, causal T2 ground truth, vantage, train/val/locked-test split by session/config) + `dataset/DATASHEET.md` + strict `dataset/validate.py` (exits non-zero on hash/provenance/leakage violations; **PASS**). Credits `naman9271/ipsec-pcap-lab` | `dataset/` |
 | T-025 | OQ-30 closed — Palo Alto Quantum Readiness inventories TLS/SSH via decryption logs + its OWN VPN tunnels; third-party IPsec merely transiting is NOT inventoried. The doc-11 assessment gap stands | `research/11-...md`, OQ-30 |
 | T-030 | System architecture — `build/00-ARCHITECTURE.md`: components, data flow, 9 design invariants, requirement traceability, 6 ADRs, staged build order, testing strategy | `build/00-ARCHITECTURE.md` |
@@ -183,3 +186,10 @@ not a compressed version.)
   captures) both DONE. **Build roadmap T-030–T-041 complete.** Remaining are the documented
   deferrals only: T-022 true-positive CVE arm (needs a malicious IKE stack) and the optional Stage-3
   C5 endpoint cross-check. The demo *video* is the user's to record from `build/sih/DEMO-SCRIPT.md`.
+- **2026-09-12** — User: "complete everything left behind except the demo video." Closed both:
+  **T-022** — wired the CVE-2026-78135 detector into the package as a real extractor + `CVE-WATCH`
+  rule, and validated SENSITIVITY with a synthetic plaintext-structural positive (0 FP/69, 1/1 TP).
+  **T-045** — built the optional Stage-3 C5 cross-tier module (T2-vs-wire reconciliation, incl. the
+  NOTES #13 IP-TFS CONTRADICTORY). 38 tests pass (was 24), e2e still 69/69, dataset validator PASS
+  (72 pcaps, synthetic fixture excluded from all ML splits). **Only the demo video now remains, and
+  it is the user's to record.** The one stated out-of-scope gap is a live-crypto CVE exploit capture.

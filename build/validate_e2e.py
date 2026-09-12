@@ -72,6 +72,8 @@ def main():
     for row in rows:
         if row["experiment"] == "EXP-06r1-superseded":
             continue
+        if row.get("split") == "excluded":   # synthetic detector fixtures carry no crypto ground truth
+            continue
         issues = check(row)
         results.append((row["path"], row["experiment"], issues))
 

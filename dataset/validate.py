@@ -56,6 +56,11 @@ def main():
     for r in rows:
         if r["experiment"] == "EXP-06r1-superseded":
             continue
+        # Synthetic detector fixtures (split=excluded) carry no crypto ground
+        # truth by nature — they are forged plaintext headers, never in an ML
+        # split — so the provenance rule does not apply to them.
+        if r["split"] == "excluded":
+            continue
         if not r["ground_truth_json"] and not r["arm"]:
             fails.append(f"no ground truth / known arm: {r['path']}")
 
