@@ -280,3 +280,21 @@ inference signal and it may warrant the one statistical component. Either way th
 P44-1 held (fixed +20 B with a paired baseline); P44-2 held (without a baseline, every ESP length is
 valid in both modes — the +20 B inner header is encrypted). Resolves the last candidate-ML row: no ML
 for mode. Only CS-01 leakage measurement remains ML. `experiments/exp08-mode-inference/RESULT.md`.
+
+### EXP-10 — Cross-implementation, third codebase: real OpenBSD `iked` (T-047, 2026-09-13)
+**Not pre-registered** — reactive, user-directed ("find a free/open-source vendor-diversity
+alternative"), stated honestly rather than retrofitted as if planned. Addresses `research/12-DEVELOP.md`
+§6's red-team risk: "only two implementations tested [strongSwan, Libreswan]." OpenIKED-portable,
+OpenIKEv2 and racoon2 were each checked and ruled out with evidence (dead/archived/unstable — see
+RESULT.md). Ran strongSwan 6.1.0 (macOS host) against a genuine OpenBSD 7.9 `iked` responder (real VM,
+arm64 native, isolated network) — an architecturally independent third codebase, not another
+strongSwan/Libreswan-lineage fork.
+
+**Result:** `ike_meta`/`ike_crypto`/PQ-posture extraction and EXP-06's failure-diagnosis heuristic all
+generalized correctly on a genuine authentication failure (byte-exact match to `iked`'s own log). But
+the same heuristic **misdiagnosed a real success** as `child-sa-rejected`, because no ESP traffic was
+sent and the heuristic conflates "no ESP yet" with "ESP rejected" — a genuine gap the 71 prior captures
+never exercised. Also surfaced that OpenBSD's `iked` supports its own PQ mechanism
+(`sntrup761x25519`, a DH-group-encoded hybrid) architecturally different from strongSwan/Libreswan's
+RFC 9370 ADDKE + ML-KEM — our PQ detector would not recognize it, flagged as a scoped follow-up, not
+silently claimed as working. `experiments/exp10-openbsd-iked-generalization/RESULT.md`.

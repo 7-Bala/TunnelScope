@@ -38,7 +38,8 @@ GT = {
     "pq-downgrade": dict(ike="v2", cipher="AES-GCM-16", keylen=256, mode="tunnel", pfs=False, pq="offered-but-not-used"),
     "tfc-sample": dict(ike="v2", cipher="AES-GCM-16", keylen=256, mode="tunnel", pfs=False, tfc="mtu"),
 }
-IMPL = {"exp07": "libreswan-5.4", "default_pq": "strongswan-6.1.0", "default": "strongswan-5.9.8"}
+IMPL = {"exp07": "libreswan-5.4", "default_pq": "strongswan-6.1.0", "default": "strongswan-5.9.8",
+        "exp10": "strongswan-6.1.0+openbsd-iked-7.9"}
 
 
 def sha256(p):
@@ -68,6 +69,7 @@ def arm_of(name):
 def experiment_of(relpath, name):
     if relpath.startswith("synthetic/"): return "SYNTHETIC-detector-fixture"
     if relpath.startswith("exploitlab/"): return "EXPLOITLAB-live-cve78135"
+    if relpath.startswith("exp10/"): return "EXP-10-openbsd-iked"
     if relpath.startswith("exp06r2"): return "EXP-06r2-failure-diagnosis"
     if relpath.startswith("exp07"): return "EXP-07-libreswan"
     if name.startswith("rekey-"): return "EXP-03-pfs"
@@ -84,6 +86,12 @@ def split_of(experiment, name):
     # Synthetic fixtures are hash-tracked but NEVER enter any ML split: they are
     # forged plaintext headers for detector testing, not captured traffic.
     if experiment in ("SYNTHETIC-detector-fixture", "EXPLOITLAB-live-cve78135"): return "excluded"
+    # EXP-10 holds two SAs with two DIFFERENT outcomes (a failed-auth attempt and a
+    # succeeded retry) in one pcap - real generalization evidence (see RESULT.md +
+    # its own groundtruth.json), but it does not fit the one-arm-per-file ground
+    # truth schema this manifest assumes. Excluded from the automated per-arm e2e
+    # check rather than force a mismatch into a validated 69/69 pipeline.
+    if experiment == "EXP-10-openbsd-iked": return "excluded"
     if "rep5" in name: return "locked_test"
     if "rep4" in name: return "validation"
     if experiment == "EXP-07-libreswan": return "locked_test"   # cross-impl = generalisation test
@@ -100,6 +108,7 @@ def main():
         arm = arm_of(name)
         experiment = experiment_of(rel, name)
         impl = (IMPL["exp07"] if rel.startswith("exp07")
+                else IMPL["exp10"] if rel.startswith("exp10")
                 else IMPL["default_pq"] if name.startswith(("classical-baseline", "pq-mlkem768", "pq-downgrade", "tfc-sample"))
                 else IMPL["default"])
         gt = dict(GT.get(arm, {}))

@@ -1,0 +1,35 @@
+{
+  "capture": "obsd-vendor.pcap",
+  "kind": "LIVE cross-implementation generalization test (EXP-10) - strongSwan 6.1.0 (macOS host, initiator) vs real OpenBSD 7.9 iked (Parallels VM, responder)",
+  "topology": "isolated Parallels Host-Only network 10.37.129.0/24, never joined to the validated Docker testbed; T0 vantage = macOS host's own bridge101 interface (owns no IPsec keys)",
+  "arm": "mirrors cs-aes256gcm16: IKE aes256-sha256-modp2048, ESP aes256gcm16",
+  "sa_1_failed": {
+    "spi_i": "64b8d583ac0a7dde",
+    "gt_outcome": "AUTH_FAILED",
+    "gt_source": "iked daemon log (T2, causal)",
+    "gt_log": "ikev2_auth_verify: ikev2_msg_authverify failed; ikev2_send_auth_failed: authentication failed for IPV4/10.37.129.2",
+    "root_cause": "strongSwan secret used the '0s<...>' prefix convention (meaningful only within the strongSwan ecosystem); iked has no such convention and read it as a literal string, producing different key material on each side",
+    "tunnelscope_diagnosis": "auth-or-child-failure (INFERRED, failure_diag F4 112B rule)",
+    "diagnosis_correct": true
+  },
+  "sa_2_succeeded": {
+    "spi_i": "b867821c0880cb35",
+    "gt_outcome": "ESTABLISHED",
+    "gt_source": "iked daemon log + ipsecctl -sa (T2, causal)",
+    "gt_log": "ikev2_childsa_enable: loaded SPIs: 0x3baa27bb, 0xc82d2075 (enc aes-256-gcm); ikev2_childsa_enable: loaded flows: ESP-10.37.129.50/32=10.37.129.2/32(0); established peer 10.37.129.2:4500 ... as responder (enc aes-256 auth hmac-sha2-256 group modp2048 prf hmac-sha2-256)",
+    "ipsecctl_sa": {
+      "flows": [
+        "flow esp in from 10.37.129.2 to 10.37.129.50 peer 10.37.129.2 srcid IPV4/10.37.129.50 dstid IPV4/10.37.129.2 type require",
+        "flow esp out from 10.37.129.50 to 10.37.129.2 peer 10.37.129.2 srcid IPV4/10.37.129.50 dstid IPV4/10.37.129.2 type require"
+      ],
+      "sad": [
+        "esp tunnel from 10.37.129.2 to 10.37.129.50 spi 0x3baa27bb enc aes-256-gcm",
+        "esp tunnel from 10.37.129.50 to 10.37.129.2 spi 0xc82d2075 enc aes-256-gcm"
+      ]
+    },
+    "tunnelscope_diagnosis": "child-sa-rejected (INFERRED, failure_diag fallback)",
+    "diagnosis_correct": false,
+    "why_wrong": "extract_failure()'s fallback branch (IKE up, no ESP observed) assumes rejection; it has no state for 'IKE and Child SA succeeded, no data sent yet'. No ESP packets exist in this capture because no traffic was pushed through the tunnel before capture stopped, and separately because of a macOS kernel route-install quirk logged during negotiation ('can't install route ... conflicts with IKE traffic') - a host-side limitation unrelated to the tunnel's cryptographic validity."
+  },
+  "note": "Ground truth is T2 (iked's own log + ipsecctl), never TunnelScope's own inference, per DEC-009. Both the correct diagnosis (SA1) and the genuine misdiagnosis (SA2) are recorded honestly."
+}
