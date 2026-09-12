@@ -1,8 +1,8 @@
 # EXP-09 (T-022) — Passive detection of the CVE-2026-78135 pattern (early Child SA before auth)
 
-**Date:** 2026-09-12 (updated) · **Status:** DONE (detector shipped in the package; specificity AND
-plaintext-structural sensitivity validated; live-crypto-exploit reproduction still out of scope with
-reason) · **Closes:** OQ-31
+**Date:** 2026-09-12 (updated) · **Status:** DONE (detector shipped in the package; specificity,
+plaintext-structural sensitivity, AND a genuine live fault-injected reproduction all validated) ·
+**Closes:** OQ-31
 
 ## The CVE
 strongSwan 6.1.0 fixed **CVE-2026-78135**: a peer could obtain a **usable Child SA from a
@@ -52,51 +52,70 @@ shipped extractor fires `early_childsa_cve = early-child-sa-before-auth` (OBSERV
 Sensitivity 1/1, specificity 69/69, and the 2 UNKNOWNs are the mid-tunnel rekey captures the vantage
 guard correctly refuses to judge.
 
-## What is STILL out of scope, and why
-A **live cryptographic exploit** capture is not produced. Reproducing the real attack needs a
-malicious or patched IKE initiator that emits a genuine, key-valid CREATE_CHILD_SA before IKE_AUTH;
-every stock stack refuses, and the post-INIT payloads are encrypted, so a full forgery would need the
-IKE key schedule. The synthetic capture proves the detector sees the pattern; it does **not** prove a
-real exploit emits exactly this sequence (an assumption grounded in RFC 7296 + the CVE description),
-nor that the encrypted payloads would validate. That is the one remaining gap, stated plainly.
+## Live reproduction (2026-09-12) — genuine fault-injected exploit, not synthetic headers
 
-## Verdict
-A **deterministic, vantage-aware** passive detector for the CVE-2026-78135 pattern exists, fires on
-zero legitimate captures, and degrades to UNKNOWN when it cannot see the SA's birth. No AI. It is a
-concrete, CVE-anchored capability no surveyed tool has (doc 11). It ships **guarded**: reported only
-when the SA is observed from IKE_SA_INIT, else UNKNOWN.
+Went beyond the plaintext-structural positive and reproduced the pattern with real strongSwan 6.1.0
+daemons in an isolated Docker lab (`testbed/docker-compose.exploitlab.yml`, completely separate
+network/images from the validated Stage 1-3 testbed — see the ISOLATION WARNING in
+`testbed/images/strongswan-exploitlab/Dockerfile.*`).
 
-## Root cause located in strongSwan source (2026-09-12, attempted live reproduction)
-
-Attempted to go beyond the plaintext-structural positive and reproduce a genuine live exploit in
-the Docker testbed. Cloned strongSwan 6.1.0 (`git b43f6bf`) and traced the actual code path:
-
-**The gate that fixes the CVE** — `src/libcharon/sa/ikev2/task_manager_v2.c`, function
-`reject_request()`, line 1736:
+**Root cause, cited exactly.** Cloned strongSwan 6.1.0 (`git b43f6bf`) and traced the real code:
+`src/libcharon/sa/ikev2/task_manager_v2.c`, function `reject_request()`, lines 1736-1739:
 ```c
 case CREATE_CHILD_SA:
 case IKE_FOLLOWUP_KE:
     reject = state == IKE_CREATED || state == IKE_CONNECTING;
     break;
 ```
-This is precisely the check RL-033's finding describes: a `CREATE_CHILD_SA` request is rejected
-while the responder's IKE_SA is still `IKE_CREATED`/`IKE_CONNECTING` (i.e. before `IKE_AUTH`
-completes moves it to `IKE_ESTABLISHED`). Commenting out this case reproduces the described
-pre-fix responder behavior.
+This is precisely the check RL-033 describes: a `CREATE_CHILD_SA` is rejected while the responder's
+IKE_SA is still `IKE_CREATED`/`IKE_CONNECTING`, i.e. before `IKE_AUTH` moves it to
+`IKE_ESTABLISHED`. `Dockerfile.vulnerable` relaxes exactly this one line (`reject = FALSE`),
+build-time-asserted so a silently-unapplied patch cannot ship as validated.
 
-**Why full reproduction was not completed.** The responder-side gate alone is a one-line, low-risk
-patch. But making a *real* initiator emit an out-of-order `CREATE_CHILD_SA` exchange (rather than
-one folded into `IKE_AUTH`, which is how a legitimate first Child SA is always created —
-`task_manager_v2.c` line ~543) requires also changing which exchange type charon selects for a
-task activated mid-negotiation — traced into `initiate_tasks()`'s per-round exchange-type
-selection, which turned out to depend on state not fully mapped in this session. Patching it
-without full confidence risks a broken, non-representative capture, which is worse than no capture
-(this project's own evidence discipline — DEC-008 — treats a wrong claim as worse than an honest
-gap). Stopped here rather than ship an uncertain patch as validated evidence.
+**The other half — a real initiator that skips auth.** `initiate()`'s round-2 exchange-type
+selection (same file, ~line 654) picks the exchange from the *first recognized task type still
+queued*, independent of IKE_SA state. `Dockerfile.attacker` comments out one line — the
+`activate_task(this, TASK_IKE_AUTH)` call in the `IKE_CREATED` case (line 553) — so `IKE_AUTH` is
+never activated; `TASK_CHILD_CREATE` becomes the first recognized task, and charon sends a genuine,
+correctly-encrypted `CREATE_CHILD_SA` request (using the real SK_ei/SK_ai keys already derived from
+`IKE_SA_INIT`) with **no `IKE_AUTH` ever exchanged**.
 
-**Net effect on the finding:** upgraded from "TP validation deferred, no source inspection" to
-"root cause located and cited (exact file/function/line) from the actual strongSwan 6.1.0 source
-that fixes it; full live-exploit reproduction remains future work, now scoped concretely (patch
-`reject_request()` line 1736 + `initiate_tasks()`'s exchange-type selection on the initiator)."
-Sensitivity is validated at the plaintext-structural level (above); a live-crypto capture is the
-one honestly-stated remaining gap.
+**Result — the wire capture** (`testbed/captures/exploitlab/cve-2026-78135-live.pcap`, real traffic,
+tshark-verified exchange sequence):
+```
+34 (IKE_SA_INIT, msgid 0)  →  34 (response)  →  36 (CREATE_CHILD_SA, msgid 1)  →  36 (response)
+```
+No exchange type 35 (IKE_AUTH) anywhere. TunnelScope's shipped detector fires identically to the
+synthetic case: `early_childsa_cve = OBSERVED early-child-sa-before-auth`, and `CVE-WATCH /
+CVE-2026-78135` returns **FAIL (high)** — now confirmed on genuine live traffic, not forged headers
+(`tests/test_cve.py::test_live_exploitlab_capture_if_present`).
+
+**Gate bypass, independently confirmed via the responder's own debug log** (`cfg=3`): the
+`CREATE_CHILD_SA` request is fully parsed (proposal, TSi, TSr) with **no state-violation rejection**
+— it proceeds past the exact line that fixes the CVE. It fails later for an *unrelated* reason:
+`N(TS_UNACCEPT)`.
+
+**What did NOT happen, and precisely why (T2 ground truth, `*.groundtruth.json`):** no Child SA /
+kernel XFRM state was installed on either side (`swanctl --list-sas` shows empty `child-sas {}` on
+both, `ip xfrm state` empty on the responder). The `cfg`-level debug log shows **zero** `[CFG]
+looking for a child config...` lines before the failure — the responder's `child_create` task, given
+a `CREATE_CHILD_SA` with no prior `IKE_AUTH`, has no linked `peer_cfg`/`child_cfg` to narrow traffic
+selectors against, because that linkage is normally established via `IKE_AUTH`'s identity-based
+peer_cfg selection, which never occurred. This is a diagnosed structural reason, not an unexplained
+gap: forcing a fully kernel-installed Child SA would need a *further*, separate patch to also force
+early peer_cfg selection — genuinely out of scope, since the detector's decision surface (plaintext
+exchange headers) is already proven on real traffic regardless of whether the SA installs.
+
+**Reproducibility:** `bash testbed/scripts/run_exploitlab.sh` rebuilds and reruns the whole lab from
+scratch (build-time patch assertions fail loudly if a future strongSwan release moves the target
+lines); `docker compose -f testbed/docker-compose.exploitlab.yml down` tears it down. Never run
+alongside `testbed/docker-compose.yml` — separate subnets, separate container names, by design.
+
+## Verdict
+A **deterministic, vantage-aware** passive detector for the CVE-2026-78135 pattern exists, fires on
+zero legitimate captures, degrades to UNKNOWN when it cannot see the SA's birth, and now has three
+independent layers of validation: specificity (69 real captures, 0 FP), sensitivity on a synthetic
+plaintext-structural positive (1/1), and sensitivity on a **genuine live fault-injected exploit
+capture** with the exact root-cause gate bypass independently confirmed via the daemon's own debug
+log. No AI. It is a concrete, CVE-anchored capability no surveyed tool has (doc 11). It ships
+**guarded**: reported only when the SA is observed from IKE_SA_INIT, else UNKNOWN.

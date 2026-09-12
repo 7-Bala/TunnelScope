@@ -101,7 +101,7 @@ not a compressed version.)
 | T-044 | EXP-08 mode inference — **NOT-OBSERVABLE at T0**: fixed +20 B offset only with a paired baseline; without one every ESP length is valid in both modes. Resolves the last candidate-ML row → only CS-01 leakage remains ML (DEC-024) | `experiments/exp08-mode-inference/RESULT.md` |
 | T-013 | EXP-04 follow-up — reassembled the fragmented IKE_INTERMEDIATE: initiator KE plaintext 1216 B vs responder 1112 B = **104 B asymmetry**, matching ML-KEM-768 ek(1184)−ct(1088)=96 B. PQ-6 confirmed as secondary signal | `experiments/exp04-pq-length-asymmetry/reassemble_ke.py` + `results/t013_ke_asymmetry.json` |
 | T-024 | EXP-04 oracle — **four independent sources** agree ADDKE1 ID 36 = ML-KEM-768: IANA registry (RFC-ietf-ipsecme-ikev2-mlkem-09), Wireshark master `packet-ike.c`, tshark 4.6.4/4.6.8 parsing our capture, strongSwan T2 log | this table; IANA + Wireshark master verified |
-| T-022 | EXP-09 CVE-2026-78135 detector — **shipped in the package** (`extract_early_childsa_cve` + `rules/cve-2026-78135.yaml`), deterministic + vantage-aware. Specificity 0 FP/69, sensitivity 1/1 on a synthetic plaintext-structural positive; correct UNKNOWN when SA predates capture. Only a *live-crypto* exploit capture stays out of scope (stated). OQ-31 closed | `experiments/exp09-early-childsa-cve/RESULT.md`, `tests/test_cve.py` (6), `testbed/captures/synthetic/`, `testbed/scripts/gen_cve_positive.py` |
+| T-022 | EXP-09 CVE-2026-78135 detector — **shipped in the package** (`extract_early_childsa_cve` + `rules/cve-2026-78135.yaml`), deterministic + vantage-aware. Three validation layers: specificity 0 FP/69, sensitivity 1/1 on a synthetic plaintext-structural positive, AND sensitivity confirmed on a **genuine live fault-injected exploit** (real strongSwan 6.1.0 traffic, two one-line build-asserted patches, isolated Docker lab, root-cause gate bypass independently confirmed via the daemon's own debug log). OQ-31 closed | `experiments/exp09-early-childsa-cve/RESULT.md`, `tests/test_cve.py` (7), `testbed/captures/{synthetic,exploitlab}/`, `testbed/images/strongswan-exploitlab/`, `testbed/docker-compose.exploitlab.yml` |
 | T-045 | Stage-3 C5 cross-tier consistency — `tunnelscope/crosstier/` reconciles T2 endpoint telemetry vs T0/T1 findings: escalation (resolves NOT-OBSERVABLE mode), confirmation/refinement (ESP cipher family→exact), CONTRADICTORY (the real NOTES #13 IP-TFS case). CLI `crosstier`. Trust stays causal (T2 is ground truth). 8 tests | `tunnelscope/crosstier/crosstier.py`, `build/02-CROSSTIER.md`, `tests/test_crosstier.py`, `testbed/telemetry/` |
 | T-023 | Dataset hygiene — `dataset/build_manifest.py` (69 pcaps, per-file SHA-256, causal T2 ground truth, vantage, train/val/locked-test split by session/config) + `dataset/DATASHEET.md` + strict `dataset/validate.py` (exits non-zero on hash/provenance/leakage violations; **PASS**). Credits `naman9271/ipsec-pcap-lab` | `dataset/` |
 | T-025 | OQ-30 closed — Palo Alto Quantum Readiness inventories TLS/SSH via decryption logs + its OWN VPN tunnels; third-party IPsec merely transiting is NOT inventoried. The doc-11 assessment gap stands | `research/11-...md`, OQ-30 |
@@ -194,12 +194,20 @@ not a compressed version.)
   (72 pcaps, synthetic fixture excluded from all ML splits). **Only the demo video now remains, and
   it is the user's to record.** The one stated out-of-scope gap is a live-crypto CVE exploit capture.
 - **2026-09-12** — User: attempt both remaining stretch items (live CVE exploit, vendor-appliance
-  validation). Honest outcome, neither claimed DONE: **live CVE exploit** — cloned strongSwan 6.1.0,
-  located and cited the exact root-cause gate (`task_manager_v2.c reject_request()` line 1736);
-  stopped short of a patched live capture because making a real initiator emit an out-of-order
-  `CREATE_CHILD_SA` needs `initiate_tasks()` exchange-selection changes not fully mapped this
-  session — shipping an unverified patch as "validated" would violate DEC-008. Recorded as a scoped,
-  concrete next step (`experiments/exp09-.../RESULT.md`), commit `fe52c31`. **Vendor-appliance
-  validation (Cisco/Palo Alto/Fortinet)** — genuinely blocked: needs licensed vendor VM images or
-  hardware I have no way to obtain. Neither is a fabricated deferral; both are stated with the exact
-  next step.
+  validation). **live CVE exploit** — first pass cited the root-cause gate but stopped short
+  (commit `fe52c31`); user pushed to finish it, so continued: mapped `initiate_tasks()`'s
+  exchange-selection (picks exchange from the first recognized queued task type, independent of
+  IKE_SA state), wrote two one-line, build-asserted patches (`testbed/images/strongswan-exploitlab/`:
+  attacker skips activating `TASK_IKE_AUTH`; vulnerable relaxes the `reject_request()` gate), built
+  an isolated Docker lab (`testbed/docker-compose.exploitlab.yml`, separate network from the
+  validated testbed), and captured a **genuine live exchange**: real strongSwan 6.1.0 traffic
+  showing `IKE_SA_INIT → CREATE_CHILD_SA` with zero `IKE_AUTH`. TunnelScope's detector fires FAIL
+  (high) on it — same result as the synthetic positive, now on real traffic. Gate bypass
+  independently confirmed via the responder's own cfg-debug log (reached TS evaluation, past the
+  state check). Honestly documented what did NOT happen too: no Child SA installed (T2: empty on
+  both sides), root cause diagnosed (responder has no linked child_cfg without IKE_AUTH's identity
+  selection) rather than left unexplained. **T-022 now genuinely complete at the wire-detection
+  level** (`experiments/exp09-.../RESULT.md`, `tests/test_cve.py` — 7 tests). **Vendor-appliance
+  validation (Cisco/Palo Alto/Fortinet)** — still genuinely blocked: needs licensed vendor VM images
+  or hardware I have no way to obtain; not attempted because there is no legitimate path to do so
+  without the user supplying access.

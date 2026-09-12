@@ -42,14 +42,16 @@ tunnelscope analyze testbed/captures/exp06r2/exp06r2-f06-rep1.pcap | grep negoti
 **Point:** `ike-proposal-mismatch` vs `peer-unreachable` — diagnosed from structure alone, the thing
 practitioners currently do by hand-reading both configs.
 
-## 5b · CVE-2026-78135 detection, from the wire (30s)
+## 5b · CVE-2026-78135 detection, on a real live exploit (30s)
 ```bash
-tunnelscope assess testbed/captures/synthetic/cve-2026-78135-plaintext-positive.pcap | grep -A1 CVE
+tunnelscope assess testbed/captures/exploitlab/cve-2026-78135-live.pcap | grep -A1 CVE
 ```
-**Point:** a Child SA before IKE_AUTH → **FAIL (high)**, detected from plaintext headers alone — and
-on all 69 real captures it fires **zero** times (returns UNKNOWN when it can't see the handshake, not
-a false alarm). Say plainly: this capture forges the plaintext *pattern*; a live-crypto exploit is
-out of scope.
+**Point:** this is not a forged capture — it's genuine traffic from a real strongSwan pair in an
+isolated Docker lab where we bypassed the actual CVE fix (`task_manager_v2.c`'s auth-completion
+gate) and made a real initiator skip IKE_AUTH entirely. The detector fires **FAIL (high)** on the
+exact same wire pattern it fires on synthetically, and on all 69 real captures it fires **zero**
+times (returns UNKNOWN when it can't see the handshake, never a false alarm). See
+`experiments/exp09-early-childsa-cve/RESULT.md` for the full reproduction and root-cause citation.
 
 ## 5c · Higher vantage changes the answer — honestly (30s)
 ```bash
