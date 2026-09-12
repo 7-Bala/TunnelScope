@@ -65,3 +65,38 @@ A **deterministic, vantage-aware** passive detector for the CVE-2026-78135 patte
 zero legitimate captures, and degrades to UNKNOWN when it cannot see the SA's birth. No AI. It is a
 concrete, CVE-anchored capability no surveyed tool has (doc 11). It ships **guarded**: reported only
 when the SA is observed from IKE_SA_INIT, else UNKNOWN.
+
+## Root cause located in strongSwan source (2026-09-12, attempted live reproduction)
+
+Attempted to go beyond the plaintext-structural positive and reproduce a genuine live exploit in
+the Docker testbed. Cloned strongSwan 6.1.0 (`git b43f6bf`) and traced the actual code path:
+
+**The gate that fixes the CVE** — `src/libcharon/sa/ikev2/task_manager_v2.c`, function
+`reject_request()`, line 1736:
+```c
+case CREATE_CHILD_SA:
+case IKE_FOLLOWUP_KE:
+    reject = state == IKE_CREATED || state == IKE_CONNECTING;
+    break;
+```
+This is precisely the check RL-033's finding describes: a `CREATE_CHILD_SA` request is rejected
+while the responder's IKE_SA is still `IKE_CREATED`/`IKE_CONNECTING` (i.e. before `IKE_AUTH`
+completes moves it to `IKE_ESTABLISHED`). Commenting out this case reproduces the described
+pre-fix responder behavior.
+
+**Why full reproduction was not completed.** The responder-side gate alone is a one-line, low-risk
+patch. But making a *real* initiator emit an out-of-order `CREATE_CHILD_SA` exchange (rather than
+one folded into `IKE_AUTH`, which is how a legitimate first Child SA is always created —
+`task_manager_v2.c` line ~543) requires also changing which exchange type charon selects for a
+task activated mid-negotiation — traced into `initiate_tasks()`'s per-round exchange-type
+selection, which turned out to depend on state not fully mapped in this session. Patching it
+without full confidence risks a broken, non-representative capture, which is worse than no capture
+(this project's own evidence discipline — DEC-008 — treats a wrong claim as worse than an honest
+gap). Stopped here rather than ship an uncertain patch as validated evidence.
+
+**Net effect on the finding:** upgraded from "TP validation deferred, no source inspection" to
+"root cause located and cited (exact file/function/line) from the actual strongSwan 6.1.0 source
+that fixes it; full live-exploit reproduction remains future work, now scoped concretely (patch
+`reject_request()` line 1736 + `initiate_tasks()`'s exchange-type selection on the initiator)."
+Sensitivity is validated at the plaintext-structural level (above); a live-crypto capture is the
+one honestly-stated remaining gap.
