@@ -35,6 +35,9 @@ testbed/captures/exp05/*.pcap
 # EXP-06 r2 and EXP-07 captures are small (KB) and are primary evidence: tracked.
 !testbed/captures/exp06r2/*.pcap
 !testbed/captures/exp07/*.pcap
+# Synthetic detector fixtures (T-022 CVE-2026-78135): forged plaintext headers,
+# tiny (<1KB), primary evidence for the detector's sensitivity. Tracked.
+!testbed/captures/synthetic/*.pcap
 
 # Python build/runtime
 __pycache__/

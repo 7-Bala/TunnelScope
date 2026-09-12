@@ -1,7 +1,8 @@
 # EXP-09 (T-022) — Passive detection of the CVE-2026-78135 pattern (early Child SA before auth)
 
-**Date:** 2026-09-12 · **Status:** DONE (detector designed + specificity validated; true-positive
-validation deferred with reason) · **Closes:** OQ-31 (partially)
+**Date:** 2026-09-12 (updated) · **Status:** DONE (detector shipped in the package; specificity AND
+plaintext-structural sensitivity validated; live-crypto-exploit reproduction still out of scope with
+reason) · **Closes:** OQ-31
 
 ## The CVE
 strongSwan 6.1.0 fixed **CVE-2026-78135**: a peer could obtain a **usable Child SA from a
@@ -30,14 +31,34 @@ returns UNKNOWN for them instead of a false alarm. **This is the project's vanta
 (DEC-003/008) catching a real error class**: "I didn't see the handshake" must not read as "the
 handshake didn't happen."
 
-## What is NOT done, and why
-**True-positive validation is deferred.** Reproducing the actual exploit needs a **malicious or
-patched IKE initiator** that emits CREATE_CHILD_SA before IKE_AUTH — every stock implementation
-refuses to. Crafting it by hand is hard: all IKEv2 messages after IKE_SA_INIT are encrypted with
-negotiated keys, so a Scapy forgery would need a full IKE key schedule. Options for later (T-022
-stays open for the TP side): patch strongSwan to send the early exchange, or drive a downgraded
-5.9.x pair with a fault injector. The detector's **logic** is deterministic and its **specificity**
-is validated; its sensitivity against a live exploit is unproven.
+## Sensitivity — validated at the plaintext-structural level (T-022, updated 2026-09-12)
+The detector reads **only plaintext ISAKMP header fields** — exchange type, message id, SPIs — which
+are unencrypted in *every* IKEv2 message (RFC 7296 §3.1), including the ones whose payloads are
+encrypted. Its decision surface is therefore the on-wire **exchange-type / message-id sequence**, and
+that sequence can be exercised faithfully with a header-only capture.
+
+`testbed/scripts/gen_cve_positive.py` forges exactly that sequence —
+`IKE_SA_INIT (msgid 0) → CREATE_CHILD_SA (msgid 1)`, no IKE_AUTH — into
+`testbed/captures/synthetic/cve-2026-78135-plaintext-positive.pcap` (tracked in the manifest as
+`split=excluded`, never in any ML split). tshark parses it as exchange types 34, 34, 36, 36; the
+shipped extractor fires `early_childsa_cve = early-child-sa-before-auth` (OBSERVED, T1) and the
+`CVE-WATCH / CVE-2026-78135` rule returns **FAIL (high)**. Confusion matrix now:
+
+| | detector fires | not-detected / n-a | UNKNOWN (guard) |
+|---|---|---|---|
+| synthetic positive (1) | **1** | 0 | 0 |
+| 69 legitimate captures | **0** | 67 | 2 |
+
+Sensitivity 1/1, specificity 69/69, and the 2 UNKNOWNs are the mid-tunnel rekey captures the vantage
+guard correctly refuses to judge.
+
+## What is STILL out of scope, and why
+A **live cryptographic exploit** capture is not produced. Reproducing the real attack needs a
+malicious or patched IKE initiator that emits a genuine, key-valid CREATE_CHILD_SA before IKE_AUTH;
+every stock stack refuses, and the post-INIT payloads are encrypted, so a full forgery would need the
+IKE key schedule. The synthetic capture proves the detector sees the pattern; it does **not** prove a
+real exploit emits exactly this sequence (an assumption grounded in RFC 7296 + the CVE description),
+nor that the encrypted payloads would validate. That is the one remaining gap, stated plainly.
 
 ## Verdict
 A **deterministic, vantage-aware** passive detector for the CVE-2026-78135 pattern exists, fires on

@@ -1,0 +1,6 @@
+{
+  "_source": "config claims esp = ...-iptfs (padding requested); NOTES #13 kernel lacked CONFIG_XFRM_IPTFS",
+  "mode": "tunnel",
+  "ike_dh_group": "MODP-2048",
+  "tfc_padding_active": true
+}

@@ -78,6 +78,24 @@ def cmd_dashboard(args):
     print(f"wrote {args.out}")
 
 
+def cmd_crosstier(args):
+    from .crosstier.crosstier import load_telemetry, crosstier_records
+    recs = build_records(args.pcap)
+    tel = load_telemetry(args.telemetry)
+    results = crosstier_records(recs, tel)
+    if args.json:
+        print(json.dumps({sa: [c.__dict__ for c in cks] for sa, cks in results.items()}, indent=2, default=str))
+        return
+    glyph = {"escalation": "↑", "confirmation": "=", "contradiction": "✗", "new": "+"}
+    print(f"# cross-tier reconciliation: {args.pcap}  ×  {args.telemetry}")
+    for sa, cks in results.items():
+        print(f"\n  SA {sa}")
+        for c in cks:
+            print(f"    [{glyph.get(c.outcome,'?')}] {c.outcome:13} {c.attribute:20} {c.note}")
+        if any(c.outcome == "contradiction" for c in cks):
+            print("    ! config and wire diverge — see CONTRADICTORY findings above")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tunnelscope")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -97,6 +115,10 @@ def main(argv=None):
     db = sub.add_parser("dashboard", help="self-contained HTML dashboard")
     db.add_argument("pcap"); db.add_argument("-o", "--out", default="tunnelscope-dashboard.html")
     db.set_defaults(func=cmd_dashboard)
+    ct = sub.add_parser("crosstier", help="reconcile T2 endpoint telemetry against passive findings (Stage 3, C5)")
+    ct.add_argument("pcap"); ct.add_argument("telemetry", help="T2 telemetry file (JSON or key: value)")
+    ct.add_argument("--json", action="store_true")
+    ct.set_defaults(func=cmd_crosstier)
     args = ap.parse_args(argv)
     return args.func(args)
 

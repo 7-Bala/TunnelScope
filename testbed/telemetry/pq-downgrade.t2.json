@@ -1,0 +1,8 @@
+{
+  "_source": "swanctl --list-sas + swanctl.conf on the responder (T2), pq-downgrade arm",
+  "mode": "tunnel",
+  "ike_dh_group": "MODP-2048",
+  "pq_key_exchange": "offered-but-not-used",
+  "esp_cipher": "AES-CBC-256",
+  "tfc_padding_active": true
+}

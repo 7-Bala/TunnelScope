@@ -69,4 +69,5 @@ pq-mlkem768-run2.pcap,331165b1976c1b4637e26e6db5fba792165b8184653c93d50e58fcbb89
 pq-mlkem768.pcap,87b45ab3934c437f0d80d3f268273b5f9083c6ff30cc718b2a26a9a3196eb683,44730,139,EXP-04-pq,pq-mlkem768,strongswan-6.1.0,"T0/T1 (router, keyless)",pq-mlkem768.groundtruth.json,AES-GCM-16,256,tunnel,False,ML-KEM-768,train
 rekey-cs-pfs-off-aes256gcm16-run2.pcap,e3beb15b5e2b6a357af19d97619f53bdfad8c3a42732b7ba392a5ed67e06b779,832,4,EXP-03-pfs,cs-pfs-off-aes256gcm16,strongswan-5.9.8,"T0/T1 (router, keyless)",,AES-GCM-16,256,tunnel,False,,train
 rekey-cs-pfs-on-aes256gcm16-run2.pcap,78d01f9897bdbc92eb63f9e0a085339b4a390525f740477c9360b6fd781cb6cc,1376,4,EXP-03-pfs,cs-pfs-on-aes256gcm16,strongswan-5.9.8,"T0/T1 (router, keyless)",,AES-GCM-16,256,tunnel,True,,train
+synthetic/cve-2026-78135-plaintext-positive.pcap,799818c810779aa467a4368ef7a61bd192c89793c2d91049a931097da1bcb865,952,4,SYNTHETIC-detector-fixture,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,excluded
 tfc-sample.pcap,95c036f99b642ca86edd731f5402037465f4089ccc68ce0098291eeda6decdc2,36744,24,EXP-05-leakage,tfc-sample,strongswan-6.1.0,"T0/T1 (router, keyless)",,AES-GCM-16,256,tunnel,False,,train
