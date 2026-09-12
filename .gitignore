@@ -38,6 +38,10 @@ testbed/captures/exp05/*.pcap
 # Synthetic detector fixtures (T-022 CVE-2026-78135): forged plaintext headers,
 # tiny (<1KB), primary evidence for the detector's sensitivity. Tracked.
 !testbed/captures/synthetic/*.pcap
+# Live exploit-lab reproduction (T-022 CVE-2026-78135): genuine captured traffic
+# from a deliberately fault-injected strongSwan pair (see
+# testbed/images/strongswan-exploitlab/). Tiny (<1KB), primary evidence. Tracked.
+!testbed/captures/exploitlab/*.pcap
 
 # Python build/runtime
 __pycache__/

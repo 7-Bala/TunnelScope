@@ -73,3 +73,21 @@ def test_synthetic_positive_capture_if_present():
               r.findings["early_childsa_cve"].value == "early-child-sa-before-auth"
               for r in build_records(pcap))
     assert hit
+
+
+def test_live_exploitlab_capture_if_present():
+    """End-to-end on the LIVE fault-injected reproduction (genuine strongSwan
+    traffic, not synthetic headers — see testbed/images/strongswan-exploitlab/
+    and testbed/captures/exploitlab/*.groundtruth.json). Skips if absent/no
+    tshark: this capture is produced by a one-time lab run, not regenerated
+    per test run."""
+    import shutil
+    pcap = os.path.join(ROOT, "testbed", "captures", "exploitlab",
+                        "cve-2026-78135-live.pcap")
+    if not (shutil.which("tshark") and os.path.exists(pcap)):
+        return
+    from tunnelscope.evidence.extract import build_records
+    hit = any(r.findings.get("early_childsa_cve") and
+              r.findings["early_childsa_cve"].value == "early-child-sa-before-auth"
+              for r in build_records(pcap))
+    assert hit
