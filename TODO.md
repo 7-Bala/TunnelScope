@@ -42,6 +42,7 @@ detector reads is validated. See `experiments/exp09-.../RESULT.md`.
 
 | ID | P | Status | Task | Acceptance criteria | Evidence |
 |---|---|---|---|---|---|
+| T-046 | **P1** | BLOCKED (on user) | Kumaraguru internal ideathon deck (pptx) filled from real project evidence, all layout defects found+fixed; official SIH portal submission (sih.iqubekct.ac.in/submissions/63) — all 6 sections filled+saved, 100% readiness, every section "Strong" | Deck delivered; portal draft saved; PPT attached; user clicks Submit for review when ready | `/Users/bala/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.pptx`; portal shows "Draft saved – readiness 100%" |
 
 ## Roadmap to submission (not yet started)
 
