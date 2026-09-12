@@ -193,3 +193,13 @@ not a compressed version.)
   NOTES #13 IP-TFS CONTRADICTORY). 38 tests pass (was 24), e2e still 69/69, dataset validator PASS
   (72 pcaps, synthetic fixture excluded from all ML splits). **Only the demo video now remains, and
   it is the user's to record.** The one stated out-of-scope gap is a live-crypto CVE exploit capture.
+- **2026-09-12** — User: attempt both remaining stretch items (live CVE exploit, vendor-appliance
+  validation). Honest outcome, neither claimed DONE: **live CVE exploit** — cloned strongSwan 6.1.0,
+  located and cited the exact root-cause gate (`task_manager_v2.c reject_request()` line 1736);
+  stopped short of a patched live capture because making a real initiator emit an out-of-order
+  `CREATE_CHILD_SA` needs `initiate_tasks()` exchange-selection changes not fully mapped this
+  session — shipping an unverified patch as "validated" would violate DEC-008. Recorded as a scoped,
+  concrete next step (`experiments/exp09-.../RESULT.md`), commit `fe52c31`. **Vendor-appliance
+  validation (Cisco/Palo Alto/Fortinet)** — genuinely blocked: needs licensed vendor VM images or
+  hardware I have no way to obtain. Neither is a fabricated deferral; both are stated with the exact
+  next step.
