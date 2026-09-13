@@ -119,3 +119,11 @@ plaintext-structural positive (1/1), and sensitivity on a **genuine live fault-i
 capture** with the exact root-cause gate bypass independently confirmed via the daemon's own debug
 log. No AI. It is a concrete, CVE-anchored capability no surveyed tool has (doc 11). It ships
 **guarded**: reported only when the SA is observed from IKE_SA_INIT, else UNKNOWN.
+
+**Update (2026-09-13, EXP-12):** a fourth validation layer — an unrelated experiment (rekey-cadence
+measurement) incidentally produced a capture with **responder-initiated** rekey activity, which
+exposed a genuine false positive: the detector compared message IDs globally, but IKEv2 message IDs
+are per-*originator* (RFC 7296 §2.1), so a responder-initiated exchange's own counter restarting at
+0 read as "before IKE_AUTH." Fixed to compare by frame/capture order instead of message ID; the "0
+FP / 69" claim now also holds against traffic that exercises bidirectional activity, which the
+original 69 captures happened not to. Full writeup: `experiments/exp12-rekey-cadence/RESULT.md`.

@@ -21,6 +21,20 @@ def _main(pcap):
     ("exp06r2/exp06r2-f06-rep1.pcap", "negotiation_outcome", "OBSERVED", "peer-unreachable"),
     ("rekey-cs-pfs-on-aes256gcm16-run2.pcap", "pfs", "INFERRED", True),
     ("rekey-cs-pfs-off-aes256gcm16-run2.pcap", "pfs", "INFERRED", False),
+    # T-048/EXP-11: peer_auth_method is NOT_OBSERVABLE everywhere (the actual
+    # CERT/AUTH payload is encrypted in IKE_AUTH) - true for a genuine
+    # certificate exchange, a PSK exchange on the SAME cert-capable responder,
+    # and an older PSK-only capture from before any cert config existed.
+    ("exp11/certauth.pcap", "peer_auth_method", "NOT_OBSERVABLE", None),
+    ("exp11/psk-control.pcap", "peer_auth_method", "NOT_OBSERVABLE", None),
+    ("classical-baseline.pcap", "peer_auth_method", "NOT_OBSERVABLE", None),
+    # responder_cert_capability correctly tracks the RESPONDER's own policy
+    # state, not this SA's negotiated method - both exp11 captures share the
+    # same (now cert-capable) bob container, so both are True; the pre-cert
+    # capture is False.
+    ("exp11/certauth.pcap", "responder_cert_capability", "OBSERVED", True),
+    ("exp11/psk-control.pcap", "responder_cert_capability", "OBSERVED", True),
+    ("classical-baseline.pcap", "responder_cert_capability", "OBSERVED", False),
 ])
 def test_finding(pcap, attr, status, value):
     f = _main(pcap).findings[attr]

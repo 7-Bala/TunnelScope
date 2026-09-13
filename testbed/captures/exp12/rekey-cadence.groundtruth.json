@@ -1,0 +1,14 @@
+{
+  "capture": "rekey-cadence.pcap",
+  "kind": "LIVE rekey-cadence measurement (EXP-12, T-048) - 4 manually-triggered CHILD_SA rekeys at ~15s spacing, plus the responder's own auto-rekey activity interleaved",
+  "gt_source": "docker exec commands + date +%s timestamps recorded during the run (T2, causal - the actual swanctl --rekey trigger times), and swanctl --list-sas confirming the final installed SPI",
+  "manual_trigger_spacing_s": [
+    15,
+    15,
+    15
+  ],
+  "tunnelscope_measured": "rekey_cadence: 7 rekeys, intervals [18.37, 15.09, 15.09, 11.01, 0.0, 4.09]s, mean 10.61s",
+  "note_on_interpretation": "two of the measured intervals (15.09, 15.09) match the manual 15s trigger spacing almost exactly, confirming the measurement mechanism is correct. The shorter/near-zero intervals reflect genuine mixed activity: the responder's own auto-rekey timer fired independently and interleaved with the manual triggers - a REAL demonstration of measured (not idealized) cadence, exactly as R12's disposition specifies ('report measured effective rekey behaviour', never a claimed configured value).",
+  "second_finding": "this same capture's responder-initiated rekey exposed a genuine false positive in the CVE-2026-78135 detector (extract_early_childsa_cve): message IDs are per-originator (RFC 7296 sec 2.1), so the responder's own message-id counter restarting at 0 for its self-initiated exchange was being compared against the initiator's message-id sequence as if they were one sequence. Fixed to compare by frame/capture order instead - re-verified against the full 69-capture specificity sweep (0 FP) plus both true-positive captures (synthetic + live exploit), both still fire correctly.",
+  "gt_note": "Ground truth is T2 (our own recorded trigger timestamps + swanctl state, causal), never TunnelScope's own inference, per DEC-009."
+}

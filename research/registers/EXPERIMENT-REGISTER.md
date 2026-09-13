@@ -298,3 +298,24 @@ never exercised. Also surfaced that OpenBSD's `iked` supports its own PQ mechani
 (`sntrup761x25519`, a DH-group-encoded hybrid) architecturally different from strongSwan/Libreswan's
 RFC 9370 ADDKE + ML-KEM — our PQ detector would not recognize it, flagged as a scoped follow-up, not
 silently claimed as working. `experiments/exp10-openbsd-iked-generalization/RESULT.md`.
+
+### EXP-11 — Peer auth-method inference (R7/OQ-05), T-048, 2026-09-13
+Full-project audit found R7's auth-method half (PSK/cert/EAP via CERTREQ/SIGNATURE_HASH_ALGORITHMS,
+disposed as buildable in `research/09-DEFINE.md`) was never built. Built it, then empirically
+falsified the easy version before shipping: SIGNATURE_HASH_ALGORITHMS is unconditional; CERTREQ
+reflects the *responder's* fleet-wide cert policy, not this SA's method (differential test: real
+cert auth + a PSK control on the identical responder, both showed CERTREQ). Shipped honestly:
+`peer_auth_method` NOT-OBSERVABLE at T0/T1 (same encryption-boundary pattern as mode/EXP-08),
+`responder_cert_capability` as the correctly-scoped real capability. R7 corrected in 09-DEFINE.md.
+`experiments/exp11-auth-method-inference/RESULT.md`.
+
+### EXP-12 — Rekey-cadence measurement (R9/R12), T-048, 2026-09-13
+`sa_lifecycle` was planned in `build/00-ARCHITECTURE.md` but never built. Built it: measures
+observed CREATE_CHILD_SA inter-arrival times (never a claimed configured lifetime — IKEv2 negotiates
+none, F-02). Validated on a real capture with 7 rekeys (manual + interleaved auto-rekey); measured
+intervals matched the manual 15s trigger spacing almost exactly. **Also found a real security bug**
+in the shipped CVE-2026-78135 detector: message IDs are per-originator (RFC 7296 §2.1), so a
+responder-initiated rekey's own counter restarting at 0 produced a false positive when compared
+globally against the initiator's sequence. Fixed to compare by frame/capture order; re-verified 0 FP
+on all 69 real captures plus both true positives still firing.
+`experiments/exp12-rekey-cadence/RESULT.md`.
