@@ -108,10 +108,17 @@ exercised on a true positive until this real cross-implementation test surfaced 
 the kind of finding EXP-07 modeled: **a real independent implementation is what proves or breaks a
 heuristic that captures based on our own configs cannot.**
 
-**Not fixed in this session** (would need a new decision on how to distinguish the two cases
-passively — e.g., a longer observation window before concluding rejection, which is a real design
-question, not a one-line patch) — recorded here as a scoped, honest follow-up rather than silently
-patched or hidden.
+**Fixed (2026-09-13), honestly rather than by curve-fitting.** The first instinct — raise the size
+threshold that separates "success" from "rejected" — was tried and empirically falsified before
+being shipped: strongSwan's own F2/F3 rejections are 256 B, but real `iked`'s genuine success is
+224 B, *smaller* than strongSwan's own rejection. No single byte constant classifies both correctly;
+this is implementation-dependent in exactly the way EXP-07 already found for fragment size and
+notify placement, not a bug fixable with a better number. The honest fix: the ambiguous branch now
+reports `post-auth-outcome-ambiguous` (was the specific, sometimes-wrong `child-sa-rejected`) at
+confidence 0.4 (was 0.7), stating both live hypotheses in the note and pointing at T2 or a longer
+observation window as the real resolution. Locked in by
+`tests/test_extract.py::test_failure_diag_admits_ambiguity_on_real_success_with_no_esp`, which
+fails if the code ever again asserts a specific wrong answer with unwarranted confidence.
 
 ## Net effect
 
@@ -143,12 +150,18 @@ only because 5 identical-payload ICMP probes are naturally uniform. The detector
 (`tunnelscope/leakage/leakage.py`: `padding_active = distinct <= 1 and len(lens) >= 5`) cannot
 distinguish "traffic happens to be uniform" from "padding is forcing uniformity", because EXP-05's
 original synthetic dataset always paired non-uniform unpadded traffic against uniform padded
-traffic and never tested naturally-uniform *unpadded* traffic as its own case. **Not fixed this
-session** — recorded as a second honest follow-up, found by the same real-traffic test that found
-the first one.
+traffic and never tested naturally-uniform *unpadded* traffic as its own case.
+
+**Fixed (2026-09-13).** TFC padding pads to path MTU by design (RFC 4303 §2.7); EXP-05's own
+`tfc-sample.pcap` confirms this lands at 1472 B ESP content on this network. The heuristic now
+requires the uniform size to also be large (`>= 1200` B, real headroom below 1472 B for other common
+MTUs) before calling it padding — "all one size" alone is no longer sufficient. Verified against
+both real cases: the false positive (112 B uniform) now correctly reports `False`; the genuine
+MTU-padded capture still correctly reports `True`. Locked in by
+`tests/test_leakage.py::test_naturally_uniform_traffic_is_not_tfc_padding`.
 
 **What did generalize correctly:** `esp_cipher_family` (EXP-01 sieve) correctly did not exclude the
 true cipher; `mode` and `pfs` correctly stayed NOT_OBSERVABLE. The addendum's net effect: EXP-10 now
 covers both IKE-control-plane and ESP-dataplane generalization against the same independent
-codebase, and has surfaced two real, disclosed limitations that seven implementations' worth of
+codebase, and has surfaced (and fixed) two real limitations that seven implementations' worth of
 prior captures (strongSwan classical/PQ + Libreswan) never exercised.

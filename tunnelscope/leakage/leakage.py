@@ -43,7 +43,17 @@ def per_capture(rec: EvidenceRecord) -> dict:
     size_bits = _entropy_bits(lens)                                   # entropy of ESP sizes
     # timing entropy over log-spaced inter-arrival bins (matches EXP-05)
     iat_bits = _entropy_bits(iats, lambda x: int(math.floor(math.log2(x))) if x > 1e-6 else -20)
-    padding_active = distinct <= 1 and len(lens) >= 5                 # all one size -> TFC padding
+    # TFC padding pads to path MTU (RFC 4303 sec 2.7) - EXP-05's own tfc-sample
+    # capture confirms this lands at 1472 B ESP content (1500 B MTU minus
+    # IP/UDP/ESP overhead). "All one size" alone is NOT sufficient: naturally
+    # uniform small traffic (e.g. identical-size ICMP probes, 112 B in a real
+    # capture - EXP-10 addendum) triggered a false positive under the old
+    # rule, because nothing distinguished "uniform because padded to MTU" from
+    # "uniform because the traffic itself is uniform". MIN_PADDED_SIZE gives
+    # real headroom below 1472 B for other common MTUs (1400/1420 with
+    # tunnelling overhead) while safely excluding small uniform traffic.
+    MIN_PADDED_SIZE = 1200
+    padding_active = distinct <= 1 and len(lens) >= 5 and lens[0] >= MIN_PADDED_SIZE
 
     return {
         "n_esp": len(lens), "distinct_esp_lengths": distinct,

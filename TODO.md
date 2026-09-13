@@ -73,7 +73,7 @@ not a compressed version.)
 
 | ID | Task | Evidence |
 |---|---|---|
-| T-047 | EXP-10 vendor-diversity via free/open-source alternative (user request). OpenIKED/OpenIKEv2/racoon2 each ruled out with evidence (dead/archived/unstable). Built a real OpenBSD 7.9 arm64 VM (Parallels, native, isolated network) running genuine `iked`; strongSwan 6.1.0 (macOS host) negotiated against it — a real, architecturally independent third codebase. `ike_meta`/`ike_crypto`/PQ-posture and EXP-06 failure-diagnosis all generalized correctly on a real auth failure (byte-exact to `iked`'s own log); **also found a genuine gap**: the same heuristic misdiagnosed a real success as rejected (no ESP sent) — reported honestly, not hidden. Also surfaced OpenBSD's own PQ mechanism (`sntrup761x25519`) our detector doesn't recognize (scoped follow-up). **Addendum:** pushed into the ESP dataplane too — real ICMP through the tunnel confirmed macOS's kernel *does* enforce the SA (the route warning is non-fatal) and surfaced a second genuine gap: the TFC-padding heuristic false-positives on naturally-uniform traffic. 75 pcaps, dataset validator PASS, e2e still 69/69 | `experiments/exp10-openbsd-iked-generalization/RESULT.md`, `testbed/captures/exp10/` (2 pcaps + 2 groundtruth.json), `research/registers/EXPERIMENT-REGISTER.md` |
+| T-047 | EXP-10 vendor-diversity via free/open-source alternative (user request). OpenIKED/OpenIKEv2/racoon2 each ruled out with evidence (dead/archived/unstable). Built a real OpenBSD 7.9 arm64 VM (Parallels, native, isolated network) running genuine `iked`; strongSwan 6.1.0 (macOS host) negotiated against it — a real, architecturally independent third codebase. `ike_meta`/`ike_crypto`/PQ-posture and EXP-06 failure-diagnosis all generalized correctly on a real auth failure (byte-exact to `iked`'s own log); **also found a genuine gap**: the same heuristic misdiagnosed a real success as rejected (no ESP sent) — reported honestly, not hidden. Also surfaced OpenBSD's own PQ mechanism (`sntrup761x25519`) our detector doesn't recognize (scoped follow-up). **Addendum:** pushed into the ESP dataplane too — real ICMP through the tunnel confirmed macOS's kernel *does* enforce the SA (the route warning is non-fatal) and surfaced a second genuine gap: the TFC-padding heuristic false-positives on naturally-uniform traffic. **Both gaps since fixed honestly** (not curve-fit): failure-diagnosis now reports `post-auth-outcome-ambiguous` at confidence 0.4 instead of a specific wrong answer at 0.7; TFC heuristic now requires size ≥1200B (grounded in RFC 4303's pad-to-MTU), not just uniformity. 75 pcaps, dataset validator PASS, e2e still 69/69, 41/41 unit tests | `experiments/exp10-openbsd-iked-generalization/RESULT.md`, `testbed/captures/exp10/` (2 pcaps + 2 groundtruth.json), `research/registers/EXPERIMENT-REGISTER.md`, `tunnelscope/evidence/extract.py`, `tunnelscope/leakage/leakage.py`, `tests/test_extract.py`, `tests/test_leakage.py` |
 | T-001 | Research plan and methodology | `research/00-RESEARCH-PLAN.md` |
 | T-002 | Discover phase D1–D8 | `research/01`–`08-*.md` |
 | T-003 | Define phase | `research/09-DEFINE.md` |
@@ -240,3 +240,16 @@ not a compressed version.)
   synthetic dataset never tested. Not fixed this session; recorded as a follow-up, same as finding
   1 from the earlier run. 75 pcaps, e2e still 69/69, 39/39 unit tests, dataset validator PASS.
   `experiments/exp10-openbsd-iked-generalization/RESULT.md` (addendum), `testbed/captures/exp10/`.
+- **2026-09-13** — User: "complete all." Fixed both EXP-10 gaps — honestly, not by curve-fitting.
+  **Failure-diagnosis:** first instinct (raise the byte threshold) was tried and empirically
+  falsified before shipping: strongSwan's own F2/F3 rejections are 256B, but iked's real success is
+  224B — smaller than strongSwan's own rejection, so no single constant classifies both. The honest
+  fix: the ambiguous branch now reports `post-auth-outcome-ambiguous` (was the specific,
+  sometimes-wrong `child-sa-rejected`) at confidence 0.4 (was 0.7), stating both live hypotheses.
+  **TFC-padding heuristic:** grounded in the actual protocol concept — TFC pads to path MTU
+  (RFC 4303 §2.7; EXP-05's own capture confirms 1472B on this network) — so "all one size" now also
+  requires size ≥1200B before calling it padding. Verified against both real cases (112B uniform →
+  now correctly False; 1472B MTU-padded → still correctly True). Both locked in with regression
+  tests (`test_extract.py::test_failure_diag_admits_ambiguity_on_real_success_with_no_esp`,
+  `test_leakage.py::test_naturally_uniform_traffic_is_not_tfc_padding`). 41/41 unit tests, e2e still
+  69/69, dataset validator PASS.
