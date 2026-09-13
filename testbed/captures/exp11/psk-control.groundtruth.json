@@ -1,0 +1,5 @@
+{
+  "gt_auth_method": "psk",
+  "gt_source": "swanctl --list-sas (T2): identities are alice-cs-aes256gcm16 / bob-cs-aes256gcm16, PSK connection per testbed/scripts/experiment_matrix.json",
+  "note": "Ground truth is T2 (swanctl --list-sas, causal), never TunnelScope's own inference, per DEC-009."
+}

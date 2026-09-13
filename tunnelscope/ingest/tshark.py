@@ -60,13 +60,13 @@ def ike_messages(pcap: str) -> list[dict]:
               "isakmp.ispi", "isakmp.rspi", "isakmp.exchangetype", "isakmp.flags",
               "isakmp.messageid", "isakmp.length",
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
-              "isakmp.vid_string"]
+              "isakmp.vid_string", "isakmp.certreq.type"]
     rows = _run_fields(pcap, "isakmp", fields)
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         (fn, t, src, dst, iplen, ispi, rspi, exch, flags, mid, ilen,
-         notify, tftype, tfid, vid) = r
+         notify, tftype, tfid, vid, certreq) = r
 
         def ints(s):
             return [int(x) for x in s.split(",") if x != ""]
@@ -84,6 +84,7 @@ def ike_messages(pcap: str) -> list[dict]:
             notify_types=ints(notify),
             transform_types=ints(tftype), transform_ids=ints(tfid),
             vendor_ids=[v for v in vid.split(",") if v] if vid else [],
+            has_certreq=bool(certreq),
         ))
     return msgs
 

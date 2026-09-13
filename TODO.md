@@ -74,6 +74,7 @@ not a compressed version.)
 | ID | Task | Evidence |
 |---|---|---|
 | T-047 | EXP-10 vendor-diversity via free/open-source alternative (user request). OpenIKED/OpenIKEv2/racoon2 each ruled out with evidence (dead/archived/unstable). Built a real OpenBSD 7.9 arm64 VM (Parallels, native, isolated network) running genuine `iked`; strongSwan 6.1.0 (macOS host) negotiated against it — a real, architecturally independent third codebase. `ike_meta`/`ike_crypto`/PQ-posture and EXP-06 failure-diagnosis all generalized correctly on a real auth failure (byte-exact to `iked`'s own log); **also found a genuine gap**: the same heuristic misdiagnosed a real success as rejected (no ESP sent) — reported honestly, not hidden. Also surfaced OpenBSD's own PQ mechanism (`sntrup761x25519`) our detector doesn't recognize (scoped follow-up). **Addendum:** pushed into the ESP dataplane too — real ICMP through the tunnel confirmed macOS's kernel *does* enforce the SA (the route warning is non-fatal) and surfaced a second genuine gap: the TFC-padding heuristic false-positives on naturally-uniform traffic. **Both gaps since fixed honestly** (not curve-fit): failure-diagnosis now reports `post-auth-outcome-ambiguous` at confidence 0.4 instead of a specific wrong answer at 0.7; TFC heuristic now requires size ≥1200B (grounded in RFC 4303's pad-to-MTU), not just uniformity. 75 pcaps, dataset validator PASS, e2e still 69/69, 41/41 unit tests | `experiments/exp10-openbsd-iked-generalization/RESULT.md`, `testbed/captures/exp10/` (2 pcaps + 2 groundtruth.json), `research/registers/EXPERIMENT-REGISTER.md`, `tunnelscope/evidence/extract.py`, `tunnelscope/leakage/leakage.py`, `tests/test_extract.py`, `tests/test_leakage.py` |
+| T-048 | Full-project audit (user: "complete the entire project completely... make an audit"). Checked every PS requirement (R1-R17), every register's stated status, and the architecture doc's own planned components against actual code — not just the task tracker. Found and closed 3 real gaps (EXP-11 auth-method inference, corrected R7; SPI exposed as a Finding, R9; EXP-12 rekey-cadence measurement, R9/R12 — which itself found and fixed a real false-positive bug in the shipped CVE-2026-78135 detector) and 2 stale docs (09-DEFINE.md R16's conformal-prediction claim corrected; OPEN-QUESTIONS.md fully rebuilt from a confusing append-only history to one accurate row per question, with OQ-14 checked live against the portal). 3 items left open by informed choice (OQ-15/22/23, all low-stakes, stated why). 48/48 unit tests, e2e still 69/69, dataset validator PASS (78 pcaps) | `experiments/exp11-auth-method-inference/RESULT.md`, `experiments/exp12-rekey-cadence/RESULT.md`, `research/09-DEFINE.md`, `research/registers/OPEN-QUESTIONS.md`, `research/registers/EXPERIMENT-REGISTER.md`, `tunnelscope/evidence/extract.py`, `tunnelscope/ingest/tshark.py` |
 | T-001 | Research plan and methodology | `research/00-RESEARCH-PLAN.md` |
 | T-002 | Discover phase D1–D8 | `research/01`–`08-*.md` |
 | T-003 | Define phase | `research/09-DEFINE.md` |
@@ -253,3 +254,38 @@ not a compressed version.)
   tests (`test_extract.py::test_failure_diag_admits_ambiguity_on_real_success_with_no_esp`,
   `test_leakage.py::test_naturally_uniform_traffic_is_not_tfc_padding`). 41/41 unit tests, e2e still
   69/69, dataset validator PASS.
+- **2026-09-13** — User: "complete the entire project completely... make an audit what yet is
+  left." Full audit against every PS requirement (R1-R17), every register's stated status, and the
+  architecture doc's own planned components (not just the TODO list). Found 3 real gaps + 2 stale
+  docs, all now closed:
+  - **T-048/EXP-11 (R7/OQ-05, auth method)** — built `extract_auth_hint`, then empirically
+    falsified the easy version before shipping (matches the project's own standing discipline):
+    SIGNATURE_HASH_ALGORITHMS is unconditional (zero discriminating value); CERTREQ reflects the
+    *responder's* fleet-wide cert policy, not this SA's method (differential test: same responder,
+    PSK vs cert, both showed CERTREQ). Shipped honestly: `peer_auth_method` NOT_OBSERVABLE (same
+    encryption-boundary pattern as mode/EXP-08), `responder_cert_capability` as the correctly-scoped
+    real capability. `research/09-DEFINE.md` R7 corrected to match.
+  - **R9 (SPI not exposed)** — trivial fix, `ike_spi` now a citable Finding.
+  - **`research/09-DEFINE.md` R16** — corrected: conformal prediction was never implemented (rightly
+    superseded once 8/9 capabilities turned out deterministic); doc now says so instead of claiming
+    a mechanism that doesn't exist.
+  - **`research/registers/OPEN-QUESTIONS.md`** — full close-out pass. Was genuinely stale (closures
+    appended below instead of updating rows in place, making resolved questions look open). Rebuilt
+    with one row per question; checked OQ-14 (SIH IP/licensing) live against the portal (none
+    published — internal pre-screening layer, non-issue since no third-party GPL code is bundled).
+    3 questions left genuinely, honestly open (OQ-15, OQ-22, OQ-23), all low-stakes.
+  - **T-048/EXP-12 (R9/R12, SA-lifecycle/rekey-cadence)** — built `extract_sa_lifecycle`
+    (`rekey_cadence`, MEASURED, never a claimed configured lifetime — F-02). Validated on a real
+    capture with 7 rekeys (4 manual + 3 interleaved auto); measured intervals matched the manual 15s
+    spacing almost exactly (15.09s, 15.09s). **This same real capture found a genuine security bug**
+    in the already-shipped CVE-2026-78135 detector (T-022/EXP-09): message IDs are per-originator
+    (RFC 7296 §2.1), so a responder-initiated rekey's own counter restarting at 0 produced a false
+    positive when compared globally against the initiator's sequence. Fixed to compare by
+    frame/capture order; re-verified 0 FP on all 69 real captures, both true positives (synthetic +
+    live exploit) still fire correctly. Added as a permanent regression test. EXP-09's own RESULT.md
+    updated to point at this.
+  48/48 unit tests (was 39 at the start of this audit), e2e still 69/69, dataset validator PASS
+  (78 pcaps, was 71). **Full-project audit complete: every PS requirement (R1-R17) is now either
+  built, or an honestly-disclosed, stated limitation — nothing is silently missing.** Remaining,
+  stated explicitly: OQ-15/OQ-22/OQ-23 (low-stakes, open by choice, see OPEN-QUESTIONS.md), the demo
+  video (user's task), and vendor-appliance licensing (blocked on the user supplying access).

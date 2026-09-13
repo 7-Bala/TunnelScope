@@ -77,6 +77,11 @@ def extract_ike_meta(r: EvidenceRecord) -> None:
                   evidence=ev, note="ISAKMP version 2 exchange types present"))
     exch = sorted({m["exchange_name"] for m in ike})
     r.add(Finding("ike_exchanges", Status.OBSERVED, Vantage.T1, "ike_meta", value=exch, evidence=ev))
+    # R9 (T-048): SPI was already tracked internally for SA grouping but never
+    # surfaced as a citable Finding.
+    if r.ike_spi_i:
+        r.add(Finding("ike_spi", Status.OBSERVED, Vantage.T1, "ike_meta",
+                      value={"initiator": r.ike_spi_i, "responder": r.ike_spi_r or None}))
 
 
 def extract_pq_addke(r: EvidenceRecord) -> None:
@@ -135,11 +140,78 @@ def extract_pfs(r: EvidenceRecord) -> None:
                       confidence=0.9, evidence=ev, note=f"CREATE_CHILD_SA request {max(sizes) if sizes else '?'} B, no KE payload"))
 
 
+def extract_sa_lifecycle(r: EvidenceRecord) -> None:
+    """R9/R12 (T-048, EXP-12): measured rekey cadence. IKEv2 does not negotiate
+    a key lifetime (F-02) — the only honest answer is a MEASUREMENT of
+    observed CREATE_CHILD_SA rekey timing, never a claimed configured value.
+    Needs >=2 rekeys in the capture to measure an interval at all."""
+    ike = getattr(r, "_ike", [])
+    ccsa_req = sorted([m for m in ike if m["exchange"] == 36 and not m["is_response"]],
+                      key=lambda m: m["t"])
+    if len(ccsa_req) < 2:
+        r.add(Finding("rekey_cadence", Status.NOT_OBSERVABLE, Vantage.T1, "sa_lifecycle (EXP-12)",
+                      note=f"{len(ccsa_req)} CREATE_CHILD_SA rekey(s) observed; need >=2 to measure "
+                           "an interval"))
+        return
+    intervals = [round(b["t"] - a["t"], 2) for a, b in zip(ccsa_req, ccsa_req[1:])]
+    ev = [EvidencePtr(r.source_pcap, m["frame"], "frame.time_relative", str(m["t"])) for m in ccsa_req]
+    r.add(Finding("rekey_cadence", Status.MEASURED, Vantage.T1, "sa_lifecycle (EXP-12)",
+                  value={"n_rekeys": len(ccsa_req), "intervals_s": intervals,
+                         "mean_interval_s": round(sum(intervals) / len(intervals), 2)},
+                  evidence=ev,
+                  note="measured from observed CREATE_CHILD_SA timing, never the configured/"
+                       "negotiated lifetime - IKEv2 does not negotiate one (F-02)"))
+
+
 def extract_mode(r: EvidenceRecord) -> None:
     """R4 tunnel/transport. EXP-08: NOT-OBSERVABLE at T0 from ESP alone."""
     r.add(Finding("mode", Status.NOT_OBSERVABLE, Vantage.T0, "mode (EXP-08)",
                   note="tunnel vs transport is not recoverable from passive ESP (every length is "
                        "valid in both modes; the inner IP header is encrypted). Report from T2/topology."))
+
+
+def extract_auth_hint(r: EvidenceRecord) -> None:
+    """R7/OQ-05 (T-048, EXP-11): does the on-wire trace tell us the PEER
+    AUTHENTICATION METHOD (PSK / certificate / EAP) this specific tunnel used?
+
+    Tested empirically before shipping, per DEC-008 (never claim what wasn't
+    verified): CERTREQ and SIGNATURE_HASH_ALGORITHMS both appear in the
+    PLAINTEXT IKE_SA_INIT, so 09-DEFINE.md's original disposition ("I at T1
+    via CERTREQ/SIGHASH presence") looked buildable. It is only half true.
+
+    - SIGNATURE_HASH_ALGORITHMS (notify 16431) is emitted UNCONDITIONALLY —
+      confirmed present even in a capture from a responder with zero
+      certificate configuration anywhere. Zero discriminating value.
+    - CERTREQ presence tracks whether the RESPONDER has ANY certificate trust
+      anchor loaded in its config — a differential test on the identical
+      responder (same container, same swanctl.conf) showed CERTREQ present in
+      BOTH a PSK-only exchange and a certificate exchange, once ANY
+      certificate-capable connection existed in that responder's policy.
+      This makes sense protocol-wise: CERTREQ is sent in IKE_SA_INIT, before
+      IDi identifies which connection will be matched, so the responder
+      cannot yet know which policy applies to THIS tunnel.
+
+    Net: the per-tunnel auth method is only settled inside IKE_AUTH's CERT/
+    AUTH payloads, which are encrypted — NOT-OBSERVABLE at T0/T1, the same
+    encryption-boundary pattern as mode (EXP-08). CERTREQ presence is kept as
+    its own, honestly-scoped finding: a genuine, useful signal about the
+    RESPONDER'S fleet-wide policy capability, not this SA's actual method.
+    """
+    ike = getattr(r, "_ike", [])
+    if not ike:
+        return
+    init_resp = [m for m in ike if m["exchange"] == 34 and m["is_response"]]
+    r.add(Finding("peer_auth_method", Status.NOT_OBSERVABLE, Vantage.T1, "auth_hint (EXP-11)",
+                  note="the actual CERT/AUTH payload is inside encrypted IKE_AUTH; CERTREQ/SIGHASH "
+                       "in IKE_SA_INIT do not reliably indicate THIS tunnel's auth method (EXP-11)"))
+    if not init_resp:
+        return
+    certreq_seen = any(m.get("has_certreq") for m in init_resp)
+    r.add(Finding("responder_cert_capability", Status.OBSERVED, Vantage.T1, "auth_hint (EXP-11)",
+                  value=certreq_seen,
+                  note="CERTREQ presence in the IKE_SA_INIT response - reflects the responder's "
+                       "own certificate trust-anchor policy fleet-wide, not necessarily this SA's "
+                       "negotiated method (validated by a same-responder differential test, EXP-11)"))
 
 
 def extract_failure(r: EvidenceRecord) -> None:
@@ -279,27 +351,37 @@ def extract_early_childsa_cve(r: EvidenceRecord) -> None:
         r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method, value="not-applicable",
                       note="no CREATE_CHILD_SA exchange in this capture"))
         return
-    auth_mids = [m["message_id"] for m in auth if m["message_id"] is not None]
-    child_mids = [m["message_id"] for m in child if m["message_id"] is not None]
-    earliest_auth = min(auth_mids) if auth_mids else None
-    earliest_child = min(child_mids) if child_mids else None
-    # CVE pattern: a Child SA exchange with no IKE_AUTH at all, or one whose
-    # message id precedes the first IKE_AUTH.
-    pre_auth = earliest_auth is None or (earliest_child is not None and earliest_child < earliest_auth)
+    # Order by FRAME NUMBER (capture sequence), never by raw message ID.
+    # Bug found by EXP-12 (T-048, 2026-09-13): message IDs are maintained
+    # PER ORIGINATOR (RFC 7296 sec 2.1) — once the peer that answered IKE_AUTH
+    # independently initiates its own exchange (a self-initiated rekey, DPD,
+    # anything), that peer's own message-id counter restarts at 0. Comparing
+    # "earliest child msgid < earliest auth msgid" then compares two DIFFERENT
+    # counters and false-positives on ordinary bidirectional rekey activity —
+    # confirmed on a real capture where the responder independently rekeyed
+    # (testbed/captures/exp12/rekey-cadence.pcap). Frame number is a single,
+    # globally consistent order regardless of which side originated what.
+    earliest_auth_frame = min((m["frame"] for m in auth), default=None)
+    earliest_child_frame = min((m["frame"] for m in child), default=None)
+    earliest_child_mid = min(m["message_id"] for m in child
+                             if m["frame"] == earliest_child_frame)
+    pre_auth = earliest_auth_frame is None or earliest_child_frame < earliest_auth_frame
     if pre_auth:
-        why = ("no IKE_AUTH observed for this SA" if earliest_auth is None
-               else f"IKE_AUTH not seen until msgid {earliest_auth}")
+        why = ("no IKE_AUTH observed for this SA" if earliest_auth_frame is None
+               else f"IKE_AUTH first seen at frame {earliest_auth_frame}")
         r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method,
                       value="early-child-sa-before-auth",
-                      note=f"CREATE_CHILD_SA at msgid {earliest_child}, {why} — matches CVE-2026-78135"))
+                      note=f"CREATE_CHILD_SA at frame {earliest_child_frame} (msgid {earliest_child_mid}), "
+                           f"{why} — matches CVE-2026-78135"))
     else:
         r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method, value="not-detected",
-                      note=f"IKE_AUTH (msgid {earliest_auth}) precedes CREATE_CHILD_SA (msgid {earliest_child})"))
+                      note=f"IKE_AUTH (frame {earliest_auth_frame}) precedes CREATE_CHILD_SA "
+                           f"(frame {earliest_child_frame})"))
 
 
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,
-                  extract_cipher_sieve, extract_pfs, extract_mode, extract_failure,
-                  extract_early_childsa_cve, extract_leakage]
+                  extract_cipher_sieve, extract_pfs, extract_sa_lifecycle, extract_mode,
+                  extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_leakage]
 
 
 def build_records(pcap: str) -> list[EvidenceRecord]:

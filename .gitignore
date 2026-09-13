@@ -26,6 +26,12 @@ venv/
 # Docker volumes / runtime state
 testbed/**/run/
 testbed/**/ipsec.d/private/
+# EXP-11 (T-048): the test CA + RSA private keys for the auth-method
+# experiment. Throwaway, local-only, zero real-world value — but private
+# keys never belong in git regardless. Public certs are kept (harmless,
+# useful for reproducibility); regenerate keys with `ipsec pki --gen` per
+# experiments/exp11-auth-method-inference/RESULT.md if reproducing this.
+testbed/certauth/pki/private/
 
 # tool outputs
 results/**/*.tmp
@@ -45,6 +51,12 @@ testbed/captures/exp05/*.pcap
 # EXP-10 vendor-diversity generalization test (strongSwan vs real OpenBSD iked),
 # incl. the ESP-dataplane addendum. Tiny (<4KB each), primary evidence. Tracked.
 !testbed/captures/exp10/*.pcap
+# EXP-11 auth-method inference (R7/OQ-05): real cert-auth + differential PSK
+# control on the same responder. Tiny (<5KB each), primary evidence. Tracked.
+!testbed/captures/exp11/*.pcap
+# EXP-12 rekey-cadence measurement (R9/R12); also the capture that found the
+# CVE-detector false positive. Tiny (<3KB), primary evidence. Tracked.
+!testbed/captures/exp12/*.pcap
 
 # Python build/runtime
 __pycache__/

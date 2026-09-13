@@ -63,6 +63,9 @@ exp07/e7-pfs-on.pcap,21292bff6143be7dec4efce558e660b724419714d0219c35bcf28b7dc27
 exp07/e7-pq.pcap,55682b9e2005a3880ea35148f75185494f3a26e68ba3cfd5327071aa747d46cf,44948,142,EXP-07-libreswan,,libreswan-5.4,"T0/T1 (router, keyless)",e7-pq.groundtruth.json,,,,,,locked_test
 exp10/obsd-esp-test.pcap,0c9cded057d251f03e315bdc7838b80e170eb75f86a2df240977f77b329ac787,1724,10,EXP-10-openbsd-iked,,strongswan-6.1.0+openbsd-iked-7.9,"T0/T1 (router, keyless)",obsd-esp-test.groundtruth.json,,,,,,excluded
 exp10/obsd-vendor.pcap,ccd40cd3a840d38e582d152dee454ce0d8eb0b610e958303fd2cdd656bc98581,3460,8,EXP-10-openbsd-iked,,strongswan-6.1.0+openbsd-iked-7.9,"T0/T1 (router, keyless)",obsd-vendor.groundtruth.json,,,,,,excluded
+exp11/certauth.pcap,6d4a3e8e8b00b3bb37dc21d57b82c2d1be24d7b1f082a8d6a16fc77ad3d8c097,4373,6,EXP-11-auth-method,,strongswan-5.9.8,"T0/T1 (router, keyless)",certauth.groundtruth.json,,,,,,excluded
+exp11/psk-control.pcap,cba6ad21dda0d0f76b10ccb531c2df7982b5657f4547c83d556dafd9a81cf096,1785,4,EXP-11-auth-method,,strongswan-5.9.8,"T0/T1 (router, keyless)",psk-control.groundtruth.json,,,,,,excluded
+exp12/rekey-cadence.pcap,e38bbe2b7a3f5df4e78af49a383d89f1bba3a9544da3c0b39d15aca37bdeea53,7400,32,EXP-12-rekey-cadence,,strongswan-5.9.8,"T0/T1 (router, keyless)",rekey-cadence.groundtruth.json,,,,,,excluded
 exploitlab/cve-2026-78135-live.pcap,f08caadd2d28519090c708c0182b1d7fb7148cb596b769d3590e127904792891,1472,4,EXPLOITLAB-live-cve78135,,strongswan-5.9.8,"T0/T1 (router, keyless)",cve-2026-78135-live.groundtruth.json,,,,,,excluded
 fail-proposal-mismatch.pcap,991565abc5dd0f3deb9f27f5054415ac0b3a66ff08deaddd2a42343f16eeda0c,45320,144,EXP-06r1-superseded,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,train
 fail-ts-mismatch.pcap,328afc27f4c88d633f7e0bbb5dc55821b4120e4d347197ff5bec9eb3d9aa019c,43648,140,EXP-06r1-superseded,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,train

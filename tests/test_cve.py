@@ -23,8 +23,13 @@ def _rec(msgs):
     return r
 
 
-def _m(exch, mid):
-    return {"exchange": exch, "message_id": mid, "is_response": False}
+def _m(exch, mid, frame=None):
+    # frame defaults to mid: every existing fixture here already chose msgid
+    # values to reflect intended chronological order, so this keeps them
+    # unchanged. Pass frame= explicitly (as the new regression test does) when
+    # a fixture needs message-id and frame order to actually differ.
+    return {"exchange": exch, "message_id": mid, "is_response": False,
+            "frame": frame if frame is not None else mid}
 
 
 def test_fires_on_child_before_auth():
@@ -73,6 +78,25 @@ def test_synthetic_positive_capture_if_present():
               r.findings["early_childsa_cve"].value == "early-child-sa-before-auth"
               for r in build_records(pcap))
     assert hit
+
+
+def test_responder_initiated_rekey_is_not_a_false_positive():
+    """Regression for the real false positive EXP-12 found (2026-09-13):
+    message IDs are per-ORIGINATOR (RFC 7296 sec 2.1). Once the peer that
+    answered IKE_AUTH independently initiates its own exchange, its own
+    message-id counter restarts at 0 - comparing that against the other
+    side's message ids (the original bug) makes a routine responder-initiated
+    rekey look like CREATE_CHILD_SA-before-auth. Minimal repro: IKE_AUTH at
+    msgid 1 (initiator's sequence), then a responder-initiated CREATE_CHILD_SA
+    at msgid 0 (responder's OWN, freshly-started sequence) - frame order still
+    correctly shows auth first."""
+    r = _rec([
+        _m(34, 0),                                   # IKE_SA_INIT
+        {"exchange": 35, "message_id": 1, "is_response": False, "frame": 3},
+        {"exchange": 36, "message_id": 0, "is_response": False, "frame": 10},  # responder's own rekey, own counter
+    ])
+    extract_early_childsa_cve(r)
+    assert r.findings["early_childsa_cve"].value == "not-detected"
 
 
 def test_live_exploitlab_capture_if_present():

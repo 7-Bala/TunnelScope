@@ -1,0 +1,6 @@
+{
+  "gt_auth_method": "pubkey-rsa-x509",
+  "gt_source": "swanctl --list-sas (T2, causal): local/remote identities are full X.509 DNs (C=IN, O=TunnelScope, CN=alice-certauth / bob-certauth), CA-signed by testbed/certauth/pki/",
+  "gt_ike_log": "[IKE] authentication of 'C=IN, O=TunnelScope, CN=bob-certauth' with RSA_EMSA_PKCS1_SHA2_256 successful",
+  "note": "Ground truth is T2 (swanctl --list-sas, causal), never TunnelScope's own inference, per DEC-009."
+}
