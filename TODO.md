@@ -73,7 +73,7 @@ not a compressed version.)
 
 | ID | Task | Evidence |
 |---|---|---|
-| T-047 | EXP-10 vendor-diversity via free/open-source alternative (user request). OpenIKED/OpenIKEv2/racoon2 each ruled out with evidence (dead/archived/unstable). Built a real OpenBSD 7.9 arm64 VM (Parallels, native, isolated network) running genuine `iked`; strongSwan 6.1.0 (macOS host) negotiated against it — a real, architecturally independent third codebase. `ike_meta`/`ike_crypto`/PQ-posture and EXP-06 failure-diagnosis all generalized correctly on a real auth failure (byte-exact to `iked`'s own log); **also found a genuine gap**: the same heuristic misdiagnosed a real success as rejected (no ESP sent) — reported honestly, not hidden. Also surfaced OpenBSD's own PQ mechanism (`sntrup761x25519`) our detector doesn't recognize (scoped follow-up). 74 pcaps, dataset validator PASS, e2e still 69/69 | `experiments/exp10-openbsd-iked-generalization/RESULT.md`, `testbed/captures/exp10/` (pcap + groundtruth.json), `research/registers/EXPERIMENT-REGISTER.md` |
+| T-047 | EXP-10 vendor-diversity via free/open-source alternative (user request). OpenIKED/OpenIKEv2/racoon2 each ruled out with evidence (dead/archived/unstable). Built a real OpenBSD 7.9 arm64 VM (Parallels, native, isolated network) running genuine `iked`; strongSwan 6.1.0 (macOS host) negotiated against it — a real, architecturally independent third codebase. `ike_meta`/`ike_crypto`/PQ-posture and EXP-06 failure-diagnosis all generalized correctly on a real auth failure (byte-exact to `iked`'s own log); **also found a genuine gap**: the same heuristic misdiagnosed a real success as rejected (no ESP sent) — reported honestly, not hidden. Also surfaced OpenBSD's own PQ mechanism (`sntrup761x25519`) our detector doesn't recognize (scoped follow-up). **Addendum:** pushed into the ESP dataplane too — real ICMP through the tunnel confirmed macOS's kernel *does* enforce the SA (the route warning is non-fatal) and surfaced a second genuine gap: the TFC-padding heuristic false-positives on naturally-uniform traffic. 75 pcaps, dataset validator PASS, e2e still 69/69 | `experiments/exp10-openbsd-iked-generalization/RESULT.md`, `testbed/captures/exp10/` (2 pcaps + 2 groundtruth.json), `research/registers/EXPERIMENT-REGISTER.md` |
 | T-001 | Research plan and methodology | `research/00-RESEARCH-PLAN.md` |
 | T-002 | Discover phase D1–D8 | `research/01`–`08-*.md` |
 | T-003 | Define phase | `research/09-DEFINE.md` |
@@ -227,3 +227,16 @@ not a compressed version.)
   misdiagnosed as rejected, because no ESP traffic had been sent) and a real generalization limit
   (OpenBSD's own PQ mechanism, `sntrup761x25519`, isn't recognized by our ADDKE-based detector).
   Both reported honestly, neither hidden. 74 pcaps, e2e still 69/69, dataset validator PASS.
+- **2026-09-13** — User: "proceed with next." Pushed EXP-10 further to cover the ESP dataplane
+  (the first run had 0 ESP packets). VM had gone to a stale suspended snapshot between sessions;
+  fixed with `prlctl reset` for a genuine cold boot. Re-established the tunnel, sent real ICMP
+  through it, captured on the same T0 vantage. **Two more honest findings:** (1) charon's
+  `[KNL] can't install route ... conflicts with IKE traffic` warning is NON-FATAL — macOS's kernel
+  did enforce the SA; all 10 packets were genuine ESP with the correct SPIs (T2-confirmed via
+  OpenBSD's `ipsecctl -sa`). (2) A **second real, previously-undisclosed gap**: the TFC-padding
+  heuristic (`leakage.py`) false-positives on naturally-uniform traffic (5 identical-size ICMP
+  probes triggered `tfc_padding_active: True` with no padding configured) — it cannot distinguish
+  "uniform because padded" from "uniform because the traffic itself is uniform," a case EXP-05's
+  synthetic dataset never tested. Not fixed this session; recorded as a follow-up, same as finding
+  1 from the earlier run. 75 pcaps, e2e still 69/69, 39/39 unit tests, dataset validator PASS.
+  `experiments/exp10-openbsd-iked-generalization/RESULT.md` (addendum), `testbed/captures/exp10/`.

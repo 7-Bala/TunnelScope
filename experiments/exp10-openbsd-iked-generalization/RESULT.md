@@ -121,3 +121,34 @@ plus one architecturally independent third codebase, real traffic, real ground t
 being equally honest that this run found a genuine limitation in the failure-diagnosis heuristic
 that the first 71 captures never exposed. Both the win and the gap are the same kind of evidence
 this project is built to produce.
+
+## Addendum (2026-09-13) — real ESP dataplane traffic, and a second genuine gap
+
+The original run above had no ESP packets. Re-established the same tunnel (fresh IKE_SA after a
+clean VM reboot, same arm, new SPIs `0xae499361`/`0xc924358f`) and this time sent 5 ICMP echo
+requests through it, capturing on the same keyless `bridge101` T0 vantage:
+`testbed/captures/exp10/obsd-esp-test.pcap` + `.groundtruth.json` (T2: OpenBSD `ipsecctl -sa`).
+
+**Finding 1 — the earlier route warning is non-fatal.** charon's
+`[KNL] can't install route ... conflicts with IKE traffic` looked like it might mean macOS never
+enforces the SA on local dataplane traffic. It doesn't: all 10 captured packets (5 request + 5
+reply) are genuine ESP (`ip.proto=50`) carrying the exact SPIs both sides' T2 state confirms for
+this SA. The warning is about strongSwan's convenience route-table entry, not the kernel's actual
+policy enforcement.
+
+**Finding 2 — a second genuine, previously-undisclosed heuristic gap, this time in leakage
+measurement.** TunnelScope reported `tfc_padding_active: True` on this capture. OpenBSD's `iked`
+was not configured with any padding option in this test — the 10 ESP frames are uniform in size
+only because 5 identical-payload ICMP probes are naturally uniform. The detector
+(`tunnelscope/leakage/leakage.py`: `padding_active = distinct <= 1 and len(lens) >= 5`) cannot
+distinguish "traffic happens to be uniform" from "padding is forcing uniformity", because EXP-05's
+original synthetic dataset always paired non-uniform unpadded traffic against uniform padded
+traffic and never tested naturally-uniform *unpadded* traffic as its own case. **Not fixed this
+session** — recorded as a second honest follow-up, found by the same real-traffic test that found
+the first one.
+
+**What did generalize correctly:** `esp_cipher_family` (EXP-01 sieve) correctly did not exclude the
+true cipher; `mode` and `pfs` correctly stayed NOT_OBSERVABLE. The addendum's net effect: EXP-10 now
+covers both IKE-control-plane and ESP-dataplane generalization against the same independent
+codebase, and has surfaced two real, disclosed limitations that seven implementations' worth of
+prior captures (strongSwan classical/PQ + Libreswan) never exercised.
