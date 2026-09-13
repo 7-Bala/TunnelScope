@@ -39,3 +39,19 @@ def test_key_length_never_read_from_esp():
     for pcap in ("cs-aes128gcm16.pcap", "cs-aes256gcm16.pcap"):
         r = _main(pcap)
         assert "esp_key_length" not in r.findings
+
+
+def test_failure_diag_admits_ambiguity_on_real_success_with_no_esp():
+    """EXP-10 regression: a genuine IKE_AUTH success (real OpenBSD iked, T2-confirmed
+    established with SPIs and installed flows) with no ESP yet observed must NOT be
+    reported as the specific wrong answer 'child-sa-rejected' at high confidence — a
+    response-size threshold cannot safely tell the two cases apart across
+    implementations (strongSwan F0 success=336B vs F2/F3 rejection=256B; this real
+    iked success=224B, smaller than strongSwan's own rejection size). It must instead
+    be reported as genuinely ambiguous, at low confidence."""
+    recs = build_records(os.path.join(CAP, "exp10", "obsd-vendor.pcap"))
+    succeeded = next(r for r in recs if r.ike_spi_i == "b867821c0880cb35")
+    f = succeeded.findings["negotiation_outcome"]
+    assert f.value != "child-sa-rejected", "must not assert the specific wrong diagnosis"
+    assert f.value == "post-auth-outcome-ambiguous"
+    assert f.confidence <= 0.5, "must not claim high confidence in an unresolved case"

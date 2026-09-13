@@ -170,9 +170,26 @@ def extract_failure(r: EvidenceRecord) -> None:
     if esp:
         r.add(Finding("negotiation_outcome", Status.OBSERVED, Vantage.T1, "failure_diag F0",
                       value="success", note="IKE_AUTH completed and ESP flows")); return
-    r.add(Finding("negotiation_outcome", Status.INFERRED, Vantage.T1, "failure_diag",
-                  value="child-sa-rejected", confidence=0.7,
-                  note="IKE up, no ESP; proposal or traffic-selector mismatch (reason needs T2)"))
+    # IKE up, no ESP observed. Originally reported as "child-sa-rejected" at
+    # confidence 0.7 (backed by 10/10 EXP-06r2 F2/F3 captures, all genuine
+    # rejections at this exact structural point). EXP-10 (real OpenBSD iked)
+    # falsified that confidence: a genuine SUCCESS produced a 224 B IKE_AUTH
+    # response - smaller than strongSwan's own F2/F3 REJECTION size (256 B),
+    # because no ESP had been sent yet. A response-size threshold cannot be
+    # made to classify both correctly with one constant (strongSwan F0
+    # success=336B vs F2/F3 rejection=256B; iked success=224B) - this is
+    # implementation-dependent in the same way EXP-07 found for fragment size
+    # and notify placement, not a bug fixable with a better number. Reported
+    # honestly as ambiguous rather than curve-fit to either vendor.
+    r.add(Finding("negotiation_outcome", Status.INFERRED, Vantage.T1, "failure_diag (EXP-10 revised)",
+                  value="post-auth-outcome-ambiguous", confidence=0.4,
+                  note=("IKE up, no ESP observed at T0/T1. Two live hypotheses, not resolvable from "
+                        "response size alone: (a) Child SA rejected (proposal/TS mismatch) - matches "
+                        "10/10 of our own strongSwan fault-injection captures; (b) Child SA succeeded "
+                        "but no data-plane traffic has been sent yet - confirmed possible on a real "
+                        "OpenBSD iked capture (EXP-10), where a genuine success's response was smaller "
+                        "than strongSwan's own rejection size. Resolve via T2 (swanctl/ipsecctl) or a "
+                        "longer observation window.")))
 
 
 
