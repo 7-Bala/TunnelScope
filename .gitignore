@@ -42,8 +42,8 @@ testbed/captures/exp05/*.pcap
 # from a deliberately fault-injected strongSwan pair (see
 # testbed/images/strongswan-exploitlab/). Tiny (<1KB), primary evidence. Tracked.
 !testbed/captures/exploitlab/*.pcap
-# EXP-10 vendor-diversity generalization test (strongSwan vs real OpenBSD iked).
-# Tiny (<4KB), primary evidence. Tracked.
+# EXP-10 vendor-diversity generalization test (strongSwan vs real OpenBSD iked),
+# incl. the ESP-dataplane addendum. Tiny (<4KB each), primary evidence. Tracked.
 !testbed/captures/exp10/*.pcap
 
 # Python build/runtime

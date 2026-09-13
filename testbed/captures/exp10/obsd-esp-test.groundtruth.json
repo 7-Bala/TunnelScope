@@ -1,0 +1,39 @@
+{
+  "capture": "obsd-esp-test.pcap",
+  "kind": "LIVE ESP dataplane test (EXP-10 addendum) - 5 ICMP echo/reply pairs through a real strongSwan<->OpenBSD iked tunnel",
+  "topology": "same isolated Parallels Host-Only network as obsd-vendor.pcap (10.37.129.0/24); T0 vantage = macOS host bridge101",
+  "why_this_capture_exists": "obsd-vendor.pcap (the original EXP-10 capture) had 0 ESP packets because no traffic was pushed through the tunnel. This follow-up explicitly sends ICMP through the established SA to test whether macOS's kernel actually enforces the IPsec policy despite charon logging '[KNL] can't install route ... conflicts with IKE traffic', and to validate TunnelScope's ESP-level extractors (cipher sieve, leakage) against real OpenBSD-side dataplane traffic for the first time.",
+  "sa": {
+    "spi_out": "0xae499361",
+    "spi_in": "0xc924358f",
+    "gt_cipher": "aes-256-gcm",
+    "gt_source": "OpenBSD ipsecctl -sa (T2, causal)",
+    "ipsecctl_sa": {
+      "flows": [
+        "flow esp in from 10.37.129.2 to 10.37.129.50 peer 10.37.129.2 srcid IPV4/10.37.129.50 dstid IPV4/10.37.129.2 type require",
+        "flow esp out from 10.37.129.50 to 10.37.129.2 peer 10.37.129.2 srcid IPV4/10.37.129.50 dstid IPV4/10.37.129.2 type require"
+      ],
+      "sad": [
+        "esp tunnel from 10.37.129.2 to 10.37.129.50 spi 0xae499361 enc aes-256-gcm",
+        "esp tunnel from 10.37.129.50 to 10.37.129.2 spi 0xc924358f enc aes-256-gcm"
+      ]
+    }
+  },
+  "finding_1_route_warning_is_nonfatal": {
+    "claim": "charon's '[KNL] can't install route ... conflicts with IKE traffic' warning does NOT mean the SA is unenforced",
+    "evidence": "all 10 captured packets (5 ping request + 5 reply) are genuine ESP (ip.proto=50) with the exact SPIs (0xae499361 out, 0xc924358f in) that both sides' T2 state shows for this SA - real dataplane traffic flowed correctly despite the warning"
+  },
+  "finding_2_tfc_heuristic_false_positive": {
+    "claim": "TunnelScope's TFC-padding-active heuristic (tunnelscope/leakage/leakage.py: 'padding_active = distinct <= 1 and len(lens) >= 5') produces a FALSE POSITIVE on this capture",
+    "tunnelscope_output": "tfc_padding_active: True, size_bits: 0.0",
+    "why_wrong": "OpenBSD iked was not configured with any TFC/dummy-padding option in this test. The 10 ESP frames are uniform in size because all 5 ICMP echo/reply pairs sent were themselves identical-size probes (default ping payload) - naturally uniform traffic, not active padding. The heuristic (>=5 packets, <=1 distinct length) cannot distinguish 'traffic happens to be uniform' from 'padding is forcing uniformity', because EXP-05's original synthetic dataset always paired non-uniform 'unpadded' traffic against uniform 'padded' traffic and never tested naturally-uniform unpadded traffic as its own case.",
+    "disclosed_previously": false,
+    "status": "genuine, newly-found limitation - not fixed this session, recorded honestly as a follow-up"
+  },
+  "tunnelscope_esp_extraction": {
+    "esp_cipher_family": "INFERRED ['AES-CBC+HMAC-SHA256-128','AES-CTR+HMAC-SHA256-128','AES-GCM-16','AES-CCM-16','ChaCha20-Poly1305'] - correctly did not exclude the true cipher (AES-GCM-16 family), consistent with EXP-01's one-directional sieve design; uniform small ICMP frames give the sieve no additional narrowing signal here",
+    "mode": "NOT_OBSERVABLE (correct, matches EXP-08)",
+    "pfs": "NOT_OBSERVABLE (correct, no rekey observed)"
+  },
+  "note": "Ground truth is T2 (OpenBSD ipsecctl -sa, causal), never TunnelScope's own inference, per DEC-009."
+}
