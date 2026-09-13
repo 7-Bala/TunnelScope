@@ -40,6 +40,7 @@ tunnelscope cbom     capture.pcap          # CycloneDX CBOM (JSON)
 tunnelscope report   capture.pcap          # executive + technical report
 tunnelscope dashboard capture.pcap -o d.html  # self-contained offline HTML
 tunnelscope crosstier capture.pcap t2.json    # reconcile T2 endpoint telemetry (Stage 3)
+tunnelscope fleet captures/ -o fleet.html     # scan a directory: one view, per-tunnel evidence kept
 tunnelscope analyze  capture.pcap --json   # machine-readable
 ```
 

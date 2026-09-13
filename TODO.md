@@ -74,6 +74,7 @@ not a compressed version.)
 | ID | Task | Evidence |
 |---|---|---|
 | T-047 | EXP-10 vendor-diversity via free/open-source alternative (user request). OpenIKED/OpenIKEv2/racoon2 each ruled out with evidence (dead/archived/unstable). Built a real OpenBSD 7.9 arm64 VM (Parallels, native, isolated network) running genuine `iked`; strongSwan 6.1.0 (macOS host) negotiated against it — a real, architecturally independent third codebase. `ike_meta`/`ike_crypto`/PQ-posture and EXP-06 failure-diagnosis all generalized correctly on a real auth failure (byte-exact to `iked`'s own log); **also found a genuine gap**: the same heuristic misdiagnosed a real success as rejected (no ESP sent) — reported honestly, not hidden. Also surfaced OpenBSD's own PQ mechanism (`sntrup761x25519`) our detector doesn't recognize (scoped follow-up). **Addendum:** pushed into the ESP dataplane too — real ICMP through the tunnel confirmed macOS's kernel *does* enforce the SA (the route warning is non-fatal) and surfaced a second genuine gap: the TFC-padding heuristic false-positives on naturally-uniform traffic. **Both gaps since fixed honestly** (not curve-fit): failure-diagnosis now reports `post-auth-outcome-ambiguous` at confidence 0.4 instead of a specific wrong answer at 0.7; TFC heuristic now requires size ≥1200B (grounded in RFC 4303's pad-to-MTU), not just uniformity. 75 pcaps, dataset validator PASS, e2e still 69/69, 41/41 unit tests | `experiments/exp10-openbsd-iked-generalization/RESULT.md`, `testbed/captures/exp10/` (2 pcaps + 2 groundtruth.json), `research/registers/EXPERIMENT-REGISTER.md`, `tunnelscope/evidence/extract.py`, `tunnelscope/leakage/leakage.py`, `tests/test_extract.py`, `tests/test_leakage.py` |
+| T-049 | Usage & operations plan (user request) + immediate execution. `build/03-USAGE-AND-OPERATIONS-PLAN.md`: per-role workflows (grounded in `research/03`'s 4 roles, not invented), deployment model (I9-consistent, offline by default), real team ownership, explicit non-goals (public API deferred pending security review). Built the plan's top items same session: `tunnelscope fleet` (many-captures-in, one-view-out, per-baseline FAIL rollup never a blended score, errors surfaced never dropped), CI (unit+e2e+dataset checks on every push), dependency cleanup (removed unused fastapi/uvicorn that contradicted I9), `CHANGELOG.md` started, version 0.1.0→0.2.0. 52/52 unit tests, e2e still 69/69, dataset validator PASS (78 pcaps) | `build/03-USAGE-AND-OPERATIONS-PLAN.md`, `tunnelscope/report/fleet.py`, `.github/workflows/ci.yml`, `CHANGELOG.md`, `pyproject.toml`, `tests/test_fleet.py` |
 | T-048 | Full-project audit (user: "complete the entire project completely... make an audit"). Checked every PS requirement (R1-R17), every register's stated status, and the architecture doc's own planned components against actual code — not just the task tracker. Found and closed 3 real gaps (EXP-11 auth-method inference, corrected R7; SPI exposed as a Finding, R9; EXP-12 rekey-cadence measurement, R9/R12 — which itself found and fixed a real false-positive bug in the shipped CVE-2026-78135 detector) and 2 stale docs (09-DEFINE.md R16's conformal-prediction claim corrected; OPEN-QUESTIONS.md fully rebuilt from a confusing append-only history to one accurate row per question, with OQ-14 checked live against the portal). 3 items left open by informed choice (OQ-15/22/23, all low-stakes, stated why). 48/48 unit tests, e2e still 69/69, dataset validator PASS (78 pcaps) | `experiments/exp11-auth-method-inference/RESULT.md`, `experiments/exp12-rekey-cadence/RESULT.md`, `research/09-DEFINE.md`, `research/registers/OPEN-QUESTIONS.md`, `research/registers/EXPERIMENT-REGISTER.md`, `tunnelscope/evidence/extract.py`, `tunnelscope/ingest/tshark.py` |
 | T-001 | Research plan and methodology | `research/00-RESEARCH-PLAN.md` |
 | T-002 | Discover phase D1–D8 | `research/01`–`08-*.md` |
@@ -289,3 +290,26 @@ not a compressed version.)
   built, or an honestly-disclosed, stated limitation — nothing is silently missing.** Remaining,
   stated explicitly: OQ-15/OQ-22/OQ-23 (low-stakes, open by choice, see OPEN-QUESTIONS.md), the demo
   video (user's task), and vendor-appliance licensing (blocked on the user supplying access).
+- **2026-09-14** — User: "start doing the work according to the plan and now itself plan how the
+  users are gonna use it and how we will manage and build it accordingly." Wrote
+  `build/03-USAGE-AND-OPERATIONS-PLAN.md`: per-role usage workflows grounded in `research/03`'s 4
+  established roles (not invented personas), a deployment model consistent with I9 (offline by
+  default), team ownership mapped to the real 6-person roster, and an honest list of what's
+  deliberately NOT being built yet (a public API — needs its own security review first). Then
+  executed the plan's highest-value, lowest-risk items immediately, same session:
+  - **T-049: `tunnelscope fleet`** — the actual gap the plan found: roles B (auditor) and D (SOC
+    analyst) both need "many tunnels, one view," which nothing before this served (every prior
+    surface was one-pcap-at-a-time). Built `tunnelscope/report/fleet.py`: per-baseline FAIL-count
+    rollup (never a blended fleet score — DEC-007 applied at fleet scale), every tunnel its own row,
+    a file that fails to parse is its own error row, never silently dropped (verified with an actual
+    corrupt file). New CLI: `tunnelscope fleet <dir> [-o out.html] [--json]`. 4 new tests.
+  - **CI** (`.github/workflows/ci.yml`) — unit tests + 69-capture e2e + dataset validate, on every
+    push/PR. Scoped honestly in the workflow's own comment: this would not have found EXP-10/11/12's
+    3 bugs itself (those needed real infra CI can't invent), but every one of them is now a
+    permanent regression test CI enforces going forward.
+  - **Dependency cleanup**: removed `fastapi`/`uvicorn` — declared since early scaffolding, never
+    used anywhere, and quietly contradicted I9. Added an explicit `dev` extra (`pytest`) instead of
+    an undeclared global install. Version bumped 0.1.0 → 0.2.0.
+  - **`CHANGELOG.md`** — started, so the project's history is readable without opening `TODO.md`.
+  52/52 unit tests (was 48), e2e still 69/69, dataset validator PASS (78 pcaps, unchanged — fleet
+  mode adds no new captures, it's a new view over existing ones).
