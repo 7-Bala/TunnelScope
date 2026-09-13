@@ -14,6 +14,7 @@ from .assess.engine import assess_record, load_baselines
 from .pq.cbom import build_cbom
 from .report.report import analyze, executive_report, technical_report
 from .report.dashboard import render as render_dashboard
+from .report.fleet import render as render_fleet, render_json as fleet_json
 
 
 def cmd_analyze(args):
@@ -96,6 +97,14 @@ def cmd_crosstier(args):
             print("    ! config and wire diverge — see CONTRADICTORY findings above")
 
 
+def cmd_fleet(args):
+    if args.json:
+        print(json.dumps(fleet_json(args.directory), indent=2, default=str))
+        return
+    open(args.out, "w").write(render_fleet(args.directory))
+    print(f"wrote {args.out}")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tunnelscope")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -119,6 +128,11 @@ def main(argv=None):
     ct.add_argument("pcap"); ct.add_argument("telemetry", help="T2 telemetry file (JSON or key: value)")
     ct.add_argument("--json", action="store_true")
     ct.set_defaults(func=cmd_crosstier)
+    fl = sub.add_parser("fleet", help="scan a directory of captures: one aggregated view, per-tunnel evidence kept intact (role B/D)")
+    fl.add_argument("directory")
+    fl.add_argument("-o", "--out", default="tunnelscope-fleet.html")
+    fl.add_argument("--json", action="store_true")
+    fl.set_defaults(func=cmd_fleet)
     args = ap.parse_args(argv)
     return args.func(args)
 
