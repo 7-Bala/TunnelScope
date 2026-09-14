@@ -15,12 +15,10 @@ TypeScript** and **shadcn/ui** primitives (Collapsible, restyled crisp).
 - **Type:** the **Geist** superfamily for UI text and all data (IPs, SPIs, rule IDs, the
   dissection tree).
 - **Wordmark as logo:** no separate icon — "TunnelScope" set as one word in a single
-  silver tone, in **Bebas Neue** (Google Fonts, OFL), an ultra-condensed all-caps display
-  face. This stands in for **Dugas Pro**, the free/Beerware-licensed condensed display
-  font requested — its only distribution is via Behance and Pixel Surplus, both of which
-  this environment's network policy blocks, so the real font file couldn't be fetched
-  here. To use the real Dugas Pro, drop its woff2 files under `src/assets/fonts/` and
-  repoint `--font-display` in `src/index.css`.
+  silver tone, in **Kufica Bold** — the user's exact pick, a commercial display face
+  (Artegra/Creative Fabrica) with no free CDN distribution. The user supplied the
+  licensed `woff2` directly; it's checked into `src/assets/fonts/KuficaBold.woff2` and
+  wired via `@font-face` in `src/index.css` (`--font-display`).
 - **Signal trace** (`SignalTrace.tsx`): the fleet as a violet posture waveform, each
   gateway a pulse whose height = its weighted finding load, marker ringed by posture
   color (green/yellow/red). A quiet reveal sweep draws it on load.

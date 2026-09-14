@@ -1,10 +1,14 @@
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
+import type { Props as LabelContentProps } from "recharts/types/component/Label"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
+import { usePrefersReducedMotion } from "@/lib/use-reduced-motion"
 
 const config = { n: { label: "Findings" } } satisfies ChartConfig
+const GROW_MS = 650
 
 // shadcn/Recharts horizontal bar chart: findings by severity.
 export function SeverityBars({ high, medium, informational }: { high: number; medium: number; informational: number }) {
+  const reduced = usePrefersReducedMotion()
   const data = [
     { sev: "High", n: high, fill: "var(--neg)" },
     { sev: "Medium", n: medium, fill: "var(--warn)" },
@@ -23,7 +27,14 @@ export function SeverityBars({ high, medium, informational }: { high: number; me
           width={58}
           tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
         />
-        <Bar dataKey="n" radius={4} barSize={12} isAnimationActive={false}>
+        <Bar
+          dataKey="n"
+          radius={4}
+          barSize={12}
+          isAnimationActive={!reduced}
+          animationDuration={GROW_MS}
+          animationEasing="ease-out"
+        >
           {data.map((d) => (
             <Cell key={d.sev} fill={d.fill} />
           ))}
@@ -31,8 +42,30 @@ export function SeverityBars({ high, medium, informational }: { high: number; me
             dataKey="n"
             position="right"
             offset={8}
-            className="fill-foreground/80"
-            style={{ fontSize: 12, fontVariantNumeric: "tabular-nums" }}
+            content={(props: LabelContentProps) => {
+              const x = Number(props.x ?? 0)
+              const y = Number(props.y ?? 0)
+              const w = Number(props.width ?? 0)
+              const h = Number(props.height ?? 0)
+              // lands right as its own bar finishes growing, not all at once
+              const delay = reduced ? 0 : GROW_MS * 0.75
+              return (
+                <text
+                  x={x + w + 8}
+                  y={y + h / 2}
+                  dominantBaseline="middle"
+                  className="fill-foreground/80"
+                  style={{
+                    fontSize: 12,
+                    fontVariantNumeric: "tabular-nums",
+                    opacity: reduced ? 1 : 0,
+                    animation: reduced ? "none" : `chart-label-in .3s ease-out ${delay}ms both`,
+                  }}
+                >
+                  {props.value}
+                </text>
+              )
+            }}
           />
         </Bar>
       </BarChart>
