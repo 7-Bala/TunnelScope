@@ -3,21 +3,25 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
-/* Wordmark display face. The user asked for Dugas Pro (a free/Beerware-
-   licensed condensed display face distributed via Behance/Pixel Surplus) —
-   this session's network policy blocks both of those hosts, so the real
-   font file could not be fetched here. Bebas Neue (Google Fonts, OFL) is
-   used as a same-spirit stand-in: ultra-condensed, minimal, all-caps. Drop
-   the real Dugas Pro woff2 files under src/assets/fonts/ and repoint
-   --font-display below once you can supply them. */
-@import "@fontsource/bebas-neue";
+
+/* Wordmark display face — Kufica Bold, the user's exact pick. No free CDN
+   distribution exists for it (Artegra/Creative Fabrica, commercial); the
+   user supplied the licensed woff2 file directly, checked into
+   src/assets/fonts/. Single static weight (700) — no variable axis. */
+@font-face {
+  font-family: 'Kufica';
+  src: url('./assets/fonts/KuficaBold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     --font-sans: 'Geist Variable', -apple-system, 'Segoe UI', sans-serif;
     --font-mono: 'Geist Mono Variable', 'SF Mono', monospace;
-    --font-display: 'Bebas Neue', 'Geist Variable', sans-serif;
+    --font-display: 'Kufica', 'Geist Variable', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -144,6 +148,13 @@
 .rise { animation: rise .55s cubic-bezier(.16,.84,.44,1) both; }
 
 @keyframes soft-blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* Chart micro-motion — timed to land as each Recharts draw-in (Area/Pie/Bar,
+   animated via their own isAnimationActive) completes, not simultaneously
+   with it. See use-reduced-motion.ts for why Recharts' own animation is
+   gated separately from the CSS reduced-motion rule below. */
+@keyframes chart-dot-in { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+@keyframes chart-label-in { from { opacity: 0; transform: translateX(-3px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .rise { animation: none !important; }

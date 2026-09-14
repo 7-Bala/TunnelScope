@@ -1,6 +1,9 @@
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart"
 import { type Gateway, postureKind, POSTURE_META } from "@/lib/fleet"
+import { usePrefersReducedMotion } from "@/lib/use-reduced-motion"
+
+const DRAW_MS = 900
 
 const SEV_WEIGHT = { high: 3, medium: 2, informational: 1 } as const
 const KIND_COLOR: Record<string, string> = {
@@ -14,6 +17,7 @@ const config = { load: { label: "Finding load", color: "var(--violet)" } } satis
 // shadcn/Recharts step-area: the fleet posture as a waveform, each gateway a
 // point whose height = weighted finding load, dot colored by posture.
 export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; height?: number }) {
+  const reduced = usePrefersReducedMotion()
   const data = gateways.map((g) => ({
     city: g.city,
     id: g.id,
@@ -67,11 +71,16 @@ export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; h
           stroke="var(--violet)"
           strokeWidth={1.75}
           fill="url(#fillLoad)"
-          isAnimationActive={false}
+          isAnimationActive={!reduced}
+          animationDuration={DRAW_MS}
+          animationEasing="ease-out"
           activeDot={{ r: 4, stroke: "var(--violet)", fill: "var(--background)" }}
           dot={(props: { cx?: number; cy?: number; index?: number; payload?: (typeof data)[number] }) => {
             const { cx, cy, index, payload } = props
             if (cx == null || cy == null) return <g key={index} />
+            // Each dot pops in exactly when the step-line reaches it, so the
+            // reveal reads as one continuous draw, not a line then a dot pass.
+            const delay = reduced ? 0 : ((index ?? 0) / Math.max(data.length - 1, 1)) * DRAW_MS
             return (
               <circle
                 key={index}
@@ -81,6 +90,10 @@ export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; h
                 fill="var(--background)"
                 stroke={KIND_COLOR[payload?.kind ?? "classical"]}
                 strokeWidth={1.6}
+                style={{
+                  transformOrigin: `${cx}px ${cy}px`,
+                  animation: reduced ? "none" : `chart-dot-in .32s cubic-bezier(.34,1.56,.64,1) ${delay}ms both`,
+                }}
               />
             )
           }}
