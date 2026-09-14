@@ -12,7 +12,7 @@ function App() {
   const readouts = [
     { label: "Sources", value: s.total, foot: "captures, no parse errors" },
     { label: "PQ-ready", value: s.counts.pq, tone: "pos" as const, foot: "hybrid ML-KEM" },
-    { label: "Downgraded", value: s.counts.downgraded, foot: "PQ offered, classical used" },
+    { label: "Downgraded", value: s.counts.downgraded, tone: "warn" as const, foot: "PQ offered, classical used" },
     { label: "Critical", value: s.high, tone: "neg" as const, foot: "high-severity, cited" },
     { label: "CVE-2026-78135", value: s.cve, tone: s.cve ? ("neg" as const) : undefined, foot: s.cve ? "pre-auth Child SA" : "none observed" },
   ]
@@ -33,14 +33,14 @@ function App() {
               pattern. Only <span className="text-pos">{s.counts.pq}</span> is hardened with hybrid ML-KEM.
             </p>
           </div>
-          <div className="mt-6 h-[150px] w-full">
-            <SignalTrace gateways={GATEWAYS} height={150} />
+          <div className="mt-6 h-[168px] w-full">
+            <SignalTrace gateways={GATEWAYS} height={168} />
           </div>
-          <div className="mt-2 flex items-center gap-5 text-[12px] text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-steel" />classical</span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12px] text-muted-foreground">
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-warn" />classical</span>
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-pos" />post-quantum</span>
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-neg" />downgrade / CVE</span>
-            <span className="ml-auto">per-gateway finding load</span>
+            <span className="sm:ml-auto">per-gateway finding load</span>
           </div>
         </section>
 
@@ -50,13 +50,13 @@ function App() {
 
         <div className="grid items-start gap-4 lg:grid-cols-[300px_1fr]">
           <div className="rise flex flex-col gap-4" style={{ animationDelay: "140ms" }}>
-            <div className="rounded-lg border border-border bg-card">
+            <div className="rounded-2xl border border-border bg-card">
               <div className="border-b border-border px-5 py-3.5">
                 <h2 className="text-[14px] font-semibold tracking-tight">Quantum posture</h2>
               </div>
               <PostureGauge counts={s.counts} total={s.total} />
             </div>
-            <div className="rounded-lg border border-border bg-card">
+            <div className="rounded-2xl border border-border bg-card">
               <div className="border-b border-border px-5 py-3.5">
                 <h2 className="text-[14px] font-semibold tracking-tight">Findings by severity</h2>
               </div>

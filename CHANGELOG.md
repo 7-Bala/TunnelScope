@@ -3,6 +3,22 @@
 Every entry cites the T-ID / EXP-ID that drove it — full detail lives in `TODO.md` and the
 referenced experiment's `RESULT.md`. This file is for someone who isn't reading the task tracker.
 
+## [Unreleased] — fleet-dashboard only (T-051)
+
+**Changed**
+- `fleet-dashboard/` visual redesign: black/violet/silver-white base, with green/yellow/red
+  used strictly as the status-indicator system (never decoratively). Replaced the earlier
+  teal/graphite palette throughout `index.css` and every `dashboard/*` component.
+- Removed the generic SVG header logo; the wordmark itself is now the mark ("Tunnel" in
+  Geist, "Scope" in Bungee — the requested Kufica font is commercial-only with no free
+  license, so it was not bundled; see `fleet-dashboard/README.md` for the swap-in path).
+- All card containers now use a visibly rounded `rounded-2xl`.
+- Fixed real text-overflow risks: KPI card truncation, the expanded verdict table's
+  rule-id/baseline columns, and mobile-width x-axis label collisions on the signal trace.
+
+This does not touch the Python package (`tunnelscope/`), tests, or dataset — version stays
+at 0.2.0.
+
 ## [0.2.0] — 2026-09-14 (T-049)
 
 **Added**

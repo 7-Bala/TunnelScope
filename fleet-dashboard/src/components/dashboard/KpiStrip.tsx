@@ -3,15 +3,15 @@ import { cn } from "@/lib/utils"
 interface Readout {
   label: string
   value: number
-  tone?: "teal" | "pos" | "neg" | "steel"
+  tone?: "violet" | "pos" | "warn" | "neg"
   foot: string
 }
 
 const TONE: Record<string, string> = {
-  teal: "text-teal",
+  violet: "text-violet",
   pos: "text-pos",
+  warn: "text-warn",
   neg: "text-neg",
-  steel: "text-steel",
 }
 
 export function KpiStrip({ readouts }: { readouts: Readout[] }) {
@@ -20,14 +20,14 @@ export function KpiStrip({ readouts }: { readouts: Readout[] }) {
       {readouts.map((r, i) => (
         <div
           key={r.label}
-          className="rise rounded-lg border border-border bg-card p-4"
+          className="rise min-w-0 rounded-2xl border border-border bg-card p-4"
           style={{ animationDelay: `${i * 55}ms` }}
         >
-          <div className="text-[12.5px] font-medium text-muted-foreground">{r.label}</div>
-          <div className={cn("mt-2.5 text-[32px] font-semibold leading-none tracking-tight tnum", r.tone ? TONE[r.tone] : "text-foreground")}>
+          <div className="truncate text-[12.5px] font-medium text-muted-foreground" title={r.label}>{r.label}</div>
+          <div className={cn("mt-2.5 truncate text-[32px] font-semibold leading-none tracking-tight tnum", r.tone ? TONE[r.tone] : "text-foreground")}>
             {r.value}
           </div>
-          <div className="mt-2 text-[12px] text-muted-foreground">{r.foot}</div>
+          <div className="mt-2 truncate text-[12px] text-muted-foreground" title={r.foot}>{r.foot}</div>
         </div>
       ))}
     </div>
