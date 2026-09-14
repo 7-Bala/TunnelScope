@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 // the full width across "TunnelScope".
 function Wordmark() {
   return (
-    <h1 className="font-display text-[22px] uppercase leading-none tracking-wide text-silver">
+    <h1 className="font-display text-[34px] uppercase leading-none tracking-wide text-silver">
       TunnelScope
     </h1>
   )
@@ -22,7 +22,6 @@ export function Topbar({ scanned }: { scanned: number }) {
         <div>
           <div className="flex items-center gap-2">
             <Wordmark />
-            <span className="rounded-full bg-violet-bg px-2 py-0.5 text-[10px] font-medium text-violet">Fleet</span>
           </div>
           <p className="mt-0.5 text-[12px] text-muted-foreground">IPsec and post-quantum posture across the fleet</p>
         </div>

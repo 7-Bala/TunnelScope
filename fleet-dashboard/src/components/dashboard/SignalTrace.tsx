@@ -3,7 +3,7 @@ import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/
 import { type Gateway, postureKind, POSTURE_META } from "@/lib/fleet"
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion"
 
-const DRAW_MS = 900
+const DRAW_MS = 1800
 
 const SEV_WEIGHT = { high: 3, medium: 2, informational: 1 } as const
 const KIND_COLOR: Record<string, string> = {
@@ -67,7 +67,7 @@ export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; h
         />
         <Area
           dataKey="load"
-          type="step"
+          type="monotone"
           stroke="var(--violet)"
           strokeWidth={1.75}
           fill="url(#fillLoad)"

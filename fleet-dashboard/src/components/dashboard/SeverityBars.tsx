@@ -17,8 +17,12 @@ export function SeverityBars({ high, medium, informational }: { high: number; me
 
   return (
     <ChartContainer config={config} className="h-[132px] w-full px-2 py-4">
-      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 22, left: 6, bottom: 4 }} barCategoryGap={12}>
-        <XAxis type="number" hide domain={[0, "dataMax + 1"]} />
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 30, left: 6, bottom: 4 }} barCategoryGap={12}>
+        {/* Proportional headroom (not a flat +1): the longest bar always stops at
+            ~80% of the plot width, so the label's fixed-size text has guaranteed
+            room after it at any container width, not just the one this was
+            eyeballed at. */}
+        <XAxis type="number" hide domain={[0, (max: number) => Math.ceil(max * 1.25)]} />
         <YAxis
           type="category"
           dataKey="sev"
