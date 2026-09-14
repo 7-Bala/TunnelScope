@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react"
 
-// The wordmark IS the mark — no separate icon. One color throughout; "Tunnel"
-// is set bold + uppercase so its weight reads next to Scope's block display
-// face instead of looking like a plain label glued onto a logotype.
+// The wordmark IS the mark — no separate icon. One face, one silver color,
+// the full width across "TunnelScope".
 function Wordmark() {
   return (
-    <h1 className="flex items-baseline text-foreground">
-      <span className="text-[17px] font-black uppercase leading-none tracking-tight">Tunnel</span>
-      <span className="font-display text-[16px] font-normal uppercase leading-none">Scope</span>
+    <h1 className="font-display text-[22px] uppercase leading-none tracking-wide text-silver">
+      TunnelScope
     </h1>
   )
 }
