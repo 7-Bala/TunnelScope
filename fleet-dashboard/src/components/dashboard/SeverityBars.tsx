@@ -7,7 +7,7 @@ const config = { n: { label: "Findings" } } satisfies ChartConfig
 export function SeverityBars({ high, medium, informational }: { high: number; medium: number; informational: number }) {
   const data = [
     { sev: "High", n: high, fill: "var(--neg)" },
-    { sev: "Medium", n: medium, fill: "var(--steel)" },
+    { sev: "Medium", n: medium, fill: "var(--warn)" },
     { sev: "Info", n: informational, fill: "var(--faint)" },
   ]
 

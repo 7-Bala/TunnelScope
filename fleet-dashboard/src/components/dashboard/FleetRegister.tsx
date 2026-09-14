@@ -25,7 +25,7 @@ const RULE_DESC: Record<string, string> = {
 
 const SEV: Record<Finding["severity"], { t: string; c: string }> = {
   high: { t: "High", c: "text-neg" },
-  medium: { t: "Med", c: "text-steel" },
+  medium: { t: "Med", c: "text-warn" },
   informational: { t: "Info", c: "text-faint" },
 }
 
@@ -35,7 +35,7 @@ function stateChip(g: Gateway): { t: string; cls: string } {
   const k = postureKind(g.posture)
   if (k === "downgraded") return { t: "Downgraded", cls: "bg-neg-bg text-neg" }
   if (k === "pq") return { t: "PQ hybrid", cls: "bg-pos-bg text-pos" }
-  return { t: "Classical", cls: "bg-steel-bg text-steel" }
+  return { t: "Classical", cls: "bg-warn-bg text-warn" }
 }
 
 function Row({ g }: { g: Gateway }) {
@@ -67,23 +67,23 @@ function Row({ g }: { g: Gateway }) {
               <span className="text-pos">clean</span>
             )}
           </span>
-          <ChevronDown className={cn("h-4 w-4 shrink-0 text-faint transition-transform duration-200", open && "rotate-180 text-teal")} />
+          <ChevronDown className={cn("h-4 w-4 shrink-0 text-faint transition-transform duration-200", open && "rotate-180 text-violet")} />
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-5 pb-4 pl-[76px]">
+          <div className="px-5 pb-4 sm:pl-[76px]">
             <div className="mb-2 text-[12px] text-faint">Verdicts, each cited to its standard ({g.fails.length})</div>
             {g.fails.length ? (
               <div className="font-mono text-[12px]">
                 {g.fails.map((f, k) => {
                   const last = k === g.fails.length - 1
                   return (
-                    <div key={k} className="flex items-baseline gap-2.5 py-[3px]">
-                      <span className="text-faint">{last ? "└" : "├"}</span>
-                      <span className={cn("w-10 shrink-0 font-medium", SEV[f.severity].c)}>{SEV[f.severity].t}</span>
-                      <span className="w-[136px] shrink-0 text-foreground/90">{f.rule_id}</span>
-                      <span className="hidden w-[150px] shrink-0 text-muted-foreground/70 sm:inline">{f.baseline}</span>
-                      <span className="text-muted-foreground">{RULE_DESC[f.rule_id] ?? ""}</span>
+                    <div key={k} className="flex items-start gap-2.5 py-[3px]">
+                      <span className="shrink-0 text-faint">{last ? "└" : "├"}</span>
+                      <span className={cn("w-9 shrink-0 font-medium", SEV[f.severity].c)}>{SEV[f.severity].t}</span>
+                      <span className="w-[140px] shrink-0 truncate text-foreground/90" title={f.rule_id}>{f.rule_id}</span>
+                      <span className="hidden w-[150px] shrink-0 truncate text-muted-foreground/70 sm:inline" title={f.baseline}>{f.baseline}</span>
+                      <span className="min-w-0 flex-1 text-muted-foreground">{RULE_DESC[f.rule_id] ?? ""}</span>
                     </div>
                   )
                 })}
@@ -112,11 +112,11 @@ export function FleetRegister({ gateways }: { gateways: Gateway[] }) {
   )
 
   return (
-    <section className="rise overflow-hidden rounded-lg border border-border bg-card" style={{ animationDelay: "180ms" }}>
+    <section className="rise overflow-hidden rounded-2xl border border-border bg-card" style={{ animationDelay: "180ms" }}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-[15px] font-semibold tracking-tight">Fleet register</h2>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
             {filtered.length} of {gateways.length} security associations
           </p>
         </div>
@@ -126,8 +126,8 @@ export function FleetRegister({ gateways }: { gateways: Gateway[] }) {
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={cn(
-                "rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
-                filter === f.key ? "bg-teal text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                "rounded-full px-3 py-1.5 text-[12px] font-medium whitespace-nowrap transition-colors",
+                filter === f.key ? "bg-violet text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
               {f.label}
