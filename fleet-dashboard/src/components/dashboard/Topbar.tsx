@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react"
 
-// The wordmark IS the mark — no separate icon. "Tunnel" in the UI sans,
-// "Scope" in the display face for a distinct, legible lockup at 17px.
+// The wordmark IS the mark — no separate icon. One color throughout; "Tunnel"
+// is set bold + uppercase so its weight reads next to Scope's block display
+// face instead of looking like a plain label glued onto a logotype.
 function Wordmark() {
   return (
-    <h1 className="flex items-baseline text-[17px] leading-none tracking-tight text-foreground">
-      <span className="font-semibold">Tunnel</span>
-      <span className="font-display text-[15px] font-normal text-violet">Scope</span>
+    <h1 className="flex items-baseline text-foreground">
+      <span className="text-[17px] font-black uppercase leading-none tracking-tight">Tunnel</span>
+      <span className="font-display text-[16px] font-normal uppercase leading-none">Scope</span>
     </h1>
   )
 }
