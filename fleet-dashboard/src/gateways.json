@@ -1,0 +1,227 @@
+[
+  {
+    "id": "gw-ahmedabad-08",
+    "city": "Ahmedabad",
+    "src": "10.10.1.106",
+    "dst": "10.10.2.199",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  },
+  {
+    "id": "gw-bangalore-04",
+    "city": "Bangalore",
+    "src": "10.10.1.20",
+    "dst": "10.10.2.20",
+    "posture": "DOWNGRADED (PQ offered, classical used)",
+    "fails": [
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-DOWNGRADE",
+        "severity": "high"
+      }
+    ]
+  },
+  {
+    "id": "gw-chennai-03",
+    "city": "Chennai",
+    "src": "10.10.1.10",
+    "dst": "10.10.2.10",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  },
+  {
+    "id": "gw-delhi-02",
+    "city": "Delhi",
+    "src": "10.10.1.10",
+    "dst": "10.10.2.10",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  },
+  {
+    "id": "gw-hyderabad-05",
+    "city": "Hyderabad",
+    "src": "10.10.1.20",
+    "dst": "10.10.2.20",
+    "posture": "post-quantum (hybrid)",
+    "fails": [
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "id": "gw-jaipur-09",
+    "city": "Jaipur",
+    "src": "10.99.1.10",
+    "dst": "10.99.2.10",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "CVE-WATCH",
+        "rule_id": "CVE-2026-78135",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  },
+  {
+    "id": "gw-kolkata-07",
+    "city": "Kolkata",
+    "src": "10.10.1.101",
+    "dst": "10.10.2.101",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  },
+  {
+    "id": "gw-lucknow-10",
+    "city": "Lucknow",
+    "src": "10.37.129.2",
+    "dst": "10.37.129.50",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  },
+  {
+    "id": "gw-mumbai-01",
+    "city": "Mumbai",
+    "src": "10.10.1.20",
+    "dst": "10.10.2.20",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  },
+  {
+    "id": "gw-pune-06",
+    "city": "Pune",
+    "src": "10.10.1.10",
+    "dst": "10.10.2.10",
+    "posture": "classical (quantum-vulnerable key exchange)",
+    "fails": [
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207193",
+        "severity": "high"
+      },
+      {
+        "baseline": "DISA-VPN-SRG-V2R6",
+        "rule_id": "V-207223",
+        "severity": "medium"
+      },
+      {
+        "baseline": "DST-NQM-2026",
+        "rule_id": "DST-PQ-KE",
+        "severity": "informational"
+      }
+    ]
+  }
+]

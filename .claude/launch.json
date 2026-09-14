@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fleet-dashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "fleet-dashboard", "run", "dev"],
+      "port": 5173
+    }
+  ]
+}
