@@ -64,8 +64,12 @@ demo video, technical documentation, dataset. DEVELOP is done (DEC-023); T-030 i
 
 ## Blocked
 
-_None._ (2026-09-12: user confirmed **no deadline** → build the full staged system per DEC-023,
-not a compressed version.)
+| ID | P | Status | Task | Blocked on | Evidence |
+|---|---|---|---|---|---|
+| T-052 | P3 | BLOCKED | Swap the fleet-dashboard wordmark font to **Goroda** (user's exact pick, from a saved Instagram reference; free for personal use per its own listing, designer Zakharov Ilya) | User to supply the actual font file. This session's network egress policy (an allowlist, not a Claude choice) returns 403 on every site that hosts it (fontmeme.com, befonts.com, and by the same pattern presumably allfreefonts.co/freefontdl.com/etc.) — confirmed by direct `curl`, not assumed. Not a licensing objection (personal-use license fits this project); purely blocked on fetching the bytes. User chose to park this rather than accept a substitute for now | User can download the `.ttf`/`.otf` on their own device (no such restriction there) and attach it in the session; wiring it in via `@font-face` in `fleet-dashboard/src/index.css` is then a small, fast change |
+
+_Nothing else blocked._ (2026-09-12: user confirmed **no deadline** → build the full staged
+system per DEC-023, not a compressed version.)
 
 ---
 
@@ -327,3 +331,16 @@ not a compressed version.)
   duplicate-React "invalid hook call" via `resolve.dedupe`. Committed as **T-050**. Theme choice
   (6-option `theme-factory` comparison) still pending the user's pick. The Python tool, tests,
   dataset and research are unchanged this session — 52/52 unit tests, 69/69 e2e still hold.
+- **2026-09-14** — T-051 wordmark iteration continued. User asked to make the wordmark letters
+  thicker; swapped the display face from Bebas Neue to Anton (also Google Fonts/OFL) as a bolder
+  stand-in. Before that landed, user shared a reference screenshot naming a specific font,
+  **Goroda**, and asked to download and use it, noting it's free for personal use. Checked: true
+  (designer Zakharov Ilya, free-for-personal-use license) — but every site hosting it
+  (fontmeme.com, befonts.com, confirmed directly by `curl`, both 403) is blocked by this session's
+  network egress policy, same pattern as Kufica and Dugas Pro earlier this session. This is a
+  network restriction, not a licensing objection — Goroda's own license fits this project fine.
+  Asked the user how to proceed (send the file / pick a closer free substitute / keep Anton); they
+  chose to park it — opened **T-052** (Blocked) — and revert the in-progress Anton swap back to the
+  last committed state (Bebas Neue). Reverted cleanly (`git checkout` on the 3 touched files,
+  `npm install` to resync `node_modules` with the checked-in lockfile); working tree now matches
+  the last pushed commit exactly, verified with `git status`.
