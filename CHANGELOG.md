@@ -3,6 +3,40 @@
 Every entry cites the T-ID / EXP-ID that drove it — full detail lives in `TODO.md` and the
 referenced experiment's `RESULT.md`. This file is for someone who isn't reading the task tracker.
 
+## [0.3.0] — 2026-09-16 (T-055)
+
+Robustness pass on the failure paths. Each item was reproduced before being fixed and is now
+covered by a regression test; the suite previously only exercised captures the tool can read.
+
+**Fixed**
+- `fleet` pointed at a nonexistent directory reported a clean fleet: `rglob` yields nothing on a
+  missing path, so the scan returned zero tunnels, zero errors and **exit 0**. A typo'd path in a
+  scheduled job was indistinguishable from a healthy fleet. Missing / not-a-directory / no
+  captures found are now errors (exit 2) — "scanned nothing" must not render as "nothing wrong".
+- tshark's failure reason was swallowed: `check=True` buried stderr inside `CalledProcessError`,
+  so an unreadable capture printed the whole command line but never *why*. Now reported.
+- Unreadable or missing input printed a Python traceback; it now prints one line and an exit code.
+- ISAKMP flags were parsed two different ways. `ike_sa_crypto()` used a decimal-tolerant reader, so
+  a bare `20` (rather than `0x20`) would read as 0x14 — the responder bit would read clear, the
+  function would return `{}`, and the entire IKE crypto finding would disappear silently. Not live
+  on tshark 4.2.2 (which emits `0x20`), but one upstream formatting change away. Both call sites
+  now share one hex reader.
+- No timeout on any tshark call: a single pathological capture could hang a whole fleet scan
+  indefinitely. Bounded per call by `TUNNELSCOPE_TSHARK_TIMEOUT` (default 120s).
+
+**Added**
+- `tunnelscope doctor` and an automatic preflight: verifies tshark is present and still exposes
+  all 23 fields the extractors read. A renamed field does not raise — it silently produces an
+  empty finding, which is absence scored as compliance. Runs once per process (~0.4s);
+  `TUNNELSCOPE_SKIP_PREFLIGHT=1` opts out.
+- Exit codes so automation can tell the cases apart: 0 clean, 1 findings present, 2 input error,
+  3 dependency error. Findings-gating is **opt-in** via `--fail-on-findings`, so default
+  behaviour and the demo script are unchanged. On `fleet` it also trips when a capture failed to
+  parse — a file that was never read has not been cleared.
+- `--version`.
+- CI job for `fleet-dashboard` (typecheck + lint + build). The dashboard had no automated check
+  at all, despite now shipping real code; every regression in it so far was caught by eye.
+
 ## [Unreleased] — fleet-dashboard only (T-051)
 
 **Changed**

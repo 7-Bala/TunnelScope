@@ -50,3 +50,32 @@ jobs:
         with:
           name: e2e-validation-report
           path: build/E2E-VALIDATION.md
+
+  # The dashboard ships real code (fonts, animation hooks, a reduced-motion
+  # hook) but had no automated check at all until T-055 - every regression in
+  # it so far was caught by a human looking at a screenshot.
+  dashboard:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fleet-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: fleet-dashboard/package-lock.json
+
+      - name: Install (locked)
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc -b
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
