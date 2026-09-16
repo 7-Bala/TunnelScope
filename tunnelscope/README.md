@@ -74,6 +74,14 @@ clean report — "scanned nothing" must never render as "found nothing wrong".
 `TUNNELSCOPE_TSHARK_TIMEOUT` (default 120s) bounds each tshark call so one
 pathological capture cannot hang a whole fleet scan.
 
+Reads of a capture are memoised on `(path, mtime, size)`, because the IKE
+crypto read happens once per SA and each read re-parses the whole file: a
+capture carrying 10 tunnels cost 10 tshark spawns (1.86s) and now costs 1
+(0.19s). A capture that changes on disk is re-read, not served stale.
+`TUNNELSCOPE_CACHE_CAPTURES` sets how many captures to keep (default 8, `0`
+disables). This does **not** speed up `fleet`, which analyses each capture
+exactly once — measured 19.7s vs 19.3s over 35 captures, i.e. noise.
+
 ## Design in one paragraph
 
 A capture goes to **ingest** (tshark, reused not rebuilt), which feeds deterministic **extractors**
