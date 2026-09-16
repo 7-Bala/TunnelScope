@@ -37,6 +37,18 @@ covered by a regression test; the suite previously only exercised captures the t
 - CI job for `fleet-dashboard` (typecheck + lint + build). The dashboard had no automated check
   at all, despite now shipping real code; every regression in it so far was caught by eye.
 
+**Performance (T-056)**
+- Capture reads are memoised on `(path, mtime, size)`. The IKE crypto read runs once per SA and
+  each read re-parses the entire file, so a capture carrying 10 tunnels cost 10 tshark spawns
+  (1.86s); it now costs 1 (0.19s). The single-capture CLI path drops 5 spawns to 3. A capture
+  that changes on disk is re-read rather than served stale, and the cache is bounded
+  (`TUNNELSCOPE_CACHE_CAPTURES`, default 8, `0` disables).
+- Stated honestly: this does **not** speed up `fleet`. The original premise was that fleet scans
+  would benefit, and measurement disproved it — each capture is analysed exactly once, so there
+  is nothing to reuse across files (19.7s vs 19.3s over 35 captures, i.e. noise). The win is
+  repeated reads of one capture, which is the multi-tunnel gateway case our corpus happens not
+  to contain.
+
 ## [Unreleased] — fleet-dashboard only (T-051)
 
 **Changed**

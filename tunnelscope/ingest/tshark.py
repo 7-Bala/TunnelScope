@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import subprocess
+from collections import OrderedDict
 from pathlib import Path
 
 from ..errors import DependencyError, InputError
@@ -106,6 +107,59 @@ def _run_fields(pcap: str, display_filter: str, fields: list[str],
     return [line.split("\t") for line in proc.stdout.splitlines() if line.strip()]
 
 
+# --------------------------------------------------------------------------- #
+# Per-capture memo.                                                            #
+#                                                                              #
+# Each reader below spawns tshark, which re-reads the WHOLE capture. One       #
+# analyze() costs 3 of those (ike, esp, crypto) and ike_sa_crypto() is called  #
+# once per SA on the same file, so a multi-SA capture re-parses it repeatedly; #
+# a fleet scan multiplies that by every file. Results are memoised on          #
+# (path, mtime_ns, size) so a capture that changes on disk is re-read rather   #
+# than served stale.                                                           #
+#                                                                              #
+# Contract: cached values are shared, so callers must treat them as READ-ONLY. #
+# Every caller in this package only reads them (verified before this landed);  #
+# test_ingest_cache.py guards that.                                            #
+# --------------------------------------------------------------------------- #
+_CACHE_CAPTURES = int(os.environ.get("TUNNELSCOPE_CACHE_CAPTURES", "8"))
+_CACHE: "OrderedDict[tuple, object]" = OrderedDict()
+_MISS = object()
+
+
+def _fingerprint(pcap: str) -> tuple:
+    st = Path(pcap).stat()
+    return (str(Path(pcap).resolve()), st.st_mtime_ns, st.st_size)
+
+
+def clear_cache() -> None:
+    """Drop every memoised capture (tests, and long-lived callers)."""
+    _CACHE.clear()
+
+
+def _memo(fn):
+    """Memoise a single-argument capture reader."""
+    @functools.wraps(fn)
+    def wrapper(pcap: str):
+        if _CACHE_CAPTURES <= 0:
+            return fn(pcap)
+        try:
+            key = (fn.__name__, _fingerprint(pcap))
+        except OSError:
+            return fn(pcap)   # missing/unstattable: let the reader raise the real error
+        hit = _CACHE.get(key, _MISS)
+        if hit is not _MISS:
+            _CACHE.move_to_end(key)
+            return hit
+        val = fn(pcap)
+        _CACHE[key] = val
+        _CACHE.move_to_end(key)
+        # three readers per capture, so cap entries at 3x the capture budget
+        while len(_CACHE) > _CACHE_CAPTURES * 3:
+            _CACHE.popitem(last=False)
+        return val
+    return wrapper
+
+
 def tshark_version() -> str:
     """Version string of the tshark actually on PATH, for report provenance."""
     try:
@@ -167,6 +221,7 @@ def preflight() -> dict:
     return {"tshark": tshark_bin(), "tshark_version": tshark_version()}
 
 
+@_memo
 def ike_messages(pcap: str) -> list[dict]:
     """One dict per IKE message (ISAKMP). Plaintext fields only — payload
     contents beyond IKE_SA_INIT are encrypted."""
@@ -206,6 +261,7 @@ def ike_messages(pcap: str) -> list[dict]:
     return msgs
 
 
+@_memo
 def esp_packets(pcap: str) -> list[dict]:
     """One dict per ESP packet (native proto-50). Outer header + SPI/seq are
     always plaintext; content length is ip.len - 20(outer v4) - 8(SPI+seq)."""
@@ -249,6 +305,7 @@ IKE_PRF = {1: "PRF-HMAC-MD5", 2: "PRF-HMAC-SHA1", 5: "PRF-HMAC-SHA2-256",
            6: "PRF-HMAC-SHA2-384", 7: "PRF-HMAC-SHA2-512"}
 
 
+@_memo
 def ike_sa_crypto(pcap: str) -> dict:
     """The IKE SA's negotiated crypto suite from the plaintext IKE_SA_INIT
     RESPONSE (the responder's single selected proposal). T1-observable. This is
