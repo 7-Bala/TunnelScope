@@ -42,7 +42,37 @@ tunnelscope dashboard capture.pcap -o d.html  # self-contained offline HTML
 tunnelscope crosstier capture.pcap t2.json    # reconcile T2 endpoint telemetry (Stage 3)
 tunnelscope fleet captures/ -o fleet.html     # scan a directory: one view, per-tunnel evidence kept
 tunnelscope analyze  capture.pcap --json   # machine-readable
+tunnelscope doctor                         # check the stack before trusting its output
 ```
+
+## Running it unattended
+
+`doctor` verifies tshark is present and still exposes every field the
+extractors read. That check also runs automatically before any analysis
+command (once per process; set `TUNNELSCOPE_SKIP_PREFLIGHT=1` to skip it).
+It exists because a renamed tshark field does not raise — it silently yields
+an empty finding, which is the one failure this tool refuses to ship.
+
+Exit codes let a monitoring job tell the cases apart:
+
+| Code | Meaning |
+|---|---|
+| 0 | ran; nothing to report |
+| 1 | ran; FAIL verdicts present — only with `--fail-on-findings` |
+| 2 | input error: capture missing, path absent, no captures in the directory |
+| 3 | dependency error: tshark missing, or drifted from a field we read |
+
+```bash
+tunnelscope fleet captures/ --json --fail-on-findings || alert   # 1 = findings, 2/3 = never scanned
+```
+
+`--fail-on-findings` is opt-in so default behaviour (and the demo script) is
+unchanged. On `fleet` it also trips on captures that failed to parse: a file
+that was never read has not been cleared. Pointing `fleet` at a path that
+does not exist, or one holding no captures, is an error rather than an empty
+clean report — "scanned nothing" must never render as "found nothing wrong".
+`TUNNELSCOPE_TSHARK_TIMEOUT` (default 120s) bounds each tshark call so one
+pathological capture cannot hang a whole fleet scan.
 
 ## Design in one paragraph
 

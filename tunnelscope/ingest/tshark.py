@@ -7,9 +7,18 @@ extractors in tunnelscope/evidence build Findings from them.
 """
 from __future__ import annotations
 
+import functools
+import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
+
+from ..errors import DependencyError, InputError
+
+# A capture that makes tshark hang would otherwise hang a whole fleet scan
+# with no output at all. Bounded per invocation; override for huge captures.
+DEFAULT_TIMEOUT_S = int(os.environ.get("TUNNELSCOPE_TSHARK_TIMEOUT", "120"))
 
 # IANA IKEv2 Key Exchange Method registry (Transform Type 4) — we carry the
 # ID->name map ourselves so PQ transforms are named even on a tshark that
@@ -29,7 +38,10 @@ TRANSFORM_TYPE = {1: "ENCR", 2: "PRF", 3: "INTEG", 4: "KE", 5: "ESN",
 def tshark_bin() -> str:
     b = shutil.which("tshark")
     if not b:
-        raise RuntimeError("tshark not found (ADR-001 runtime dependency)")
+        raise DependencyError(
+            "tshark not found on PATH (ADR-001 runtime dependency). "
+            "Install it with: apt-get install tshark  |  brew install wireshark"
+        )
     return b
 
 
@@ -44,13 +56,115 @@ def _int(s, default=None):
         return default
 
 
-def _run_fields(pcap: str, display_filter: str, fields: list[str]) -> list[list[str]]:
+def _flags(s) -> int:
+    """ISAKMP flags are hex. tshark prints them 0x-prefixed today, but a bare
+    "20" read as decimal would be 0x14 — the responder bit would read clear,
+    ike_sa_crypto() would return {} and the whole crypto finding would vanish
+    with no error. One interpretation, used by every caller.
+    """
+    if not s:
+        return 0
+    s = s.split(",")[0].strip()
+    try:
+        return int(s, 16)
+    except ValueError:
+        return 0
+
+
+def _float(s, default=0.0):
+    """Timestamps come straight from tshark; an unparseable one is a gap in
+    the evidence, not a reason to abort the capture."""
+    try:
+        return float(s) if s else default
+    except (TypeError, ValueError):
+        return default
+
+
+def _run_fields(pcap: str, display_filter: str, fields: list[str],
+                timeout: int | None = None) -> list[list[str]]:
+    p = Path(pcap)
+    if not p.exists():
+        raise InputError(f"capture not found: {pcap}")
     args = [tshark_bin(), "-r", str(pcap), "-Y", display_filter, "-T", "fields",
             "-E", "occurrence=a"]
     for f in fields:
         args += ["-e", f]
-    out = subprocess.run(args, capture_output=True, text=True, check=True).stdout
-    return [line.split("\t") for line in out.splitlines() if line.strip()]
+    try:
+        proc = subprocess.run(args, capture_output=True, text=True,
+                              timeout=timeout or DEFAULT_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        raise InputError(
+            f"tshark timed out after {timeout or DEFAULT_TIMEOUT_S}s on {pcap} — "
+            "raise TUNNELSCOPE_TSHARK_TIMEOUT if this capture is genuinely large"
+        ) from None
+    if proc.returncode != 0:
+        # tshark's own stderr says WHY (not a capture file, truncated, unreadable).
+        # Swallowing it into a CalledProcessError leaves the caller guessing.
+        why = (proc.stderr or "").strip().splitlines()
+        detail = why[-1] if why else f"tshark exited {proc.returncode}"
+        raise InputError(f"tshark could not read {pcap}: {detail}")
+    return [line.split("\t") for line in proc.stdout.splitlines() if line.strip()]
+
+
+def tshark_version() -> str:
+    """Version string of the tshark actually on PATH, for report provenance."""
+    try:
+        out = subprocess.run([tshark_bin(), "-v"], capture_output=True, text=True,
+                             timeout=DEFAULT_TIMEOUT_S).stdout
+    except subprocess.TimeoutExpired:
+        raise DependencyError("tshark -v timed out") from None
+    m = re.search(r"(\d+\.\d+\.\d+)", out.splitlines()[0] if out else "")
+    return m.group(1) if m else "unknown"
+
+
+# Every tshark field an extractor reads. tshark's IKE dissector field names do
+# move between releases (T-024 saw ADDKE naming change on master), and a field
+# that silently stops resolving yields an EMPTY finding rather than an error —
+# which is exactly the "absence read as compliance" failure this project
+# refuses to ship. So we assert them up front instead of discovering it in a
+# verdict.
+REQUIRED_FIELDS = (
+    "frame.number", "frame.time_relative", "ip.src", "ip.dst", "ip.len",
+    "isakmp.ispi", "isakmp.rspi", "isakmp.exchangetype", "isakmp.flags",
+    "isakmp.messageid", "isakmp.length", "isakmp.notify.msgtype",
+    "isakmp.tf.type", "isakmp.tf.id", "isakmp.vid_string",
+    "isakmp.certreq.type", "isakmp.tf.id.encr", "isakmp.ike2.attr.key_length",
+    "isakmp.tf.id.prf", "isakmp.tf.id.integ", "isakmp.tf.id.dh",
+    "esp.spi", "esp.sequence",
+)
+
+
+@functools.lru_cache(maxsize=1)
+def _known_fields() -> frozenset[str]:
+    """Field abbreviations this tshark build actually exposes (`-G fields`)."""
+    try:
+        out = subprocess.run([tshark_bin(), "-G", "fields"], capture_output=True,
+                             text=True, timeout=DEFAULT_TIMEOUT_S).stdout
+    except subprocess.TimeoutExpired:
+        raise DependencyError("tshark -G fields timed out") from None
+    names = set()
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if parts and parts[0] == "F" and len(parts) > 2:
+            names.add(parts[2])
+    return frozenset(names)
+
+
+def preflight() -> dict:
+    """Verify the analysis stack before trusting anything it produces.
+
+    Returns provenance (binary, version) on success; raises DependencyError
+    naming the exact fields that vanished if tshark has drifted.
+    """
+    missing = sorted(f for f in REQUIRED_FIELDS if f not in _known_fields())
+    if missing:
+        raise DependencyError(
+            f"this tshark ({tshark_version()}) does not expose "
+            f"{len(missing)} field(s) TunnelScope reads: {', '.join(missing)}. "
+            "Findings derived from them would be silently empty, so the run is "
+            "refused rather than under-reporting."
+        )
+    return {"tshark": tshark_bin(), "tshark_version": tshark_version()}
 
 
 def ike_messages(pcap: str) -> list[dict]:
@@ -69,12 +183,15 @@ def ike_messages(pcap: str) -> list[dict]:
          notify, tftype, tfid, vid, certreq) = r
 
         def ints(s):
-            return [int(x) for x in s.split(",") if x != ""]
+            # tolerant on purpose: tshark may print these hex or decimal, and a
+            # single unparseable entry must not abort the whole capture.
+            vals = [_int(x) for x in s.split(",") if x != ""]
+            return [v for v in vals if v is not None]
 
         exch_i = _int(exch)
-        flags_i = int(flags, 16) if flags else 0
+        flags_i = _flags(flags)
         msgs.append(dict(
-            frame=_int(fn), t=float(t) if t else 0.0,
+            frame=_int(fn), t=_float(t),
             src=src, dst=dst, ip_len=_int(iplen, 0),
             ispi=ispi, rspi=rspi,
             exchange=exch_i, exchange_name=EXCHANGE.get(exch_i, str(exch_i)),
@@ -101,7 +218,7 @@ def esp_packets(pcap: str) -> list[dict]:
         fn, t, src, dst, iplen, spi, seq = r
         ip_len = _int(iplen, 0)
         pkts.append(dict(
-            frame=_int(fn), t=float(t) if t else 0.0,
+            frame=_int(fn), t=_float(t),
             src=src, dst=dst, ip_len=ip_len,
             esp_content=max(ip_len - 20 - 8, 0),
             spi=spi, seq=_int(seq),
@@ -113,7 +230,7 @@ def capture_summary(pcap: str) -> dict:
     """Quick shape of a capture: does it contain IKE, ESP, which exchanges."""
     p = Path(pcap)
     if not p.exists():
-        raise FileNotFoundError(pcap)
+        raise InputError(f"capture not found: {pcap}")
     ike = ike_messages(pcap)
     esp = esp_packets(pcap)
     exch = sorted({m["exchange_name"] for m in ike if m["exchange"] is not None})
@@ -142,7 +259,7 @@ def ike_sa_crypto(pcap: str) -> dict:
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         src, flags, encr, klen, prf, integ, dh = r
-        if not (_int(flags, 0) & 0x20):   # responder message only = the selected suite
+        if not (_flags(flags) & 0x20):   # responder message only = the selected suite
             continue
         e = _int(encr); d = _int(dh); i = _int(integ); pr = _int(prf); kl = _int(klen)
         return {
