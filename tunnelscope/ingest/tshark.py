@@ -15,11 +15,14 @@ from pathlib import Path
 # ID->name map ourselves so PQ transforms are named even on a tshark that
 # prints them numerically (T-024: released tshark shows "36", master names it).
 KE_METHOD = {
+    0: "NONE",
     14: "MODP-2048", 15: "MODP-3072", 16: "MODP-4096", 19: "ECP-256", 20: "ECP-384",
     21: "ECP-521", 31: "Curve25519", 32: "Curve448",
     35: "ML-KEM-512", 36: "ML-KEM-768", 37: "ML-KEM-1024",
 }
-EXCHANGE = {34: "IKE_SA_INIT", 35: "IKE_AUTH", 36: "CREATE_CHILD_SA",
+EXCHANGE = {2: "IKEv1_MAIN_MODE", 4: "IKEv1_AGGRESSIVE_MODE", 5: "IKEv1_INFORMATIONAL",
+            32: "IKEv1_QUICK_MODE", 33: "IKEv1_NEW_GROUP_MODE",
+            34: "IKE_SA_INIT", 35: "IKE_AUTH", 36: "CREATE_CHILD_SA",
             37: "INFORMATIONAL", 43: "IKE_INTERMEDIATE"}
 TRANSFORM_TYPE = {1: "ENCR", 2: "PRF", 3: "INTEG", 4: "KE", 5: "ESN",
                   6: "ADDKE1", 7: "ADDKE2", 8: "ADDKE3", 9: "ADDKE4",
@@ -60,19 +63,38 @@ def ike_messages(pcap: str) -> list[dict]:
               "isakmp.ispi", "isakmp.rspi", "isakmp.exchangetype", "isakmp.flags",
               "isakmp.messageid", "isakmp.length",
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
-              "isakmp.vid_string", "isakmp.certreq.type"]
+              "isakmp.vid_string", "isakmp.certreq.type",
+              "isakmp.prop.number", "isakmp.prop.transforms"]
     rows = _run_fields(pcap, "isakmp", fields)
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         (fn, t, src, dst, iplen, ispi, rspi, exch, flags, mid, ilen,
-         notify, tftype, tfid, vid, certreq) = r
+         notify, tftype, tfid, vid, certreq, propnum, proptfs) = r
 
         def ints(s):
             return [int(x) for x in s.split(",") if x != ""]
 
         exch_i = _int(exch)
         flags_i = int(flags, 16) if flags else 0
+        p_nums = ints(propnum)
+        p_tfs = ints(proptfs)
+        tf_types = ints(tftype)
+        tf_ids = ints(tfid)
+        proposals = []
+        tf_offset = 0
+        for p_idx, p_num in enumerate(p_nums):
+            count = p_tfs[p_idx] if p_idx < len(p_tfs) else (len(tf_types) - tf_offset)
+            prop_types = tf_types[tf_offset:tf_offset + count]
+            prop_ids = tf_ids[tf_offset:tf_offset + count] if len(tf_ids) >= tf_offset + count else []
+            proposals.append({
+                "number": p_num,
+                "transform_count": count,
+                "transform_types": prop_types,
+                "transform_ids": prop_ids,
+            })
+            tf_offset += count
+
         msgs.append(dict(
             frame=_int(fn), t=float(t) if t else 0.0,
             src=src, dst=dst, ip_len=_int(iplen, 0),
@@ -82,7 +104,9 @@ def ike_messages(pcap: str) -> list[dict]:
             message_id=_int(mid),
             isakmp_len=_int(ilen, 0),
             notify_types=ints(notify),
-            transform_types=ints(tftype), transform_ids=ints(tfid),
+            transform_types=tf_types, transform_ids=tf_ids,
+            proposal_numbers=p_nums, proposal_transforms=p_tfs,
+            proposals=proposals,
             vendor_ids=[v for v in vid.split(",") if v] if vid else [],
             has_certreq=bool(certreq),
         ))
@@ -132,18 +156,23 @@ IKE_PRF = {1: "PRF-HMAC-MD5", 2: "PRF-HMAC-SHA1", 5: "PRF-HMAC-SHA2-256",
            6: "PRF-HMAC-SHA2-384", 7: "PRF-HMAC-SHA2-512"}
 
 
-def ike_sa_crypto(pcap: str) -> dict:
+def ike_sa_crypto(pcap: str, ispi: str | None = None) -> dict:
     """The IKE SA's negotiated crypto suite from the plaintext IKE_SA_INIT
     RESPONSE (the responder's single selected proposal). T1-observable. This is
     the IKE SA key length (observable), NOT the ESP key length (F-05, unobservable)."""
-    fields = ["ip.src", "isakmp.flags", "isakmp.tf.id.encr", "isakmp.ike2.attr.key_length",
+    fields = ["ip.src", "isakmp.flags", "isakmp.ispi", "isakmp.tf.id.encr", "isakmp.ike2.attr.key_length",
               "isakmp.tf.id.prf", "isakmp.tf.id.integ", "isakmp.tf.id.dh"]
     rows = _run_fields(pcap, "isakmp.exchangetype==34", fields)
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
-        src, flags, encr, klen, prf, integ, dh = r
+        src, flags, row_ispi, encr, klen, prf, integ, dh = r
         if not (_int(flags, 0) & 0x20):   # responder message only = the selected suite
             continue
+        if ispi and row_ispi:
+            clean_ispi = ispi.lower().removeprefix("0x")
+            clean_row = row_ispi.lower().removeprefix("0x").split(",")[0]
+            if clean_row != clean_ispi:
+                continue
         e = _int(encr); d = _int(dh); i = _int(integ); pr = _int(prf); kl = _int(klen)
         return {
             "encr": IKE_ENCR.get(e, f"encr-{e}") if e is not None else None,
