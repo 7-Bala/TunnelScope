@@ -71,166 +71,159 @@ def test_failure_diag_admits_ambiguity_on_real_success_with_no_esp():
     assert f.confidence <= 0.5, "must not claim high confidence in an unresolved case"
 
 
-def test_pq_addke_none_fallback_calibrated():
-    """T-051: When initiator offers Transform ID 0 (NONE) per RFC 9370 §2.1,
-    classical selection is a permitted fallback, with calibrated confidence."""
+# --------------------------------------------------------------------------- #
+# T-051/T-053: PQ selection is read from the responder's plaintext proposal.   #
+# --------------------------------------------------------------------------- #
+def _sa(msgs):
     from tunnelscope.evidence.record import EvidenceRecord
-    from tunnelscope.evidence.extract import extract_pq_addke
-
     r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
-    r._ike = [
-        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [1, 3, 2, 4, 6, 6],
-         "transform_ids": [36, 0]},  # 36 = ML-KEM-768, 0 = NONE
-        {"exchange": 34, "frame": 2, "is_response": True, "transform_types": [1, 3, 2, 4],
-         "transform_ids": []},
-    ]
+    r._ike = [dict({"exchange": 34, "frame": i + 1, "transform_types": [], "transform_ids": []}, **m)
+              for i, m in enumerate(msgs)]
+    return r
+
+
+def _pq(msgs):
+    from tunnelscope.evidence.extract import extract_pq_addke
+    r = _sa(msgs)
     extract_pq_addke(r)
-    f = r.findings["pq_key_exchange"]
+    return r.findings["pq_key_exchange"]
+
+
+def test_pq_downgrade_capture_selection_is_observed():
+    """pq-downgrade.pcap: the initiator offers ADDKE [ML-KEM-768, NONE]; the responder's
+    SA carries no Transform Type 6 at all. That is plaintext, so OBSERVED - not the
+    old INFERRED guess from IKE_INTERMEDIATE being absent."""
+    f = _main("pq-downgrade.pcap").findings["pq_key_exchange"]
+    assert f.status.value == "OBSERVED"
     assert f.value == "offered-but-not-used"
-    assert f.confidence == 0.95
-    assert "NONE fallback" in f.note
+    assert f.confidence == 1.0
+    assert "ML-KEM-768" in f.note
 
 
-def test_pq_addke_downgrade_without_none():
-    """T-051: When initiator offers ADDKE without NONE and responder omits
-    IKE_INTERMEDIATE, report possible downgrade at confidence 0.9."""
-    from tunnelscope.evidence.record import EvidenceRecord
-    from tunnelscope.evidence.extract import extract_pq_addke
-
-    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
-    r._ike = [
-        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [1, 3, 2, 4, 6],
-         "transform_ids": [36]},  # ML-KEM-768 only, no NONE
-        {"exchange": 34, "frame": 2, "is_response": True, "transform_types": [1, 3, 2, 4],
-         "transform_ids": []},
-    ]
-    extract_pq_addke(r)
-    f = r.findings["pq_key_exchange"]
-    assert f.value == "offered-but-not-used"
-    assert f.confidence == 0.9
-    assert "without NONE fallback" in f.note
+def test_pq_two_proposal_offer_classical_selection_is_not_called_a_downgrade():
+    """T-052 stress case: proposal 1 = classical + ML-KEM (no NONE), proposal 2 =
+    classical only; the responder picks proposal 2. That is legitimate selection."""
+    f = _pq([{"is_response": False, "transform_types": [1, 3, 2, 4, 6, 1, 3, 2, 4], "transform_ids": [36]},
+             {"is_response": True, "transform_types": [1, 3, 2, 4]}])
+    assert f.status.value == "OBSERVED" and f.value == "offered-but-not-used"
+    assert "downgrade" not in f.note.lower()
 
 
-def test_pq_addke_only_none_is_classical():
-    """T-051: If only Transform ID 0 (NONE) is offered, posture is classical-only."""
-    from tunnelscope.evidence.record import EvidenceRecord
-    from tunnelscope.evidence.extract import extract_pq_addke
-
-    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
-    r._ike = [
-        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [6],
-         "transform_ids": [0]},
-    ]
-    extract_pq_addke(r)
-    f = r.findings["pq_key_exchange"]
-    assert f.value == "classical-only"
+def test_pq_responder_explicitly_selects_none():
+    f = _pq([{"is_response": False, "transform_types": [1, 3, 2, 4, 6, 6], "transform_ids": [36, 0]},
+             {"is_response": True, "transform_types": [1, 3, 2, 4, 6], "transform_ids": [0]}])
+    assert f.status.value == "OBSERVED" and f.value == "offered-but-not-used"
 
 
+def test_pq_responder_selection_named_from_its_own_proposal():
+    """Offer ML-KEM-768 and ML-KEM-1024; the responder picks 768 - report only that."""
+    f = _pq([{"is_response": False, "transform_types": [1, 3, 2, 4, 6, 6], "transform_ids": [36, 37]},
+             {"is_response": True, "transform_types": [1, 3, 2, 4, 6], "transform_ids": [36]}])
+    assert f.status.value == "OBSERVED" and f.value == ["ML-KEM-768"]
+
+
+def test_pq_error_only_response_is_unknown_not_a_verdict():
+    """A NO_PROPOSAL_CHOSEN / INVALID_KE_PAYLOAD response selects nothing: the PQ
+    outcome is UNKNOWN, never 'offered-but-not-used'."""
+    f = _pq([{"is_response": False, "transform_types": [1, 3, 2, 4, 6], "transform_ids": [36]},
+             {"is_response": True, "notify_types": [14]}])
+    assert f.status.value == "UNKNOWN" and f.value is None
+
+
+def test_pq_only_none_offered_is_classical():
+    f = _pq([{"is_response": False, "transform_types": [6], "transform_ids": [0]}])
+    assert f.status.value == "OBSERVED" and f.value == "classical-only"
+
+
+# --------------------------------------------------------------------------- #
+# PFS: the 400 B rule is only calibrated for MODP groups.                      #
+# --------------------------------------------------------------------------- #
+def _pfs(group, req_len):
+    from tunnelscope.evidence.record import Finding, Status, Vantage
+    from tunnelscope.evidence.extract import extract_pfs
+    r = _sa([])
+    if group:
+        r.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "test", value=group))
+    r._ike = [{"exchange": 36, "frame": 10, "is_response": False, "ip_len": req_len}]
+    extract_pfs(r)
+    return r.findings["pfs"]
+
+
+@pytest.mark.parametrize("group,req_len,value", [
+    ("MODP-2048", 508, True),    # measured PFS-on (exp07/e7-pfs-on.pcap)
+    ("MODP-2048", 236, False),   # measured PFS-off (exp07/e7-pfs-off.pcap)
+])
+def test_pfs_modp_rule(group, req_len, value):
+    f = _pfs(group, req_len)
+    assert f.status.value == "INFERRED" and f.value is value
+
+
+@pytest.mark.parametrize("group", ["Curve25519", "ECP-256", "ECP-384", "dh-2"])
+def test_pfs_uncalibrated_group_is_unknown(group):
+    """T-052: no capture calibrates a size gap for these groups (Curve25519 adds ~40 B,
+    ECP-256 ~72 B - within one traffic selector's variance). Must not guess."""
+    f = _pfs(group, 290)
+    assert f.status.value == "UNKNOWN" and f.value is None
+    assert "uncalibrated" in f.note
+
+
+# --------------------------------------------------------------------------- #
+# IKEv1, per-SA crypto, ESP attribution - against real captures where we have them. #
+# --------------------------------------------------------------------------- #
 def test_ikev1_legacy_detection():
-    """T-051: Detect legacy IKEv1 (Main Mode exchange 2) and flag deprecation."""
-    from tunnelscope.evidence.record import EvidenceRecord
+    """No IKEv1 capture exists in the testbed yet, so this is header-level only."""
     from tunnelscope.evidence.extract import extract_ike_meta
-
-    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit", ike_spi_i="0102030405060708")
-    r._ike = [
-        {"exchange": 2, "exchange_name": "IKEv1_MAIN_MODE", "frame": 1, "is_response": False, "ip_len": 200},
-        {"exchange": 2, "exchange_name": "IKEv1_MAIN_MODE", "frame": 2, "is_response": True, "ip_len": 200},
-    ]
+    r = _sa([{"exchange": 2, "exchange_name": "IKEv1_MAIN_MODE", "is_response": False},
+             {"exchange": 2, "exchange_name": "IKEv1_MAIN_MODE", "is_response": True}])
     extract_ike_meta(r)
     f = r.findings["ike_version"]
-    assert f.value == "IKEv1"
-    assert "RFC 8247" in f.note
+    assert f.value == "IKEv1" and "RFC 9395" in f.note
 
 
-def test_pfs_ec_curve_threshold():
-    """T-051: RFC 5903 §7 / RFC 8031: When an EC group is used, KE payload is smaller
-    (64B for Group 19, 32B for Curve25519) so PFS threshold is 280B instead of 400B."""
-    from tunnelscope.evidence.record import EvidenceRecord, Finding, Status, Vantage
-    from tunnelscope.evidence.extract import extract_pfs
-
-    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
-    r.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "test", value="ECP-256"))
-    r._ike = [
-        {"exchange": 36, "frame": 10, "is_response": False, "ip_len": 310},
-    ]
-    extract_pfs(r)
-    f = r.findings["pfs"]
-    assert f.value is True
+def test_ike_crypto_is_per_sa():
+    """cs-aes256gcm16-a7.pcap starts with two NO_PROPOSAL_CHOSEN negotiations. Reading
+    the pcap's first IKE_SA_INIT response for every SA made all four UNKNOWN; each SA
+    must get its own responder's selection."""
+    recs = {r.ike_spi_i[:8]: r for r in build_records(os.path.join(CAP, "cs-aes256gcm16-a7.pcap"))}
+    assert recs["d262af62"].findings["ike_dh_group"].status.value == "UNKNOWN"
+    ok = recs["370f59f1"].findings
+    assert ok["ike_dh_group"].status.value == "OBSERVED" and ok["ike_dh_group"].value == "MODP-2048"
+    assert ok["ike_encr"].value == "AES-CBC-256"
 
 
-def test_pfs_curve25519_threshold():
-    """T-051: RFC 8031: Curve25519 KE payload is 32 octets (total ~40B).
-    A rekey request of 265B must be detected as PFS-on (threshold 255B),
-    preventing false negatives from the coarser 280B ECP threshold."""
-    from tunnelscope.evidence.record import EvidenceRecord, Finding, Status, Vantage
-    from tunnelscope.evidence.extract import extract_pfs
-
-    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
-    r.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "test", value="Curve25519"))
-    r._ike = [
-        {"exchange": 36, "frame": 10, "is_response": False, "ip_len": 265},
-    ]
-    extract_pfs(r)
-    f = r.findings["pfs"]
-    assert f.value is True
-
-    # And a PFS-off request (230B) must still be correctly classified as False
-    r2 = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
-    r2.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "test", value="Curve25519"))
-    r2._ike = [
-        {"exchange": 36, "frame": 10, "is_response": False, "ip_len": 230},
-    ]
-    extract_pfs(r2)
-    assert r2.findings["pfs"].value is False
+def test_esp_credited_to_the_sa_that_carried_it():
+    """fail-ts-mismatch.pcap: a failed negotiation, then a working one; ESP starts only
+    after the second. The failed SA must not be credited with that traffic."""
+    recs = {r.ike_spi_i[:8]: r for r in build_records(os.path.join(CAP, "fail-ts-mismatch.pcap"))}
+    assert len(recs["01efa12e"]._esp) == 0
+    assert len(recs["978d2ed7"]._esp) == 132
 
 
-def test_esp_only_bidirectional_tunnel_unified():
-    """T-051: ESP-only captures with forward and reverse flows must form a single
-    unified EvidenceRecord with both child_spi_in and child_spi_out populated,
-    rather than splitting into two unidirectional half-tunnel records."""
+def test_esp_only_tunnel_directional_spis():
     recs = build_records(os.path.join(CAP, "a7-cs-aes256gcm16.pcap"))
-    assert len(recs) == 1, f"Expected 1 unified bidirectional tunnel record, got {len(recs)}"
+    assert len(recs) == 1
     r = recs[0]
     assert len(r._esp) == 60
-    assert r.child_spi_out and r.child_spi_in
+    assert (r.src, r.child_spi_out, r.child_spi_in) == ("10.10.1.10", "0xc33f04de", "0xc3951ee3")
+
+
+def test_esp_only_rekey_stays_one_tunnel(monkeypatch):
+    """T-052 regression: an ESP-only capture whose SPIs change (a rekey) is ONE tunnel.
+    Built from real ESP packets of two captures between the same hosts, the second
+    shifted to start after the first ends, as a rekey would."""
+    from tunnelscope.evidence import extract
+    from tunnelscope.ingest import tshark
+    first = tshark.esp_packets(os.path.join(CAP, "cs-aes256gcm16-success-baseline.pcap"))
+    second = tshark.esp_packets(os.path.join(CAP, "a7-cs-aes256gcm16.pcap"))
+    t0 = max(p["t"] for p in first) + 5.0
+    merged = first + [dict(p, t=p["t"] + t0, frame=p["frame"] + len(first)) for p in second]
+    monkeypatch.setattr(extract.tshark, "ike_messages", lambda pcap: [])
+    monkeypatch.setattr(extract.tshark, "esp_packets", lambda pcap: merged)
+    recs = extract.group_sas("merged-rekey")
+    assert len(recs) == 1, "a rekeying ESP-only tunnel must not be split per SPI"
+    r = recs[0]
+    assert len(r._esp) == len(merged) == 192
+    assert {(p["src"], p["dst"]) for p in r._esp} == {("10.10.1.10", "10.10.2.10"), ("10.10.2.10", "10.10.1.10")}
     assert r.child_spi_out != r.child_spi_in
-
-
-def test_pq_addke_multi_offer_responder_selection():
-    """T-051: When initiator offers multiple ADDKE algorithms (e.g. ML-KEM-768 and ML-KEM-1024),
-    extract_pq_addke must report the responder's selected algorithm rather than claiming both."""
-    from tunnelscope.evidence.record import EvidenceRecord
-    from tunnelscope.evidence.extract import extract_pq_addke
-
-    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
-    r._ike = [
-        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [1, 3, 2, 4, 6, 6],
-         "transform_ids": [36, 37]},  # 36 = ML-KEM-768, 37 = ML-KEM-1024
-        {"exchange": 34, "frame": 2, "is_response": True, "transform_types": [1, 3, 2, 4, 6],
-         "transform_ids": [36]},       # responder chooses 36
-        {"exchange": 43, "frame": 3, "is_response": False},
-        {"exchange": 43, "frame": 4, "is_response": True},
-    ]
-    extract_pq_addke(r)
-    f = r.findings["pq_key_exchange"]
-    assert f.value == ["ML-KEM-768"]
-
-
-def test_proposal_structuring_and_matching():
-    """T-051: Bottleneck a: proposals in IKE messages are structured per proposal number,
-    and extract_ike_crypto notes when the responder's selection matched an offered proposal."""
-    from tunnelscope.evidence.record import EvidenceRecord, Finding, Status, Vantage
-    from tunnelscope.evidence.extract import extract_ike_crypto
-
-    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit", ike_spi_i="0102030405060708")
-    r._ike = [
-        {"exchange": 34, "frame": 1, "is_response": False,
-         "proposals": [{"number": 1, "transform_count": 4, "transform_types": [1, 3, 2, 4], "transform_ids": []}]},
-        {"exchange": 34, "frame": 2, "is_response": True,
-         "proposals": [{"number": 1, "transform_count": 4, "transform_types": [1, 3, 2, 4], "transform_ids": []}]},
-    ]
-    # Simulate crypto extraction finding
-    r.add(Finding("ike_encr", Status.OBSERVED, Vantage.T1, "ike_crypto", value="AES-GCM-16-256"))
-    r.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "ike_crypto", value="MODP-2048",
-                  note="DH group id 14; proposal #1 matched initiator offer"))
-    assert "matched initiator offer" in r.findings["ike_dh_group"].note
+    assert all(p["src"] == r.src for p in r._esp if p["spi"] == r.child_spi_out)
+    assert all(p["src"] == r.dst for p in r._esp if p["spi"] == r.child_spi_in)

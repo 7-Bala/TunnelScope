@@ -63,38 +63,19 @@ def ike_messages(pcap: str) -> list[dict]:
               "isakmp.ispi", "isakmp.rspi", "isakmp.exchangetype", "isakmp.flags",
               "isakmp.messageid", "isakmp.length",
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
-              "isakmp.vid_string", "isakmp.certreq.type",
-              "isakmp.prop.number", "isakmp.prop.transforms"]
+              "isakmp.vid_string", "isakmp.certreq.type"]
     rows = _run_fields(pcap, "isakmp", fields)
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         (fn, t, src, dst, iplen, ispi, rspi, exch, flags, mid, ilen,
-         notify, tftype, tfid, vid, certreq, propnum, proptfs) = r
+         notify, tftype, tfid, vid, certreq) = r
 
         def ints(s):
             return [int(x) for x in s.split(",") if x != ""]
 
         exch_i = _int(exch)
         flags_i = int(flags, 16) if flags else 0
-        p_nums = ints(propnum)
-        p_tfs = ints(proptfs)
-        tf_types = ints(tftype)
-        tf_ids = ints(tfid)
-        proposals = []
-        tf_offset = 0
-        for p_idx, p_num in enumerate(p_nums):
-            count = p_tfs[p_idx] if p_idx < len(p_tfs) else (len(tf_types) - tf_offset)
-            prop_types = tf_types[tf_offset:tf_offset + count]
-            prop_ids = tf_ids[tf_offset:tf_offset + count] if len(tf_ids) >= tf_offset + count else []
-            proposals.append({
-                "number": p_num,
-                "transform_count": count,
-                "transform_types": prop_types,
-                "transform_ids": prop_ids,
-            })
-            tf_offset += count
-
         msgs.append(dict(
             frame=_int(fn), t=float(t) if t else 0.0,
             src=src, dst=dst, ip_len=_int(iplen, 0),
@@ -104,9 +85,7 @@ def ike_messages(pcap: str) -> list[dict]:
             message_id=_int(mid),
             isakmp_len=_int(ilen, 0),
             notify_types=ints(notify),
-            transform_types=tf_types, transform_ids=tf_ids,
-            proposal_numbers=p_nums, proposal_transforms=p_tfs,
-            proposals=proposals,
+            transform_types=ints(tftype), transform_ids=ints(tfid),
             vendor_ids=[v for v in vid.split(",") if v] if vid else [],
             has_certreq=bool(certreq),
         ))

@@ -37,7 +37,9 @@ def group_sas(pcap: str) -> list[EvidenceRecord]:
         r._ike = getattr(r, "_ike", [])
         r._ike.append(m)
 
-    # attach ESP packets by address pair and SPI
+    # Attach ESP packets by address pair. Child SA SPIs are negotiated inside the
+    # encrypted IKE_AUTH/CREATE_CHILD_SA, so the IKE SA <-> ESP SPI link is never
+    # plaintext: attribution is by address pair and time, never by SPI proof.
     for r in recs.values():
         r._esp = []
     all_esp_by_pair = defaultdict(list)
@@ -52,80 +54,55 @@ def group_sas(pcap: str) -> list[EvidenceRecord]:
         pair_esp = all_esp_by_pair.get(pair, [])
         if not pair_esp:
             continue
-        # Sort SAs by initial IKE message timestamp
-        sa_list.sort(key=lambda s: min((m["t"] for m in getattr(s, "_ike", []) if "t" in m), default=0.0))
         if len(sa_list) == 1:
-            sa = sa_list[0]
-            sa._esp = pair_esp
-            spis_fwd = {p["spi"] for p in pair_esp if p["src"] == sa.src and p["dst"] == sa.dst and p.get("spi")}
-            spis_rev = {p["spi"] for p in pair_esp if p["src"] == sa.dst and p["dst"] == sa.src and p.get("spi")}
-            if spis_fwd and not sa.child_spi_out:
-                sa.child_spi_out = sorted(spis_fwd)[0]
-            if spis_rev and not sa.child_spi_in:
-                sa.child_spi_in = sorted(spis_rev)[0]
+            sa_list[0]._esp = pair_esp
         else:
-            # Multiple SAs between the same host pair: segregate by SPI multiplexing
+            # T-051: several IKE SAs between one host pair. An SA owns the SPIs that
+            # carry traffic between its first IKE message and the next SA's, so ESP
+            # that only starts after a later negotiation is not credited to an
+            # earlier, failed one. Known limit (T-052 stress case): an SA negotiated
+            # while an older tunnel is still carrying traffic also sees that traffic.
+            sa_list.sort(key=lambda s: min((m["t"] for m in s._ike), default=0.0))
             for i, sa in enumerate(sa_list):
-                sa_ike_times = [m["t"] for m in getattr(sa, "_ike", []) if "t" in m]
-                t_start = min(sa_ike_times) if sa_ike_times else 0.0
-                t_end = float("inf")
-                if i + 1 < len(sa_list):
-                    next_ike_times = [m["t"] for m in getattr(sa_list[i+1], "_ike", []) if "t" in m]
-                    if next_ike_times:
-                        t_end = min(next_ike_times)
-                known_spis = {sa.child_spi_in, sa.child_spi_out} - {"", None}
-                if known_spis:
-                    sa._esp = [p for p in pair_esp if p.get("spi") in known_spis]
-                else:
-                    window_spis = {p.get("spi") for p in pair_esp if t_start <= p["t"] < t_end and p.get("spi")}
-                    if window_spis:
-                        sa._esp = [p for p in pair_esp if p.get("spi") in window_spis]
-                    else:
-                        sa._esp = []
-                spis_fwd = {p["spi"] for p in sa._esp if p["src"] == sa.src and p["dst"] == sa.dst and p.get("spi")}
-                spis_rev = {p["spi"] for p in sa._esp if p["src"] == sa.dst and p["dst"] == sa.src and p.get("spi")}
-                if spis_fwd and not sa.child_spi_out:
-                    sa.child_spi_out = sorted(spis_fwd)[0]
-                if spis_rev and not sa.child_spi_in:
-                    sa.child_spi_in = sorted(spis_rev)[0]
+                t_start = min((m["t"] for m in sa._ike), default=0.0)
+                t_end = (min((m["t"] for m in sa_list[i + 1]._ike), default=float("inf"))
+                         if i + 1 < len(sa_list) else float("inf"))
+                window_spis = {p["spi"] for p in pair_esp if t_start <= p["t"] < t_end and p.get("spi")}
+                sa._esp = [p for p in pair_esp if p.get("spi") in window_spis]
+        for sa in sa_list:
+            _set_child_spis(sa)
 
     # ESP-only flows (T0: the SA predates the capture, no IKE visible) still get a
-    # record so size/timing leakage and the cipher sieve can run on them.
+    # record so size/timing leakage and the cipher sieve can run on them. One
+    # record per host pair ACROSS SPI changes: a new SPI pair between the same
+    # hosts is read as a rekey of the same tunnel (T-053 decision), because
+    # splitting per SPI turned one rekeying tunnel into one-way fragments and
+    # collapsed its measured timing leakage (T-052: 1.97 -> 0.0-0.58 bits).
     ike_pairs = {tuple(sorted([r.src, r.dst])) for r in recs.values()}
     for pair, pkts in all_esp_by_pair.items():
         if pair in ike_pairs:
             continue
-        host_a, host_b = pair
-        spis_a_to_b = sorted({p["spi"] for p in pkts if p["src"] == host_a and p["dst"] == host_b and p.get("spi")})
-        spis_b_to_a = sorted({p["spi"] for p in pkts if p["src"] == host_b and p["dst"] == host_a and p.get("spi")})
-
-        # If at most one SPI exists in each direction, this is a single bidirectional tunnel
-        if len(spis_a_to_b) <= 1 and len(spis_b_to_a) <= 1:
-            esp_r = EvidenceRecord(src=pkts[0]["src"], dst=pkts[0]["dst"], source_pcap=pcap)
-            esp_r._ike = []
-            esp_r._esp = pkts
-            esp_r._esp_only = True
-            if pkts[0]["src"] == host_a:
-                esp_r.child_spi_out = spis_a_to_b[0] if spis_a_to_b else ""
-                esp_r.child_spi_in = spis_b_to_a[0] if spis_b_to_a else ""
-            else:
-                esp_r.child_spi_out = spis_b_to_a[0] if spis_b_to_a else ""
-                esp_r.child_spi_in = spis_a_to_b[0] if spis_a_to_b else ""
-            recs[("esp", pair)] = esp_r
-        else:
-            # Multiple SPIs per direction indicate multiple multiplexed tunnels between the same host pair
-            pkts_by_spi = defaultdict(list)
-            for p in pkts:
-                pkts_by_spi[p.get("spi")].append(p)
-            for spi_val, spi_pkts in pkts_by_spi.items():
-                esp_r = EvidenceRecord(src=spi_pkts[0]["src"], dst=spi_pkts[0]["dst"], source_pcap=pcap)
-                esp_r._ike = []
-                esp_r._esp = spi_pkts
-                esp_r._esp_only = True
-                esp_r.child_spi_in = spi_val or ""
-                recs[("esp", pair, spi_val)] = esp_r
+        esp_r = EvidenceRecord(src=pkts[0]["src"], dst=pkts[0]["dst"], source_pcap=pcap)
+        esp_r._ike = []
+        esp_r._esp = pkts
+        esp_r._esp_only = True
+        _set_child_spis(esp_r)
+        recs[("esp", pair)] = esp_r
 
     return list(recs.values())
+
+
+def _set_child_spis(r: EvidenceRecord) -> None:
+    """child_spi_out = first SPI seen src->dst, child_spi_in = first SPI seen
+    dst->src, in capture order (ESP packets arrive frame-ordered from tshark).
+    Later SPIs on the same record are rekeys; the packets stay in r._esp."""
+    for p in r._esp:
+        if not p.get("spi"):
+            continue
+        if not r.child_spi_out and p["src"] == r.src and p["dst"] == r.dst:
+            r.child_spi_out = p["spi"]
+        elif not r.child_spi_in and p["src"] == r.dst and p["dst"] == r.src:
+            r.child_spi_in = p["spi"]
 
 
 # --------------------------------------------------------------------------- #
@@ -141,7 +118,7 @@ def extract_ike_meta(r: EvidenceRecord) -> None:
         if ikev1:
             ev = [EvidencePtr(r.source_pcap, m["frame"], "isakmp.exchangetype", m["exchange_name"]) for m in ikev1[:2]]
             r.add(Finding("ike_version", Status.OBSERVED, Vantage.T1, "ike_meta", value="IKEv1",
-                          evidence=ev, note="ISAKMP version 1 exchanges detected; deprecated by RFC 8247"))
+                          evidence=ev, note="ISAKMP version 1 exchanges detected; IKEv1 is deprecated (RFC 9395)"))
             exch = sorted({m["exchange_name"] for m in ike})
             r.add(Finding("ike_exchanges", Status.OBSERVED, Vantage.T1, "ike_meta", value=exch, evidence=ev))
             if r.ike_spi_i:
@@ -163,61 +140,85 @@ def extract_ike_meta(r: EvidenceRecord) -> None:
                       value={"initiator": r.ike_spi_i, "responder": r.ike_spi_r or None}))
 
 
+def _addke_ids(m: dict) -> list[int]:
+    """Additional key exchange method ids (RFC 9370 Transform Types 6-12) in one
+    message, NONE (id 0) removed. tshark routes the typed transforms (ENCR/PRF/
+    INTEG/KE/ESN) to typed id fields, so the generic isakmp.tf.id carries exactly
+    the additional-KE ids."""
+    if not any(tt >= 6 for tt in m["transform_types"]):
+        return []
+    return [i for i in m["transform_ids"] if i != 0]
+
+
 def extract_pq_addke(r: EvidenceRecord) -> None:
-    """R8 key exchange + PQ posture. EXP-04/07. Decisive signals: ADDKE transform
-    in IKE_SA_INIT + presence of IKE_INTERMEDIATE (DEC-020).
-    RFC 9370 §2.1: Transform ID 0 is NONE (indicates additional key exchange is optional)."""
+    """R8 key exchange + PQ posture. EXP-04/07, DEC-020, T-053.
+
+    Plaintext first: the responder's IKE_SA_INIT response carries the single
+    proposal it selected, so whether an additional key exchange was SELECTED is
+    read directly (OBSERVED), never inferred from IKE_INTERMEDIATE being absent.
+    RFC 9370: Transform ID 0 is NONE, i.e. the additional exchange is optional.
+    A responder picking a proposal without PQ is a policy fact we can see; WHY
+    (configured fallback, a second classical proposal, or an injected
+    INVALID_KE_PAYLOAD making the initiator retry) is not attributable at T1."""
     ike = getattr(r, "_ike", [])
     init = [m for m in ike if m["exchange"] == 34]
     if not init:
         r.add(Finding("pq_key_exchange", Status.UNKNOWN, Vantage.T0, "pq_addke",
                       note="no IKE_SA_INIT visible"))
         return
-    # tshark routes typed transforms (ENCR/PRF/INTEG/KE-DH/ESN) to typed id
-    # fields; the generic isakmp.tf.id therefore carries exactly the ADDKE key
-    # exchange method ids. So: ADDKE present iff a transform type >= 6 appears,
-    # and its method ids are the generic tf.id values.
-    has_addke = any(tt >= 6 for m in init for tt in m["transform_types"])
-    addke_ids = sorted({ti for m in init for ti in m["transform_ids"]}) if has_addke else []
-    non_zero_addke = [ti for ti in addke_ids if ti != 0]
-    has_none_transform = 0 in addke_ids
+    offered = sorted({i for m in init if not m["is_response"] for i in _addke_ids(m)})
+    offered_names = [tshark.KE_METHOD.get(i, f"KE-id-{i}") for i in offered]
+    # A response that selected a proposal carries transforms; an error-only one
+    # (NO_PROPOSAL_CHOSEN, INVALID_KE_PAYLOAD, COOKIE) carries none. After a
+    # retry, the last selecting response is the one that stands.
+    selecting = [m for m in init if m["is_response"] and m["transform_types"]]
     has_intermediate = any(m["exchange"] == 43 for m in ike)
-    ev = [EvidencePtr(r.source_pcap, init[0]["frame"], "isakmp.tf.type/tf.id", str(addke_ids))]
 
-    init_resp = [m for m in init if m.get("is_response")]
-    resp_addke = [ti for m in init_resp for ti in m.get("transform_ids", []) if ti != 0]
-    chosen_addke = resp_addke if resp_addke else non_zero_addke
-
-    if non_zero_addke and has_intermediate:
-        names = [tshark.KE_METHOD.get(i, f"KE-id-{i}") for i in chosen_addke]
-        r.add(Finding("pq_key_exchange", Status.OBSERVED, Vantage.T1, "pq_addke (EXP-04 signal 2+3)",
-                      value=names, evidence=ev,
-                      note="ADDKE transform(s) proposed AND IKE_INTERMEDIATE observed"))
-    elif non_zero_addke and not has_intermediate:
-        # proposed but no intermediate exchange -> the ADDKE was not actually used
-        if has_none_transform:
-            note_text = ("ADDKE proposed with NONE fallback (RFC 9370 §2.1); responder negotiated classical "
-                         "KE and omitted IKE_INTERMEDIATE (negotiated classical fallback)")
-            conf = 0.95
+    if selecting:
+        sel = selecting[-1]
+        chosen = _addke_ids(sel)
+        ev = [EvidencePtr(r.source_pcap, sel["frame"], "isakmp.tf.type/tf.id (responder SA)", str(chosen))]
+        if chosen:
+            r.add(Finding("pq_key_exchange", Status.OBSERVED, Vantage.T1, "pq_addke (responder selection)",
+                          value=[tshark.KE_METHOD.get(i, f"KE-id-{i}") for i in chosen], evidence=ev,
+                          note="responder selected additional key exchange(s) in its IKE_SA_INIT proposal"
+                               + ("; IKE_INTERMEDIATE observed" if has_intermediate
+                                  else "; IKE_INTERMEDIATE not observed (capture may end before it)")))
+        elif offered:
+            r.add(Finding("pq_key_exchange", Status.OBSERVED, Vantage.T1, "pq_addke (responder selection)",
+                          value="offered-but-not-used", evidence=ev,
+                          note=f"initiator offered {offered_names}; the responder's selected proposal carries "
+                               "no additional key exchange (absent or NONE). The selection is plaintext; "
+                               "whether it was configured policy or induced is not attributable at T1"))
         else:
-            note_text = "ADDKE proposed without NONE fallback; no IKE_INTERMEDIATE observed -> possible downgrade to classical KE"
-            conf = 0.9
-        r.add(Finding("pq_key_exchange", Status.INFERRED, Vantage.T1, "pq_addke downgrade check",
-                      value="offered-but-not-used", confidence=conf, evidence=ev,
-                      note=note_text))
+            r.add(Finding("pq_key_exchange", Status.OBSERVED, Vantage.T1, "pq_addke",
+                          value="classical-only", evidence=ev,
+                          note="no additional key exchange offered (or only NONE)"))
+        return
+
+    ev = [EvidencePtr(r.source_pcap, init[0]["frame"], "isakmp.tf.type/tf.id (initiator SA)", str(offered))]
+    if offered:
+        r.add(Finding("pq_key_exchange", Status.UNKNOWN, Vantage.T1, "pq_addke (responder selection)",
+                      evidence=ev,
+                      note=f"initiator offered {offered_names} but no responder proposal selection is visible "
+                           "(no response, or an error-only response)"))
     else:
         r.add(Finding("pq_key_exchange", Status.OBSERVED, Vantage.T1, "pq_addke",
                       value="classical-only", evidence=ev,
-                      note="no ADDKE transform proposed" if not addke_ids else "only NONE transform proposed"))
+                      note="initiator offered no additional key exchange (or only NONE)"))
 
 
 def extract_pfs(r: EvidenceRecord) -> None:
-    """R14 PFS. EXP-03: a CREATE_CHILD_SA rekey carrying a KE payload is larger
-    than one without. Grounded in RFC 7296 §1.3 and RFC 5903 §7:
-      - MODP-2048 (Group 14): KE data is 256 octets (total KE payload ~264 B).
-      - Group 19 (ECP-256): KE data is 64 octets (RFC 5903 §7, NOT 32 bytes; total ~72 B).
-      - Curve25519 (Group 31): KE data is 32 octets (RFC 8031; total ~40 B).
-    Only judgeable when a rekey is observed."""
+    """R14 PFS. EXP-03: a CREATE_CHILD_SA rekey carrying a KE payload is ~256 B
+    larger than one without. Only judgeable when a rekey is observed.
+
+    The 400 B rule is MEASURED for MODP groups only (EXP-03/07: PFS-off requests
+    236-240 B, PFS-on 508-512 B, all MODP-2048). Smaller KE values - Curve25519
+    32 octets (RFC 8031), ECP-256 64 octets (x|y, RFC 5903 sec 7) - shrink the gap
+    to tens of bytes, within the variance of one traffic selector or ESP
+    transform, and no capture of ours calibrates it: those groups are UNKNOWN
+    (T-053). The IKE SA group is only a proxy - the Child SA's PFS group is
+    negotiated inside the encrypted exchange and may differ."""
     ike = getattr(r, "_ike", [])
     ccsa = [m for m in ike if m["exchange"] == 36]
     if not ccsa:
@@ -231,22 +232,24 @@ def extract_pfs(r: EvidenceRecord) -> None:
     ev = [EvidencePtr(r.source_pcap, ccsa[0]["frame"], "ip.len", str(sizes))]
 
     dh_f = r.findings.get("ike_dh_group")
-    dh_val = dh_f.value if (dh_f and dh_f.value) else ""
-    if not dh_val:
-        try:
-            dh_val = tshark.ike_sa_crypto(r.source_pcap, ispi=r.ike_spi_i).get("dh") or ""
-        except Exception:
-            dh_val = ""
-    is_curve25519 = "Curve25519" in str(dh_val)
-    is_ec = is_curve25519 or any(ec in str(dh_val) for ec in ("ECP", "Curve448"))
-    threshold = 255 if is_curve25519 else (280 if is_ec else 400)
-
-    if sizes and max(sizes) >= threshold:
+    dh_val = dh_f.value if (dh_f and isinstance(dh_f.value, str)) else None
+    if dh_val and not dh_val.startswith("MODP"):
+        r.add(Finding("pfs", Status.UNKNOWN, Vantage.T1, "pfs (EXP-03 length gap)", evidence=ev,
+                      note=f"PFS size threshold uncalibrated for DH group {dh_val} (400 B rule measured on "
+                           f"MODP-2048 only; request sizes {sizes}); needs a measured baseline for this group "
+                           "or T2 endpoint telemetry"))
+        return
+    caveat = ("" if dh_val else
+              " (IKE DH group not visible; the 400 B rule assumes a MODP-size KE, so a PFS rekey with a "
+              "smaller group would read as PFS-off)")
+    if sizes and max(sizes) >= 400:
         r.add(Finding("pfs", Status.INFERRED, Vantage.T1, "pfs (EXP-03 length gap)", value=True,
-                      confidence=0.9, evidence=ev, note=f"CREATE_CHILD_SA request {max(sizes)} B carries a KE payload"))
+                      confidence=0.9, evidence=ev,
+                      note=f"CREATE_CHILD_SA request {max(sizes)} B carries a KE payload{caveat}"))
     else:
         r.add(Finding("pfs", Status.INFERRED, Vantage.T1, "pfs (EXP-03 length gap)", value=False,
-                      confidence=0.9, evidence=ev, note=f"CREATE_CHILD_SA request {max(sizes) if sizes else '?'} B, no KE payload"))
+                      confidence=0.9, evidence=ev,
+                      note=f"CREATE_CHILD_SA request {max(sizes) if sizes else '?'} B, no KE payload{caveat}"))
 
 
 def extract_sa_lifecycle(r: EvidenceRecord) -> None:
@@ -385,21 +388,9 @@ def extract_ike_crypto(r: EvidenceRecord) -> None:
     ev = [EvidencePtr(r.source_pcap, None, "isakmp IKE_SA_INIT response", str(c))]
     enc = (f"{c.get('encr')}-{c['encr_keylen']}" if c.get("encr") and c.get("encr_keylen")
            else c.get("encr"))
-
-    # Proposal matching: verify responder selected proposal was offered by initiator (Bottleneck a)
-    ike = getattr(r, "_ike", [])
-    init_req = [m for m in ike if m.get("exchange") == 34 and not m.get("is_response")]
-    init_resp = [m for m in ike if m.get("exchange") == 34 and m.get("is_response")]
-    offered_pn = [p["number"] for m in init_req for p in m.get("proposals", [])]
-    chosen_pn = [p["number"] for m in init_resp for p in m.get("proposals", [])]
-    prop_note = ""
-    if chosen_pn and offered_pn:
-        matched = chosen_pn[0] in offered_pn
-        prop_note = f"; proposal #{chosen_pn[0]} {'matched initiator offer' if matched else 'not in initiator offer'}"
-
     for attr, val, extra in (("ike_encr", enc, {}),
                              ("ike_integ", c.get("integ"), {}),
-                             ("ike_dh_group", c.get("dh"), {"note": f"DH group id {c.get('dh_id')}{prop_note}"})):
+                             ("ike_dh_group", c.get("dh"), {"note": f"DH group id {c.get('dh_id')}"})):
         if val:
             r.add(Finding(attr, Status.OBSERVED, Vantage.T1, "ike_crypto", value=val, evidence=ev, **extra))
         else:

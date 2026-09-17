@@ -3,6 +3,30 @@
 Every entry cites the T-ID / EXP-ID that drove it — full detail lives in `TODO.md` and the
 referenced experiment's `RESULT.md`. This file is for someone who isn't reading the task tracker.
 
+## [Unreleased] — 2026-09-17 (T-051, T-052, T-053)
+
+**Fixed**
+- IKE crypto is now read per SA. Previously the first IKE_SA_INIT response in a capture was used for
+  every SA, so one NO_PROPOSAL_CHOSEN made all of them UNKNOWN (`cs-aes256gcm16-a7.pcap`).
+- ESP traffic is no longer credited to earlier, failed SAs between the same hosts; those were being
+  reported as `success` (`fail-proposal-mismatch.pcap`, `fail-ts-mismatch.pcap`).
+- PQ: whether an additional key exchange was selected is read from the responder's plaintext
+  proposal — `offered-but-not-used` is now OBSERVED, and a legitimate two-proposal offer no longer
+  raises 'possible downgrade'. RFC 9370 NONE (Transform ID 0) handled. (DEC-025)
+
+**Changed**
+- PFS size rule (400 B) applies to MODP groups only; other groups report UNKNOWN until calibrated.
+  ESP-only captures keep one record per host pair across rekeys. (DEC-026)
+
+**Added**
+- IKEv1 exchange detection (version only; IKEv1 deprecated by RFC 9395).
+- `build/04-IMPLEMENTATION-PLAN.md`: adjudication of the review-panel dossier and the remaining plan.
+
+**Process**
+- A first implementation (T-051) passed all suites but, under a full-findings differential across
+  130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
+  Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
+
 ## [0.2.0] — 2026-09-14 (T-049)
 
 **Added**
