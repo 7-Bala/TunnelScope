@@ -9,8 +9,8 @@ rules:
     severity: informational
     fail_message: "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)"
   - id: DST-PQ-DOWNGRADE
-    title: "A proposed PQ key exchange must not be downgraded to classical (prevent insecure fallback)"
+    title: "A proposed PQ key exchange must not fall back to classical (prevent insecure fallback)"
     attribute: pq_key_exchange
     assert: {op: not_equals, value: "offered-but-not-used"}
     severity: high
-    fail_message: "PQ key exchange was offered but not used - a downgrade / insecure fallback"
+    fail_message: "PQ key exchange offered, classical selected - an insecure fallback under DST policy (cause not attributable passively)"

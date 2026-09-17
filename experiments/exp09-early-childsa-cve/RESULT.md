@@ -114,7 +114,7 @@ alongside `testbed/docker-compose.yml` — separate subnets, separate container 
 ## Verdict
 A **deterministic, vantage-aware** passive detector for the CVE-2026-78135 pattern exists, fires on
 zero legitimate captures, degrades to UNKNOWN when it cannot see the SA's birth, and now has three
-independent layers of validation: specificity (69 real captures, 0 FP), sensitivity on a synthetic
+independent layers of validation: specificity (0 FP on the 67 judgeable legit captures, 2 UNKNOWN; one-sided 95% upper bound ≈4.4%, lab captures), sensitivity on a synthetic
 plaintext-structural positive (1/1), and sensitivity on a **genuine live fault-injected exploit
 capture** with the exact root-cause gate bypass independently confirmed via the daemon's own debug
 log. No AI. It is a concrete, CVE-anchored capability no surveyed tool has (doc 11). It ships

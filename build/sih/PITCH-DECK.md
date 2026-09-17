@@ -17,7 +17,7 @@ isn't parsing — it's **assessment**:
 - The ESP cipher, mode, and PFS are inside the **encrypted** part of IKE.
 - IKEv2 doesn't even negotiate a lifetime.
 - No tool tells an operator: *is this tunnel compliant, against which standard, and is it
-  post-quantum — or was it silently downgraded?*
+  post-quantum — or was PQ offered but classical negotiated?*
 _We spent the research phase proving where the gap really is (research/ docs 01–11)._
 
 ---
@@ -44,7 +44,8 @@ can't see the handshake. That's a confident lie. We refuse to._
 strongSwan negotiates hybrid ML-KEM IPsec today. India's DST/National Quantum Mission mandates
 crypto inventory and downgrade prevention for critical infrastructure by 2027.
 **TunnelScope detects, from plaintext IKE, whether a tunnel is post-quantum, classical, or was
-offered PQ and silently downgraded** — and emits a CycloneDX CBOM.
+offered PQ but negotiated classical** (the cause is not attributable passively) — and emits a
+CycloneDX CBOM.
 _Live demo: the downgrade capture → posture DOWNGRADED, DST verdict FAIL._
 
 ---

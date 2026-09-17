@@ -486,7 +486,8 @@ def extract_early_childsa_cve(r: EvidenceRecord) -> None:
         r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method,
                       value="early-child-sa-before-auth",
                       note=f"CREATE_CHILD_SA at frame {earliest_child_frame} (msgid {earliest_child_mid}), "
-                           f"{why} — matches CVE-2026-78135"))
+                           f"{why} — CVE-2026-78135 pattern (an attempt; whether the responder "
+                           "accepted it is not visible at T1)"))
     else:
         r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method, value="not-detected",
                       note=f"IKE_AUTH (frame {earliest_auth_frame}) precedes CREATE_CHILD_SA "

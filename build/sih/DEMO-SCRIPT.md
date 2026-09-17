@@ -19,7 +19,9 @@ tunnelscope analyze testbed/captures/pq-mlkem768.pcap
 tunnelscope report testbed/captures/pq-downgrade.pcap --level exec
 ```
 **Point:** posture **DOWNGRADED (PQ offered, classical used)**; DST-PQ-DOWNGRADE **FAIL** (high).
-This is the capability nothing else has, tied to the DST 2027 mandate.
+This is the capability nothing else has, tied to the DST 2027 mandate. The responder's selection is
+read straight from plaintext IKE; *why* it chose classical (configured policy, or an induced retry)
+is not attributable passively without private keys or endpoint telemetry.
 
 ## 3 · Multi-baseline honesty (45s)
 ```bash
@@ -42,15 +44,16 @@ tunnelscope analyze testbed/captures/exp06r2/exp06r2-f06-rep1.pcap | grep negoti
 **Point:** `ike-proposal-mismatch` vs `peer-unreachable` — diagnosed from structure alone, the thing
 practitioners currently do by hand-reading both configs.
 
-## 5b · CVE-2026-78135 detection, on a real live exploit (30s)
+## 5b · CVE-2026-78135 detection, on a live exploit attempt from a lab (30s)
 ```bash
 tunnelscope assess testbed/captures/exploitlab/cve-2026-78135-live.pcap | grep -A1 CVE
 ```
 **Point:** this is not a forged capture — it's genuine traffic from a real strongSwan pair in an
 isolated Docker lab where we bypassed the actual CVE fix (`task_manager_v2.c`'s auth-completion
 gate) and made a real initiator skip IKE_AUTH entirely. The detector fires **FAIL (high)** on the
-exact same wire pattern it fires on synthetically, and on all 69 real captures it fires **zero**
-times (returns UNKNOWN when it can't see the handshake, never a false alarm). See
+exact same wire pattern it fires on synthetically, and on the 69 legitimate captures it fires **zero**
+times (67 judged, 2 UNKNOWN where it can't see the handshake — never a false alarm). It shows the
+*attempt*: the lab responder still rejected the Child SA, and acceptance is not visible on the wire. See
 `experiments/exp09-early-childsa-cve/RESULT.md` for the full reproduction and root-cause citation.
 
 ## 5c · Higher vantage changes the answer — honestly (30s)

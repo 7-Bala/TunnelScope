@@ -20,7 +20,7 @@ scores absence of evidence as compliance.
 | Negotiation-failure diagnosis | structural signatures | EXP-06 |
 | Tunnel/transport mode | **reports NOT-OBSERVABLE at T0** (honest) | EXP-08 |
 | Metadata leakage | size/timing entropy in bits (never a traffic label) | EXP-05 |
-| CVE-2026-78135 pattern | vantage-aware early-Child-SA detector (0 FP/69, sensitivity 1/1) | EXP-09 |
+| CVE-2026-78135 pattern | vantage-aware early-Child-SA detector (0 FP on 67 judgeable legit captures + 2 UNKNOWN, 95% upper bound ≈4.4%; fires on synthetic and live-lab positives) | EXP-09 |
 | Cross-tier consistency (T2 vs wire) | reconcile endpoint telemetry → escalate / confirm / **CONTRADICTORY** | Stage 3, `build/02-CROSSTIER.md` |
 | Multi-baseline compliance | rules as versioned data | RFC 8221/8247/9395, NIST SP 800-77r1, DISA VPN SRG, DST/NQM |
 | CBOM export | CycloneDX 1.6 | DST/NQM |

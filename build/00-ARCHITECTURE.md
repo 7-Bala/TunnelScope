@@ -106,7 +106,7 @@ first-class result the assessor and report must honour — it can never be silen
 | evidence/failure_diag | R-new (why a tunnel failed) | EXP-06 r2 (macro-F1 1.000) |
 | evidence/sa_lifecycle | R9 SA characteristics, R12 lifetime | F-02 (measured, not read) |
 | evidence/mode | R4 tunnel/transport | EXP-08 (NOT-OBSERVABLE at T0; T2/topology) |
-| evidence/cve_earlychild | R-new (CVE-2026-78135) | EXP-09 (0 FP, vantage-aware) |
+| evidence/cve_earlychild | R-new (CVE-2026-78135) | EXP-09 (0 FP on 67 judgeable captures, 95% upper bound ≈4.4%; vantage-aware) |
 | evidence/metadata_leak | R10/R15 metadata exposure | EXP-05 (the one ML instrument) |
 | assess | R11 compliance, R13 replay | rules as data; multi-baseline (I3) |
 | pq | R8 PQ + downgrade, PS §E CBOM | EXP-04/07; DST/NQM |
