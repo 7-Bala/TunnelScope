@@ -27,10 +27,8 @@
 T-053, `build/04-IMPLEMENTATION-PLAN.md`). Verified on `main`: 69/69 unit tests, 69/69 E2E captures,
 dataset validator PASS (78 pcaps).
 
-**Next: submission (T-046, user's steps).** Before recording, fix the one remaining jury-facing
-overclaim: `build/sih/PITCH-DECK.md:87` "0 false positives / 69" → the plan §2.9 form (0 of 67
-judgeable legit captures; 95% upper bound ≈4.4%, lab captures). Then record the demo video
-(`build/sih/DEMO-SCRIPT.md`) and click Submit.
+**Next: submission (T-046, user's steps).** Deck wording and counts are fixed (2026-09-17). Re-upload
+the updated PPT to the portal, record the demo video (`build/sih/DEMO-SCRIPT.md`), click Submit.
 
 **After submission:** plan §5 P1 items, staged below as T-054–T-058.
 
@@ -40,7 +38,7 @@ judgeable legit captures; 95% upper bound ≈4.4%, lab captures). Then record th
 
 | ID | P | Status | Task | Acceptance criteria | Evidence |
 |---|---|---|---|---|---|
-| T-046 | **P1** | DOING (user's steps left) | Kumaraguru internal ideathon deck (pptx) + official SIH portal submission (sih.iqubekct.ac.in/submissions/63): all 6 sections filled+saved, 100% readiness. PPT attached (2026-09-12). 2026-09-17: user adopting T-053 numbers (69 unit / 69 E2E / 78 pcaps) and the PQ wording "PQ offered, classical selected; cause not attributable passively" | (a) deck + `build/sih/*` use 69/69/78 and the plan §2.9 stats wording — `PITCH-DECK.md` fixed 2026-09-17; the .pptx is still to check; (b) demo video recorded; (c) user clicks Submit | `/Users/bala/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.pptx` (pptx not re-inspected since 2026-09-12); portal draft 100% |
+| T-046 | **P1** | DOING (user's steps left) | Kumaraguru internal ideathon deck (pptx) + official SIH portal submission (sih.iqubekct.ac.in/submissions/63): all 6 sections filled+saved, 100% readiness. PPT attached (2026-09-12). 2026-09-17: user adopting T-053 numbers (69 unit / 69 E2E / 78 pcaps) and the PQ wording "PQ offered, classical selected; cause not attributable passively" | (a) deck + `build/sih/*` use 69/69/78 and the plan §2.9 stats wording — done 2026-09-17: `PITCH-DECK.md` (bound + EXP-09 live-reproduction wording) and the .pptx (slides 11 and 13: 69 unit tests, 78 pcaps; render checked); the portal still has the old PPT attached → re-upload; (b) demo video recorded; (c) user clicks Submit | `/Users/bala/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.pptx` (pptx not re-inspected since 2026-09-12); portal draft 100% |
 | T-054 | P2 | TODO (post-submission) | Script the full-findings differential (all pcaps, status/value/confidence vs merge base) and run it in CI — plan §5 P1-1 | A PR changing any finding fails unless listed in an allow-file | — |
 | T-055 | P2 | TODO (post-submission) | CVE-2026-78135 message-ID guard (capture loss of IKE_AUTH) — plan §5 P1-2, §3.4 CVE-2b | Fires on synthetic + live positives; UNKNOWN on a benign capture with IKE_AUTH frames removed; 0 new detections elsewhere | — |
 | T-056 | P2 | TODO (post-submission) | Wording: 'attempt' not 'matches CVE'; PQ 'offered, classical selected' not 'downgrade' in rule titles, CBOM label, demo/pitch/Q&A — plan §5 P1-3 | No jury-facing text claims exploitation or attack where only an attempt or a policy selection is observed | — |
@@ -351,3 +349,4 @@ not a compressed version.)
 - **2026-09-17** — User re-verified `main` (69/69 unit, 69/69 E2E, dataset PASS, clean tree), adopted the T-046 numbers and PQ wording, staged plan §5 P1 as post-submission work, and asked for a final TODO sync. Done: Current focus rewritten to the real state (it still said T-030 was next); T-046 lists its remaining steps, incl. the one jury overclaim left (`PITCH-DECK.md:87`, found by grep); P1 items opened as T-054–T-058; T-051 row marked partly superseded; broken fragment in the roadmap table removed.
 - **2026-09-17** — User re-sent the final-sync request. Checked: `main` @ `bfd6d85`, tree clean, the sync is already in place; nothing new to record. `PITCH-DECK.md:87` "0 false positives / 69" still open (T-046a).
 - **2026-09-17** — User: fix `PITCH-DECK.md` line 87. Replaced "specificity is proven (0 false positives / 69)" with "0 false positives on 67 judgeable legitimate lab captures (2 more were correctly UNKNOWN); 95% upper bound ≈ 4.4%". Flagged, not changed: the same sentence still calls reproducing the actual exploit future work, but EXP-09 already has a live exploit-lab reproduction.
+- **2026-09-17** — User: apply the fixes wherever I had flagged them. `PITCH-DECK.md`: "future work" sentence replaced (EXP-09 live lab reproduction; responder still rejected the Child SA). `.pptx` in Downloads: slide 11 "39 unit tests" → 69; slide 13 "39/39 unit tests … 73 pcaps" → 69/69 … 78 (only these 2 runs changed; rendered via LibreOffice, layout intact). Original kept as `~/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.before-2026-09-17.pptx`. Neither had the CVE line. Not changed (not flagged earlier): `tunnelscope/README.md:23`, `build/00-ARCHITECTURE.md:109` still say "0 FP/69" (T-058).
