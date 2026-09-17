@@ -85,8 +85,9 @@ HTML file. Vantage ladder T0→T4: fully useful passively, more with endpoint ac
   so no synthetic number is inherited.
 - Validated on two open-source stacks; **vendor appliances untested**.
 - The CVE-2026-78135 detector: 0 false positives on 67 judgeable legitimate lab captures (2 more
-  were correctly UNKNOWN); 95% upper bound ≈ 4.4%. Reproducing the
-  actual exploit needs a malicious IKE stack — that's future work.
+  were correctly UNKNOWN); 95% upper bound ≈ 4.4%. Reproduced live in an isolated lab with a
+  patched strongSwan (EXP-09), where the detector fired; the lab responder still rejected the Child
+  SA, so a successful exploit isn't shown.
 
 ---
 
