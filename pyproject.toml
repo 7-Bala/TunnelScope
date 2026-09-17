@@ -5,9 +5,11 @@ description = "Evidence-tiered IPsec/IKE posture and PQ-migration assessment (SI
 requires-python = ">=3.11"
 # fastapi/uvicorn removed (T-049, 2026-09-14): declared from the start but
 # never used anywhere in tunnelscope/ - dead weight that also contradicted
-# I9 (offline by default, no assumed network surface). A local-only API is
-# planned (build/03-USAGE-AND-OPERATIONS-PLAN.md §3.4/§6) but needs its own
-# security review before it ships; these deps come back only alongside it.
+# I9 (offline by default, no assumed network surface). `tunnelscope serve`
+# (T-059) is a local upload dashboard built on stdlib http.server instead -
+# 127.0.0.1 only, no new dependency. The role-D SIEM-facing API in
+# build/03-USAGE-AND-OPERATIONS-PLAN.md §6 is a separate, still-open item;
+# these deps come back only alongside that one, if it needs them.
 dependencies = ["scikit-learn>=1.3", "numpy>=1.24", "PyYAML>=6.0"]
 
 [project.optional-dependencies]

@@ -1,6 +1,7 @@
 """TunnelScope CLI — the offline entry point (ADR-006).
 
   tunnelscope analyze <pcap> [--json]     build evidence records from a capture
+  tunnelscope serve [--port N]            local dashboard: drop pcaps in a browser tab (T-059)
 """
 from __future__ import annotations
 
@@ -97,6 +98,11 @@ def cmd_crosstier(args):
             print("    ! config and wire diverge — see CONTRADICTORY findings above")
 
 
+def cmd_serve(args):
+    from .api.server import run_server
+    run_server(port=args.port, open_browser=not args.no_browser)
+
+
 def cmd_fleet(args):
     if args.json:
         print(json.dumps(fleet_json(args.directory), indent=2, default=str))
@@ -128,6 +134,10 @@ def main(argv=None):
     ct.add_argument("pcap"); ct.add_argument("telemetry", help="T2 telemetry file (JSON or key: value)")
     ct.add_argument("--json", action="store_true")
     ct.set_defaults(func=cmd_crosstier)
+    sv = sub.add_parser("serve", help="local dashboard: open a page, drop in pcaps, see findings (127.0.0.1 only, uploads not saved)")
+    sv.add_argument("--port", type=int, default=8765)
+    sv.add_argument("--no-browser", action="store_true", help="don't auto-open a browser tab")
+    sv.set_defaults(func=cmd_serve)
     fl = sub.add_parser("fleet", help="scan a directory of captures: one aggregated view, per-tunnel evidence kept intact (role B/D)")
     fl.add_argument("directory")
     fl.add_argument("-o", "--out", default="tunnelscope-fleet.html")
