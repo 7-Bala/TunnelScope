@@ -84,7 +84,8 @@ HTML file. Vantage ladder T0→T4: fully useful passively, more with endpoint ac
 - Traffic in the leakage experiment is synthetic — we report **measured leakage on your own tunnel**,
   so no synthetic number is inherited.
 - Validated on two open-source stacks; **vendor appliances untested**.
-- The CVE-2026-78135 detector's specificity is proven (0 false positives / 69); reproducing the
+- The CVE-2026-78135 detector: 0 false positives on 67 judgeable legitimate lab captures (2 more
+  were correctly UNKNOWN); 95% upper bound ≈ 4.4%. Reproducing the
   actual exploit needs a malicious IKE stack — that's future work.
 
 ---
