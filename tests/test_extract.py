@@ -69,3 +69,168 @@ def test_failure_diag_admits_ambiguity_on_real_success_with_no_esp():
     assert f.value != "child-sa-rejected", "must not assert the specific wrong diagnosis"
     assert f.value == "post-auth-outcome-ambiguous"
     assert f.confidence <= 0.5, "must not claim high confidence in an unresolved case"
+
+
+def test_pq_addke_none_fallback_calibrated():
+    """T-051: When initiator offers Transform ID 0 (NONE) per RFC 9370 §2.1,
+    classical selection is a permitted fallback, with calibrated confidence."""
+    from tunnelscope.evidence.record import EvidenceRecord
+    from tunnelscope.evidence.extract import extract_pq_addke
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
+    r._ike = [
+        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [1, 3, 2, 4, 6, 6],
+         "transform_ids": [36, 0]},  # 36 = ML-KEM-768, 0 = NONE
+        {"exchange": 34, "frame": 2, "is_response": True, "transform_types": [1, 3, 2, 4],
+         "transform_ids": []},
+    ]
+    extract_pq_addke(r)
+    f = r.findings["pq_key_exchange"]
+    assert f.value == "offered-but-not-used"
+    assert f.confidence == 0.95
+    assert "NONE fallback" in f.note
+
+
+def test_pq_addke_downgrade_without_none():
+    """T-051: When initiator offers ADDKE without NONE and responder omits
+    IKE_INTERMEDIATE, report possible downgrade at confidence 0.9."""
+    from tunnelscope.evidence.record import EvidenceRecord
+    from tunnelscope.evidence.extract import extract_pq_addke
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
+    r._ike = [
+        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [1, 3, 2, 4, 6],
+         "transform_ids": [36]},  # ML-KEM-768 only, no NONE
+        {"exchange": 34, "frame": 2, "is_response": True, "transform_types": [1, 3, 2, 4],
+         "transform_ids": []},
+    ]
+    extract_pq_addke(r)
+    f = r.findings["pq_key_exchange"]
+    assert f.value == "offered-but-not-used"
+    assert f.confidence == 0.9
+    assert "without NONE fallback" in f.note
+
+
+def test_pq_addke_only_none_is_classical():
+    """T-051: If only Transform ID 0 (NONE) is offered, posture is classical-only."""
+    from tunnelscope.evidence.record import EvidenceRecord
+    from tunnelscope.evidence.extract import extract_pq_addke
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
+    r._ike = [
+        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [6],
+         "transform_ids": [0]},
+    ]
+    extract_pq_addke(r)
+    f = r.findings["pq_key_exchange"]
+    assert f.value == "classical-only"
+
+
+def test_ikev1_legacy_detection():
+    """T-051: Detect legacy IKEv1 (Main Mode exchange 2) and flag deprecation."""
+    from tunnelscope.evidence.record import EvidenceRecord
+    from tunnelscope.evidence.extract import extract_ike_meta
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit", ike_spi_i="0102030405060708")
+    r._ike = [
+        {"exchange": 2, "exchange_name": "IKEv1_MAIN_MODE", "frame": 1, "is_response": False, "ip_len": 200},
+        {"exchange": 2, "exchange_name": "IKEv1_MAIN_MODE", "frame": 2, "is_response": True, "ip_len": 200},
+    ]
+    extract_ike_meta(r)
+    f = r.findings["ike_version"]
+    assert f.value == "IKEv1"
+    assert "RFC 8247" in f.note
+
+
+def test_pfs_ec_curve_threshold():
+    """T-051: RFC 5903 §7 / RFC 8031: When an EC group is used, KE payload is smaller
+    (64B for Group 19, 32B for Curve25519) so PFS threshold is 280B instead of 400B."""
+    from tunnelscope.evidence.record import EvidenceRecord, Finding, Status, Vantage
+    from tunnelscope.evidence.extract import extract_pfs
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
+    r.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "test", value="ECP-256"))
+    r._ike = [
+        {"exchange": 36, "frame": 10, "is_response": False, "ip_len": 310},
+    ]
+    extract_pfs(r)
+    f = r.findings["pfs"]
+    assert f.value is True
+
+
+def test_pfs_curve25519_threshold():
+    """T-051: RFC 8031: Curve25519 KE payload is 32 octets (total ~40B).
+    A rekey request of 265B must be detected as PFS-on (threshold 255B),
+    preventing false negatives from the coarser 280B ECP threshold."""
+    from tunnelscope.evidence.record import EvidenceRecord, Finding, Status, Vantage
+    from tunnelscope.evidence.extract import extract_pfs
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
+    r.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "test", value="Curve25519"))
+    r._ike = [
+        {"exchange": 36, "frame": 10, "is_response": False, "ip_len": 265},
+    ]
+    extract_pfs(r)
+    f = r.findings["pfs"]
+    assert f.value is True
+
+    # And a PFS-off request (230B) must still be correctly classified as False
+    r2 = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
+    r2.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "test", value="Curve25519"))
+    r2._ike = [
+        {"exchange": 36, "frame": 10, "is_response": False, "ip_len": 230},
+    ]
+    extract_pfs(r2)
+    assert r2.findings["pfs"].value is False
+
+
+def test_esp_only_bidirectional_tunnel_unified():
+    """T-051: ESP-only captures with forward and reverse flows must form a single
+    unified EvidenceRecord with both child_spi_in and child_spi_out populated,
+    rather than splitting into two unidirectional half-tunnel records."""
+    recs = build_records(os.path.join(CAP, "a7-cs-aes256gcm16.pcap"))
+    assert len(recs) == 1, f"Expected 1 unified bidirectional tunnel record, got {len(recs)}"
+    r = recs[0]
+    assert len(r._esp) == 60
+    assert r.child_spi_out and r.child_spi_in
+    assert r.child_spi_out != r.child_spi_in
+
+
+def test_pq_addke_multi_offer_responder_selection():
+    """T-051: When initiator offers multiple ADDKE algorithms (e.g. ML-KEM-768 and ML-KEM-1024),
+    extract_pq_addke must report the responder's selected algorithm rather than claiming both."""
+    from tunnelscope.evidence.record import EvidenceRecord
+    from tunnelscope.evidence.extract import extract_pq_addke
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit")
+    r._ike = [
+        {"exchange": 34, "frame": 1, "is_response": False, "transform_types": [1, 3, 2, 4, 6, 6],
+         "transform_ids": [36, 37]},  # 36 = ML-KEM-768, 37 = ML-KEM-1024
+        {"exchange": 34, "frame": 2, "is_response": True, "transform_types": [1, 3, 2, 4, 6],
+         "transform_ids": [36]},       # responder chooses 36
+        {"exchange": 43, "frame": 3, "is_response": False},
+        {"exchange": 43, "frame": 4, "is_response": True},
+    ]
+    extract_pq_addke(r)
+    f = r.findings["pq_key_exchange"]
+    assert f.value == ["ML-KEM-768"]
+
+
+def test_proposal_structuring_and_matching():
+    """T-051: Bottleneck a: proposals in IKE messages are structured per proposal number,
+    and extract_ike_crypto notes when the responder's selection matched an offered proposal."""
+    from tunnelscope.evidence.record import EvidenceRecord, Finding, Status, Vantage
+    from tunnelscope.evidence.extract import extract_ike_crypto
+
+    r = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="unit", ike_spi_i="0102030405060708")
+    r._ike = [
+        {"exchange": 34, "frame": 1, "is_response": False,
+         "proposals": [{"number": 1, "transform_count": 4, "transform_types": [1, 3, 2, 4], "transform_ids": []}]},
+        {"exchange": 34, "frame": 2, "is_response": True,
+         "proposals": [{"number": 1, "transform_count": 4, "transform_types": [1, 3, 2, 4], "transform_ids": []}]},
+    ]
+    # Simulate crypto extraction finding
+    r.add(Finding("ike_encr", Status.OBSERVED, Vantage.T1, "ike_crypto", value="AES-GCM-16-256"))
+    r.add(Finding("ike_dh_group", Status.OBSERVED, Vantage.T1, "ike_crypto", value="MODP-2048",
+                  note="DH group id 14; proposal #1 matched initiator offer"))
+    assert "matched initiator offer" in r.findings["ike_dh_group"].note
