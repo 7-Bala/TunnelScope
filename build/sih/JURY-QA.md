@@ -35,10 +35,12 @@ itself. 69/69 captures match.
 
 **Q: Wireshark can already parse ML-KEM. What's new?**
 Parsing ≠ assessment. Wireshark shows you `ADDKE1`. It doesn't tell you the tunnel was **offered PQ
-and downgraded to classical**, or map that to the DST mandate, or do it across a fleet — and the tools
+but negotiated classical**, or map that to the DST mandate, or do it across a fleet — and the tools
 SOCs actually run (Suricata, Zeek, nDPI) can't even parse the field. We proved the downgrade detector
 on a dedicated arm and confirmed the ML-KEM identity across four independent sources (IANA, Wireshark
-master, tshark, strongSwan).
+master, tshark, strongSwan). And we say plainly what we can't tell: the responder's selection is
+plaintext, but *why* it picked classical — configured policy or an attacker-induced retry — isn't
+attributable passively without private keys or endpoint telemetry.
 
 **Q: Would your PQ detector work on Cisco/Palo Alto?**
 The decisive signals (IKE_INTERMEDIATE presence, the ADDKE transform) are protocol-defined, so they
@@ -71,5 +73,5 @@ escalations that unlock more, with each finding declaring which tier produced it
 
 ## The one-sentence close
 "We built the assessment layer that's missing: it tells you what your IPsec actually negotiated,
-whether it's post-quantum or was downgraded, against which standard it complies — and it tells you
+whether it's post-quantum or fell back to classical, against which standard it complies — and it tells you
 plainly what it cannot see, so you never act on a confident guess."

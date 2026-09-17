@@ -29,7 +29,7 @@ function App() {
               {s.vulnerable} of {s.total} tunnels still negotiate classical key exchange.
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-              One was silently downgraded from post-quantum; one carries the CVE-2026-78135 pre-auth
+              One offered post-quantum but negotiated classical; one carries the CVE-2026-78135 pre-auth
               pattern. Only <span className="text-pos">{s.counts.pq}</span> is hardened with hybrid ML-KEM.
             </p>
           </div>
