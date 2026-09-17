@@ -39,10 +39,18 @@ not a report to open later. Both are addressed below.
   touches the network).
 - **Fleet mode is still local** — a directory of pcaps in, one aggregated HTML/JSON out. No new
   network surface.
-- **The local-only API (§6) is opt-in, off by default, and binds to localhost only.** It exists for
-  role D's integration need (a SIEM polling TunnelScope), not for remote or multi-host use. Shipping
-  it requires a short security review (input validation on uploaded pcaps, no auth-bypass path) before
-  it's turned on by default anywhere — not assumed safe just because it's local.
+- **`tunnelscope serve` (T-059, built) is a local upload dashboard, not the §6 API below.** It is a
+  human-facing page for the same one-shot, offline analysis every other command does — no persistent
+  role, no streaming, no polling. Explicitly narrow, since this is the one command that opens a
+  socket at all: binds to `127.0.0.1` only (not a flag — can't be pointed at a LAN or `0.0.0.0`),
+  every upload is checked against pcap/pcapng magic bytes before it reaches `tshark`, uploads are
+  written to a private temp path and deleted right after the response (nothing persists), and a
+  parse failure on one file is its own error card, never a crash of the server. Stdlib `http.server`
+  only — no new dependency, and the fastapi/uvicorn removal (T-049) stands.
+- **The local-only API (§6) is a separate, still-open item** — opt-in, off by default, binds to
+  localhost only. It exists for role D's integration need (a SIEM polling TunnelScope on a schedule),
+  which `serve` does not address. Shipping it still needs its own security review before it's turned
+  on by default anywhere — not assumed safe just because `serve` already exists.
 
 ---
 
