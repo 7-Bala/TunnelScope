@@ -28,16 +28,30 @@ staying genuinely minimal:
 - **Motion** is a single gentle rise-in on load, from a visible rest state — no
   fade-in-on-scroll, respects `prefers-reduced-motion`.
 
-## Data
+## Data and running it
 
-`src/gateways.json` is real `tunnelscope fleet <dir> --json` output over 10 of the
-project's actual validated captures (classical baselines, the PQ-downgrade tunnel, the
-ML-KEM hybrid, the real CVE-2026-78135 exploit capture, the OpenBSD `iked`
-cross-implementation capture), relabeled with Indian gateway city names.
+The dashboard has two data sources, switched in the top bar:
 
-## Run
+- **Your captures** (default): drop `.pcap`/`.pcapng` files anywhere on the page. Each is sent to the
+  local engine's `POST /api/analyze`, analysed by the real pipeline, and deleted right after. Results
+  include every verdict, every finding with its status and vantage, and what the capture can't show.
+- **Sample fleet**: `src/gateways.json`, real `tunnelscope fleet --json` output over 10 of the project's
+  validated lab captures. Gateway names are illustrative; the page says so.
 
 ```bash
-npm install
-npm run dev      # http://localhost:5173
+# the normal way: build once, then one command serves the dashboard and the engine
+npm install && npm run build      # writes dist/
+tunnelscope serve                 # http://127.0.0.1:8765, 127.0.0.1 only
+
+# while working on the UI: Vite dev server, proxied to the engine
+tunnelscope serve --no-browser    # terminal 1
+npm run dev                       # terminal 2 → http://localhost:5173
 ```
+
+Without a `dist/` build, `tunnelscope serve` falls back to a single built-in page (also at `/basic`).
+
+## Design
+
+`DESIGN.md` is the design system (tokens, components, motion rules, do's and don'ts), in the DESIGN.md
+format. The intake's 3D tunnel is `src/components/dashboard/TunnelField.tsx` (three.js), lazy-loaded
+and static under reduced motion.

@@ -9,13 +9,19 @@ const KIND_COLOR: Record<string, string> = {
   downgraded: "var(--neg)",
 }
 
-const config = { load: { label: "Finding load", color: "var(--teal)" } } satisfies ChartConfig
+const config = { load: { label: "Failed-check load", color: "var(--teal)" } } satisfies ChartConfig
+
+function short(label: string) {
+  const s = label.replace(/\.(pcapng|pcap|cap)/, "")
+  return s.length > 16 ? `${s.slice(0, 15)}…` : s
+}
 
 // shadcn/Recharts step-area: the fleet posture as a waveform, each gateway a
 // point whose height = weighted finding load, dot colored by posture.
 export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; height?: number }) {
   const data = gateways.map((g) => ({
     city: g.city,
+    tick: short(g.city),
     id: g.id,
     load: g.fails.reduce((s, f) => s + (SEV_WEIGHT[f.severity] ?? 0), 0),
     kind: postureKind(g.posture),
@@ -23,7 +29,7 @@ export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; h
 
   return (
     <ChartContainer config={config} className="w-full" style={{ height }}>
-      <AreaChart data={data} margin={{ top: 12, right: 10, left: 4, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 12, right: 28, left: 28, bottom: 0 }}>
         <defs>
           <linearGradient id="fillLoad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--teal)" stopOpacity={0.22} />
@@ -32,10 +38,11 @@ export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; h
         </defs>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.6} />
         <XAxis
-          dataKey="city"
+          dataKey="tick"
           tickLine={false}
           axisLine={false}
-          interval={0}
+          interval="preserveStartEnd"
+          minTickGap={18}
           tickMargin={8}
           tick={{ fill: "var(--muted-foreground)", fontSize: 10.5 }}
         />

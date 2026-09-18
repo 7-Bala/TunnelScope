@@ -47,6 +47,9 @@ not a report to open later. Both are addressed below.
   written to a private temp path and deleted right after the response (nothing persists), and a
   parse failure on one file is its own error card, never a crash of the server. Stdlib `http.server`
   only — no new dependency, and the fastapi/uvicorn removal (T-049) stands.
+  Since T-060 it serves the React dashboard (`fleet-dashboard/dist`) at `/`, which uploads to a
+  structured `POST /api/analyze`; static files are served only from inside that build directory
+  (resolved-path check, tested against `..` and encoded traversal).
 - **The local-only API (§6) is a separate, still-open item** — opt-in, off by default, binds to
   localhost only. It exists for role D's integration need (a SIEM polling TunnelScope on a schedule),
   which `serve` does not address. Shipping it still needs its own security review before it's turned

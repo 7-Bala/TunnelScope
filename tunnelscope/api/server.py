@@ -29,13 +29,22 @@ import sys
 import tempfile
 import threading
 import webbrowser
+import mimetypes
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, parse_qs
+from pathlib import Path
+from urllib.parse import urlparse, parse_qs, unquote
 
 from ..report.report import analyze
 from ..report.dashboard import _CSS, render_sas_html
 
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB: generous for a capture, not for a DoS
+
+# The React dashboard's production build (T-060). When present, `serve` hosts it
+# at / and the dashboard talks to /api/analyze. When absent (e.g. installed
+# without Node), the built-in page below still works on its own.
+DASHBOARD_DIR = Path(os.environ.get(
+    "TUNNELSCOPE_DASHBOARD_DIR",
+    Path(__file__).resolve().parents[2] / "fleet-dashboard" / "dist"))
 _TMP_PREFIX = "tunnelscope-upload-"
 
 # Classic pcap (LE/BE) and pcapng magic numbers (Wireshark wiki, "Development/LibpcapFileFormat").
@@ -69,6 +78,7 @@ contradictory. Absence of evidence is never scored as compliance.</div>
 const drop = document.getElementById('drop');
 const input = document.getElementById('file-input');
 const results = document.getElementById('results');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}})[c]);
 drop.addEventListener('click', () => input.click());
 drop.addEventListener('dragover', e => {{ e.preventDefault(); drop.classList.add('over'); }});
 drop.addEventListener('dragleave', () => drop.classList.remove('over'));
@@ -81,24 +91,55 @@ async function handleFiles(files) {{
   for (const f of files) {{
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = '<b>' + f.name + '</b> — <span class="pending">analyzing…</span>';
+    card.innerHTML = '<b>' + esc(f.name) + '</b> — <span class="pending">analyzing…</span>';
     results.prepend(card);
     try {{
       const res = await fetch('/api/upload?name=' + encodeURIComponent(f.name),
                               {{method: 'POST', body: f}});
       const data = await res.json();
       if (data.ok) {{
-        card.innerHTML = '<div class="sub">Source: ' + data.filename + ' · ' +
+        card.innerHTML = '<div class="sub">Source: ' + esc(data.filename) + ' · ' +
           data.n_sas + ' security association(s)</div>' + data.html;
       }} else {{
-        card.innerHTML = '<b>' + f.name + '</b> — <span class="tag t-fail">error</span> ' + data.error;
+        card.innerHTML = '<b>' + esc(f.name) + '</b> — <span class="tag t-fail">error</span> ' + esc(data.error);
       }}
     }} catch (err) {{
-      card.innerHTML = '<b>' + f.name + '</b> — <span class="tag t-fail">error</span> ' + err;
+      card.innerHTML = '<b>' + esc(f.name) + '</b> — <span class="tag t-fail">error</span> ' + esc(err);
     }}
   }}
 }}
 </script></body></html>"""
+
+
+def analysis_json(a: dict, source: str) -> dict:
+    """Structured, JSON-safe view of report.analyze() for the React dashboard
+    (T-060). Same data the HTML fragment renders, so the two never disagree."""
+    summary = a["cbom"]["tunnelscope_sa_summary"]
+    sas = []
+    for i, sa in enumerate(a["sas"]):
+        r = sa["record"]
+        verdicts = [{"verdict": v.verdict, "baseline": v.baseline, "authority": v.authority,
+                     "rule_id": v.rule_id, "title": v.title, "severity": v.severity,
+                     "attribute": v.attribute, "observed": v.observed, "message": v.message}
+                    for v in sa["verdicts"]]
+        sas.append({
+            "id": f"{source}#{i + 1}",
+            "source": source,
+            "src": r.src, "dst": r.dst,
+            "ike_spi": r.key(),
+            "posture": summary[i]["quantum_posture"],
+            "fails": [{"baseline": v["baseline"], "rule_id": v["rule_id"], "severity": v["severity"],
+                       "title": v["title"], "message": v["message"]}
+                      for v in verdicts if v["verdict"] == "FAIL"],
+            "verdicts": verdicts,
+            "findings": [{"attribute": attr, "status": f.status.value, "value": f.value,
+                          "vantage": f.vantage.value, "method": f.method, "note": f.note}
+                         for attr, f in r.findings.items()],
+            "scores": sa["scores"],
+            "score_stability": sa["sensitivity"]["verdict"],
+            "gaps": summary[i]["gaps"],
+        })
+    return {"ok": True, "filename": source, "n_sas": len(sas), "sas": sas}
 
 
 def _sniff(head: bytes) -> str | None:
@@ -112,48 +153,72 @@ class _Handler(BaseHTTPRequestHandler):
     server_version = "TunnelScope/0.2"
 
     def _json(self, status: int, payload: dict) -> None:
-        body = json.dumps(payload).encode()
+        body = json.dumps(payload, default=str).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
+    def _bytes(self, status: int, body: bytes, ctype: str) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _static(self, path: str) -> bool:
+        """Serve a file from the dashboard build. Returns False if there is no
+        build. Never serves anything outside DASHBOARD_DIR (resolved-path check,
+        so ../ and symlinks can't escape it)."""
+        root = DASHBOARD_DIR.resolve()
+        if not (root / "index.html").is_file():
+            return False
+        rel = unquote(path).lstrip("/") or "index.html"
+        target = (root / rel).resolve()
+        if not target.is_relative_to(root):
+            self._json(403, {"ok": False, "error": "forbidden"})
+            return True
+        if not target.is_file():
+            target = root / "index.html"   # single-page app fallback
+        ctype = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+        if ctype.startswith("text/") or ctype in ("application/javascript", "image/svg+xml"):
+            ctype += "; charset=utf-8"
+        self._bytes(200, target.read_bytes(), ctype)
+        return True
+
     def do_GET(self):  # noqa: N802 (stdlib method name)
         path = urlparse(self.path).path
-        if path in ("/", "/index.html"):
-            body = _PAGE.format(css=_CSS).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-        elif path == "/health":
-            self._json(200, {"ok": True})
-        else:
+        if path == "/health":
+            self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file()})
+        elif path.startswith("/api/"):
             self._json(404, {"ok": False, "error": "not found"})
+        elif path == "/basic" or not self._static(path):
+            # built-in single-file page: always available at /basic, and at / when
+            # there is no dashboard build
+            self._bytes(200, _PAGE.format(css=_CSS).encode(), "text/html; charset=utf-8")
 
     def do_POST(self):  # noqa: N802
-        path = urlparse(self.path).path
-        if path != "/api/upload":
+        url = urlparse(self.path)
+        if url.path not in ("/api/upload", "/api/analyze"):
             self._json(404, {"ok": False, "error": "not found"})
             return
-        name = (parse_qs(urlparse(self.path).query).get("name") or ["upload.pcap"])[0]
+        name = os.path.basename((parse_qs(url.query).get("name") or ["upload.pcap"])[0]) or "upload.pcap"
         try:
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
             length = 0
         if length <= 0:
-            self._json(400, {"ok": False, "filename": name, "error": "empty upload"})
+            self._json(400, {"ok": False, "filename": name, "error": "The file is empty."})
             return
         if length > MAX_UPLOAD_BYTES:
             self._json(413, {"ok": False, "filename": name,
-                              "error": f"file exceeds the {MAX_UPLOAD_BYTES // (1024*1024)} MB limit"})
+                              "error": f"File is larger than the {MAX_UPLOAD_BYTES // (1024*1024)} MB limit."})
             return
         data = self.rfile.read(length)
         if _sniff(data[:8]) is None:
             self._json(400, {"ok": False, "filename": name,
-                              "error": "not a pcap/pcapng file (bad magic bytes) — refused before parsing"})
+                              "error": "Not a pcap or pcapng capture (bad magic bytes). Nothing was parsed."})
             return
 
         tmp_path = None
@@ -162,11 +227,15 @@ class _Handler(BaseHTTPRequestHandler):
             with os.fdopen(fd, "wb") as fh:
                 fh.write(data)
             a = analyze(tmp_path)
-            frag = render_sas_html(a)
-            self._json(200, {"ok": True, "filename": name, "n_sas": len(a["sas"]), "html": frag})
+            if url.path == "/api/analyze":
+                self._json(200, analysis_json(a, name))
+            else:
+                self._json(200, {"ok": True, "filename": name, "n_sas": len(a["sas"]),
+                                  "html": render_sas_html(a)})
         except Exception as e:  # a bad-but-magic-matching file must not crash the server
             print(f"[tunnelscope serve] {name}: {type(e).__name__}: {e}", file=sys.stderr)
-            self._json(200, {"ok": False, "filename": name, "error": f"{type(e).__name__}: {e}"})
+            self._json(200, {"ok": False, "filename": name,
+                              "error": f"tshark could not parse this capture ({type(e).__name__})."})
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
@@ -183,7 +252,8 @@ def run_server(port: int = 8765, open_browser: bool = True) -> None:
     server = make_server(port)
     bound_port = server.server_address[1]
     url = f"http://127.0.0.1:{bound_port}/"
-    print(f"TunnelScope local dashboard: {url}")
+    ui = "dashboard" if (DASHBOARD_DIR / "index.html").is_file() else "basic page (no dashboard build found)"
+    print(f"TunnelScope local {ui}: {url}")
     print("Local only (127.0.0.1) — nothing leaves this machine; uploads are deleted after each response.")
     if open_browser:
         threading.Timer(0.3, lambda: webbrowser.open(url)).start()
