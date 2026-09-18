@@ -21,7 +21,7 @@ async function looksLikeCapture(file: File) {
 function worstKind(gs: Gateway[]): TunnelState {
   if (gs.some((g) => g.fails.some((f) => f.severity === "high") || postureKind(g.posture) === "downgraded")) return "neg"
   if (gs.length && gs.every((g) => postureKind(g.posture) === "pq")) return "pos"
-  return "steel"
+  return "warn"
 }
 
 function App() {
@@ -144,7 +144,7 @@ function App() {
   const readouts = [
     { label: view === "sample" ? "Gateways" : "Tunnels", value: s.total, foot: view === "sample" ? "lab captures" : "security associations" },
     { label: "PQ-ready", value: s.counts.pq, tone: "pos" as const, foot: "hybrid ML-KEM selected" },
-    { label: "PQ not selected", value: s.counts.downgraded, tone: s.counts.downgraded ? ("neg" as const) : undefined, foot: "PQ offered, classical used" },
+    { label: "PQ not selected", value: s.counts.downgraded, tone: s.counts.downgraded ? ("warn" as const) : undefined, foot: "PQ offered, classical used" },
     { label: "High severity", value: s.high, tone: s.high ? ("neg" as const) : undefined, foot: "failed checks, each cited" },
     { label: "CVE-2026-78135", value: s.cve, tone: s.cve ? ("neg" as const) : undefined, foot: s.cve ? "pre-auth Child SA attempt" : "pattern not seen" },
   ]
@@ -163,7 +163,7 @@ function App() {
         />
 
         {engine === "offline" && (
-          <div role="status" className="mb-4 rounded-lg border border-neg/30 bg-neg-bg px-4 py-3 text-[13px] text-foreground/90">
+          <div role="status" className="mb-4 rounded-2xl border border-neg/30 bg-neg-bg px-4 py-3 text-[13px] text-foreground/90">
             The analysis engine isn't reachable. Run{" "}
             <code className="rounded bg-background/60 px-1.5 py-0.5 font-mono text-[12px] text-foreground">tunnelscope serve</code>{" "}
             and reload this page. The sample fleet still works without it.
@@ -203,7 +203,7 @@ function App() {
                     <SignalTrace gateways={gateways} height={150} />
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px] text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-steel" />classical</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-warn" />classical</span>
                     <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-pos" />post-quantum</span>
                     <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-neg" />PQ not selected / CVE</span>
                     <span className="sm:ml-auto">weighted failed checks per tunnel</span>
@@ -218,13 +218,13 @@ function App() {
 
             <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
               <div className="flex flex-col gap-4">
-                <div className="rounded-lg border border-border bg-card">
+                <div className="rounded-2xl border border-border bg-card">
                   <div className="border-b border-border px-5 py-3.5">
                     <h2 className="text-[14px] font-semibold tracking-tight">Quantum posture</h2>
                   </div>
                   <PostureGauge counts={s.counts} total={s.total} />
                 </div>
-                <div className="rounded-lg border border-border bg-card">
+                <div className="rounded-2xl border border-border bg-card">
                   <div className="border-b border-border px-5 py-3.5">
                     <h2 className="text-[14px] font-semibold tracking-tight">Failed checks by severity</h2>
                   </div>
@@ -242,7 +242,7 @@ function App() {
               <p className="mx-auto mt-2 max-w-[56ch] text-[13.5px] leading-relaxed text-muted-foreground">
                 Posture, failed checks and the evidence behind each verdict appear here once a capture is analysed. To see what
                 a result looks like first, open the{" "}
-                <button type="button" onClick={() => setView("sample")} className="font-medium text-teal underline-offset-4 hover:underline">
+                <button type="button" onClick={() => setView("sample")} className="font-medium text-violet underline-offset-4 hover:underline">
                   sample fleet
                 </button>
                 .

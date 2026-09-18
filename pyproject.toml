@@ -1,6 +1,6 @@
 [project]
 name = "tunnelscope"
-version = "0.2.0"
+version = "0.3.0"
 description = "Evidence-tiered IPsec/IKE posture and PQ-migration assessment (SIH26160)"
 requires-python = ">=3.11"
 # fastapi/uvicorn removed (T-049, 2026-09-14): declared from the start but

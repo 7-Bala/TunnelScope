@@ -1,30 +1,32 @@
 # TunnelScope Fleet — local instrument dashboard
 
 A real, locally-running fleet console for TunnelScope. Runs with **Vite + React +
-TypeScript**, **shadcn/ui** (Collapsible, restyled crisp) and one **ReactBits**
-component (`CountUp`, as an instrument readout).
+TypeScript** and **shadcn/ui** primitives (Collapsible, restyled crisp).
 
-## Design direction — clean, modern, minimal (and deliberately not AI-slop)
+## Design direction — black, violet, silver-white, and a strict green/yellow/red indicator system
 
-The design avoids the documented "AI-generated" tells — no indigo/violet gradient, no
-generic Inter, no rounded-card-with-icon-and-two-lines cluster
-([the purple gradient problem](https://dev.to/james_anderson_h/the-purple-gradient-problem-why-ai-ui-all-looks-alike-and-how-to-fix-it-3j65),
-[AI slop design tells](https://www.925studios.co/blog/ai-slop-design-tells)) — while
-staying genuinely minimal:
-
-- **Palette:** cool graphite `#0B0D0F`, hairline borders, and a *single* restrained accent
-  — teal `#4FD1C5` — for brand, the signal trace and interactive state. Color carries
-  meaning, negative space carries the design. Status is minimal: green = PQ/pass, red =
-  downgrade/CVE/high, neutral steel = classical/informational.
-- **Type:** the **Geist** superfamily — Geist Sans (UI) + Geist Mono (all data: IPs, SPIs,
-  rule IDs, the dissection tree). One cohesive, modern face across weights.
-- **Logo:** a clean geometric tunnel aperture — concentric rounded squares receding to a
-  point ("look down the tunnel"), single-weight teal stroke.
-- **Signal trace** (bespoke canvas, `SignalTrace.tsx`): the fleet as a teal posture
-  waveform, each gateway a pulse whose height = its weighted finding load, marker ringed
-  by posture. A quiet reveal sweep draws it on load.
-- **Fleet register:** a minimal list where expanding a gateway opens a real
-  protocol-dissection tree (`├ └`), each verdict cited to its baseline.
+- **Palette:** near-black `#08080B`, hairline silver-tinted borders `#27272E`, silver-white
+  body text `#F3F3F6`, a dedicated metallic silver `#C7CAD1` for the wordmark, and a
+  *single* brand/interactive accent — violet `#8B5CF6` — for the signal trace, active
+  filters and focus states. Green `#22C55E` / yellow `#F2B33D` / red `#EF4444` are
+  reserved strictly as the status-indicator vocabulary (posture chips, severity labels,
+  chart colors) and never used decoratively: green = post-quantum/clean, yellow =
+  classical/medium-severity, red = downgrade/CVE/high-severity.
+- **Type:** the **Geist** superfamily for UI text and all data (IPs, SPIs, rule IDs, the
+  dissection tree).
+- **Wordmark as logo:** no separate icon — "TunnelScope" set as one word in a single
+  silver tone, in **Kufica Bold** — the user's exact pick, a commercial display face
+  (Artegra/Creative Fabrica) with no free CDN distribution. The user supplied the
+  licensed `woff2` directly; it's checked into `src/assets/fonts/KuficaBold.woff2` and
+  wired via `@font-face` in `src/index.css` (`--font-display`).
+- **Signal trace** (`SignalTrace.tsx`): the fleet as a violet posture waveform, each
+  gateway a pulse whose height = its weighted finding load, marker ringed by posture
+  color (green/yellow/red). A quiet reveal sweep draws it on load.
+- **Fleet register:** a rounded-card list where expanding a gateway opens a real
+  protocol-dissection tree (`├ └`), each verdict cited to its baseline, severity
+  color-coded red/yellow/silver.
+- **Corners:** all card-level containers use a visibly rounded `rounded-2xl` (18px);
+  chips and pills stay fully rounded.
 - **Motion** is a single gentle rise-in on load, from a visible rest state — no
   fade-in-on-scroll, respects `prefers-reduced-motion`.
 

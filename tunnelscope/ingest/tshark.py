@@ -7,9 +7,19 @@ extractors in tunnelscope/evidence build Findings from them.
 """
 from __future__ import annotations
 
+import functools
+import os
+import re
 import shutil
 import subprocess
+from collections import OrderedDict
 from pathlib import Path
+
+from ..errors import DependencyError, InputError
+
+# A capture that makes tshark hang would otherwise hang a whole fleet scan
+# with no output at all. Bounded per invocation; override for huge captures.
+DEFAULT_TIMEOUT_S = int(os.environ.get("TUNNELSCOPE_TSHARK_TIMEOUT", "120"))
 
 # IANA IKEv2 Key Exchange Method registry (Transform Type 4) — we carry the
 # ID->name map ourselves so PQ transforms are named even on a tshark that
@@ -32,7 +42,10 @@ TRANSFORM_TYPE = {1: "ENCR", 2: "PRF", 3: "INTEG", 4: "KE", 5: "ESN",
 def tshark_bin() -> str:
     b = shutil.which("tshark")
     if not b:
-        raise RuntimeError("tshark not found (ADR-001 runtime dependency)")
+        raise DependencyError(
+            "tshark not found on PATH (ADR-001 runtime dependency). "
+            "Install it with: apt-get install tshark  |  brew install wireshark"
+        )
     return b
 
 
@@ -47,15 +60,173 @@ def _int(s, default=None):
         return default
 
 
-def _run_fields(pcap: str, display_filter: str, fields: list[str]) -> list[list[str]]:
+def _flags(s) -> int:
+    """ISAKMP flags are hex. tshark prints them 0x-prefixed today, but a bare
+    "20" read as decimal would be 0x14 — the responder bit would read clear,
+    ike_sa_crypto() would return {} and the whole crypto finding would vanish
+    with no error. One interpretation, used by every caller.
+    """
+    if not s:
+        return 0
+    s = s.split(",")[0].strip()
+    try:
+        return int(s, 16)
+    except ValueError:
+        return 0
+
+
+def _float(s, default=0.0):
+    """Timestamps come straight from tshark; an unparseable one is a gap in
+    the evidence, not a reason to abort the capture."""
+    try:
+        return float(s) if s else default
+    except (TypeError, ValueError):
+        return default
+
+
+def _run_fields(pcap: str, display_filter: str, fields: list[str],
+                timeout: int | None = None) -> list[list[str]]:
+    p = Path(pcap)
+    if not p.exists():
+        raise InputError(f"capture not found: {pcap}")
     args = [tshark_bin(), "-r", str(pcap), "-Y", display_filter, "-T", "fields",
             "-E", "occurrence=a"]
     for f in fields:
         args += ["-e", f]
-    out = subprocess.run(args, capture_output=True, text=True, check=True).stdout
-    return [line.split("\t") for line in out.splitlines() if line.strip()]
+    try:
+        proc = subprocess.run(args, capture_output=True, text=True,
+                              timeout=timeout or DEFAULT_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        raise InputError(
+            f"tshark timed out after {timeout or DEFAULT_TIMEOUT_S}s on {pcap} — "
+            "raise TUNNELSCOPE_TSHARK_TIMEOUT if this capture is genuinely large"
+        ) from None
+    if proc.returncode != 0:
+        # tshark's own stderr says WHY (not a capture file, truncated, unreadable).
+        # Swallowing it into a CalledProcessError leaves the caller guessing.
+        why = (proc.stderr or "").strip().splitlines()
+        detail = why[-1] if why else f"tshark exited {proc.returncode}"
+        raise InputError(f"tshark could not read {pcap}: {detail}")
+    return [line.split("\t") for line in proc.stdout.splitlines() if line.strip()]
 
 
+# --------------------------------------------------------------------------- #
+# Per-capture memo.                                                            #
+#                                                                              #
+# Each reader below spawns tshark, which re-reads the WHOLE capture. One       #
+# analyze() costs 3 of those (ike, esp, crypto) and ike_sa_crypto() is called  #
+# once per SA on the same file, so a multi-SA capture re-parses it repeatedly; #
+# a fleet scan multiplies that by every file. Results are memoised on          #
+# (path, mtime_ns, size) so a capture that changes on disk is re-read rather   #
+# than served stale.                                                           #
+#                                                                              #
+# Contract: cached values are shared, so callers must treat them as READ-ONLY. #
+# Every caller in this package only reads them (verified before this landed);  #
+# test_ingest_cache.py guards that.                                            #
+# --------------------------------------------------------------------------- #
+_CACHE_CAPTURES = int(os.environ.get("TUNNELSCOPE_CACHE_CAPTURES", "8"))
+_CACHE: "OrderedDict[tuple, object]" = OrderedDict()
+_MISS = object()
+
+
+def _fingerprint(pcap: str) -> tuple:
+    st = Path(pcap).stat()
+    return (str(Path(pcap).resolve()), st.st_mtime_ns, st.st_size)
+
+
+def clear_cache() -> None:
+    """Drop every memoised capture (tests, and long-lived callers)."""
+    _CACHE.clear()
+
+
+def _memo(fn):
+    """Memoise a single-argument capture reader."""
+    @functools.wraps(fn)
+    def wrapper(pcap: str):
+        if _CACHE_CAPTURES <= 0:
+            return fn(pcap)
+        try:
+            key = (fn.__name__, _fingerprint(pcap))
+        except OSError:
+            return fn(pcap)   # missing/unstattable: let the reader raise the real error
+        hit = _CACHE.get(key, _MISS)
+        if hit is not _MISS:
+            _CACHE.move_to_end(key)
+            return hit
+        val = fn(pcap)
+        _CACHE[key] = val
+        _CACHE.move_to_end(key)
+        # three readers per capture, so cap entries at 3x the capture budget
+        while len(_CACHE) > _CACHE_CAPTURES * 3:
+            _CACHE.popitem(last=False)
+        return val
+    return wrapper
+
+
+def tshark_version() -> str:
+    """Version string of the tshark actually on PATH, for report provenance."""
+    try:
+        out = subprocess.run([tshark_bin(), "-v"], capture_output=True, text=True,
+                             timeout=DEFAULT_TIMEOUT_S).stdout
+    except subprocess.TimeoutExpired:
+        raise DependencyError("tshark -v timed out") from None
+    m = re.search(r"(\d+\.\d+\.\d+)", out.splitlines()[0] if out else "")
+    return m.group(1) if m else "unknown"
+
+
+# Every tshark field an extractor reads. tshark's IKE dissector field names do
+# move between releases (T-024 saw ADDKE naming change on master), and a field
+# that silently stops resolving yields an EMPTY finding rather than an error —
+# which is exactly the "absence read as compliance" failure this project
+# refuses to ship. So we assert them up front instead of discovering it in a
+# verdict.
+REQUIRED_FIELDS = (
+    "frame.number", "frame.time_relative", "ip.src", "ip.dst", "ip.len",
+    "isakmp.ispi", "isakmp.rspi", "isakmp.exchangetype", "isakmp.flags",
+    "isakmp.messageid", "isakmp.length", "isakmp.notify.msgtype",
+    "isakmp.tf.type", "isakmp.tf.id", "isakmp.vid_string",
+    "isakmp.certreq.type", "isakmp.tf.id.encr", "isakmp.ike2.attr.key_length",
+    "isakmp.tf.id.prf", "isakmp.tf.id.integ", "isakmp.tf.id.dh",
+    "esp.spi", "esp.sequence",
+    # T-057: IPv6 and UDP-encapsulated ESP offsets
+    "ip.hdr_len", "ipv6.src", "ipv6.dst", "ipv6.plen", "ipv6.nxt", "udp.length",
+)
+
+
+@functools.lru_cache(maxsize=1)
+def _known_fields() -> frozenset[str]:
+    """Field abbreviations this tshark build actually exposes (`-G fields`)."""
+    try:
+        out = subprocess.run([tshark_bin(), "-G", "fields"], capture_output=True,
+                             text=True, timeout=DEFAULT_TIMEOUT_S).stdout
+    except subprocess.TimeoutExpired:
+        raise DependencyError("tshark -G fields timed out") from None
+    names = set()
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if parts and parts[0] == "F" and len(parts) > 2:
+            names.add(parts[2])
+    return frozenset(names)
+
+
+def preflight() -> dict:
+    """Verify the analysis stack before trusting anything it produces.
+
+    Returns provenance (binary, version) on success; raises DependencyError
+    naming the exact fields that vanished if tshark has drifted.
+    """
+    missing = sorted(f for f in REQUIRED_FIELDS if f not in _known_fields())
+    if missing:
+        raise DependencyError(
+            f"this tshark ({tshark_version()}) does not expose "
+            f"{len(missing)} field(s) TunnelScope reads: {', '.join(missing)}. "
+            "Findings derived from them would be silently empty, so the run is "
+            "refused rather than under-reporting."
+        )
+    return {"tshark": tshark_bin(), "tshark_version": tshark_version()}
+
+
+@_memo
 def ike_messages(pcap: str) -> list[dict]:
     """One dict per IKE message (ISAKMP). Plaintext fields only — payload
     contents beyond IKE_SA_INIT are encrypted."""
@@ -73,12 +244,15 @@ def ike_messages(pcap: str) -> list[dict]:
          notify, tftype, tfid, vid, certreq) = r
 
         def ints(s):
-            return [int(x) for x in s.split(",") if x != ""]
+            # tolerant on purpose: tshark may print these hex or decimal, and a
+            # single unparseable entry must not abort the whole capture.
+            vals = [_int(x) for x in s.split(",") if x != ""]
+            return [v for v in vals if v is not None]
 
         exch_i = _int(exch)
-        flags_i = int(flags, 16) if flags else 0
+        flags_i = _flags(flags)
         msgs.append(dict(
-            frame=_int(fn), t=float(t) if t else 0.0,
+            frame=_int(fn), t=_float(t),
             src=_first(src) or _first(src6), dst=_first(dst) or _first(dst6),
             ip_len=_ipv4_equivalent_len(iplen, plen6),
             ispi=ispi, rspi=rspi,
@@ -110,6 +284,7 @@ def _ipv4_equivalent_len(iplen: str, plen6: str) -> int:
     return p + 20 if p is not None else 0
 
 
+@_memo
 def esp_packets(pcap: str) -> list[dict]:
     """One dict per ESP packet: native ESP over IPv4 or IPv6, or UDP-encapsulated
     ESP (RFC 3948, port 4500). The outer headers and SPI/seq are plaintext;
@@ -138,7 +313,7 @@ def esp_packets(pcap: str) -> list[dict]:
         elif plen6 and _int(nxt6) == 50:   # ESP directly after the fixed IPv6 header
             content = _int(plen6, 0) - 8
         pkts.append(dict(
-            frame=_int(fn), t=float(t) if t else 0.0,
+            frame=_int(fn), t=_float(t),
             src=_first(src) or _first(src6), dst=_first(dst) or _first(dst6),
             ip_len=_ipv4_equivalent_len(iplen, plen6),
             ip_version=4 if iplen else 6,
@@ -154,7 +329,7 @@ def capture_summary(pcap: str) -> dict:
     """Quick shape of a capture: does it contain IKE, ESP, which exchanges."""
     p = Path(pcap)
     if not p.exists():
-        raise FileNotFoundError(pcap)
+        raise InputError(f"capture not found: {pcap}")
     ike = ike_messages(pcap)
     esp = esp_packets(pcap)
     exch = sorted({m["exchange_name"] for m in ike if m["exchange"] is not None})
@@ -173,30 +348,39 @@ IKE_PRF = {1: "PRF-HMAC-MD5", 2: "PRF-HMAC-SHA1", 5: "PRF-HMAC-SHA2-256",
            6: "PRF-HMAC-SHA2-384", 7: "PRF-HMAC-SHA2-512"}
 
 
-def ike_sa_crypto(pcap: str, ispi: str | None = None) -> dict:
-    """The IKE SA's negotiated crypto suite from the plaintext IKE_SA_INIT
-    RESPONSE (the responder's single selected proposal). T1-observable. This is
-    the IKE SA key length (observable), NOT the ESP key length (F-05, unobservable)."""
+@_memo
+def _ike_sa_init_responses(pcap: str) -> list[dict]:
+    """Every IKE_SA_INIT RESPONSE's selected suite, in capture order (memoised
+    once per capture; ike_sa_crypto() filters it per SA)."""
     fields = ["ip.src", "isakmp.flags", "isakmp.ispi", "isakmp.tf.id.encr", "isakmp.ike2.attr.key_length",
               "isakmp.tf.id.prf", "isakmp.tf.id.integ", "isakmp.tf.id.dh"]
-    rows = _run_fields(pcap, "isakmp.exchangetype==34", fields)
-    for r in rows:
+    out = []
+    for r in _run_fields(pcap, "isakmp.exchangetype==34", fields):
         r = (r + [""] * len(fields))[:len(fields)]
         src, flags, row_ispi, encr, klen, prf, integ, dh = r
-        if not (_int(flags, 0) & 0x20):   # responder message only = the selected suite
+        if not (_flags(flags) & 0x20):   # responder message only = the selected suite
             continue
-        if ispi and row_ispi:
-            clean_ispi = ispi.lower().removeprefix("0x")
-            clean_row = row_ispi.lower().removeprefix("0x").split(",")[0]
-            if clean_row != clean_ispi:
-                continue
         e = _int(encr); d = _int(dh); i = _int(integ); pr = _int(prf); kl = _int(klen)
-        return {
+        out.append({"ispi": row_ispi.lower().removeprefix("0x").split(",")[0], "suite": {
             "encr": IKE_ENCR.get(e, f"encr-{e}") if e is not None else None,
             "encr_keylen": kl,
             "prf": IKE_PRF.get(pr, f"prf-{pr}") if pr is not None else None,
             "integ": IKE_INTEG.get(i, f"integ-{i}") if i is not None else None,
             "dh": KE_METHOD.get(d, f"dh-{d}") if d is not None else None,
             "dh_id": d,
-        }
+        }})
+    return out
+
+
+def ike_sa_crypto(pcap: str, ispi: str | None = None) -> dict:
+    """The IKE SA's negotiated crypto suite from the plaintext IKE_SA_INIT
+    RESPONSE (the responder's single selected proposal). T1-observable. This is
+    the IKE SA key length (observable), NOT the ESP key length (F-05, unobservable).
+    With `ispi`, only that SA's response counts (T-051: one NO_PROPOSAL_CHOSEN
+    must not blank every other SA in the capture)."""
+    want = ispi.lower().removeprefix("0x") if ispi else None
+    for row in _ike_sa_init_responses(pcap):
+        if want and row["ispi"] and row["ispi"] != want:
+            continue
+        return dict(row["suite"])   # a copy: the memoised rows stay read-only
     return {}

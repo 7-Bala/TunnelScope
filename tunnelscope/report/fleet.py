@@ -16,10 +16,10 @@ failure mode than a slow one.
 from __future__ import annotations
 
 import html
-import json
 from pathlib import Path
 
 from .report import analyze
+from ..errors import InputError
 
 _CSS = """
 :root{--bg:#f6f7f9;--card:#fff;--ink:#1a2230;--muted:#6b7684;--line:#e3e7ea;
@@ -45,9 +45,25 @@ h3{font-size:13px;margin:16px 0 4px;color:var(--muted);text-transform:uppercase;
 
 def scan(directory: str) -> dict:
     """Run analyze() over every pcap under `directory`. Returns per-tunnel
-    results and unparseable-file errors, never silently skipping either."""
+    results and unparseable-file errors, never silently skipping either.
+
+    A path that does not exist, or holds no captures, is an error and not an
+    empty clean scan: `rglob` on a missing directory yields nothing, so a
+    typo'd path would otherwise produce a zero-finding report that reads
+    exactly like a healthy fleet. "Scanned nothing" must never render as
+    "found nothing wrong".
+    """
     root = Path(directory)
+    if not root.exists():
+        raise InputError(f"directory not found: {directory}")
+    if not root.is_dir():
+        raise InputError(f"not a directory: {directory}")
     pcaps = sorted(list(root.rglob("*.pcap")) + list(root.rglob("*.pcapng")))
+    if not pcaps:
+        raise InputError(
+            f"no .pcap/.pcapng files found under {directory} — refusing to "
+            "report an empty scan as a clean fleet"
+        )
     tunnels, errors = [], []
     for p in pcaps:
         try:
@@ -76,8 +92,10 @@ def rollup(fleet: dict) -> dict:
     return counts
 
 
-def render(directory: str) -> str:
-    fleet = scan(directory)
+def render(directory: str, fleet: dict | None = None) -> str:
+    # `fleet` lets a caller that already scanned (the CLI, wanting both the
+    # HTML and the fail counts) reuse it instead of re-walking every capture.
+    fleet = fleet if fleet is not None else scan(directory)
     roll = rollup(fleet)
     n_tunnels = sum(len(t["analysis"]["sas"]) for t in fleet["tunnels"])
     n_downgraded = sum(
@@ -148,9 +166,9 @@ def render(directory: str) -> str:
             "</div></body></html>")
 
 
-def render_json(directory: str) -> dict:
+def render_json(directory: str, fleet: dict | None = None) -> dict:
     """Machine-readable fleet summary, for role D's SIEM-integration workflow."""
-    fleet = scan(directory)
+    fleet = fleet if fleet is not None else scan(directory)
     roll = rollup(fleet)
     tunnels = []
     for t in fleet["tunnels"]:

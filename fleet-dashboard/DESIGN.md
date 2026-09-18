@@ -1,30 +1,33 @@
 ---
-version: 1
+version: 2
 name: TunnelScope
-description: A dark, instrument-grade operations surface for reading IPsec and post-quantum posture off the wire. Cool graphite, one restrained teal, three status colours that carry meaning, and one authored 3D moment (the tunnel) whose motion reports analysis state.
+description: A dark, instrument-grade operations surface for reading IPsec and post-quantum posture off the wire. Near-black, one violet accent, a silver Kufica wordmark, a green/yellow/red triad used only for status, and one authored 3D moment (the tunnel) whose motion reports analysis state.
 
 colors:
-  background: "#0B0D0F"
-  surface: "#0F1214"
-  surface-raised: "#12161A"
-  secondary: "#161A1E"
-  hairline: "#20252B"
-  ink: "#E9EDF1"
-  ink-muted: "#8B949E"
-  ink-faint: "#566069"
-  accent-teal: "#4FD1C5"
-  on-accent: "#052623"
-  status-pos: "#45D483"
-  status-neg: "#FF5C6C"
-  status-steel: "#7D8894"
-  teal-wash: "rgba(79, 209, 197, .10)"
-  pos-wash: "rgba(69, 212, 131, .10)"
-  neg-wash: "rgba(255, 92, 108, .11)"
-  steel-wash: "rgba(125, 136, 148, .10)"
+  background: "#08080B"
+  surface: "#101014"
+  surface-raised: "#16161B"
+  secondary: "#1C1C22"
+  hairline: "#27272E"
+  ink: "#F3F3F6"
+  ink-muted: "#9C9CA8"
+  ink-faint: "#66666F"
+  wordmark-silver: "#C7CAD1"
+  accent-violet: "#8B5CF6"
+  on-accent: "#FFFFFF"
+  status-pos: "#22C55E"
+  status-warn: "#F2B33D"
+  status-neg: "#EF4444"
+  violet-wash: "rgba(139, 92, 246, .12)"
+  pos-wash: "rgba(34, 197, 94, .12)"
+  warn-wash: "rgba(242, 179, 61, .13)"
+  neg-wash: "rgba(239, 68, 68, .13)"
 
 typography:
+  family-display: "Kufica Bold (wordmark only), Geist Variable fallback"
   family-ui: "Geist Variable, -apple-system, Segoe UI, sans-serif"
   family-data: "Geist Mono Variable, SF Mono, monospace"
+  wordmark: { size: 34px, family: family-display, case: uppercase, color: wordmark-silver }
   headline: { size: 32px, weight: 600, lineHeight: 1.15, letterSpacing: -0.02em }
   section: { size: 20px, weight: 600, lineHeight: 1.2, letterSpacing: -0.02em }
   panel-title: { size: 14px, weight: 600, letterSpacing: -0.01em }
@@ -33,9 +36,13 @@ typography:
   data: { size: 12px, family: family-data, numerals: tabular }
   readout: { size: 28px, weight: 600, numerals: tabular }
 
-radius: { control: 6px, panel: 8px, section: 12px, pill: 999px }
+radius: { control: 6px, panel: 16px, section: 16px, pill: 999px }
 spacing: { gutter-mobile: 16px, gutter: 24px, panel-pad: 20px, section-gap: 32px }
 ---
+
+> **v2 (2026-09-18 merge).** The palette and wordmark come from the black/violet redesign on GitHub
+> `main` (T-062…T-065); the structure below (intake, data-source switch, instrument bar, register
+> panes, the tunnel) comes from T-060. v1 described the earlier graphite/teal look.
 
 # TunnelScope design system
 
@@ -49,26 +56,28 @@ the tunnel in the intake panel, which is the product mark extruded into depth.
 ## Colors
 
 ### Accent
-Teal `#4FD1C5` is the only accent. It marks the primary action, the current selection, focus, and
+Violet `#8B5CF6` is the only accent. It marks the primary action, the current selection, focus, and
 the tunnel. It never decorates an inactive state.
 
 ### Surface
-Three graphite steps: page `#0B0D0F`, panel `#0F1214`, raised/popover `#12161A`. Separation comes
-from 1px hairlines `#20252B`, not shadows.
+Three near-black steps: page `#08080B`, panel `#101014`, raised/popover `#16161B`. Separation comes
+from 1px hairlines `#27272E`, not shadows.
 
 ### Text
-Ink `#E9EDF1` for content, muted `#8B949E` for labels and prose, faint `#566069` for metadata.
+Ink `#F3F3F6` for content, muted `#9C9CA8` for labels and prose, faint `#66666F` for metadata.
+Silver `#C7CAD1` is the wordmark and the *inferred* evidence chip: a meta tone, never a status.
 
 ### Semantic
-Status colours carry meaning and nothing else:
-- **pos** `#45D483`: post-quantum selected, a passed check.
-- **neg** `#FF5C6C`: PQ offered but not selected, high severity, the CVE pattern, errors.
-- **steel** `#7D8894`: classical key exchange, medium severity.
+Green / yellow / red carry status and nothing else (never decoration):
+- **pos** `#22C55E`: post-quantum selected, a passed check.
+- **warn** `#F2B33D`: classical key exchange, medium severity, the PQ-not-selected count.
+- **neg** `#EF4444`: PQ offered but not selected (chips, donut), high severity, the CVE pattern, errors.
 Each has a 10% wash for chips. Never pair a status colour with a status it doesn't mean.
 
 ## Typography
 
-One family. Geist Sans carries headings, labels and prose. Geist Mono is for things that are data:
+Two faces. Kufica Bold is the wordmark and nothing else (licensed file in `src/assets/fonts/`).
+Geist Sans carries headings, labels and prose. Geist Mono is for things that are data:
 IPs, SPIs, rule IDs, finding values, byte sizes. It is never used as a "technical" costume. All
 numerals in data are tabular. The scale is fixed rem, ratio about 1.2, not fluid.
 
@@ -87,13 +96,13 @@ depth in the product is real depth: the WebGL tunnel.
 
 ## Shapes
 
-Controls 6px, panels 8px, the intake section 12px, pills for status chips and filters only.
+Controls 6px, panels and sections 16px (`rounded-2xl`), pills for status chips and filters only.
 Status chips in the register have a fixed width so row titles align.
 
 ## Components
 
 ### Topbar
-Mark + name, a two-option data-source switch ("Your captures" / "Sample fleet") with counts, the
+The TunnelScope wordmark (the wordmark is the mark; no icon), a two-option data-source switch ("Your captures" / "Sample fleet") with counts, the
 time of the last real analysis (only once one exists), and an engine status pill that reflects a
 real `/health` check. No "live" claim: TunnelScope analyses files, it does not monitor.
 
@@ -113,21 +122,22 @@ One bordered bar split by 1px gaps, five readouts. Not a row of identical cards.
 Rows: fixed-width status chip, name, `src → dst` in mono, failed-check counts. Expanding an uploaded
 capture shows three panes: Verdicts (every rule with its baseline), Evidence (every finding with
 status chip and vantage), Not visible from here (UNKNOWN / NOT_OBSERVABLE findings with the
-engine's reason). Status chips: observed/measured teal wash, inferred steel wash, unknown and not
+engine's reason). Status chips: observed/measured violet wash, inferred silver on secondary, unknown and not
 observable as an outline, contradictory neg wash.
 
 ### The tunnel (three.js)
 Concentric rounded squares receding to a solid core, drifting toward the viewer. Motion reports
 state: idle drift; faster and brighter while a file is dragged over the page; fastest with a slow
 twist while analysing; the rings take the posture colour for a moment when a result lands (neg if
-any high-severity or PQ-not-selected result, pos if all PQ, steel otherwise); red when a file is
+any high-severity or PQ-not-selected result, pos if all PQ, warn otherwise); red when a file is
 refused. Lazy-loaded, capped at 2x device pixel ratio, paused when off-screen or the tab is hidden,
 static under `prefers-reduced-motion`, and replaced by the SVG mark when WebGL is unavailable.
 
 ## Motion
 
-State only: analysis running, a result landing, a queue row arriving (200ms), a button press
-(1px translate). No page-load choreography, no scroll reveals. Transitions 150–250ms, exponential
+State, plus the chart draws: analysis running, a result landing, a queue row arriving (200ms), a
+button press (1px translate); the signal trace draws in (1.8s) and the donut and bars grow once,
+all off under `prefers-reduced-motion`. No scroll reveals. Transitions 150–250ms, exponential
 ease-out.
 
 ## Do's and don'ts
@@ -152,6 +162,6 @@ Tables inside the register detail scroll horizontally inside their own container
 
 ## Iteration guide
 
-Keep the world: graphite, one teal, three meaningful status colours, Geist. New surfaces should read
+Keep the world: near-black, one violet, a silver Kufica wordmark, three meaningful status colours, Geist. New surfaces should read
 as the same instrument. If a new finding type appears, give it a status chip from the existing
 vocabulary before inventing a colour.

@@ -22,9 +22,9 @@ function StaticMark() {
   return (
     <div className="flex h-full w-full items-center justify-center">
       <svg viewBox="0 0 32 32" className="h-28 w-28" fill="none" aria-hidden>
-        <rect x="3" y="3" width="26" height="26" rx="7" stroke="var(--teal)" strokeWidth="0.8" opacity="0.35" />
-        <rect x="8" y="8" width="16" height="16" rx="4.5" stroke="var(--teal)" strokeWidth="0.8" opacity="0.7" />
-        <rect x="13" y="13" width="6" height="6" rx="2" fill="var(--teal)" />
+        <rect x="3" y="3" width="26" height="26" rx="7" stroke="var(--violet)" strokeWidth="0.8" opacity="0.35" />
+        <rect x="8" y="8" width="16" height="16" rx="4.5" stroke="var(--violet)" strokeWidth="0.8" opacity="0.7" />
+        <rect x="13" y="13" width="6" height="6" rx="2" fill="var(--violet)" />
       </svg>
     </div>
   )
@@ -120,7 +120,7 @@ export function Intake({
       aria-label="Analyse captures"
       className={cn(
         "relative grid overflow-hidden rounded-xl border bg-card transition-[border-color,background-color] duration-200 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
-        dragging ? "border-teal/70 bg-teal-bg" : "border-border",
+        dragging ? "border-violet/70 bg-violet-bg" : "border-border",
       )}
     >
       <div className="flex flex-col p-6 sm:p-7">
@@ -137,7 +137,7 @@ export function Intake({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="tactile inline-flex items-center gap-2 rounded-lg bg-teal px-4 py-2.5 text-[13.5px] font-semibold text-primary-foreground hover:bg-teal/90"
+            className="tactile inline-flex items-center gap-2 rounded-lg bg-violet px-4 py-2.5 text-[13.5px] font-semibold text-primary-foreground hover:bg-teal/90"
           >
             <FileUp className="h-4 w-4" strokeWidth={2} />
             Choose captures
