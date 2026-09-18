@@ -47,6 +47,12 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Engine badge removed — 2026-09-19 (T-079)
+
+**Removed**
+- The "Engine on 127.0.0.1" pill in the top bar. When the engine is unreachable the red banner
+  ("The analysis engine isn't reachable. Run `tunnelscope serve`") still says so.
+
 ## Liquid-glass cards — 2026-09-19 (T-078)
 
 **Changed**

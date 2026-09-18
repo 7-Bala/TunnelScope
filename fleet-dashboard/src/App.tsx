@@ -184,7 +184,6 @@ function App() {
           onView={setView}
           uploadCount={uploads.length}
           sampleCount={GATEWAYS.length}
-          engine={engine}
           lastAnalysed={lastAnalysed}
         />
 
