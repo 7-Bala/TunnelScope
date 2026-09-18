@@ -13,25 +13,17 @@ function Wordmark() {
 export type View = "uploads" | "sample"
 export type Engine = "checking" | "online" | "offline"
 
-const ENGINE_LABEL: Record<Engine, string> = {
-  checking: "Checking engine",
-  online: "Engine on 127.0.0.1",
-  offline: "Engine offline",
-}
-
 export function Topbar({
   view,
   onView,
   uploadCount,
   sampleCount,
-  engine,
   lastAnalysed,
 }: {
   view: View
   onView: (v: View) => void
   uploadCount: number
   sampleCount: number
-  engine: Engine
   lastAnalysed: Date | null
 }) {
   const tabs: { key: View; label: string; count: number }[] = [
@@ -76,20 +68,6 @@ export function Topbar({
             <div className="text-[11px] text-muted-foreground">last analysis</div>
           </div>
         )}
-        <div
-          className="glass flex items-center gap-2 rounded-full px-3 py-1.5"
-          title={engine === "offline" ? "Start it with: tunnelscope serve" : undefined}
-        >
-          <span
-            className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              engine === "online" && "bg-pos",
-              engine === "offline" && "bg-neg",
-              engine === "checking" && "bg-faint soft-blink",
-            )}
-          />
-          <span className="text-[12px] text-muted-foreground">{ENGINE_LABEL[engine]}</span>
-        </div>
       </div>
     </header>
   )

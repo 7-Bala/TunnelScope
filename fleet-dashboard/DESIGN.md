@@ -107,8 +107,9 @@ Status chips in the register have a fixed width so row titles align.
 
 ### Topbar
 The TunnelScope wordmark (the wordmark is the mark; no icon), a two-option data-source switch ("Your captures" / "Sample fleet") with counts, the
-time of the last real analysis (only once one exists), and an engine status pill that reflects a
-real `/health` check. No "live" claim: TunnelScope analyses files, it does not monitor.
+time of the last real analysis (only once one exists), and, only after a real analysis, its time. There is no engine status badge (removed 2026-09-19); if the
+engine can't be reached, a red banner says so and how to start it. No "live" claim: TunnelScope
+analyses files, it does not monitor.
 
 ### Intake
 Liquid glass (`.glass`, no blur), so the background corridor shows through it clearly. Left:
