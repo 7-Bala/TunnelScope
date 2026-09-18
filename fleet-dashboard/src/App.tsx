@@ -10,6 +10,7 @@ import type { TunnelState } from "@/components/tunnel/BackgroundTunnel"
 import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
 import { analyzeCapture, engineHealth, ENGINE_OFFLINE } from "@/lib/api"
 import { Intro } from "@/components/intro/Intro"
+import { cn } from "@/lib/utils"
 import { shouldPlayIntro } from "@/components/intro/shouldPlay"
 
 const BackgroundTunnel = lazy(() => import("@/components/tunnel/BackgroundTunnel"))
@@ -37,6 +38,7 @@ function App() {
   const [flash, setFlash] = useState<TunnelState | null>(null)
   // the background tunnel holds the intro's lit frame until the intro leaves
   const [introLit, setIntroLit] = useState(shouldPlayIntro)
+  const [introPlayed] = useState(shouldPlayIntro)
   const onIntroLeave = useCallback(() => setIntroLit(false), [])
   const [lastAnalysed, setLastAnalysed] = useState<Date | null>(null)
   const working = useRef(false)
@@ -178,7 +180,7 @@ function App() {
           style={{ background: "radial-gradient(ellipse 80% 70% at 50% 34%, transparent 50%, var(--background) 100%)" }}
         />
       </div>
-      <main className="relative z-10 mx-auto max-w-[1240px] px-4 pb-20 pt-6 sm:px-6">
+      <main className={cn("relative z-10 mx-auto max-w-[1240px] px-4 pb-20 pt-6 sm:px-6", introPlayed && !introLit && "page-enter")}>
         <Topbar
           view={view}
           onView={setView}

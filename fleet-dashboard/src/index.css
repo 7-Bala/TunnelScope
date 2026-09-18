@@ -216,3 +216,13 @@
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   }
 }
+
+/* the page appearing around the intro's core at the cut (T-080): opacity only,
+   so the drop-zone mark the core flies to doesn't move while it lands */
+@keyframes page-enter { from { opacity: 0 } to { opacity: 1 } }
+.page-enter { animation: page-enter .3s ease-out both; }
+
+/* Reserve the scrollbar's space whether or not the page can scroll, so the
+   layout never shifts sideways when the intro's scroll lock releases (the
+   intro's core measured its landing spot and then the page moved 5.5px, T-080) */
+html { scrollbar-gutter: stable; }

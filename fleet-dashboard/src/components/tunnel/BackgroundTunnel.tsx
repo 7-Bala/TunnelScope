@@ -59,7 +59,6 @@ const PULSE_EVERY: Record<TunnelState, number> = { idle: 6, over: 1.1, busy: 0.6
 const REST = 0.3 // raised from 0.17 on request (2026-09-18); see NEAR_DIM for why that stays readable
 /** the vanishing point at rest: NDC y, i.e. about a third of the way down, behind the upload panel */
 const REST_VP = 0.3
-const SETTLE_S = 1.9
 /** at rest, the rings nearest the viewer are the largest on screen and cross
  *  the header text, so they are toned down to this fraction; the brightness
  *  lives in the deep corridor behind the upload panel instead */
@@ -233,14 +232,15 @@ export default function BackgroundTunnel({
       return b
     }
 
-    /** dt drives motion (capped, so a stall doesn't jump the rings); realDt
-     *  drives the hand-over, which must take SETTLE_S of wall time even on a
-     *  device rendering a few frames a second */
-    const draw = (dt: number, realDt = dt) => {
+    /** dt drives motion, capped so a stall doesn't jump the rings */
+    const draw = (dt: number) => {
       const s = stateRef.current
       const k = 1 - Math.exp(-dt * 4)
       clock += dt
-      if (!litRef.current) settle = Math.min(1, settle + realDt / SETTLE_S)
+      // T-080: the intro now exits by rushing into the core and cutting to the
+      // page, so the corridor is simply at rest from the cut (the old 1.9s
+      // dim-and-drift hand-over read as the background lagging behind)
+      if (!litRef.current) settle = 1
       const u = smooth(settle) // ease of the hand-over
       target.set(COLOR[s])
       color.lerp(target, k)
@@ -321,7 +321,7 @@ export default function BackgroundTunnel({
       const now = performance.now()
       const raw = (now - last) / 1000
       last = now
-      draw(Math.min(0.05, raw), Math.min(0.5, raw))
+      draw(Math.min(0.05, raw))
     }
     const shouldRun = () => !reduceMotion && !document.hidden && fadeByScroll > 0.001
     const start = () => {

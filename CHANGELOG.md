@@ -47,6 +47,18 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Intro exit: into the core — 2026-09-19 (T-080)
+
+**Changed**
+- The intro no longer fades into the page. The camera rushes down the corridor into the violet core;
+  at the cut the core becomes a square on the page that flies into the drop zone's mark, and the page
+  appears around it with the corridor already at rest behind. A key or tap still skips with a quick
+  fade.
+
+**Fixed**
+- The page could shift sideways by half a scrollbar when the intro's scroll lock released; the
+  scrollbar's space is now always reserved.
+
 ## Engine badge removed — 2026-09-19 (T-079)
 
 **Removed**
