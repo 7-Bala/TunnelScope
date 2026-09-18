@@ -47,6 +47,14 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Dashboard intro — 2026-09-18 (T-069)
+
+**Added**
+- First-visit intro: the tunnel's rings switch on one by one from the far end toward the viewer,
+  each flickering before it holds, then the wordmark and a fade into the dashboard. Skippable,
+  first visit only, off under reduced motion. `?intro` replays it; `?intro=hold` stops on the
+  final frame.
+
 ## Merge — 2026-09-18 (T-068)
 
 **Changed**
