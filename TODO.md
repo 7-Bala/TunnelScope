@@ -438,3 +438,4 @@ not a compressed version.)
 - **2026-09-19** — User: remove the 'Engine on 127.0.0.1' badge. Did T-079 (see Done).
 - **2026-09-19** — User: the intro-to-site transition isn't good; ideate alternatives. Diagnosed the current hand-over and proposed 5 concepts (no code); awaiting the user's pick.
 - **2026-09-19** — User picked concept C ('into the core'). Built and verified as T-080 (see Done).
+- **2026-09-19** — User asked what was implemented from the mentor conversation. Answered from this file (no code changed): B=T-075, C1=T-076/EXP-13, D=T-077 done; A dropped by the user; DLP and paper-leak claims deliberately not built; C2 open.
