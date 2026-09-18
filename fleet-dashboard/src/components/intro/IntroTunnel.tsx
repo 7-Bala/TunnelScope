@@ -13,7 +13,8 @@ import {
   ShapeGeometry,
   WebGLRenderer,
 } from "three"
-import { CORE_ON_S, RING_COUNT, ringOnAt, SEQUENCE_S } from "./timeline"
+import { CORE_ON_S, FAILING_RING, RING_COUNT, ringOnAt, SEQUENCE_S } from "./timeline"
+import { FAILING_PATTERN, flickerPattern, intensityAt } from "./flicker"
 
 // The intro's corridor: the TunnelScope mark's rings, standing still in the
 // dark, switched on one by one from the far end toward the viewer, like a row
@@ -82,31 +83,6 @@ function glowTexture() {
   return tex
 }
 
-// Deterministic per-ring flicker: 2-3 stutters, then the tube holds. Seeded so
-// every visit looks the same (it is a title sequence, not noise).
-function flickerPattern(seed: number): [number, number][] {
-  let x = seed * 9301 + 49297
-  const rand = () => ((x = (x * 9301 + 49297) % 233280) / 233280)
-  const stutters = 2 + Math.floor(rand() * 2)
-  const out: [number, number][] = [] // [duration s, intensity]
-  for (let i = 0; i < stutters; i++) {
-    out.push([0.025 + rand() * 0.035, 0.55 + rand() * 0.45])
-    out.push([0.03 + rand() * 0.06, 0])
-  }
-  return out
-}
-
-function intensityAt(t: number, pattern: [number, number][]): number {
-  if (t < 0) return 0
-  let acc = 0
-  for (const [dur, level] of pattern) {
-    if (t < acc + dur) return level
-    acc += dur
-  }
-  // held: a short over-bright bloom as the tube catches, settling to steady
-  return 1 + 0.9 * Math.exp(-(t - acc) / 0.16)
-}
-
 export default function IntroTunnel({ onReady, onUnsupported }: { onReady: () => void; onUnsupported: () => void }) {
   const hostRef = useRef<HTMLDivElement>(null)
 
@@ -143,7 +119,7 @@ export default function IntroTunnel({ onReady, onUnsupported }: { onReady: () =>
       const hl = new Mesh(halo, haloMat)
       t.position.z = hl.position.z = z
       scene.add(hl, t)
-      return { tubeMat, haloMat, onAt: ringOnAt(i), pattern: flickerPattern(i + 7) }
+      return { tubeMat, haloMat, onAt: ringOnAt(i), pattern: i === FAILING_RING ? FAILING_PATTERN : flickerPattern(i + 7) }
     })
 
     // the solid core at the far end: the source the light comes from
