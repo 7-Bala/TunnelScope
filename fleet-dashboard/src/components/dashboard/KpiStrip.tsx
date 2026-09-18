@@ -14,22 +14,27 @@ const TONE: Record<string, string> = {
   steel: "text-steel",
 }
 
+// One instrument bar with hairline dividers, not a row of identical cards.
 export function KpiStrip({ readouts }: { readouts: Readout[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-6 lg:grid-cols-5">
       {readouts.map((r, i) => (
         <div
           key={r.label}
-          className="rise rounded-lg border border-border bg-card p-4"
-          style={{ animationDelay: `${i * 55}ms` }}
+          className={cn(
+            "bg-card px-5 py-4",
+            // mobile 2+2+1, tablet 3+2, desktop 5 across: the last row always fills
+            i < 3 ? "sm:col-span-2 lg:col-span-1" : "sm:col-span-3 lg:col-span-1",
+            i === readouts.length - 1 && readouts.length % 2 === 1 && "col-span-2",
+          )}
         >
-          <div className="text-[12.5px] font-medium text-muted-foreground">{r.label}</div>
-          <div className={cn("mt-2.5 text-[32px] font-semibold leading-none tracking-tight tnum", r.tone ? TONE[r.tone] : "text-foreground")}>
+          <dt className="text-[12.5px] font-medium text-muted-foreground">{r.label}</dt>
+          <dd className={cn("mt-2 text-[28px] font-semibold leading-none tracking-tight tnum", r.tone ? TONE[r.tone] : "text-foreground")}>
             {r.value}
-          </div>
-          <div className="mt-2 text-[12px] text-muted-foreground">{r.foot}</div>
+          </dd>
+          <dd className="mt-2 text-[12px] leading-snug text-faint">{r.foot}</dd>
         </div>
       ))}
-    </div>
+    </dl>
   )
 }

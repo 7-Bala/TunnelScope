@@ -1,21 +1,41 @@
 import gatewaysData from "@/gateways.json"
+import type { AnalyzedSA } from "@/lib/api"
 
 export interface Finding {
   baseline: string
   rule_id: string
   severity: "high" | "medium" | "informational"
+  title?: string
+  message?: string
 }
 
 export interface Gateway {
   id: string
+  /** Display name: the gateway label for the sample fleet, the file name for uploads. */
   city: string
   src: string
   dst: string
   posture: string
   fails: Finding[]
+  origin: "sample" | "upload"
+  /** Full evidence for an uploaded capture; the sample fleet carries verdicts only. */
+  detail?: AnalyzedSA
 }
 
-export const GATEWAYS: Gateway[] = gatewaysData as Gateway[]
+export const GATEWAYS: Gateway[] = (gatewaysData as Omit<Gateway, "origin">[]).map((g) => ({ ...g, origin: "sample" }))
+
+export function toGateway(sa: AnalyzedSA, index: number, total: number): Gateway {
+  return {
+    id: sa.id,
+    city: total > 1 ? `${sa.source} · SA ${index + 1}` : sa.source,
+    src: sa.src,
+    dst: sa.dst,
+    posture: sa.posture,
+    fails: sa.fails,
+    origin: "upload",
+    detail: sa,
+  }
+}
 
 export type PostureKind = "classical" | "downgraded" | "pq"
 
@@ -27,7 +47,7 @@ export function postureKind(posture: string): PostureKind {
 
 export const POSTURE_META: Record<PostureKind, { label: string; color: string }> = {
   classical: { label: "Classical", color: "var(--steel)" },
-  downgraded: { label: "Downgraded", color: "var(--neg)" },
+  downgraded: { label: "PQ not selected", color: "var(--neg)" },
   pq: { label: "Post-quantum", color: "var(--pos)" },
 }
 
@@ -50,7 +70,29 @@ export function fleetStats(gateways: Gateway[]) {
       if (f.baseline === "CVE-WATCH") cve++
     })
   })
-  // quantum-vulnerable = classical + silently-downgraded (both negotiated classical KE)
+  // quantum-vulnerable = classical + PQ-offered-but-classical-selected (both negotiated classical KE)
   const vulnerable = counts.classical + counts.downgraded
   return { counts, high, medium, informational, cve, vulnerable, total: gateways.length }
+}
+
+const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
+
+/** The headline, computed from the data shown — never hard-coded to one dataset. */
+export function headline(s: ReturnType<typeof fleetStats>): { title: string; detail: string } {
+  const { total, vulnerable, counts, cve } = s
+  const title =
+    vulnerable === 0
+      ? `All ${total} ${plural(total, "tunnel negotiates", "tunnels negotiate")} hybrid post-quantum key exchange.`
+      : `${vulnerable} of ${total} ${plural(total, "tunnel", "tunnels")} still ${plural(vulnerable, "negotiates", "negotiate")} classical key exchange.`
+  const parts: string[] = []
+  if (counts.downgraded)
+    parts.push(`${counts.downgraded} offered post-quantum but negotiated classical`)
+  if (cve) parts.push(`${cve} ${plural(cve, "carries", "carry")} the CVE-2026-78135 pre-auth pattern`)
+  parts.push(
+    counts.pq
+      ? `${counts.pq} ${plural(counts.pq, "is", "are")} hardened with hybrid ML-KEM`
+      : "none are hardened with hybrid ML-KEM",
+  )
+  const detail = parts.join("; ")
+  return { title, detail: detail.charAt(0).toUpperCase() + detail.slice(1) + "." }
 }
