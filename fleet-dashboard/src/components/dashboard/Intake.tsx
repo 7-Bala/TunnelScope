@@ -1,9 +1,7 @@
-import { Suspense, lazy, useCallback, useRef, useState } from "react"
+import { useRef } from "react"
 import { AlertCircle, CheckCircle2, FileUp, RotateCcw, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { TunnelState } from "./TunnelField"
-
-const TunnelField = lazy(() => import("./TunnelField"))
+import type { TunnelState } from "../tunnel/BackgroundTunnel"
 
 export type QueueStatus = "queued" | "analysing" | "done" | "error"
 export interface QueueItem {
@@ -17,11 +15,11 @@ export interface QueueItem {
 
 const ACCEPT = ".pcap,.pcapng,.cap"
 
-function StaticMark() {
-  // shown while three.js loads, and instead of it where WebGL is unavailable
+function Mark({ className }: { className?: string }) {
+  // the TunnelScope mark; the lit tunnel itself is now the page background
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <svg viewBox="0 0 32 32" className="h-28 w-28" fill="none" aria-hidden>
+    <div className={className}>
+      <svg viewBox="0 0 32 32" className="h-full w-full" fill="none" aria-hidden>
         <rect x="3" y="3" width="26" height="26" rx="7" stroke="var(--violet)" strokeWidth="0.8" opacity="0.35" />
         <rect x="8" y="8" width="16" height="16" rx="4.5" stroke="var(--violet)" strokeWidth="0.8" opacity="0.7" />
         <rect x="13" y="13" width="6" height="6" rx="2" fill="var(--violet)" />
@@ -108,8 +106,6 @@ export function Intake({
   onClear: () => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const [webgl, setWebgl] = useState(true)
-  const unsupported = useCallback(() => setWebgl(false), [])
   const busy = queue.some((q) => q.status === "queued" || q.status === "analysing")
   const done = queue.filter((q) => q.status === "done").length
   const failed = queue.filter((q) => q.status === "error").length
@@ -119,7 +115,8 @@ export function Intake({
     <section
       aria-label="Analyse captures"
       className={cn(
-        "relative grid overflow-hidden rounded-xl border bg-card transition-[border-color,background-color] duration-200 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
+        // frosted, so the background corridor glows softly through the panel
+        "relative grid overflow-hidden rounded-xl border bg-card/75 backdrop-blur-md transition-[border-color,background-color] duration-200 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
         dragging ? "border-violet/70 bg-violet-bg" : "border-border",
       )}
     >
@@ -182,18 +179,35 @@ export function Intake({
 
       <div
         className={cn(
-          "relative min-h-[220px] border-t border-border md:border-l md:border-t-0",
+          "flex min-h-[220px] flex-col border-t border-border p-4 sm:p-5 md:border-l md:border-t-0",
           compact ? "md:min-h-[260px]" : "md:min-h-[340px]",
         )}
       >
-        {webgl ? (
-          <Suspense fallback={<StaticMark />}>
-            <TunnelField state={tunnel} onUnsupported={unsupported} className="absolute inset-0" />
-          </Suspense>
-        ) : (
-          <StaticMark />
-        )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-5 pb-4 font-mono text-[11px] text-faint">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className={cn(
+            "tactile group flex flex-1 flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-4 py-6 text-center transition-colors duration-200",
+            dragging
+              ? "border-violet bg-violet-bg"
+              : "border-border hover:border-violet/60 hover:bg-violet-bg/50",
+          )}
+        >
+          <Mark
+            className={cn(
+              "h-14 w-14 transition-transform duration-300 group-hover:scale-105",
+              (dragging || tunnel === "busy") && "soft-blink",
+            )}
+          />
+          <span className="text-[14.5px] font-medium text-foreground">
+            {dragging ? "Release to analyse" : tunnel === "busy" ? "Analysing…" : "Drop captures here"}
+          </span>
+          <span className="text-[12.5px] text-muted-foreground">
+            or click to choose · <span className="font-mono text-[12px]">.pcap</span>,{" "}
+            <span className="font-mono text-[12px]">.pcapng</span>
+          </span>
+        </button>
+        <div className="mt-3 flex justify-between px-1 font-mono text-[11px] text-faint">
           <span>
             {tunnel === "busy"
               ? "reading IKE and ESP"

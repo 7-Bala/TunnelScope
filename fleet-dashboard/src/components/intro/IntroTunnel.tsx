@@ -10,6 +10,7 @@ import {
   WebGLRenderer,
 } from "three"
 import { band, glowTexture, roundedSquare } from "../tunnel/geometry"
+import { CAMERA_Z, CORE_Z, fitCamera, GLOW_PAD, RADIUS, RING_H, ringWidth, ringZ, TUBE } from "../tunnel/layout"
 import { CORE_ON_S, FAILING_RING, RING_COUNT, ringOnAt, SEQUENCE_S } from "./timeline"
 import { FAILING_PATTERN, flickerPattern, intensityAt } from "./flicker"
 
@@ -20,11 +21,6 @@ import { FAILING_PATTERN, flickerPattern, intensityAt } from "./flicker"
 
 const VIOLET = new Color("#8B5CF6")
 const HOT = new Color("#DDD2FE") // the tube's white-hot moment as it catches
-const FAR_Z = -24
-const NEAR_Z = 1.55 // the last ring frames the screen like a doorway
-const SIZE = 2.6
-
-const GLOW_PAD = 0.9 // world units of glow around the tube
 
 export default function IntroTunnel({ onReady, onUnsupported }: { onReady: () => void; onUnsupported: () => void }) {
   const hostRef = useRef<HTMLDivElement>(null)
@@ -48,12 +44,14 @@ export default function IntroTunnel({ onReady, onUnsupported }: { onReady: () =>
     const scene = new Scene()
     const camera = new PerspectiveCamera(46, 1, 0.1, 100)
 
-    const tube = band(SIZE, 0.6, 0.036)
-    const halo = new PlaneGeometry(SIZE + GLOW_PAD * 2, SIZE + GLOW_PAD * 2)
-    const glow = glowTexture(SIZE, 0.6, GLOW_PAD)
+    // rings shaped to the window at start (the intro is short; no rebuild on resize)
+    const W = ringWidth((host.clientWidth || 1) / (host.clientHeight || 1))
+    const tube = band(W, RING_H, RADIUS, TUBE)
+    const halo = new PlaneGeometry(W + GLOW_PAD * 2, RING_H + GLOW_PAD * 2)
+    const glow = glowTexture(W, RING_H, RADIUS, GLOW_PAD)
     const rings = Array.from({ length: RING_COUNT }, (_, i) => {
       // i = 0 is the FARTHEST ring: it lights first
-      const z = FAR_Z + (i / (RING_COUNT - 1)) * (NEAR_Z - FAR_Z)
+      const z = ringZ(i)
       const tubeMat = new MeshBasicMaterial({ color: VIOLET.clone(), transparent: true, opacity: 0 })
       const haloMat = new MeshBasicMaterial({
         map: glow, color: VIOLET.clone(), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false,
@@ -69,7 +67,7 @@ export default function IntroTunnel({ onReady, onUnsupported }: { onReady: () =>
     const coreGeo = roundedSquare(0.55, 0.17)
     const coreMat = new MeshBasicMaterial({ color: VIOLET.clone(), transparent: true, opacity: 0 })
     const core = new Mesh(coreGeo, coreMat)
-    core.position.z = FAR_Z - 3
+    core.position.z = CORE_Z
     scene.add(core)
     const corePattern = flickerPattern(3)
 
@@ -79,17 +77,15 @@ export default function IntroTunnel({ onReady, onUnsupported }: { onReady: () =>
       renderer.setSize(w, h, false)
       renderer.domElement.style.width = "100%"
       renderer.domElement.style.height = "100%"
-      camera.aspect = w / h
-      // keep the doorway ring framing a portrait phone as well as a wide screen
-      camera.fov = w / h < 1 ? 62 : 46
-      camera.updateProjectionMatrix()
+      fitCamera(camera, w, h)
     }
 
     const draw = (s: number) => {
       // a slow creep down the corridor while the lights come on
       const p = Math.min(1, s / SEQUENCE_S)
-      camera.position.set(0, 0, 4.7 - 0.55 * (1 - Math.pow(1 - p, 3)))
-      camera.lookAt(0, 0, FAR_Z)
+      // ends exactly where the page-background tunnel's camera rests
+      camera.position.set(0, 0, CAMERA_Z + 0.55 * Math.pow(1 - p, 3))
+      camera.lookAt(0, 0, CORE_Z)
 
       const c = intensityAt(s - CORE_ON_S, corePattern)
       coreMat.opacity = Math.min(1, 0.06 + c)
