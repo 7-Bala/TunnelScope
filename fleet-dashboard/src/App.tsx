@@ -9,6 +9,7 @@ import { Intake, type QueueItem } from "@/components/dashboard/Intake"
 import type { TunnelState } from "@/components/dashboard/TunnelField"
 import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
 import { analyzeCapture, engineHealth, ENGINE_OFFLINE } from "@/lib/api"
+import { Intro } from "@/components/intro/Intro"
 
 let seq = 0
 const MAGIC = new Set(["d4c3b2a1", "a1b2c3d4", "4d3cb2a1", "a1b23c4d", "0a0d0d0a"])
@@ -152,6 +153,7 @@ function App() {
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
+      <Intro />
       <main className="mx-auto max-w-[1240px] px-4 pb-20 pt-6 sm:px-6">
         <Topbar
           view={view}
