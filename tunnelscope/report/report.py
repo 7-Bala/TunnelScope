@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from ..evidence.extract import build_records
 from ..assess.engine import assess_record, load_baselines
+from ..assess.context import executive_lines, load_context, technical_lines
 from ..score.score import score_record, score_sensitivity
 from ..pq.cbom import build_cbom
 
@@ -57,6 +58,7 @@ def executive_report(a: dict) -> str:
         if contra:
             L.append(f"- **⚠ {len(contra)} contradiction(s)** between evidence surfaces — see technical report.")
         L.append("")
+    L += executive_lines(load_context("india"), [v for sa in a["sas"] for v in sa["verdicts"]])
     L += ["---", "_Findings are labelled observed / inferred / not-observable. "
           "The tool reports only what the capture supports; absence of evidence is never scored as compliance._"]
     return "\n".join(L)
@@ -82,6 +84,7 @@ def technical_report(a: dict) -> str:
             L.append(f"- **{b}:** {'not assessable' if s['score'] is None else str(s['score'])+'/100'} "
                      f"— {s['note']}")
         L += ["", "> Authorities: " + "; ".join(sorted({v.authority for v in sa["verdicts"]})), ""]
+    L += technical_lines(load_context("india"), [v for sa in a["sas"] for v in sa["verdicts"]])
     L += ["## Cryptographic Bill of Materials (CycloneDX 1.6)", "",
           "```json", "", "(emit with `tunnelscope cbom <pcap>`)", "```"]
     return "\n".join(L)

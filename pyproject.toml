@@ -30,4 +30,4 @@ include = ["tunnelscope*"]
 # copy (including an air-gapped one, build/05-DEPLOYMENT-ONPREM.md) is complete.
 # tunnelscope/web/ is filled by build/offline/make_bundle.sh; it is gitignored.
 [tool.setuptools.package-data]
-tunnelscope = ["rules/*.yaml", "web/*", "web/**/*"]
+tunnelscope = ["rules/*.yaml", "rules/context/*.yaml", "web/*", "web/**/*"]
