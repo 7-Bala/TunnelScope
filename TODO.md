@@ -421,3 +421,4 @@ not a compressed version.)
 - **2026-09-18** — User: make one ring fail and catch twice. Did T-070 (see Done); the rings behind it wait for it.
 - **2026-09-18** — User: the intro should play on every reload. Did T-071 (see Done).
 - **2026-09-18** — User (with 2 screenshots, canvas selected): make the inside tunnel beautiful and interactive. Did T-072 (see Done), including the off-centre bug visible in their screenshot.
+- **2026-09-18** — User (screenshot still showing the pre-T-072 hairline tunnel, off-centre): asked whether the tunnel as a full-screen background would look good, before building it. Answered honestly (only in a restrained, top-of-page form; not behind the data); no code changed; awaiting their choice.
