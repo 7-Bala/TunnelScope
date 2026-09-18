@@ -1,0 +1,17 @@
+# Intended finding changes for build/findings_diff.py (T-054).
+# Format:  <pcap glob> :: <finding glob>  # reason (required)
+# An entry that matches nothing is reported as stale; delete it once its change is merged.
+
+# T-057: ESP offsets for UDP-encapsulated ESP (+8 B UDP header) and IPv6 (no ip.len).
+encap/encap-udp-* :: esp_cipher_family  # T-057: UDP header no longer counted as ESP content (CBC was wrongly eliminated)
+encap/ipv6-* :: esp_cipher_family  # T-057: IPv6 ESP lengths now parsed
+encap/ipv6-* :: metadata_exposure  # T-057: IPv6 ESP lengths now parsed
+encap/ipv6-* :: negotiation_outcome  # T-057: IPv6 IKE size was 0, so the 112 B rule misread success as failure
+
+# T-051 -> T-053 (plan §4.2 merge gate, reviewed): exactly these 5 captures, all intended.
+# Needed while origin/main predates T-053; stale once pushed.
+cs-aes256gcm16-a7.pcap :: *  # T-053: per-SA IKE crypto no longer blanked by an earlier NO_PROPOSAL_CHOSEN; ESP to the last SA
+cs-transport-aes256gcm16-a7.pcap :: *  # T-053: same as cs-aes256gcm16-a7
+fail-proposal-mismatch.pcap :: *  # T-053: ESP after a later working negotiation no longer credited to failed SAs
+fail-ts-mismatch.pcap :: *  # T-053: same as fail-proposal-mismatch
+pq-downgrade.pcap :: pq_key_exchange  # T-053: responder selection read from plaintext SA (INFERRED 0.9 -> OBSERVED)

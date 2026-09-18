@@ -60,6 +60,7 @@ def ike_messages(pcap: str) -> list[dict]:
     """One dict per IKE message (ISAKMP). Plaintext fields only — payload
     contents beyond IKE_SA_INIT are encrypted."""
     fields = ["frame.number", "frame.time_relative", "ip.src", "ip.dst", "ip.len",
+              "ipv6.src", "ipv6.dst", "ipv6.plen",
               "isakmp.ispi", "isakmp.rspi", "isakmp.exchangetype", "isakmp.flags",
               "isakmp.messageid", "isakmp.length",
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
@@ -68,7 +69,7 @@ def ike_messages(pcap: str) -> list[dict]:
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
-        (fn, t, src, dst, iplen, ispi, rspi, exch, flags, mid, ilen,
+        (fn, t, src, dst, iplen, src6, dst6, plen6, ispi, rspi, exch, flags, mid, ilen,
          notify, tftype, tfid, vid, certreq) = r
 
         def ints(s):
@@ -78,7 +79,8 @@ def ike_messages(pcap: str) -> list[dict]:
         flags_i = int(flags, 16) if flags else 0
         msgs.append(dict(
             frame=_int(fn), t=float(t) if t else 0.0,
-            src=src, dst=dst, ip_len=_int(iplen, 0),
+            src=_first(src) or _first(src6), dst=_first(dst) or _first(dst6),
+            ip_len=_ipv4_equivalent_len(iplen, plen6),
             ispi=ispi, rspi=rspi,
             exchange=exch_i, exchange_name=EXCHANGE.get(exch_i, str(exch_i)),
             is_response=bool(flags_i & 0x20), is_initiator=bool(flags_i & 0x08),
@@ -92,22 +94,58 @@ def ike_messages(pcap: str) -> list[dict]:
     return msgs
 
 
+def _first(s: str) -> str:
+    """First occurrence of a multi-valued tshark field ('' if absent)."""
+    return s.split(",")[0] if s else ""
+
+
+def _ipv4_equivalent_len(iplen: str, plen6: str) -> int:
+    """IKE message size as an IPv4 total length. The IKE size rules (EXP-03 PFS,
+    EXP-06 112 B) were measured on IPv4 captures; over IPv6 the same message has
+    a 40 B header instead of 20 B, so an IPv6 packet is counted as payload + 20
+    and the rules keep their meaning (T-057)."""
+    if iplen:
+        return _int(iplen, 0)
+    p = _int(plen6)
+    return p + 20 if p is not None else 0
+
+
 def esp_packets(pcap: str) -> list[dict]:
-    """One dict per ESP packet (native proto-50). Outer header + SPI/seq are
-    always plaintext; content length is ip.len - 20(outer v4) - 8(SPI+seq)."""
+    """One dict per ESP packet: native ESP over IPv4 or IPv6, or UDP-encapsulated
+    ESP (RFC 3948, port 4500). The outer headers and SPI/seq are plaintext;
+    esp_content is what follows the 8 B SPI+sequence (IV + ciphertext + ICV).
+
+    T-057: this used to be ip.len - 20 - 8 for every packet, which is only right
+    for native ESP over option-less IPv4. UDP encapsulation adds an 8 B UDP
+    header (the cipher sieve then eliminated CBC on a real CBC tunnel), and IPv6
+    has no ip.len at all. Where the offset can't be known (IPv6 extension
+    headers), esp_content is 0 and esp_content_known False, so downstream
+    measurements skip the packet instead of using a wrong length."""
     fields = ["frame.number", "frame.time_relative", "ip.src", "ip.dst",
-              "ip.len", "esp.spi", "esp.sequence"]
+              "ip.len", "ip.hdr_len", "ipv6.src", "ipv6.dst", "ipv6.plen", "ipv6.nxt",
+              "udp.length", "esp.spi", "esp.sequence"]
     rows = _run_fields(pcap, "esp", fields)
     pkts = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
-        fn, t, src, dst, iplen, spi, seq = r
-        ip_len = _int(iplen, 0)
+        fn, t, src, dst, iplen, hdrlen, src6, dst6, plen6, nxt6, udplen, spi, seq = r
+        content, encap = None, "native"
+        if udplen:
+            encap = "udp"
+            content = _int(udplen, 0) - 8 - 8
+        elif iplen:
+            content = _int(iplen, 0) - _int(hdrlen, 20) - 8
+        elif plen6 and _int(nxt6) == 50:   # ESP directly after the fixed IPv6 header
+            content = _int(plen6, 0) - 8
         pkts.append(dict(
             frame=_int(fn), t=float(t) if t else 0.0,
-            src=src, dst=dst, ip_len=ip_len,
-            esp_content=max(ip_len - 20 - 8, 0),
-            spi=spi, seq=_int(seq),
+            src=_first(src) or _first(src6), dst=_first(dst) or _first(dst6),
+            ip_len=_ipv4_equivalent_len(iplen, plen6),
+            ip_version=4 if iplen else 6,
+            encap=encap,
+            esp_content=max(content, 0) if content is not None else 0,
+            esp_content_known=content is not None,
+            spi=_first(spi), seq=_int(seq),
         ))
     return pkts
 

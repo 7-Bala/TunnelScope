@@ -72,6 +72,7 @@ def experiment_of(relpath, name):
     if relpath.startswith("exp10/"): return "EXP-10-openbsd-iked"
     if relpath.startswith("exp11/"): return "EXP-11-auth-method"
     if relpath.startswith("exp12/"): return "EXP-12-rekey-cadence"
+    if relpath.startswith("encap/"): return "T-057-encapsulation"
     if relpath.startswith("exp06r2"): return "EXP-06r2-failure-diagnosis"
     if relpath.startswith("exp07"): return "EXP-07-libreswan"
     if name.startswith("rekey-"): return "EXP-03-pfs"
@@ -104,6 +105,10 @@ def split_of(experiment, name):
     # arm-vs-baseline comparison this schema checks. Tracked as primary
     # evidence (RESULT.md + groundtruth.json).
     if experiment == "EXP-12-rekey-cadence": return "excluded"
+    # T-057: UDP-encapsulated ESP and IPv6 captures check ESP length offsets
+    # (tests/test_encap.py compares each record against its groundtruth.json).
+    # Kept out of the per-arm e2e schema, which is keyed to the IPv4 arm names.
+    if experiment == "T-057-encapsulation": return "excluded"
     if "rep5" in name: return "locked_test"
     if "rep4" in name: return "validation"
     if experiment == "EXP-07-libreswan": return "locked_test"   # cross-impl = generalisation test

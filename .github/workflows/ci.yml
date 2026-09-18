@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the findings differential checks out the base commit
 
       - uses: actions/setup-python@v5
         with:
@@ -38,6 +40,18 @@ jobs:
       - name: Unit tests
         run: python3 -m pytest tests/ -q
 
+      - name: Findings differential vs base (T-054; allow-file build/findings-allow.txt)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=$(git merge-base "origin/${{ github.base_ref }}" HEAD)
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            echo "no base commit (new branch); skipping"; exit 0
+          fi
+          python3 build/findings_diff.py --base "$BASE" --report build/FINDINGS-DIFF.md
+
       - name: End-to-end validation (69 captures vs causal T2 ground truth)
         run: python3 build/validate_e2e.py
 
@@ -49,4 +63,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-validation-report
-          path: build/E2E-VALIDATION.md
+          path: |
+            build/E2E-VALIDATION.md
+            build/FINDINGS-DIFF.md

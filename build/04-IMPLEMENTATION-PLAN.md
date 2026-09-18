@@ -150,7 +150,7 @@ Three caveats bound what this may be used to say:
 |---|---|---|---|---|
 | CVE-1 | Bug = CREATE_CHILD_SA arriving while IKE_AUTH is in flight | REJECT description | Repo evidence (EXP-09, strongSwan `task_manager_v2.c` `reject_request()`) is a CREATE_CHILD_SA accepted *before IKE_AUTH completes*; the live capture has no IKE_AUTH (§2.8). | Rejected |
 | CVE-2 | Fire only if an IKE_AUTH response appears later; else "SUSPECT 0.50" | REJECT | Would miss the real exploit (§2.8). SUSPECT is not a status in `record.py`. The frame-ordered, vantage-guarded detector stays. | Existing |
-| CVE-2b | (residual risk behind CVE-2) capture loss of the whole IKE_AUTH exchange | ADAPT | Guard by message-ID accounting: a CREATE_CHILD_SA request whose message ID directly follows the last pre-auth exchange from the same originator proves no IKE_AUTH was sent in between → OBSERVED; a gap → UNKNOWN. Must be run against every capture before shipping. | Planned P1 |
+| CVE-2b | (residual risk behind CVE-2) capture loss of the whole IKE_AUTH exchange | ADAPT | Guard by message-ID accounting: a CREATE_CHILD_SA request whose message ID directly follows the last pre-auth exchange from the same originator proves no IKE_AUTH was sent in between → OBSERVED; a gap → UNKNOWN. Must be run against every capture before shipping. | *Done (T-055)*: `_msgid_gap_before_child`, 4 tests; 0 finding changes on the other 130 captures |
 | CVE-2c | (panel missed) attempt vs acceptance | ADAPT | The responder's reply is encrypted, so whether the Child SA was *accepted* is NOT_OBSERVABLE at T1. The live lab responder actually rejected (TS_UNACCEPT, EXP-09). The rule text "matches CVE-2026-78135" should say "pre-auth CREATE_CHILD_SA attempt (CVE-2026-78135 pattern); acceptance requires T2". | Planned P1 (wording) |
 | CVE-3 | Composite keying / dedup | — | See SES-6, SES-7. | — |
 | CVE-4 | Published 11 Sep 2026, fixed in 6.1.0 on 7 Sep 2026 | UNVERIFIED | Not confirmed in T-052/T-053. The repo relies on the 6.1.0 source trace (EXP-09), not on these dates. Do not quote the dates to the jury. | — |
@@ -173,7 +173,7 @@ Three caveats bound what this may be used to say:
 | ING-3 | Two-plane split: stateful IKE, 24-byte ESP fast path | DEFER | Sound for a live mode; ESP ingest already extracts header fields only. | Deferred |
 | ING-4 | Keep ESP only in 5 s windows around anomalies | REJECT | Metadata leakage (EXP-05) and rekey cadence (EXP-12) need full sequences. Per-SPI aggregates are the memory-safe option if ever needed. | Rejected |
 | ING-5 | TCP encapsulation was wrongly dismissed | ADAPT | RFC 9329 (obsoletes 8229): streams begin with the 6-byte magic *"IKETCP"*, and implementations *"MUST support TCP encapsulation on TCP port 4500"*. Today such traffic is silently missed. Minimum: detect it and report a coverage gap. | Planned P2 |
-| ING-6 | NAT-T keepalives, IPv6 extension headers, EAP multi-round unaddressed | ADAPT | Static read (T-052, not yet tested): `esp_content = ip.len − 28` assumes native ESP over IPv4 — UDP-encapsulated ESP adds 8 B, IPv6 has no `ip.*` fields. Multi-round EAP only adds IKE_AUTH exchanges, which current extractors tolerate. | Planned P1 (verify with crafted captures first) |
+| ING-6 | NAT-T keepalives, IPv6 extension headers, EAP multi-round unaddressed | ADAPT | Static read (T-052, not yet tested): `esp_content = ip.len − 28` assumes native ESP over IPv4 — UDP-encapsulated ESP adds 8 B, IPv6 has no `ip.*` fields. Multi-round EAP only adds IKE_AUTH exchanges, which current extractors tolerate. | *Done (T-057)*: confirmed on 4 real captures (UDP-encap CBC lost CBC; IPv6 had no addresses and misread success as failure); offsets fixed, `testbed/captures/encap/`, `tests/test_encap.py` |
 
 ### 3.7 Statistics, standards, confidence
 
@@ -232,16 +232,16 @@ still credited with that tunnel's ESP on both branches — a known limit (§6).
 ## 5. Remaining work
 
 ### P1 — before relying on these outputs in front of a jury
-1. **Differential script + CI.** Commit the §4.2 differential as a script and run it in CI against
+1. ✅ *Done (T-054: `build/findings_diff.py`, `build/findings-allow.txt`, CI step).* **Differential script + CI.** Commit the §4.2 differential as a script and run it in CI against
    the merge base. *Accept:* a PR that changes any finding's status/value/confidence on any pcap
    fails unless listed in an allow-file.
-2. **CVE message-ID guard (CVE-2b).** *Accept:* fires on the synthetic and live positives; UNKNOWN
+2. ✅ *Done (T-055).* **CVE message-ID guard (CVE-2b).** *Accept:* fires on the synthetic and live positives; UNKNOWN
    on a copy of a benign capture with its IKE_AUTH frames deleted; 0 new detections on all other
    captures.
 3. **Attempt-vs-acceptance and "downgrade" wording (CVE-2c, PQ-3).** Rule text, CBOM posture label,
    `build/sih/DEMO-SCRIPT.md`, `PITCH-DECK.md`, `JURY-QA.md`. *Accept:* no jury-facing text claims
    a CVE exploitation or an attack where only an attempt or a policy selection is observed.
-4. **Encapsulation length offsets (ING-6).** Build a UDP-encapsulated ESP capture and an IPv6
+4. ✅ *Done (T-057).* **Encapsulation length offsets (ING-6).** Build a UDP-encapsulated ESP capture and an IPv6
    capture. *Accept:* `esp_content` and the cipher sieve are correct on both, or the record says
    UNKNOWN.
 5. **Statistics wording (STD-1).** Replace any "0 false positives" in README / `build/sih/*` /

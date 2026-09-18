@@ -52,3 +52,18 @@ ingress-from-alice or egress-to-alice); `-i any` was tried first and **double-co
 (saw 264 ESP frames where `swanctl` reported 132 sent), because Linux's `any` capture surfaces a
 forwarded packet on both the ingress and egress real interface. See `scripts/run_arm.sh` for the
 inline note where this was fixed.
+
+## Encapsulation lab (T-057)
+
+`docker-compose.encap.yml` is a second copy of this topology (containers `sih26e-*`,
+10.20.1.0/24 + fd00:20:1::/64 ↔ 10.20.2.0/24 + fd00:20:2::/64, dual-stack router) for traffic the
+main lab doesn't produce: UDP-encapsulated ESP (`encap = yes`) and native ESP over IPv6. After
+`docker compose -f docker-compose.encap.yml up -d`, add the IPv6 routes (the entrypoint only sets
+the IPv4 one), load the configs, and run an arm:
+
+```
+docker exec sih26e-alice ip -6 route add fd00:20:2::/64 via fd00:20:1::1
+docker exec sih26e-bob   ip -6 route add fd00:20:1::/64 via fd00:20:2::1
+docker exec sih26e-alice swanctl --load-all && docker exec sih26e-bob swanctl --load-all
+scripts/run_encap.sh ipv6-aes128cbc-sha256 fd00:20:2::10
+```

@@ -115,3 +115,53 @@ def test_live_exploitlab_capture_if_present():
               r.findings["early_childsa_cve"].value == "early-child-sa-before-auth"
               for r in build_records(pcap))
     assert hit
+
+
+# --- T-055: message-ID guard for captures that lost IKE_AUTH (plan CVE-2b) ---
+
+def test_msgid_gap_without_auth_is_unknown():
+    """IKE_AUTH (msgid 1) was sent but not captured: the rekey's msgid 2 does
+    not directly follow IKE_SA_INIT's 0, so the pattern is not proven."""
+    r = _rec([_m(34, 0), _m(36, 2, frame=5)])
+    extract_early_childsa_cve(r)
+    f = r.findings["early_childsa_cve"]
+    assert f.status == Status.UNKNOWN and f.value is None
+
+
+def test_child_directly_after_intermediate_fires():
+    """PQ handshakes add IKE_INTERMEDIATE exchanges before IKE_AUTH; a child
+    at the next msgid after the last one is still proven early."""
+    r = _rec([_m(34, 0), _m(43, 1), _m(36, 2)])
+    extract_early_childsa_cve(r)
+    assert r.findings["early_childsa_cve"].value == "early-child-sa-before-auth"
+
+
+def test_responder_originated_child_without_auth_is_unknown():
+    """The responder's own msgid counter never counts the initiator's
+    IKE_AUTH, so it cannot prove IKE_AUTH absent."""
+    r = _rec([_m(34, 0),
+              {"exchange": 36, "message_id": 0, "is_response": False,
+               "is_initiator": False, "frame": 4}])
+    extract_early_childsa_cve(r)
+    assert r.findings["early_childsa_cve"].status == Status.UNKNOWN
+
+
+def test_benign_capture_with_ike_auth_deleted_is_unknown(tmp_path):
+    """Plan acceptance: a real benign capture with a rekey, its IKE_AUTH
+    frames deleted, must read UNKNOWN (before T-055 it fired)."""
+    import shutil
+    import subprocess
+    src = os.path.join(ROOT, "testbed", "captures", "exp12", "rekey-cadence.pcap")
+    if not (shutil.which("tshark") and shutil.which("editcap") and os.path.exists(src)):
+        return
+    frames = subprocess.run(["tshark", "-r", src, "-Y", "isakmp.exchangetype==35",
+                             "-T", "fields", "-e", "frame.number"],
+                            capture_output=True, text=True, check=True).stdout.split()
+    assert frames, "fixture must contain IKE_AUTH"
+    out = str(tmp_path / "no-auth.pcap")
+    subprocess.run(["editcap", src, out, *frames], check=True)
+    from tunnelscope.evidence.extract import build_records
+    vals = [(r.findings["early_childsa_cve"].status, r.findings["early_childsa_cve"].value)
+            for r in build_records(out) if "early_childsa_cve" in r.findings]
+    assert vals and all(v != "early-child-sa-before-auth" for _, v in vals)
+    assert any(s == Status.UNKNOWN for s, _ in vals)
