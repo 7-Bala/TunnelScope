@@ -137,9 +137,11 @@ static under `prefers-reduced-motion`, and replaced by the SVG mark when WebGL i
 A full-screen title sequence before the dashboard (`src/components/intro/`). Pitch black, the unlit
 ring fixtures barely visible; the core at the far end flickers on, then each ring flickers two or
 three times and holds, farthest first, faster as they approach (like corridor lights coming on
-toward a character in a horror film), while the camera creeps forward. The last ring frames the
+toward a character in a horror film), while the camera creeps forward. One light a little past the
+middle is faulty: it catches, dies with a sputter, sits dark while the rest of the corridor waits,
+then catches again (`FAILING_RING`, `FAIL_STALL_S` in `timeline.ts`; pattern in `flicker.ts`). The last ring frames the
 screen like a doorway, the wordmark resolves over a pool of dark, and the overlay fades into the
-page (about 4.7s). First visit only (localStorage, failures fall back to not playing), any key or
+page (about 5.6s). First visit only (localStorage, failures fall back to not playing), any key or
 tap skips, never under `prefers-reduced-motion`, gives up after 2.5s if WebGL or the chunk isn't
 ready (e.g. a background tab). `?intro` forces it; `?intro=hold` stops on the final frame for stills.
 Glow is a canvas-blurred texture drawn additively behind each tube.
