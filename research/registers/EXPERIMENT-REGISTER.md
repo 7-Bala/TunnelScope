@@ -319,3 +319,9 @@ responder-initiated rekey's own counter restarting at 0 produced a false positiv
 globally against the initiator's sequence. Fixed to compare by frame/capture order; re-verified 0 FP
 on all 69 real captures plus both true positives still firing.
 `experiments/exp12-rekey-cadence/RESULT.md`.
+
+### EXP-13 — Cloud-VPN-style proposal sets (mentor follow-up C1), PRE-REGISTERED 2026-09-18
+AWS Site-to-Site VPN default proposal set emulated on strongSwan; 5 arms (legacy DH 2/SHA-1 with
+NAT-T, common MODP-2048, hardened AES-GCM/ECP-384, IKEv1, cloud-initiated offering its full set).
+Seven predictions, including three expected gaps (AEAD integrity wording, IKEv1 suite, weak
+*offered* algorithms). Full pre-registration: `experiments/exp13-cloud-vpn-proposals/PREREG.md`.
