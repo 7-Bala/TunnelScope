@@ -2,12 +2,22 @@ baseline: RFC-8247
 authority: "RFC 8247 - Algorithm Implementation Requirements and Usage Guidance for IKEv2 (updated by RFC 9395)"
 url: "https://www.rfc-editor.org/rfc/rfc8247.html"
 rules:
+  # RFC 8247 sec 2.4 (Type 4 table): 14 MUST, 19 SHOULD; 5 and 2 SHOULD NOT; 1 MUST NOT;
+  # 22 MUST NOT ("too weak"); 23 and 24 SHOULD NOT ("expected to be further downgraded ... to
+  # MUST NOT"). Groups the table does not list (15-18, 20, 21, 31, 32) are not discouraged.
+  # Until 2026-09-18 this rule compared group NUMBERS (>= 14), which passed group 22 (EXP-13).
   - id: RFC8247-DH-MUST
-    title: "IKE SA key exchange must be at least MODP-2048 (group 14)"
+    title: "IKE SA key exchange must not use a group RFC 8247 marks MUST NOT or SHOULD NOT (1, 2, 5, 22, 23, 24)"
     attribute: ike_dh_group
-    assert: {op: dh_group_ge, value: 14}
+    assert: {op: dh_group_not_in, value: [1, 2, 5, 22, 23, 24]}
     severity: high
-    fail_message: "IKE DH group below the RFC 8247 mandatory-to-implement baseline (group 14)"
+    fail_message: "IKE SA uses a key-exchange group RFC 8247 marks MUST NOT (1, 22) or SHOULD NOT (2, 5, 23, 24)"
+  - id: RFC8247-DH-OFFER
+    title: "An initiator's offer should not include groups RFC 8247 marks MUST NOT or SHOULD NOT"
+    attribute: ike_offered_dh
+    assert: {op: dh_groups_none_in, value: [1, 2, 5, 22, 23, 24]}
+    severity: medium
+    fail_message: "the initiator would accept a discouraged group if a responder chose it (downgrade exposure); only the initiator's offer is visible on the wire"
   - id: RFC8247-ENCR
     title: "IKE encryption should be AES (GCM preferred; CBC acceptable)"
     attribute: ike_encr

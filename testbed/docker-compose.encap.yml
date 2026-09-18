@@ -29,7 +29,7 @@ services:
       enc-a: { ipv4_address: 10.20.1.10, ipv6_address: "fd00:20:1::10" }
     environment: { ROUTE_CIDR: 10.20.2.0/24, ROUTE_GW: 10.20.1.1 }
     volumes:
-      - ./configs/encap/alice/swanctl.conf:/etc/swanctl/swanctl.conf:ro
+      - ./configs/${LAB_CONFIGS:-encap}/alice/swanctl.conf:/etc/swanctl/swanctl.conf:ro
       - ./configs/alice/strongswan.conf:/etc/strongswan.conf:ro
     depends_on: [router]
     command: ["charon"]
@@ -43,7 +43,7 @@ services:
       enc-b: { ipv4_address: 10.20.2.10, ipv6_address: "fd00:20:2::10" }
     environment: { ROUTE_CIDR: 10.20.1.0/24, ROUTE_GW: 10.20.2.1 }
     volumes:
-      - ./configs/encap/bob/swanctl.conf:/etc/swanctl/swanctl.conf:ro
+      - ./configs/${LAB_CONFIGS:-encap}/bob/swanctl.conf:/etc/swanctl/swanctl.conf:ro
       - ./configs/bob/strongswan.conf:/etc/strongswan.conf:ro
     depends_on: [router]
     command: ["charon"]

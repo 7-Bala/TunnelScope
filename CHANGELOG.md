@@ -47,6 +47,22 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Cloud-VPN-style proposal sets — 2026-09-19 (T-076, EXP-13, mentor follow-up C1)
+
+**Fixed**
+- The IKE SA suite was lost when the initiator's first key-exchange guess was refused
+  (INVALID_KE_PAYLOAD): the error-only response was read instead of the retry's selection.
+- Unnamed DH groups (1, 2, 5, 17, 18, 22–24) were scored as FAIL; strong groups 17/18 would have
+  failed. All IANA classical groups are named; a value a rule cannot judge is UNKNOWN.
+- The RFC 8247 key-exchange rule compared group numbers and passed group 22, which RFC 8247 marks
+  MUST NOT. It now uses the RFC's status table (fails 1, 2, 5, 22, 23, 24).
+- AES-GCM suites were described as "no IKE SA suite selected"; the note now explains AEAD integrity.
+
+**Added**
+- `ike_offered_dh`: the groups an initiator offers; rule `RFC8247-DH-OFFER` flags offers including
+  discouraged groups (downgrade exposure). `ike_prf` finding.
+- EXP-13 captures (5 arms, AWS default proposal set emulated) and lab configs.
+
 ## On-premise / air-gapped deployment, tested — 2026-09-18 (T-075, mentor follow-up B)
 
 **Fixed**
