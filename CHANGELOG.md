@@ -47,6 +47,18 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Intake tunnel — 2026-09-18 (T-072)
+
+**Changed**
+- The upload panel's tunnel is drawn with the intro's glowing tubes, adds specks of light travelling
+  out of it and a pulse of light every few seconds (faster while dragging or analysing), leans toward
+  the pointer, and a click sends a pulse down to the core.
+
+**Fixed**
+- The tunnel was pulled off centre whenever the pointer was elsewhere on the page (the offset was
+  not clamped); it now only follows the pointer over the tunnel and eases back to centre.
+- "Choose captures" had no hover colour (it still pointed at the removed teal token).
+
 ## Dashboard intro — 2026-09-18 (T-069)
 
 **Added**
