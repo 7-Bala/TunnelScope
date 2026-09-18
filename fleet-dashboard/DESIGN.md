@@ -131,7 +131,9 @@ observable as an outline, contradictory neg wash.
 ### The tunnel (three.js), the page background
 The intro's corridor stays after the intro as the page background
 (`src/components/tunnel/BackgroundTunnel.tsx`): the same rings (`tunnel/layout.ts`), shaped to the
-window (up to 1.8x wider than tall), dimmed to about 17% brightness. It sits behind the top of the
+window (up to 1.8x wider than tall), dimmed to about 30% brightness in the deep corridor; the five
+rings nearest the viewer (the largest on screen, the ones crossing the header text) taper down to 22%
+of that, so the glow sits behind the upload panel rather than across the words. It sits behind the top of the
 page only: a vertical mask fades it out by 80% of the screen height, a vignette darkens the edges,
 and it fades to nothing as the page scrolls (gone by 85% of a screen), then stops rendering. The data
 below always sits on plain black.

@@ -56,10 +56,15 @@ const GAIN: Record<TunnelState, number> = { idle: 1, over: 2.3, busy: 1.8, pos: 
 const PULSE_EVERY: Record<TunnelState, number> = { idle: 6, over: 1.1, busy: 0.6, pos: 2.5, neg: 2.5, warn: 2.5, error: 99 }
 
 /** the resting brightness: a whisper behind the page */
-const REST = 0.17
+const REST = 0.3 // raised from 0.17 on request (2026-09-18); see NEAR_DIM for why that stays readable
 /** the vanishing point at rest: NDC y, i.e. about a third of the way down, behind the upload panel */
 const REST_VP = 0.3
 const SETTLE_S = 1.9
+/** at rest, the rings nearest the viewer are the largest on screen and cross
+ *  the header text, so they are toned down to this fraction; the brightness
+ *  lives in the deep corridor behind the upload panel instead */
+const NEAR_DIM = 0.22
+const NEAR_DIM_SPAN = SPACING * 5
 const WRAP = RING_COUNT * SPACING
 const PACKETS = 60
 const WAVE_SPEED = 13
@@ -266,7 +271,8 @@ export default function BackgroundTunnel({
         const nearFade = smooth((NEAR_Z + SPACING * 0.6 - z) / (SPACING * 0.6))
         const farFade = mix(1, smooth((z - (FAR_Z - SPACING * 0.4)) / SPACING), u)
         const b = u === 1 ? waveBoost(z) : 0
-        const f = nearFade * farFade
+        const nearDim = mix(1, NEAR_DIM + (1 - NEAR_DIM) * smooth((NEAR_Z - z) / NEAR_DIM_SPAN), u)
+        const f = nearFade * farFade * nearDim
         tubeMat.opacity = Math.min(1, f * level * (1 + b * 1.4))
         glowMat.opacity = f * 0.55 * level * (1 + b * 2)
         tubeMat.color.copy(color).lerp(HOT, Math.min(1, b * 0.25 * u))
