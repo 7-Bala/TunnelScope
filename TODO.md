@@ -435,3 +435,4 @@ not a compressed version.)
 - **2026-09-19** — Did D as T-077 (see Done). All mentor follow-ups done except C2.
 - **2026-09-19** — User: update deck numbers to 135/87 and use liquid-glass cards with no blur. Asked where (dashboard/deck/both): dashboard only. Did T-078 (see Done).
 - **2026-09-19** — User: remove the 'Engine on 127.0.0.1' badge. Did T-079 (see Done).
+- **2026-09-19** — User: the intro-to-site transition isn't good; ideate alternatives. Diagnosed the current hand-over and proposed 5 concepts (no code); awaiting the user's pick.
