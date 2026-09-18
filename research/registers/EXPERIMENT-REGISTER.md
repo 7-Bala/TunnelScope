@@ -325,3 +325,10 @@ AWS Site-to-Site VPN default proposal set emulated on strongSwan; 5 arms (legacy
 NAT-T, common MODP-2048, hardened AES-GCM/ECP-384, IKEv1, cloud-initiated offering its full set).
 Seven predictions, including three expected gaps (AEAD integrity wording, IKEv1 suite, weak
 *offered* algorithms). Full pre-registration: `experiments/exp13-cloud-vpn-proposals/PREREG.md`.
+
+### EXP-13 — RESULT (2026-09-19): DONE — P3–P6 held; P1 failed on one arm (a real bug); 4 fixes
+Found and fixed: IKE suite lost after an INVALID_KE_PAYLOAD retry (first, error-only response was
+used); unnamed DH groups scored as FAIL (strong 17/18 would have failed); RFC 8247 DH rule compared
+group numbers and passed group 22 (MUST NOT); weak *offered* groups invisible. New finding
+`ike_offered_dh` + rule `RFC8247-DH-OFFER`: the cloud-initiated arm negotiated MODP-2048 but offered
+groups 2 and 22. `experiments/exp13-cloud-vpn-proposals/RESULT.md`.

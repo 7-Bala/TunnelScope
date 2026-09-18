@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 import yaml
 
 from ..errors import DependencyError
+from ..ingest.tshark import KE_METHOD
 from ..evidence.record import EvidenceRecord, Status
 
 # Shipped inside the package (tunnelscope/rules/, package data) so an installed
@@ -25,9 +26,22 @@ from ..evidence.record import EvidenceRecord, Status
 # capture against nothing, silently (found by the on-prem install test, 2026-09-18).
 RULES_DIR = os.environ.get("TUNNELSCOPE_RULES_DIR", os.path.join(os.path.dirname(os.path.dirname(__file__)), "rules"))
 
-# DH group name -> numeric id (for dh_group_ge)
-_DH_ID = {"MODP-1024": 2, "MODP-2048": 14, "MODP-3072": 15, "MODP-4096": 16,
-          "ECP-256": 19, "ECP-384": 20, "ECP-521": 21, "Curve25519": 31, "Curve448": 32}
+# DH group name -> IANA id, from the one table the ingest layer names groups
+# with (a second, partial copy here once scored every unnamed group as -1,
+# i.e. FAIL: EXP-13 found strong groups 17/18 would have failed that way).
+_DH_ID = {name: i for i, name in KE_METHOD.items() if i and not name.startswith("ML-KEM")}
+
+
+def _dh_id(value) -> int | None:
+    """IANA id of a DH group finding value ('MODP-2048', or 'dh-N' for a group
+    the ingest table doesn't name); None when it can't be told."""
+    if not isinstance(value, str):
+        return None
+    if value in _DH_ID:
+        return _DH_ID[value]
+    if value.startswith("dh-") and value[3:].isdigit():
+        return int(value[3:])
+    return None
 
 
 @dataclass
@@ -49,13 +63,29 @@ class Verdict:
         return d
 
 
-def _assert(op: str, want, value) -> bool:
+def _assert(op: str, want, value) -> bool | None:
+    """True = meets the rule, False = does not, None = the rule cannot judge
+    this value (reported UNKNOWN, never FAIL and never PASS)."""
     if op == "equals":       return value == want
     if op == "not_equals":   return value != want
     if op == "in":           return value in want
     if op == "not_in":       return value not in want
     if op == "matches_any":  return isinstance(value, str) and any(w in value for w in want)
-    if op == "dh_group_ge":  return _DH_ID.get(value, -1) >= want
+    if op == "dh_group_ge":
+        # DISA V-207193's literal test ("DH Group of 16 or greater"): by IANA number
+        g = _dh_id(value)
+        return None if g is None else g >= want
+    if op == "dh_group_not_in":
+        g = _dh_id(value)
+        return None if g is None else g not in want
+    if op == "dh_groups_none_in":
+        # a list of offered groups: fails if ANY of them is in `want`
+        if not isinstance(value, list):
+            return None
+        ids = [_dh_id(v) for v in value]
+        if any(g in want for g in ids if g is not None):
+            return False
+        return None if any(g is None for g in ids) else True
     if op == "pq_present":   return isinstance(value, list) and any("ML-KEM" in str(v) for v in value)
     raise ValueError(f"unknown assert op: {op}")
 
@@ -95,6 +125,10 @@ def assess_record(rec: EvidenceRecord, baselines: list[dict] | None = None) -> l
                                         message=f.note, evidence=f.evidence)); continue
             a = rule["assert"]
             ok = _assert(a["op"], a.get("value"), f.value)
+            if ok is None:
+                verdicts.append(Verdict(**common, verdict="UNKNOWN", observed=f.value, evidence=f.evidence,
+                                        message=f"this rule cannot judge the observed value {f.value!r}"))
+                continue
             verdicts.append(Verdict(
                 **common, verdict="PASS" if ok else "FAIL",
                 observed=f.value, evidence=f.evidence,

@@ -14,6 +14,8 @@ rules:
     assert: {op: dh_group_ge, value: 16}
     severity: high
     fail_message: "DH group below 16 for the IKE SA (DISA baseline; note RFC 8247 permits group 14)"
+    # Literal text (SRG, "DH Group of 16 or greater", checked 2026-09-18): judged by IANA number,
+    # so groups 22-24 pass THIS rule despite being weak; RFC8247-DH-MUST fails them.
   - id: V-207223
     title: "IKE must use FIPS-validated SHA-2 at 384 bits or higher"
     attribute: ike_integ

@@ -26,8 +26,13 @@ DEFAULT_TIMEOUT_S = int(os.environ.get("TUNNELSCOPE_TSHARK_TIMEOUT", "120"))
 # prints them numerically (T-024: released tshark shows "36", master names it).
 KE_METHOD = {
     0: "NONE",
-    14: "MODP-2048", 15: "MODP-3072", 16: "MODP-4096", 19: "ECP-256", 20: "ECP-384",
-    21: "ECP-521", 31: "Curve25519", 32: "Curve448",
+    # every classical group a real endpoint may offer (EXP-13: AWS's default set
+    # includes 2, 5, 17, 18 and 22-24, which were unnamed here and read "dh-N")
+    1: "MODP-768", 2: "MODP-1024", 5: "MODP-1536",
+    14: "MODP-2048", 15: "MODP-3072", 16: "MODP-4096", 17: "MODP-6144", 18: "MODP-8192",
+    19: "ECP-256", 20: "ECP-384", 21: "ECP-521",
+    22: "MODP-1024-S160", 23: "MODP-2048-S224", 24: "MODP-2048-S256",
+    31: "Curve25519", 32: "Curve448",
     35: "ML-KEM-512", 36: "ML-KEM-768", 37: "ML-KEM-1024",
 }
 EXCHANGE = {2: "IKEv1_MAIN_MODE", 4: "IKEv1_AGGRESSIVE_MODE", 5: "IKEv1_INFORMATIONAL",
@@ -235,13 +240,14 @@ def ike_messages(pcap: str) -> list[dict]:
               "isakmp.ispi", "isakmp.rspi", "isakmp.exchangetype", "isakmp.flags",
               "isakmp.messageid", "isakmp.length",
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
-              "isakmp.vid_string", "isakmp.certreq.type"]
+              "isakmp.vid_string", "isakmp.certreq.type",
+              "isakmp.tf.id.dh", "isakmp.tf.id.integ"]
     rows = _run_fields(pcap, "isakmp", fields)
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         (fn, t, src, dst, iplen, src6, dst6, plen6, ispi, rspi, exch, flags, mid, ilen,
-         notify, tftype, tfid, vid, certreq) = r
+         notify, tftype, tfid, vid, certreq, tfdh, tfinteg) = r
 
         def ints(s):
             # tolerant on purpose: tshark may print these hex or decimal, and a
@@ -264,6 +270,9 @@ def ike_messages(pcap: str) -> list[dict]:
             transform_types=ints(tftype), transform_ids=ints(tfid),
             vendor_ids=[v for v in vid.split(",") if v] if vid else [],
             has_certreq=bool(certreq),
+            # every KE / INTEG transform in this message's SA payload: for an
+            # IKE_SA_INIT request, the groups the initiator would accept
+            offered_dh=ints(tfdh), offered_integ=ints(tfinteg),
         ))
     return msgs
 
@@ -379,8 +388,13 @@ def ike_sa_crypto(pcap: str, ispi: str | None = None) -> dict:
     With `ispi`, only that SA's response counts (T-051: one NO_PROPOSAL_CHOSEN
     must not blank every other SA in the capture)."""
     want = ispi.lower().removeprefix("0x") if ispi else None
-    for row in _ike_sa_init_responses(pcap):
-        if want and row["ispi"] and row["ispi"] != want:
-            continue
-        return dict(row["suite"])   # a copy: the memoised rows stay read-only
-    return {}
+    rows = [r for r in _ike_sa_init_responses(pcap) if not (want and r["ispi"] and r["ispi"] != want)]
+    # An error-only response (INVALID_KE_PAYLOAD asking for another DH group,
+    # COOKIE, NO_PROPOSAL_CHOSEN) selects nothing; after a retry the LAST
+    # response that carries a selection is the one that stands. Taking the
+    # first lost the whole suite whenever the initiator's first KE guess was
+    # refused (found by EXP-13: a cloud endpoint opening with DH group 2).
+    selecting = [r for r in rows if any(v is not None for v in r["suite"].values())]
+    if selecting:
+        return dict(selecting[-1]["suite"])   # a copy: the memoised rows stay read-only
+    return dict(rows[-1]["suite"]) if rows else {}

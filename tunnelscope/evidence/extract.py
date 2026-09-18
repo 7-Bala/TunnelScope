@@ -388,6 +388,12 @@ def extract_ike_crypto(r: EvidenceRecord) -> None:
     ev = [EvidencePtr(r.source_pcap, None, "isakmp IKE_SA_INIT response", str(c))]
     enc = (f"{c.get('encr')}-{c['encr_keylen']}" if c.get("encr") and c.get("encr_keylen")
            else c.get("encr"))
+    # AEAD suites (AES-GCM/CCM, ChaCha20-Poly1305) carry no separate INTEG
+    # transform: integrity is part of the cipher. Saying "no suite selected"
+    # there was wrong (EXP-13 P3); say what is true and name the PRF instead.
+    aead = bool(c.get("encr")) and any(x in c["encr"] for x in ("GCM", "CCM", "ChaCha20"))
+    if c.get("prf"):
+        r.add(Finding("ike_prf", Status.OBSERVED, Vantage.T1, "ike_crypto", value=c["prf"], evidence=ev))
     for attr, val, extra in (("ike_encr", enc, {}),
                              ("ike_integ", c.get("integ"), {}),
                              ("ike_dh_group", c.get("dh"), {"note": f"DH group id {c.get('dh_id')}"})):
@@ -396,7 +402,11 @@ def extract_ike_crypto(r: EvidenceRecord) -> None:
         else:
             is_v1 = r.findings.get("ike_version") and r.findings["ike_version"].value == "IKEv1"
             unknown_note = ("IKEv1 negotiation (RFC 2409); IKEv2 suite extraction not applicable"
-                            if is_v1 else "no IKE SA suite selected (negotiation failed or no response visible)")
+                            if is_v1 else
+                            f"AEAD suite ({enc}): no separate integrity transform; integrity is part of the cipher, "
+                            f"PRF {c.get('prf')}. A rule written for HMAC integrity cannot judge it"
+                            if attr == "ike_integ" and aead else
+                            "no IKE SA suite selected (negotiation failed or no response visible)")
             r.add(Finding(attr, Status.UNKNOWN, Vantage.T0, "ike_crypto", note=unknown_note))
 
 
@@ -535,9 +545,31 @@ def _msgid_gap_before_child(ike: list[dict], child_frame: int) -> str | None:
     return None
 
 
+def extract_offered_dh(r: EvidenceRecord) -> None:
+    """EXP-13 P5: the key-exchange groups the INITIATOR offered, from its
+    plaintext IKE_SA_INIT request(s). A peer that offers a weak group would
+    accept it from any responder that picks it: downgrade exposure, even when
+    this particular tunnel negotiated something strong. Only the initiator's
+    offer is on the wire; the responder's acceptable set never is."""
+    ike = getattr(r, "_ike", [])
+    reqs = [m for m in ike if m["exchange"] == 34 and not m["is_response"] and m.get("offered_dh")]
+    if not reqs:
+        if ike:
+            r.add(Finding("ike_offered_dh", Status.UNKNOWN, Vantage.T1, "offered_dh (EXP-13)",
+                          note="no IKE_SA_INIT request with a key-exchange offer visible"))
+        return
+    ids = sorted({g for m in reqs for g in m["offered_dh"]})
+    names = [tshark.KE_METHOD.get(g, f"dh-{g}") for g in ids]
+    who = f"{reqs[0]['src']} (initiator)"
+    ev = [EvidencePtr(r.source_pcap, m["frame"], "isakmp.tf.id.dh (initiator SA)", str(m["offered_dh"])) for m in reqs[:2]]
+    r.add(Finding("ike_offered_dh", Status.OBSERVED, Vantage.T1, "offered_dh (EXP-13)", value=names, evidence=ev,
+                  note=f"groups {who} offered in IKE_SA_INIT; the responder's acceptable set is not visible"))
+
+
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,
                   extract_cipher_sieve, extract_pfs, extract_sa_lifecycle, extract_mode,
-                  extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_leakage]
+                  extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_offered_dh,
+                  extract_leakage]
 
 
 def build_records(pcap: str) -> list[EvidenceRecord]:
