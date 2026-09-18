@@ -16,9 +16,14 @@ from dataclasses import dataclass, field
 
 import yaml
 
+from ..errors import DependencyError
 from ..evidence.record import EvidenceRecord, Status
 
-RULES_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "rules")
+# Shipped inside the package (tunnelscope/rules/, package data) so an installed
+# copy has its baselines. They used to live at the repo root, resolved relative
+# to the source checkout: an installed wheel found none and assessed every
+# capture against nothing, silently (found by the on-prem install test, 2026-09-18).
+RULES_DIR = os.environ.get("TUNNELSCOPE_RULES_DIR", os.path.join(os.path.dirname(os.path.dirname(__file__)), "rules"))
 
 # DH group name -> numeric id (for dh_group_ge)
 _DH_ID = {"MODP-1024": 2, "MODP-2048": 14, "MODP-3072": 15, "MODP-4096": 16,
@@ -58,7 +63,14 @@ def _assert(op: str, want, value) -> bool:
 def load_baselines(rules_dir: str = RULES_DIR) -> list[dict]:
     out = []
     for f in sorted(glob.glob(os.path.join(rules_dir, "*.yaml"))):
-        out.append(yaml.safe_load(open(f)))
+        with open(f) as fh:
+            out.append(yaml.safe_load(fh))
+    if not out:
+        # An assessment against zero baselines has no verdicts, which reads as
+        # "nothing wrong". That is absence scored as compliance (I8): refuse.
+        raise DependencyError(
+            f"no baselines found in {os.path.abspath(rules_dir)}: refusing to assess against nothing "
+            "(reinstall TunnelScope, or point TUNNELSCOPE_RULES_DIR at a rules directory)")
     return out
 
 

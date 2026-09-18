@@ -41,3 +41,23 @@ def test_pq_downgrade_detected():
 def test_every_verdict_cites_authority():
     for (b, rid), v in _verdicts("cs-aes256gcm16.pcap").items():
         assert v.authority and v.rule_id, f"{b}/{rid} missing citation"
+
+
+def test_no_baselines_is_an_error_not_an_empty_pass(tmp_path):
+    """An assessment against zero baselines has no verdicts, which reads as
+    'nothing wrong'. Found for real (2026-09-18): an installed wheel resolved
+    the rules directory relative to a source checkout that wasn't there and
+    assessed every capture against nothing, exit 0. Must refuse instead."""
+    import pytest
+    from tunnelscope.errors import DependencyError
+    with pytest.raises(DependencyError):
+        load_baselines(str(tmp_path))
+
+
+def test_baselines_ship_inside_the_package():
+    """The rules live in tunnelscope/rules/ (package data), not the repo root."""
+    import os
+    import tunnelscope
+    rules = os.path.join(os.path.dirname(tunnelscope.__file__), "rules")
+    assert len([f for f in os.listdir(rules) if f.endswith(".yaml")]) >= 4
+    assert len(load_baselines(rules)) >= 4

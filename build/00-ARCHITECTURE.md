@@ -55,7 +55,7 @@ decisions are recorded as ADRs in §7. Nothing here re-opens the DEVELOP selecti
                          │                                ▼
                          │               ┌──────────────────────────────────────────┐
                          │               │ ASSESS  (tunnelscope/assess)              │
-                         │               │  rule engine over rules/*.yaml            │
+                         │               │  rule engine over tunnelscope/rules/*.yaml│
                          │               │  baselines: RFC 8221/8247/9395, SP800-77r1,│
                          │               │  DISA VPN SRG, DST/NQM                     │
                          │               │  → Verdict{PASS/FAIL/UNKNOWN/NOT-OBS/CONTRA}│
@@ -125,7 +125,7 @@ length at T0 declined; R10 reframed to leakage); no pretrained traffic transform
 | Language | **Python 3.11+** | matches all experiment code; scikit-learn for the one ML component; fast to build |
 | Parser | **tshark** (`-T ek`), shelled out | I6; the experiments already depend on it; GPL boundary respected by shelling out |
 | Evidence store | **SQLite** + JSON export | offline (I9), zero-config, queryable, reproducible |
-| Rules/baselines | **YAML** files under `rules/`, each versioned with its source citation | I5 |
+| Rules/baselines | **YAML** files under `tunnelscope/rules/` (package data since 2026-09-18), each versioned with its source citation | I5 |
 | ML instrument | **scikit-learn** RandomForest + 1-NN Bayes bound | EXP-05, already validated; interpretable |
 | API | **FastAPI** (optional, off by default) | lightweight; core works as a CLI without it |
 | Reports | **Markdown → HTML** (templated); optional LLM for prose only | I8 |

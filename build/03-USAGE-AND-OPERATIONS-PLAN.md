@@ -34,9 +34,11 @@ not a report to open later. Both are addressed below.
 ## 2. Deployment model (per I9: offline by default, no cloud dependency)
 
 - **Default and only supported mode: local CLI, air-gapped-capable.** A single `pip install
-  tunnelscope` (or an offline wheel, for NTRO's context) plus `tshark` on PATH. No network calls in
-  the analysis path — confirmed by the codebase (ingest shells out to local `tshark`; nothing else
-  touches the network).
+  tunnelscope`, or the offline bundle for NTRO's context (`build/offline/make_bundle.sh`), plus
+  `tshark` on PATH. No network calls: **tested, not just read** (2026-09-18) — installed from the
+  bundle in a `--network none` container, `doctor`/`assess`/`serve`/upload all run under
+  `strace -f -e connect`, zero attempts beyond loopback (`build/offline/AIRGAP-TEST.md`,
+  `build/05-DEPLOYMENT-ONPREM.md`).
 - **Fleet mode is still local** — a directory of pcaps in, one aggregated HTML/JSON out. No new
   network surface.
 - **`tunnelscope serve` (T-059, built) is a local upload dashboard, not the §6 API below.** It is a
@@ -87,7 +89,7 @@ first.
 - `pyproject.toml` bumps on every merged change to `tunnelscope/`; `CHANGELOG.md` (new, §5) records
   what changed, referencing the EXP/T-ID that drove it — the project already has this discipline in
   `TODO.md`, this just makes it visible to someone who isn't reading the task tracker.
-- Rule baselines (`rules/*.yaml`) are already versioned data (DEC-011) — new baselines or amendments
+- Rule baselines (`tunnelscope/rules/*.yaml`, shipped inside the package) are already versioned data (DEC-011) — new baselines or amendments
   ship as a new file or a dated header change, never a silent edit to existing verdicts' meaning.
 
 ### 3.4 What is explicitly NOT being built, and why

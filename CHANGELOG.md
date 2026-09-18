@@ -47,6 +47,22 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## On-premise / air-gapped deployment, tested — 2026-09-18 (T-075, mentor follow-up B)
+
+**Fixed**
+- An *installed* TunnelScope found no baselines (they were resolved relative to the source checkout)
+  and assessed every capture against nothing: empty result, exit 0. Baselines now ship inside the
+  package (`rules/` → `tunnelscope/rules/`), and loading zero baselines is an error (exit 3).
+- An installed copy could not find the dashboard; the built dashboard now ships inside the package.
+
+**Added**
+- `build/offline/make_bundle.sh`: one-file offline bundle (all wheels + checksums + install notes).
+- `build/offline/airgap_test.sh`: builds the bundle in a connected container, installs and runs
+  doctor/assess/serve/upload in a `--network none` container under `strace`: 0 connection attempts
+  beyond loopback (`build/offline/AIRGAP-TEST.md`).
+- `build/05-DEPLOYMENT-ONPREM.md`; `TUNNELSCOPE_RULES_DIR` for organisation-specific baselines.
+- CI installs the package outside the repo and checks it still produces real verdicts.
+
 ## Brighter background tunnel — 2026-09-18 (T-074)
 
 **Changed**

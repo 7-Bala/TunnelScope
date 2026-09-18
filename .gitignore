@@ -64,3 +64,7 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 build/FINDINGS-DIFF.md
+tunnelscope/web/
+build/offline/out/
+build/lib/
+build/bdist*/

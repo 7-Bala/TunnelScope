@@ -42,9 +42,19 @@ MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB: generous for a capture, not for 
 # The React dashboard's production build (T-060). When present, `serve` hosts it
 # at / and the dashboard talks to /api/analyze. When absent (e.g. installed
 # without Node), the built-in page below still works on its own.
-DASHBOARD_DIR = Path(os.environ.get(
-    "TUNNELSCOPE_DASHBOARD_DIR",
-    Path(__file__).resolve().parents[2] / "fleet-dashboard" / "dist"))
+def _dashboard_dir() -> Path:
+    """Where the built dashboard is: an explicit override, else the copy shipped
+    inside the package (tunnelscope/web/, put there by build/offline/make_bundle.sh
+    so an installed copy has it), else a source checkout's fleet-dashboard/dist."""
+    if os.environ.get("TUNNELSCOPE_DASHBOARD_DIR"):
+        return Path(os.environ["TUNNELSCOPE_DASHBOARD_DIR"])
+    packaged = Path(__file__).resolve().parents[1] / "web"
+    if (packaged / "index.html").is_file():
+        return packaged
+    return Path(__file__).resolve().parents[2] / "fleet-dashboard" / "dist"
+
+
+DASHBOARD_DIR = _dashboard_dir()
 _TMP_PREFIX = "tunnelscope-upload-"
 
 # Classic pcap (LE/BE) and pcapng magic numbers (Wireshark wiki, "Development/LibpcapFileFormat").
