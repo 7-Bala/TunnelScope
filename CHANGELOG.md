@@ -47,6 +47,13 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Brighter background tunnel — 2026-09-18 (T-074)
+
+**Changed**
+- The background corridor rests at about 30% brightness (was 17%). The rings nearest the viewer are
+  toned down, so the extra light sits in the deep corridor behind the upload panel, not across the
+  header text.
+
 ## Tunnel as the page background — 2026-09-18 (T-073)
 
 **Changed**
