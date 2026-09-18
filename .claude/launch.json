@@ -4,8 +4,26 @@
     {
       "name": "fleet-dashboard",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "fleet-dashboard", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "fleet-dashboard",
+        "run",
+        "dev"
+      ],
       "port": 5173
+    },
+    {
+      "name": "tunnelscope-serve",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "tunnelscope.cli",
+        "serve",
+        "--no-browser",
+        "--port",
+        "8765"
+      ],
+      "port": 8765
     }
   ]
 }

@@ -2,12 +2,16 @@ import { Cell, Label, Pie, PieChart } from "recharts"
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart"
 import type { PostureKind } from "@/lib/fleet"
 import { POSTURE_META } from "@/lib/fleet"
+import { usePrefersReducedMotion } from "@/lib/use-reduced-motion"
 
 const ORDER: PostureKind[] = ["classical", "downgraded", "pq"]
 const config = {} satisfies ChartConfig
 
 // shadcn/Recharts donut: fleet posture composition.
+const SWEEP_MS = 700
+
 export function PostureGauge({ counts, total }: { counts: Record<PostureKind, number>; total: number }) {
+  const reduced = usePrefersReducedMotion()
   const data = ORDER.filter((k) => counts[k]).map((k) => ({
     kind: k,
     name: POSTURE_META[k].label,
@@ -48,7 +52,9 @@ export function PostureGauge({ counts, total }: { counts: Record<PostureKind, nu
             strokeWidth={0}
             startAngle={90}
             endAngle={-270}
-            isAnimationActive={false}
+            isAnimationActive={!reduced}
+            animationDuration={SWEEP_MS}
+            animationEasing="ease-out"
           >
             {data.map((d) => (
               <Cell key={d.kind} fill={d.fill} />
@@ -58,7 +64,16 @@ export function PostureGauge({ counts, total }: { counts: Record<PostureKind, nu
                 if (!viewBox || !("cx" in viewBox)) return null
                 const { cx, cy } = viewBox as { cx: number; cy: number }
                 return (
-                  <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle">
+                  <text
+                    x={cx}
+                    y={cy}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      opacity: reduced ? 1 : 0,
+                      animation: reduced ? "none" : `chart-label-in .4s ease-out ${SWEEP_MS * 0.55}ms both`,
+                    }}
+                  >
                     <tspan x={cx} y={cy - 4} className="fill-foreground text-[26px] font-semibold tabular-nums">
                       {pctClassical}%
                     </tspan>
@@ -74,8 +89,12 @@ export function PostureGauge({ counts, total }: { counts: Record<PostureKind, nu
       </ChartContainer>
 
       <div className="flex flex-1 flex-col gap-2.5">
-        {data.map((d) => (
-          <div key={d.kind} className="flex items-center gap-2.5 text-[13px]">
+        {data.map((d, i) => (
+          <div
+            key={d.kind}
+            className={reduced ? "flex items-center gap-2.5 text-[13px]" : "rise flex items-center gap-2.5 text-[13px]"}
+            style={reduced ? undefined : { animationDelay: `${i * 90 + 120}ms` }}
+          >
             <span className="h-2 w-2 rounded-full" style={{ background: d.fill }} />
             <span className="flex-1 text-foreground/85">{d.name}</span>
             <span className="font-mono text-[13px] text-muted-foreground tabular-nums">{d.value}</span>

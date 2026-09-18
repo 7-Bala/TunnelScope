@@ -20,22 +20,23 @@ import {
 //   idle     slow drift toward the viewer
 //   over     a capture is being dragged over the page: faster, brighter
 //   busy     analysing: fastest, with a slow twist down the tunnel
-//   pos/neg/steel  a result just landed: the rings take the posture colour
+//   pos/neg/warn   a result just landed: the rings take the posture colour
 //   error    the file was refused or could not be parsed
-export type TunnelState = "idle" | "over" | "busy" | "pos" | "neg" | "steel" | "error"
+export type TunnelState = "idle" | "over" | "busy" | "pos" | "neg" | "warn" | "error"
 
 const COLOR: Record<TunnelState, string> = {
-  idle: "#4FD1C5",
-  over: "#4FD1C5",
-  busy: "#4FD1C5",
-  pos: "#45D483",
-  neg: "#FF5C6C",
-  steel: "#9AA5B1",
-  error: "#FF5C6C",
+  // index.css tokens (WebGL cannot read CSS variables): --violet, --pos, --neg, --warn
+  idle: "#8B5CF6",
+  over: "#8B5CF6",
+  busy: "#8B5CF6",
+  pos: "#22C55E",
+  neg: "#EF4444",
+  warn: "#F2B33D",
+  error: "#EF4444",
 }
-const SPEED: Record<TunnelState, number> = { idle: 0.55, over: 1.9, busy: 3.4, pos: 0.7, neg: 0.7, steel: 0.7, error: 0.4 }
-const TWIST: Record<TunnelState, number> = { idle: 0, over: 0.02, busy: 0.075, pos: 0, neg: 0, steel: 0, error: 0 }
-const GAIN: Record<TunnelState, number> = { idle: 0.8, over: 1.25, busy: 1.1, pos: 1.15, neg: 1.15, steel: 1, error: 1 }
+const SPEED: Record<TunnelState, number> = { idle: 0.55, over: 1.9, busy: 3.4, pos: 0.7, neg: 0.7, warn: 0.7, error: 0.4 }
+const TWIST: Record<TunnelState, number> = { idle: 0, over: 0.02, busy: 0.075, pos: 0, neg: 0, warn: 0, error: 0 }
+const GAIN: Record<TunnelState, number> = { idle: 0.8, over: 1.25, busy: 1.1, pos: 1.15, neg: 1.15, warn: 1, error: 1 }
 
 const RINGS = 22
 const SPAN = 26 // depth of the tunnel, world units

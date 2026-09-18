@@ -25,9 +25,9 @@ const RULE_DESC: Record<string, string> = {
 }
 
 const STATUS: Record<FindingStatus, { t: string; cls: string }> = {
-  OBSERVED: { t: "observed", cls: "bg-teal-bg text-teal" },
-  MEASURED: { t: "measured", cls: "bg-teal-bg text-teal" },
-  INFERRED: { t: "inferred", cls: "bg-steel-bg text-steel" },
+  OBSERVED: { t: "observed", cls: "bg-violet-bg text-violet" },
+  MEASURED: { t: "measured", cls: "bg-violet-bg text-violet" },
+  INFERRED: { t: "inferred", cls: "bg-secondary text-silver" },
   UNKNOWN: { t: "unknown", cls: "border border-border text-faint" },
   NOT_OBSERVABLE: { t: "not observable", cls: "border border-border text-faint" },
   CONTRADICTORY: { t: "contradictory", cls: "bg-neg-bg text-neg" },
@@ -77,7 +77,7 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
             onClick={() => setPane(p.key)}
             className={cn(
               "-mb-px border-b-2 px-2.5 pb-2 pt-1 text-[12.5px] font-medium transition-colors",
-              pane === p.key ? "border-teal text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+              pane === p.key ? "border-violet text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {p.label} <span className="font-mono text-[11px] text-faint tnum">{p.n}</span>
@@ -161,7 +161,7 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
 
 const SEV: Record<Finding["severity"], { t: string; c: string }> = {
   high: { t: "High", c: "text-neg" },
-  medium: { t: "Med", c: "text-steel" },
+  medium: { t: "Med", c: "text-warn" },
   informational: { t: "Info", c: "text-faint" },
 }
 
@@ -171,7 +171,7 @@ function stateChip(g: Gateway): { t: string; cls: string } {
   const k = postureKind(g.posture)
   if (k === "downgraded") return { t: "PQ not selected", cls: "bg-neg-bg text-neg" }
   if (k === "pq") return { t: "PQ hybrid", cls: "bg-pos-bg text-pos" }
-  return { t: "Classical", cls: "bg-steel-bg text-steel" }
+  return { t: "Classical", cls: "bg-warn-bg text-warn" }
 }
 
 function Row({ g }: { g: Gateway }) {
@@ -207,7 +207,7 @@ function Row({ g }: { g: Gateway }) {
           </span>
 
           <span className="hidden shrink-0 text-[12px] sm:block">{counts}</span>
-          <ChevronDown className={cn("mt-1 h-4 w-4 shrink-0 text-faint transition-transform duration-200 sm:mt-0", open && "rotate-180 text-teal")} />
+          <ChevronDown className={cn("mt-1 h-4 w-4 shrink-0 text-faint transition-transform duration-200 sm:mt-0", open && "rotate-180 text-violet")} />
         </CollapsibleTrigger>
 
         <CollapsibleContent>
@@ -256,7 +256,7 @@ export function FleetRegister({ gateways, title = "Fleet register" }: { gateways
   )
 
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-card">
+    <section className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
           <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
@@ -271,7 +271,7 @@ export function FleetRegister({ gateways, title = "Fleet register" }: { gateways
               onClick={() => setFilter(f.key)}
               className={cn(
                 "rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
-                filter === f.key ? "bg-teal text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                filter === f.key ? "bg-violet text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
               {f.label}

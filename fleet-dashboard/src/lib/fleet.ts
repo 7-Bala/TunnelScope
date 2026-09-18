@@ -46,7 +46,7 @@ export function postureKind(posture: string): PostureKind {
 }
 
 export const POSTURE_META: Record<PostureKind, { label: string; color: string }> = {
-  classical: { label: "Classical", color: "var(--steel)" },
+  classical: { label: "Classical", color: "var(--warn)" },
   downgraded: { label: "PQ not selected", color: "var(--neg)" },
   pq: { label: "Post-quantum", color: "var(--pos)" },
 }

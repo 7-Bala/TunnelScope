@@ -47,6 +47,84 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Merge — 2026-09-18 (T-068)
+
+**Changed**
+- `fleet-dashboard/`: the upload-first dashboard (intake, 3D tunnel, data-source switch, register
+  panes) now uses the black/violet design system and Kufica wordmark. Evidence-tier chips: observed
+  and measured in violet, inferred in silver (a meta tone, never the yellow status colour).
+- `ike_sa_crypto()` keeps its per-SA filter and is now served from the capture cache.
+
+
+Two histories diverged after T-050 (2026-09-14): GitHub `main` (T-051…T-056 below, 2026-09-14…16)
+and this machine (T-051…T-061 above). Both used the IDs T-051…T-056 for different work. They were
+merged on 2026-09-18 keeping GitHub's black/violet dashboard design (user's choice) with the
+upload features rebuilt on it, and both backends combined. In `TODO.md` the GitHub-side tasks are
+renumbered **T-062…T-067** (T-051→T-062, T-052→T-063, T-053→T-064, T-054→T-065, T-055→T-066,
+T-056→T-067); their commit messages keep the original IDs.
+
+## [0.3.0] — 2026-09-16 (GitHub T-055 → T-066)
+
+Robustness pass on the failure paths. Each item was reproduced before being fixed and is now
+covered by a regression test; the suite previously only exercised captures the tool can read.
+
+**Fixed**
+- `fleet` pointed at a nonexistent directory reported a clean fleet: `rglob` yields nothing on a
+  missing path, so the scan returned zero tunnels, zero errors and **exit 0**. A typo'd path in a
+  scheduled job was indistinguishable from a healthy fleet. Missing / not-a-directory / no
+  captures found are now errors (exit 2) — "scanned nothing" must not render as "nothing wrong".
+- tshark's failure reason was swallowed: `check=True` buried stderr inside `CalledProcessError`,
+  so an unreadable capture printed the whole command line but never *why*. Now reported.
+- Unreadable or missing input printed a Python traceback; it now prints one line and an exit code.
+- ISAKMP flags were parsed two different ways. `ike_sa_crypto()` used a decimal-tolerant reader, so
+  a bare `20` (rather than `0x20`) would read as 0x14 — the responder bit would read clear, the
+  function would return `{}`, and the entire IKE crypto finding would disappear silently. Not live
+  on tshark 4.2.2 (which emits `0x20`), but one upstream formatting change away. Both call sites
+  now share one hex reader.
+- No timeout on any tshark call: a single pathological capture could hang a whole fleet scan
+  indefinitely. Bounded per call by `TUNNELSCOPE_TSHARK_TIMEOUT` (default 120s).
+
+**Added**
+- `tunnelscope doctor` and an automatic preflight: verifies tshark is present and still exposes
+  all 23 fields the extractors read. A renamed field does not raise — it silently produces an
+  empty finding, which is absence scored as compliance. Runs once per process (~0.4s);
+  `TUNNELSCOPE_SKIP_PREFLIGHT=1` opts out.
+- Exit codes so automation can tell the cases apart: 0 clean, 1 findings present, 2 input error,
+  3 dependency error. Findings-gating is **opt-in** via `--fail-on-findings`, so default
+  behaviour and the demo script are unchanged. On `fleet` it also trips when a capture failed to
+  parse — a file that was never read has not been cleared.
+- `--version`.
+- CI job for `fleet-dashboard` (typecheck + lint + build). The dashboard had no automated check
+  at all, despite now shipping real code; every regression in it so far was caught by eye.
+
+**Performance (GitHub T-056 → T-067)**
+- Capture reads are memoised on `(path, mtime, size)`. The IKE crypto read runs once per SA and
+  each read re-parses the entire file, so a capture carrying 10 tunnels cost 10 tshark spawns
+  (1.86s); it now costs 1 (0.19s). The single-capture CLI path drops 5 spawns to 3. A capture
+  that changes on disk is re-read rather than served stale, and the cache is bounded
+  (`TUNNELSCOPE_CACHE_CAPTURES`, default 8, `0` disables).
+- Stated honestly: this does **not** speed up `fleet`. The original premise was that fleet scans
+  would benefit, and measurement disproved it — each capture is analysed exactly once, so there
+  is nothing to reuse across files (19.7s vs 19.3s over 35 captures, i.e. noise). The win is
+  repeated reads of one capture, which is the multi-tunnel gateway case our corpus happens not
+  to contain.
+
+## fleet-dashboard only — 2026-09-14 (GitHub T-051 → T-062)
+
+**Changed**
+- `fleet-dashboard/` visual redesign: black/violet/silver-white base, with green/yellow/red
+  used strictly as the status-indicator system (never decoratively). Replaced the earlier
+  teal/graphite palette throughout `index.css` and every `dashboard/*` component.
+- Removed the generic SVG header logo; the wordmark itself is now the mark ("Tunnel" in
+  Geist, "Scope" in Bungee — the requested Kufica font is commercial-only with no free
+  license, so it was not bundled; see `fleet-dashboard/README.md` for the swap-in path).
+- All card containers now use a visibly rounded `rounded-2xl`.
+- Fixed real text-overflow risks: KPI card truncation, the expanded verdict table's
+  rule-id/baseline columns, and mobile-width x-axis label collisions on the signal trace.
+
+This does not touch the Python package (`tunnelscope/`), tests, or dataset — version stays
+at 0.2.0.
+
 ## [0.2.0] — 2026-09-14 (T-049)
 
 **Added**

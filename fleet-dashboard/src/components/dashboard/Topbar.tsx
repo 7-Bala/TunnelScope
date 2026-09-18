@@ -1,14 +1,12 @@
 import { cn } from "@/lib/utils"
 
-// Clean geometric mark: a tunnel aperture — concentric rounded squares receding to
-// a point. "Look down the tunnel." Single-weight teal stroke.
-function Logo() {
+// The wordmark IS the mark — no separate icon. One face, one silver color,
+// the full width across "TunnelScope".
+function Wordmark() {
   return (
-    <svg viewBox="0 0 32 32" className="h-8 w-8" fill="none" aria-hidden>
-      <rect x="3" y="3" width="26" height="26" rx="7" stroke="var(--teal)" strokeWidth="1.6" opacity="0.35" />
-      <rect x="8" y="8" width="16" height="16" rx="4.5" stroke="var(--teal)" strokeWidth="1.6" opacity="0.7" />
-      <rect x="13" y="13" width="6" height="6" rx="2" fill="var(--teal)" />
-    </svg>
+    <h1 className="font-display text-[34px] uppercase leading-none tracking-wide text-silver">
+      TunnelScope
+    </h1>
   )
 }
 
@@ -44,10 +42,9 @@ export function Topbar({
   return (
     <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pb-6">
       <div className="flex items-center gap-3">
-        <Logo />
         <div>
-          <h1 className="text-[17px] font-semibold tracking-tight text-foreground">TunnelScope</h1>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">IPsec and post-quantum posture, from the wire</p>
+          <Wordmark />
+          <p className="mt-1.5 text-[12px] text-muted-foreground">IPsec and post-quantum posture, from the wire</p>
         </div>
       </div>
 
@@ -65,7 +62,7 @@ export function Topbar({
             )}
           >
             {t.label}
-            <span className={cn("font-mono text-[11px] tnum", view === t.key ? "text-teal" : "text-faint")}>{t.count}</span>
+            <span className={cn("font-mono text-[11px] tnum", view === t.key ? "text-violet" : "text-faint")}>{t.count}</span>
           </button>
         ))}
       </div>
