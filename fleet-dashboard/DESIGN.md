@@ -91,8 +91,12 @@ numerals in data are tabular. The scale is fixed rem, ratio about 1.2, not fluid
 
 ## Elevation & depth
 
-Flat. Elevation is declared by one hairline border, never a border plus a wide shadow. The only
-depth in the product is real depth: the WebGL corridor behind the top of the page.
+Liquid glass, never blur (user, 2026-09-19). Cards are the `.glass` class in `index.css`: a clear
+pane tinted `rgb(16 16 20 / .62)` that the background corridor shows through undistorted, a rim
+(gradient border) brightest along the top-left edge where light would catch it, an inset top
+highlight, a faint 135° sheen, and a soft drop shadow. **No `backdrop-filter`, no blur, anywhere.**
+The KPI bar is one glass pane with hairline light dividers (inset shadows), since glass cells are not
+opaque. The only other depth is real depth: the WebGL corridor behind the top of the page.
 
 ## Shapes
 
@@ -107,7 +111,7 @@ time of the last real analysis (only once one exists), and an engine status pill
 real `/health` check. No "live" claim: TunnelScope analyses files, it does not monitor.
 
 ### Intake
-Frosted (`bg-card/75` + backdrop blur) so the background corridor glows softly through it. Left:
+Liquid glass (`.glass`, no blur), so the background corridor shows through it clearly. Left:
 section title, one sentence on what happens to the file, primary button "Choose captures", limits,
 then the queue. Right: a dashed drop zone (the mark, "Drop captures here", "or click to choose"),
 itself a button that opens the file picker, with the engine's status line under it. The whole page is

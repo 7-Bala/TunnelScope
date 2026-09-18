@@ -17,12 +17,14 @@ const TONE: Record<string, string> = {
 // One instrument bar with hairline dividers, not a row of identical cards.
 export function KpiStrip({ readouts }: { readouts: Readout[] }) {
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-6 lg:grid-cols-5">
+    <dl className="glass grid grid-cols-2 overflow-hidden rounded-2xl sm:grid-cols-6 lg:grid-cols-5">
       {readouts.map((r, i) => (
         <div
           key={r.label}
           className={cn(
-            "min-w-0 bg-card px-5 py-4",
+            // hairline light dividers on each cell's right and bottom edge (the old 1px-gap
+            // trick needs opaque cells, which glass is not)
+            "min-w-0 px-5 py-4 shadow-[inset_-1px_0_0_rgb(255_255_255/0.06),inset_0_-1px_0_rgb(255_255_255/0.06)]",
             // mobile 2+2+1, tablet 3+2, desktop 5 across: the last row always fills
             i < 3 ? "sm:col-span-2 lg:col-span-1" : "sm:col-span-3 lg:col-span-1",
             i === readouts.length - 1 && readouts.length % 2 === 1 && "col-span-2",

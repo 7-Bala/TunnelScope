@@ -47,6 +47,13 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Liquid-glass cards — 2026-09-19 (T-078)
+
+**Changed**
+- Dashboard cards are liquid glass with no blur: a clear dark-tinted pane, a light-catching rim and a
+  faint sheen. The upload panel's backdrop blur is gone; nothing on the page uses a blur filter.
+- The first chart label no longer clips at medium widths.
+
 ## Indian regulatory context — 2026-09-19 (T-077, mentor follow-up D)
 
 **Added**

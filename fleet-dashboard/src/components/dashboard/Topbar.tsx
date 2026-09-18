@@ -48,7 +48,7 @@ export function Topbar({
         </div>
       </div>
 
-      <div role="tablist" aria-label="Data shown" className="order-3 flex w-full rounded-lg border border-border bg-card p-1 sm:order-none sm:w-auto">
+      <div role="tablist" aria-label="Data shown" className="glass order-3 flex w-full rounded-lg p-1 sm:order-none sm:w-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -77,7 +77,7 @@ export function Topbar({
           </div>
         )}
         <div
-          className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5"
+          className="glass flex items-center gap-2 rounded-full px-3 py-1.5"
           title={engine === "offline" ? "Start it with: tunnelscope serve" : undefined}
         >
           <span

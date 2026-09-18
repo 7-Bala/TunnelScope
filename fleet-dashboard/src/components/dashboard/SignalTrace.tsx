@@ -35,7 +35,7 @@ export function SignalTrace({ gateways, height = 150 }: { gateways: Gateway[]; h
 
   return (
     <ChartContainer config={config} className="w-full" style={{ height }}>
-      <AreaChart data={data} margin={{ top: 12, right: 28, left: 64, bottom: 8 }}>
+      <AreaChart data={data} margin={{ top: 12, right: 28, left: 78, bottom: 8 }}>
         <defs>
           <linearGradient id="fillLoad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--violet)" stopOpacity={0.22} />
