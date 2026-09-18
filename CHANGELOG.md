@@ -3,6 +3,26 @@
 Every entry cites the T-ID / EXP-ID that drove it — full detail lives in `TODO.md` and the
 referenced experiment's `RESULT.md`. This file is for someone who isn't reading the task tracker.
 
+## [Unreleased] — 2026-09-18 (T-054, T-055, T-057)
+
+**Fixed**
+- ESP content length is now right for UDP-encapsulated ESP (NAT-T, RFC 3948) and for IPv6. It used
+  to be `ip.len − 28` for every packet: on a real UDP-encapsulated CBC tunnel that counted the 8 B
+  UDP header as ciphertext and the cipher sieve **eliminated CBC, the true suite**; over IPv6 the
+  records had no addresses or lengths, and a successful tunnel was reported as a failure (0.9).
+  IPv4 options now use the header length, and IPv6 extension headers mark the length unknown
+  instead of guessing. (T-057)
+- CVE-2026-78135: when a capture has no IKE_AUTH, the detector now fires only if the
+  CREATE_CHILD_SA's message ID directly follows the last pre-auth exchange (proving nothing was sent
+  in between). A gap, or a responder-originated exchange, is UNKNOWN, so a capture that merely lost
+  its IKE_AUTH is no longer a detection. (T-055)
+
+**Added**
+- `build/findings_diff.py` + `build/findings-allow.txt`: every finding on every capture, base vs
+  head; CI fails on any change not listed with a reason. (T-054)
+- Encapsulation lab `testbed/docker-compose.encap.yml` + `scripts/run_encap.sh`, and 4 real
+  captures with T2 ground truth in `testbed/captures/encap/` (dataset now 82 pcaps). (T-057)
+
 ## [Unreleased] — 2026-09-17 (T-051, T-052, T-053)
 
 **Fixed**

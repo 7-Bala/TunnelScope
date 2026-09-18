@@ -480,6 +480,20 @@ def extract_early_childsa_cve(r: EvidenceRecord) -> None:
     earliest_child_mid = min(m["message_id"] for m in child
                              if m["frame"] == earliest_child_frame)
     pre_auth = earliest_auth_frame is None or earliest_child_frame < earliest_auth_frame
+    if earliest_auth_frame is None:
+        # T-055 (plan CVE-2b): "no IKE_AUTH in the capture" is not "no IKE_AUTH
+        # was sent" - the capture may have lost it. Message IDs settle it: the
+        # original initiator numbers its requests 0, 1, 2... (RFC 7296 sec 2.2),
+        # so a CREATE_CHILD_SA that DIRECTLY follows its last pre-auth exchange
+        # (IKE_SA_INIT, IKE_INTERMEDIATE) proves nothing was sent in between.
+        # A gap means an IKE_AUTH may be missing from the capture -> UNKNOWN.
+        gap = _msgid_gap_before_child(ike, earliest_child_frame)
+        if gap is not None:
+            r.add(Finding(attr, Status.UNKNOWN, Vantage.T1, method,
+                          note=f"no IKE_AUTH in the capture, but CREATE_CHILD_SA (frame {earliest_child_frame}, "
+                               f"msgid {earliest_child_mid}) {gap}; an IKE_AUTH may have been sent and "
+                               "not captured, so the early-Child-SA pattern is not proven"))
+            return
     if pre_auth:
         why = ("no IKE_AUTH observed for this SA" if earliest_auth_frame is None
                else f"IKE_AUTH first seen at frame {earliest_auth_frame}")
@@ -492,6 +506,33 @@ def extract_early_childsa_cve(r: EvidenceRecord) -> None:
         r.add(Finding(attr, Status.OBSERVED, Vantage.T1, method, value="not-detected",
                       note=f"IKE_AUTH (frame {earliest_auth_frame}) precedes CREATE_CHILD_SA "
                            f"(frame {earliest_child_frame})"))
+
+
+def _from_original_initiator(m: dict) -> bool:
+    """Did the original IKE SA initiator originate this exchange? The I flag
+    marks messages SENT by the original initiator, so its requests carry I and
+    the other side's responses to them do not."""
+    return m.get("is_initiator", True) != m["is_response"]
+
+
+def _msgid_gap_before_child(ike: list[dict], child_frame: int) -> str | None:
+    """None when message-ID accounting proves no exchange was sent between the
+    last pre-auth exchange and the first CREATE_CHILD_SA; otherwise why it
+    can't be proven."""
+    child = next(m for m in ike if m["frame"] == child_frame)
+    if not _from_original_initiator(child):
+        return ("was originated by the responder, whose message IDs do not count the "
+                "initiator's IKE_AUTH")
+    pre = [m["message_id"] for m in ike
+           if m["exchange"] in (34, 43) and m["frame"] < child_frame
+           and m["message_id"] is not None and _from_original_initiator(m)]
+    if not pre or child["message_id"] is None:
+        return "has no pre-auth message ID to count from"
+    expected = max(pre) + 1
+    if child["message_id"] != expected:
+        return (f"carries msgid {child['message_id']}, not {expected} (the next after the last "
+                f"pre-auth exchange)")
+    return None
 
 
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,

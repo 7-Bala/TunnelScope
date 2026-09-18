@@ -72,3 +72,9 @@ DEC-010 CONTRADICTORY first-class · DEC-011 rules-as-versioned-data · DEC-012 
 |---|---|---|
 | 12 | [12-DEVELOP.md](12-DEVELOP.md) | 8 concepts + 2 composites, weights committed before scoring, evidence-cited scores, 23-scenario sensitivity, red team, **selection (K1) and staged build order** |
 | — | [data/develop_scores.json](data/develop_scores.json) · [develop_matrix.py](data/develop_matrix.py) | Every score with its evidence; re-runnable arithmetic |
+
+## Mentor feedback review (added 2026-09-18)
+
+| # | Document | What it settles |
+|---|---|---|
+| 13 | [13-MENTOR-APPLICATION-REVIEW.md](13-MENTOR-APPLICATION-REVIEW.md) | Tests the mentor's "application-oriented" advice (DLP, paper leaks, defence, cloud). Verdict: reframe the story, don't pivot the product; paper-leak and DLP claims rejected with evidence; defence/PQ and hybrid-cloud tunnels kept |
