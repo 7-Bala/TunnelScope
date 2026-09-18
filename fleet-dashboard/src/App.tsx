@@ -244,13 +244,13 @@ function App() {
 
             <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
               <div className="flex flex-col gap-4">
-                <div className="rounded-2xl border border-border bg-card">
+                <div className="glass rounded-2xl">
                   <div className="border-b border-border px-5 py-3.5">
                     <h2 className="text-[14px] font-semibold tracking-tight">Quantum posture</h2>
                   </div>
                   <PostureGauge counts={s.counts} total={s.total} />
                 </div>
-                <div className="rounded-2xl border border-border bg-card">
+                <div className="glass rounded-2xl">
                   <div className="border-b border-border px-5 py-3.5">
                     <h2 className="text-[14px] font-semibold tracking-tight">Failed checks by severity</h2>
                   </div>

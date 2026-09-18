@@ -115,9 +115,9 @@ export function Intake({
     <section
       aria-label="Analyse captures"
       className={cn(
-        // frosted, so the background corridor glows softly through the panel
-        "relative grid overflow-hidden rounded-xl border bg-card/75 backdrop-blur-md transition-[border-color,background-color] duration-200 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
-        dragging ? "border-violet/70 bg-violet-bg" : "border-border",
+        // liquid glass (no blur): the background corridor shows through clearly
+        "glass grid overflow-hidden rounded-xl transition-[border-color,background-color] duration-200 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
+        dragging && "border-violet/70 bg-violet-bg",
       )}
     >
       <div className="flex flex-col p-6 sm:p-7">

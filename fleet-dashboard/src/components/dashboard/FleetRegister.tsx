@@ -256,7 +256,7 @@ export function FleetRegister({ gateways, title = "Fleet register" }: { gateways
   )
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card">
+    <section className="glass overflow-hidden rounded-2xl">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
           <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
