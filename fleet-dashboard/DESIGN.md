@@ -126,12 +126,18 @@ engine's reason). Status chips: observed/measured violet wash, inferred silver o
 observable as an outline, contradictory neg wash.
 
 ### The tunnel (three.js)
-Concentric rounded squares receding to a solid core, drifting toward the viewer. Motion reports
-state: idle drift; faster and brighter while a file is dragged over the page; fastest with a slow
-twist while analysing; the rings take the posture colour for a moment when a result lands (neg if
+Concentric rounded squares receding to a solid core, drifting toward the viewer, drawn as thin lit
+tubes with a soft canvas-blurred glow (the same tube as the intro, `src/components/tunnel/geometry.ts`),
+specks of light (packets) travelling out of the tunnel, and a pulse of light running out of the core
+every few seconds. Motion reports state: idle drift and a pulse every 3.4s; faster, brighter and
+pulsing every 1.1s while a file is dragged over the page; fastest, with a slow twist and near-constant
+pulses while analysing; the tunnel takes the posture colour for a moment when a result lands (neg if
 any high-severity or PQ-not-selected result, pos if all PQ, warn otherwise); red when a file is
-refused. Lazy-loaded, capped at 2x device pixel ratio, paused when off-screen or the tab is hidden,
-static under `prefers-reduced-motion`, and replaced by the SVG mark when WebGL is unavailable.
+refused. Interactive: it leans toward the pointer while the pointer is over it (offset clamped, eases
+back home when the pointer leaves, so a pointer elsewhere on the page never pulls it off centre),
+brightens slightly on hover, and a click sends a pulse down to the core, which flashes. Lazy-loaded,
+capped at 2x device pixel ratio, paused when off-screen or the tab is hidden, static under
+`prefers-reduced-motion`, and replaced by the SVG mark when WebGL is unavailable.
 
 ### Intro (every load)
 A full-screen title sequence before the dashboard (`src/components/intro/`). Pitch black, the unlit

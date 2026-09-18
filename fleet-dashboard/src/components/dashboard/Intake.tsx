@@ -137,7 +137,7 @@ export function Intake({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="tactile inline-flex items-center gap-2 rounded-lg bg-violet px-4 py-2.5 text-[13.5px] font-semibold text-primary-foreground hover:bg-teal/90"
+            className="tactile inline-flex items-center gap-2 rounded-lg bg-violet px-4 py-2.5 text-[13.5px] font-semibold text-primary-foreground hover:bg-violet/90"
           >
             <FileUp className="h-4 w-4" strokeWidth={2} />
             Choose captures
