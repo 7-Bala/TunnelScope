@@ -76,7 +76,7 @@ port splits one SA in two.
 `tunnelscope/evidence/record.py:27-32`: **T0** passive ESP only · **T1** passive + IKE visible ·
 **T2** endpoint telemetry (swanctl/pluto/config) · **T3** keying material · **T4** authorized
 active probe. The dossier's T0–T4 (policy / wire / active prober / gateway agent / reconciler)
-does not match; policy baselines are `rules/*.yaml`, and reconciliation is
+does not match; policy baselines are `tunnelscope/rules/*.yaml`, and reconciliation is
 `tunnelscope/crosstier/`, not a vantage. All statuses in this document use the codebase numbering.
 
 ### 2.8 The live CVE-2026-78135 exploit capture contains no IKE_AUTH
@@ -181,7 +181,7 @@ Three caveats bound what this may be used to say:
 |---|---|---|---|---|
 | STD-1 | "Hanley-McNeil" 3/N bound | ADAPT | §2.9: citation corrected, exact bound, per-detector n, non-independence. | Done (this doc); P1 to apply to jury material |
 | STD-2 | CBOM native only in CycloneDX 1.7; dual-target 1.6/1.7 | REJECT premise | CycloneDX 1.6 (released 09 April 2024) introduced CBOM; 1.7 was released 21 October 2025. Export is `specVersion 1.6` (`pq/cbom.py`). Add 1.7 only with official-schema validation. | P3 |
-| STD-3/4 | Anchor in DST-NQM 2026; baselines DISA STIG, NIST SP 800-52 | ADAPT | `rules/dst-nqm-pq.yaml` cites the DST Task Force report (Feb 2026); its URL returned HTTP 200 (1.98 MB) on 2026-09-17, contents not re-read here. NIST SP 800-52 is TLS guidance *(not re-fetched)*; the IPsec guide is SP 800-77 Rev. 1. Current baselines: RFC 8247, DISA VPN SRG v2r6, DST-NQM, CVE-WATCH. Do not add SP 800-52. | Existing |
+| STD-3/4 | Anchor in DST-NQM 2026; baselines DISA STIG, NIST SP 800-52 | ADAPT | `tunnelscope/rules/dst-nqm-pq.yaml` cites the DST Task Force report (Feb 2026); its URL returned HTTP 200 (1.98 MB) on 2026-09-17, contents not re-read here. NIST SP 800-52 is TLS guidance *(not re-fetched)*; the IPsec guide is SP 800-77 Rev. 1. Current baselines: RFC 8247, DISA VPN SRG v2r6, DST-NQM, CVE-WATCH. Do not add SP 800-52. | Existing |
 | STD-5 | Dossier tier model | REJECT | §2.7. | Rejected |
 | STD-6 | New verdicts with numeric confidences (0.99, SUSPECT 0.50, …) | REJECT | Uncalibrated constants dressed as probabilities. T-053 removed T-051's 0.95/0.9 PQ constants. Older constants remain (sieve 0.9/0.95, PFS 0.9, failure 0.4) with no calibration study. | P2: document provenance or drop |
 

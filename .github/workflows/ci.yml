@@ -40,6 +40,16 @@ jobs:
       - name: Unit tests
         run: python3 -m pytest tests/ -q
 
+      - name: Installed package works outside the repo (baselines are package data)
+        # Regression guard: an installed wheel once found no baselines (they were
+        # resolved relative to the source checkout) and assessed everything
+        # against nothing, exit 0. Build, install in a clean venv, run from /tmp.
+        run: |
+          python3 -m pip wheel . --no-deps -q -w /tmp/wheel
+          python3 -m venv /tmp/ts && /tmp/ts/bin/pip install -q /tmp/wheel/*.whl
+          cd /tmp && /tmp/ts/bin/tunnelscope assess "$GITHUB_WORKSPACE/testbed/captures/pq-downgrade.pcap" --json > /tmp/a.json
+          python3 -c "import json; v=json.load(open('/tmp/a.json')); assert len({x['baseline'] for x in v}) >= 4, v; assert any(x['rule_id']=='DST-PQ-DOWNGRADE' and x['verdict']=='FAIL' for x in v); print(len(v), 'verdicts from the installed package')"
+
       - name: Findings differential vs base (T-054; allow-file build/findings-allow.txt)
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
