@@ -47,6 +47,14 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Indian regulatory context — 2026-09-19 (T-077, mentor follow-up D)
+
+**Added**
+- Both reports gain an "Indian regulatory context (evidence, not a compliance verdict)" section:
+  DPDP Rules 2025 rule 6(1)(a)/(g) (in force from 13 May 2027) and CERT-In's 2023 guidelines for
+  government entities (7.1, 4.5.7, 3.4), each with the relevant verdicts and what a capture cannot
+  show. Data in `tunnelscope/rules/context/india.yaml`; `build/06-INDIA-REGULATORY-MAPPING.md`.
+
 ## Cloud-VPN-style proposal sets — 2026-09-19 (T-076, EXP-13, mentor follow-up C1)
 
 **Fixed**

@@ -310,6 +310,12 @@ not "works with".
 | C | Pre-registered lab experiment: cloud-gateway-style proposal sets (incl. SHA-1 / DH2 allowed) → do the rules fire correctly? | Medium |
 | D | Map rule outputs to DPDP "reasonable security safeguards" and CERT-In wording | Small–medium |
 
+**Status (2026-09-19):** A dropped (user: no separate slide). **B done** (T-075,
+`build/05-DEPLOYMENT-ONPREM.md`: air-gap test PASS, and it found an installed copy assessed against
+zero baselines). **C1 done** (T-076, EXP-13: four fixes, including weak *offered* groups now reported).
+**D done** (T-077, `build/06-INDIA-REGULATORY-MAPPING.md`: evidence, never compliance; DPDP rule 6 in
+force from 13 May 2027). C2 (a real AWS tunnel) needs an AWS account and is open.
+
 ---
 
 ## 6. Questions to take back to the mentor

@@ -1,0 +1,64 @@
+# Indian regulatory CONTEXT for TunnelScope's findings (mentor follow-up D).
+#
+# This is NOT a baseline: nothing here produces a PASS/FAIL. Neither instrument below sets
+# algorithms, key sizes or protocols for IPsec, so no capture can show "compliance" with them.
+# What TunnelScope can supply is audit EVIDENCE for the in-transit encryption part of each clause,
+# via the baseline verdicts listed under evidence_rules. Post-quantum rules are deliberately NOT
+# listed: neither instrument asks for PQ key exchange (that is the DST/NQM baseline's job). Every clause also says what TunnelScope
+# does NOT show. Texts were read from the primary documents on 2026-09-19 (see `source`).
+context: INDIA
+title: "Indian regulatory context"
+disclaimer: >-
+  Evidence, not a compliance verdict. These instruments require encryption without specifying
+  algorithms; TunnelScope shows whether and how strongly an IPsec link encrypts, which is one input
+  to an organisation's own assessment, never the whole of it.
+clauses:
+  - id: DPDP-R6-1a
+    instrument: "Digital Personal Data Protection Rules, 2025"
+    authority: "DPDP Rules 2025 (G.S.R. 846(E), 13 Nov 2025), rule 6(1)(a)"
+    source: "Gazette of India, Extraordinary, Part II Sec 3(i), G.S.R. 846(E); rule 1(4): rules 3, 5-16, 22, 23 in force eighteen months after publication"
+    in_force: "2027-05-13"
+    text: "appropriate data security measures, such as securing of personal data through encryption, obfuscation, masking or the use of virtual tokens mapped to that personal data"
+    relevance: "Where personal data crosses this IPsec link: is it encrypted, with what, and would the endpoint accept weaker (downgrade exposure)."
+    evidence_rules: [V-207205, V-207193, V-207223, RFC8247-DH-MUST, RFC8247-DH-OFFER, RFC8247-ENCR, CVE-2026-78135]
+    does_not_show: "Whether this link carries personal data at all; encryption at rest; masking or tokenisation; any other path the data takes."
+  - id: DPDP-R6-1g
+    instrument: "Digital Personal Data Protection Rules, 2025"
+    authority: "DPDP Rules 2025 (G.S.R. 846(E), 13 Nov 2025), rule 6(1)(g)"
+    source: "Gazette of India, Extraordinary, G.S.R. 846(E)"
+    in_force: "2027-05-13"
+    text: "appropriate technical and organisational measures to ensure effective observance of security safeguards"
+    relevance: "A repeatable, standard-referenced check that in-transit safeguards are still in place (for example after a configuration change or a cloud migration)."
+    evidence_rules: [V-207205, V-207193, RFC8247-DH-MUST, RFC8247-DH-OFFER]
+    does_not_show: "The organisational measures themselves; access control, logging and backups (rule 6(1)(b)-(e)) are outside what a capture can show."
+  - id: CERTIN-GE-7.1
+    instrument: "CERT-In Guidelines on Information Security Practices for Government Entities (June 2023)"
+    authority: "CERT-In Guidelines for Government Entities, 7.1"
+    source: "cert-in.org.in/PDF/guidelinesgovtentities.pdf, section 7 Data security"
+    issued: "2023-06-30"   # guidance for government entities, not a statute with a commencement date
+    text: "Identify and classify sensitive/personal data and apply measures for encrypting such data in transit and at rest."
+    relevance: "Evidence for the 'in transit' half, for data that crosses IPsec links."
+    evidence_rules: [V-207193, V-207223, RFC8247-DH-MUST, RFC8247-ENCR]
+    does_not_show: "Data classification; encryption at rest; the DLP deployment the same clause asks for."
+  - id: CERTIN-GE-4.5.7
+    instrument: "CERT-In Guidelines on Information Security Practices for Government Entities (June 2023)"
+    authority: "CERT-In Guidelines for Government Entities, 4.5.7"
+    source: "cert-in.org.in/PDF/guidelinesgovtentities.pdf, section 4.5"
+    issued: "2023-06-30"   # guidance for government entities, not a statute with a commencement date
+    text: "use secure protocols such as SSH, SSL, or IP Security (IPSec) encryption for all remote connections to the router/switch/server"
+    relevance: "Confirms the protocol on the wire is IPsec, its IKE version, and the strength of what was negotiated."
+    evidence_rules: [V-207205, V-207193, RFC8247-DH-MUST]
+    does_not_show: "Connections that are not in the capture; SSH or TLS management sessions."
+  - id: CERTIN-GE-3.4
+    instrument: "CERT-In Guidelines on Information Security Practices for Government Entities (June 2023)"
+    authority: "CERT-In Guidelines for Government Entities, 3.4"
+    source: "cert-in.org.in/PDF/guidelinesgovtentities.pdf, section 3"
+    issued: "2023-06-30"   # guidance for government entities, not a statute with a commencement date
+    text: "Internal information security audit to be conducted at least once in 6 months. 3rd Party Security audits must be conducted at least once a year."
+    relevance: "TunnelScope's reports are designed as audit evidence: each verdict cites its standard and every unseen attribute is marked, not assumed."
+    evidence_rules: []
+    does_not_show: "An audit itself; CERT-In expects empanelled auditors for external audits."
+not_covered:
+  - "DPDP Rules 6(1)(b)-(f): access control, access logs and review, backups, one-year log retention, processor contracts."
+  - "CERT-In Guidelines 4.5.8 / 5.8: MFA and VPN account logging to a SIEM."
+  - "CERT-In Directions of 28 April 2022 (section 70B): six-hour incident reporting, 180-day log retention."
