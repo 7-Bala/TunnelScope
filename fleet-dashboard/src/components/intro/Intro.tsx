@@ -1,23 +1,16 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { FADE_MS, LEAVE_S, WORDMARK_S } from "./timeline"
+import { shouldPlayIntro } from "./shouldPlay"
 
 const IntroTunnel = lazy(() => import("./IntroTunnel"))
 
 // if the 3D chunk hasn't drawn a frame by now, don't hold the page hostage
 const READY_TIMEOUT_MS = 2500
 
-// Plays on every load (user's choice, 2026-09-18); any key or tap skips it.
-// `?intro=hold` stays on the final frame until a key or tap, for stills.
-// Never under reduced motion. Decided synchronously so the dashboard never flashes first.
-function shouldPlay(): boolean {
-  try {
-    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  } catch {
-    return false
-  }
-}
-
+// Plays on every load; any key or tap skips it. `?intro=hold` stays on the
+// final frame until a key or tap, for stills. Decided synchronously (same
+// predicate as App) so the dashboard never flashes first.
 function holdAtEnd(): boolean {
   try {
     return new URLSearchParams(window.location.search).get("intro") === "hold"
@@ -28,8 +21,10 @@ function holdAtEnd(): boolean {
 
 type Phase = "dark" | "running" | "leaving" | "done"
 
-export function Intro() {
-  const [phase, setPhase] = useState<Phase>(() => (shouldPlay() ? "dark" : "done"))
+/** `onLeave` fires once, the moment the intro starts to go (or if it never
+ *  could play): the page-background tunnel under it then dims and settles. */
+export function Intro({ onLeave }: { onLeave?: () => void }) {
+  const [phase, setPhase] = useState<Phase>(() => (shouldPlayIntro() ? "dark" : "done"))
   const [wordmark, setWordmark] = useState(false)
   const timers = useRef<number[]>([])
 
@@ -46,6 +41,14 @@ export function Intro() {
   }, [leave])
 
   const onUnsupported = useCallback(() => setPhase("done"), [])
+
+  const left = useRef(false)
+  useEffect(() => {
+    if ((phase === "leaving" || phase === "done") && !left.current) {
+      left.current = true
+      onLeave?.()
+    }
+  }, [phase, onLeave])
 
   // leaving -> done once the fade has played
   useEffect(() => {

@@ -47,6 +47,19 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   130 captures (T-052), split rekeying ESP-only tunnels and relied on uncalibrated thresholds.
   Fixed in T-053; the differential is the merge gate (to be scripted, plan §5 P1).
 
+## Tunnel as the page background — 2026-09-18 (T-073)
+
+**Changed**
+- The tunnel is now the page background behind the top of the page, dimmed and fading out toward the
+  data and on scroll. The intro hands over to it: the same corridor dims and settles instead of
+  fading to black. Rings fit the window's shape.
+- The upload panel is frosted, and its right half is a dashed drop zone (click to choose files)
+  instead of a second tunnel.
+
+**Fixed**
+- The hand-over was timed per frame (capped), so on a device drawing 2 frames a second it would have
+  taken ~19s instead of 1.9s; it now runs on wall-clock time.
+
 ## Intake tunnel — 2026-09-18 (T-072)
 
 **Changed**

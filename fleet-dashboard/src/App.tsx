@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Topbar, type Engine, type View } from "@/components/dashboard/Topbar"
 import { KpiStrip } from "@/components/dashboard/KpiStrip"
 import { SignalTrace } from "@/components/dashboard/SignalTrace"
@@ -6,10 +6,13 @@ import { PostureGauge } from "@/components/dashboard/PostureGauge"
 import { SeverityBars } from "@/components/dashboard/SeverityBars"
 import { FleetRegister } from "@/components/dashboard/FleetRegister"
 import { Intake, type QueueItem } from "@/components/dashboard/Intake"
-import type { TunnelState } from "@/components/dashboard/TunnelField"
+import type { TunnelState } from "@/components/tunnel/BackgroundTunnel"
 import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
 import { analyzeCapture, engineHealth, ENGINE_OFFLINE } from "@/lib/api"
 import { Intro } from "@/components/intro/Intro"
+import { shouldPlayIntro } from "@/components/intro/shouldPlay"
+
+const BackgroundTunnel = lazy(() => import("@/components/tunnel/BackgroundTunnel"))
 
 let seq = 0
 const MAGIC = new Set(["d4c3b2a1", "a1b2c3d4", "4d3cb2a1", "a1b23c4d", "0a0d0d0a"])
@@ -32,6 +35,9 @@ function App() {
   const [engine, setEngine] = useState<Engine>("checking")
   const [dragging, setDragging] = useState(false)
   const [flash, setFlash] = useState<TunnelState | null>(null)
+  // the background tunnel holds the intro's lit frame until the intro leaves
+  const [introLit, setIntroLit] = useState(shouldPlayIntro)
+  const onIntroLeave = useCallback(() => setIntroLit(false), [])
   const [lastAnalysed, setLastAnalysed] = useState<Date | null>(null)
   const working = useRef(false)
   const dragDepth = useRef(0)
@@ -152,9 +158,27 @@ function App() {
   const h = s.total ? headline(s) : null
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
-      <Intro />
-      <main className="mx-auto max-w-[1240px] px-4 pb-20 pt-6 sm:px-6">
+    <div className="relative isolate min-h-[100dvh] bg-background text-foreground">
+      <Intro onLeave={onIntroLeave} />
+      {/* the intro's corridor, dimmed, behind the top of the page only: it fades
+          toward the bottom of the screen and as the page scrolls */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          maskImage: "linear-gradient(to bottom, #000 0%, #000 34%, transparent 80%)",
+          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 34%, transparent 80%)",
+        }}
+      >
+        <Suspense fallback={null}>
+          <BackgroundTunnel state={tunnel} lit={introLit} className="absolute inset-0" />
+        </Suspense>
+        <div
+          className="absolute inset-0"
+          style={{ background: "radial-gradient(ellipse 80% 70% at 50% 34%, transparent 50%, var(--background) 100%)" }}
+        />
+      </div>
+      <main className="relative z-10 mx-auto max-w-[1240px] px-4 pb-20 pt-6 sm:px-6">
         <Topbar
           view={view}
           onView={setView}

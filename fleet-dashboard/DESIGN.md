@@ -92,7 +92,7 @@ numerals in data are tabular. The scale is fixed rem, ratio about 1.2, not fluid
 ## Elevation & depth
 
 Flat. Elevation is declared by one hairline border, never a border plus a wide shadow. The only
-depth in the product is real depth: the WebGL tunnel.
+depth in the product is real depth: the WebGL corridor behind the top of the page.
 
 ## Shapes
 
@@ -107,9 +107,12 @@ time of the last real analysis (only once one exists), and an engine status pill
 real `/health` check. No "live" claim: TunnelScope analyses files, it does not monitor.
 
 ### Intake
-Left: section title, one sentence on what happens to the file, primary button "Choose captures",
-limits, then the queue. Right: the tunnel. The whole page is a drop target; the panel re-titles to
-"Release to analyse" while a file is over the page.
+Frosted (`bg-card/75` + backdrop blur) so the background corridor glows softly through it. Left:
+section title, one sentence on what happens to the file, primary button "Choose captures", limits,
+then the queue. Right: a dashed drop zone (the mark, "Drop captures here", "or click to choose"),
+itself a button that opens the file picker, with the engine's status line under it. The whole page is
+a drop target; the panel and the zone turn violet and re-title to "Release to analyse" while a file
+is over the page.
 
 ### Queue row
 Status icon, file name, size in mono. States: waiting, analysing (thin shimmer bar, no spinner in
@@ -125,19 +128,24 @@ status chip and vantage), Not visible from here (UNKNOWN / NOT_OBSERVABLE findin
 engine's reason). Status chips: observed/measured violet wash, inferred silver on secondary, unknown and not
 observable as an outline, contradictory neg wash.
 
-### The tunnel (three.js)
-Concentric rounded squares receding to a solid core, drifting toward the viewer, drawn as thin lit
-tubes with a soft canvas-blurred glow (the same tube as the intro, `src/components/tunnel/geometry.ts`),
-specks of light (packets) travelling out of the tunnel, and a pulse of light running out of the core
-every few seconds. Motion reports state: idle drift and a pulse every 3.4s; faster, brighter and
-pulsing every 1.1s while a file is dragged over the page; fastest, with a slow twist and near-constant
-pulses while analysing; the tunnel takes the posture colour for a moment when a result lands (neg if
-any high-severity or PQ-not-selected result, pos if all PQ, warn otherwise); red when a file is
-refused. Interactive: it leans toward the pointer while the pointer is over it (offset clamped, eases
-back home when the pointer leaves, so a pointer elsewhere on the page never pulls it off centre),
-brightens slightly on hover, and a click sends a pulse down to the core, which flashes. Lazy-loaded,
-capped at 2x device pixel ratio, paused when off-screen or the tab is hidden, static under
-`prefers-reduced-motion`, and replaced by the SVG mark when WebGL is unavailable.
+### The tunnel (three.js), the page background
+The intro's corridor stays after the intro as the page background
+(`src/components/tunnel/BackgroundTunnel.tsx`): the same rings (`tunnel/layout.ts`), shaped to the
+window (up to 1.8x wider than tall), dimmed to about 17% brightness. It sits behind the top of the
+page only: a vertical mask fades it out by 80% of the screen height, a vignette darkens the edges,
+and it fades to nothing as the page scrolls (gone by 85% of a screen), then stops rendering. The data
+below always sits on plain black.
+
+Hand-over: while the intro plays, it holds the intro's final frame (every ring lit, vanishing point
+centred) underneath; when the intro leaves, the same rings dim over 1.9s (wall-clock, so slow devices
+don't stretch it) and the vanishing point drifts up to about a third of the way down, behind the
+upload panel.
+
+Motion still reports state: idle drift and a faint pulse every 6s; the whole corridor brightens and
+speeds up while a file is dragged over the page; faster, with a slow twist and packets of light
+streaming out, while analysing; it takes the posture colour when a result lands. A slight lean toward
+the pointer (window-wide, clamped). Canvas capped at 1.5x pixel ratio, paused when the tab is hidden
+or it has scrolled away, static under `prefers-reduced-motion`, absent without WebGL (plain black).
 
 ### Intro (every load)
 A full-screen title sequence before the dashboard (`src/components/intro/`). Pitch black, the unlit

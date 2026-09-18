@@ -1,17 +1,19 @@
 import { CanvasTexture, Path, Shape, ShapeGeometry } from "three"
 
-// Shared by the intro corridor and the intake tunnel, so both draw the same
-// glowing tube: the TunnelScope mark's rounded square.
+// Shared by the intro corridor and the page-background tunnel, so both draw
+// the same glowing tube: the TunnelScope mark's rounded square, stretched to a
+// rounded rectangle to fit wide screens.
 
-export function roundedSquarePath<T extends Shape | Path>(size: number, radius: number, target: T, reverse = false): T {
-  const h = size / 2
-  const r = Math.min(radius, h)
+export function roundedRectPath<T extends Shape | Path>(w: number, h: number, radius: number, target: T, reverse = false): T {
+  const hw = w / 2
+  const hh = h / 2
+  const r = Math.min(radius, hw, hh)
   const pts: [number, number][] = []
   const corners: [number, number, number][] = [
-    [h - r, h - r, 0],
-    [-(h - r), h - r, Math.PI / 2],
-    [-(h - r), -(h - r), Math.PI],
-    [h - r, -(h - r), (3 * Math.PI) / 2],
+    [hw - r, hh - r, 0],
+    [-(hw - r), hh - r, Math.PI / 2],
+    [-(hw - r), -(hh - r), Math.PI],
+    [hw - r, -(hh - r), (3 * Math.PI) / 2],
   ]
   for (const [cx, cy, start] of corners) {
     for (let i = 0; i <= 10; i++) {
@@ -27,33 +29,32 @@ export function roundedSquarePath<T extends Shape | Path>(size: number, radius: 
 
 /** A rounded-square band (outer minus inner): a line with real thickness that
  *  scales with perspective. WebGL lines are always 1px wide. */
-export function band(size: number, radius: number, thickness: number) {
-  const shape = roundedSquarePath(size + thickness, radius + thickness / 2, new Shape())
-  shape.holes.push(roundedSquarePath(size - thickness, Math.max(radius - thickness / 2, 0.05), new Path(), true))
+export function band(w: number, h: number, radius: number, thickness: number) {
+  const shape = roundedRectPath(w + thickness, h + thickness, radius + thickness / 2, new Shape())
+  shape.holes.push(roundedRectPath(w - thickness, h - thickness, Math.max(radius - thickness / 2, 0.05), new Path(), true))
   return new ShapeGeometry(shape)
 }
 
 export function roundedSquare(size: number, radius: number) {
-  return new ShapeGeometry(roundedSquarePath(size, radius, new Shape()))
+  return new ShapeGeometry(roundedRectPath(size, size, radius, new Shape()))
 }
 
 /** The light a tube throws, drawn once with the 2D canvas's real blur and used
- *  as an additive texture on a plane of side `size + 2 * pad` behind the tube.
+ *  as an additive texture on a (w + 2pad) x (h + 2pad) plane behind the tube.
  *  (A flat translucent band reads as a solid frame, not as light.) */
-export function glowTexture(size: number, radius: number, pad: number, px = 512) {
+export function glowTexture(w: number, h: number, radius: number, pad: number, px = 512) {
   const c = document.createElement("canvas")
-  c.width = c.height = px
+  const scale = px / (w + pad * 2)
+  c.width = px
+  c.height = Math.round((h + pad * 2) * scale)
   const g = c.getContext("2d")!
-  const scale = px / (size + pad * 2)
-  const side = size * scale
-  const o = (px - side) / 2
   g.strokeStyle = "#ffffff"
   g.shadowColor = "#ffffff"
   g.lineWidth = 3
   for (const blur of [34, 18, 8]) {
     g.shadowBlur = blur
     g.beginPath()
-    g.roundRect(o, o, side, side, radius * scale)
+    g.roundRect(pad * scale, pad * scale, w * scale, h * scale, radius * scale)
     g.stroke()
   }
   const tex = new CanvasTexture(c)

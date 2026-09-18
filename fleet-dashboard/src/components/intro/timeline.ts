@@ -1,7 +1,9 @@
 // One clock for the intro: the WebGL corridor and the HTML wordmark both read
 // these, so the words land exactly as the last light catches.
 
-export const RING_COUNT = 16
+import { RING_COUNT } from "../tunnel/layout"
+
+export { RING_COUNT }
 /** the core at the far end flickers on first: the source the light comes from */
 export const CORE_ON_S = 0.35
 const FIRST_RING_S = 0.8
