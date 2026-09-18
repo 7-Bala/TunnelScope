@@ -54,6 +54,7 @@ referenced experiment's `RESULT.md`. This file is for someone who isn't reading 
   each flickering before it holds, then the wordmark and a fade into the dashboard. Skippable,
   first visit only, off under reduced motion. `?intro` replays it; `?intro=hold` stops on the
   final frame.
+- Plays on every load now, not just the first visit (T-071); any key or tap still skips it.
 - One faulty light (T-070): ring 9 catches, dies, and catches again while the nearer rings wait for it.
 
 ## Merge — 2026-09-18 (T-068)

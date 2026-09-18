@@ -4,28 +4,17 @@ import { FADE_MS, LEAVE_S, WORDMARK_S } from "./timeline"
 
 const IntroTunnel = lazy(() => import("./IntroTunnel"))
 
-const SEEN_KEY = "tunnelscope.intro.seen"
 // if the 3D chunk hasn't drawn a frame by now, don't hold the page hostage
 const READY_TIMEOUT_MS = 2500
 
-// First visit only; `?intro` forces it (demo recording, testing) and
-// `?intro=hold` also stays on the final frame until a key or tap, for stills.
+// Plays on every load (user's choice, 2026-09-18); any key or tap skips it.
+// `?intro=hold` stays on the final frame until a key or tap, for stills.
 // Never under reduced motion. Decided synchronously so the dashboard never flashes first.
 function shouldPlay(): boolean {
   try {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false
-    if (new URLSearchParams(window.location.search).has("intro")) return true
-    return window.localStorage.getItem(SEEN_KEY) !== "1"
+    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches
   } catch {
-    return false // storage blocked: skipping is safer than replaying every load
-  }
-}
-
-function markSeen() {
-  try {
-    window.localStorage.setItem(SEEN_KEY, "1")
-  } catch {
-    /* private mode / blocked storage: it just plays again next time */
+    return false
   }
 }
 
@@ -49,7 +38,6 @@ export function Intro() {
   }, [])
 
   const onReady = useCallback(() => {
-    markSeen()
     setPhase("running")
     timers.current.push(
       window.setTimeout(() => setWordmark(true), WORDMARK_S * 1000),
@@ -76,10 +64,7 @@ export function Intro() {
   // any key, click or touch skips; the page underneath can't scroll meanwhile
   useEffect(() => {
     if (phase === "done") return
-    const skip = () => {
-      markSeen()
-      leave()
-    }
+    const skip = () => leave()
     window.addEventListener("keydown", skip)
     window.addEventListener("pointerdown", skip)
     const overflow = document.body.style.overflow
