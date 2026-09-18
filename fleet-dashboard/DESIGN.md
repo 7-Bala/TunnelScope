@@ -143,10 +143,8 @@ page only: a vertical mask fades it out by 80% of the screen height, a vignette 
 and it fades to nothing as the page scrolls (gone by 85% of a screen), then stops rendering. The data
 below always sits on plain black.
 
-Hand-over: while the intro plays, it holds the intro's final frame (every ring lit, vanishing point
-centred) underneath; when the intro leaves, the same rings dim over 1.9s (wall-clock, so slow devices
-don't stretch it) and the vanishing point drifts up to about a third of the way down, behind the
-upload panel.
+Hand-over (T-080, "into the core"): while the intro plays, this holds the corridor underneath; at the
+intro's cut it is simply at rest (no dim-and-drift, which read as the background lagging).
 
 Motion still reports state: idle drift and a faint pulse every 6s; the whole corridor brightens and
 speeds up while a file is dragged over the page; faster, with a slow twist and packets of light
@@ -161,7 +159,14 @@ three times and holds, farthest first, faster as they approach (like corridor li
 toward a character in a horror film), while the camera creeps forward. One light a little past the
 middle is faulty: it catches, dies with a sputter, sits dark while the rest of the corridor waits,
 then catches again (`FAILING_RING`, `FAIL_STALL_S` in `timeline.ts`; pattern in `flicker.ts`). The last ring frames the
-screen like a doorway, the wordmark resolves over a pool of dark, and the overlay fades into the
+screen like a doorway and the wordmark resolves over a pool of dark. Exit ("into the core", T-080):
+the wordmark fades, the camera accelerates down the corridor (1.1s, view widening, rings flaring as
+they pass) until only the core is left on black; match cut: a DOM square is placed exactly where the
+core was on screen, the page fades in around it (0.3s, opacity only) with the corridor at rest behind,
+and the square flies to the drop-zone mark's core (0.65s) and hands over to it. Landing measured
+pixel-exact (0 px) at desktop and 375px; `scrollbar-gutter: stable` keeps the layout from shifting
+when the intro's scroll lock releases. A skip still exits with a quick fade. The whole thing takes about
+7s; before, it faded into the
 page (about 5.6s). Plays on every load (user's choice), any key or tap skips, never under `prefers-reduced-motion`, gives up after 2.5s if WebGL or the chunk isn't
 ready (e.g. a background tab). `?intro=hold` stops on the final frame for stills.
 Glow is a canvas-blurred texture drawn additively behind each tube.

@@ -31,5 +31,14 @@ export function ringOnAt(i: number): number {
 /** last ring switched on plus its flicker */
 export const SEQUENCE_S = ringOnAt(RING_COUNT - 1) + 0.3
 export const WORDMARK_S = SEQUENCE_S - 0.05
-export const LEAVE_S = SEQUENCE_S + 1.7 // long enough to read the wordmark once it has fully resolved
-export const FADE_MS = 550
+export const LEAVE_S = SEQUENCE_S + 1.3 // long enough to read the wordmark once it has fully resolved
+/** fade used only when the intro is skipped */
+export const FADE_MS = 350
+
+// Exit (T-080, "into the core"): the camera rushes down the corridor into the
+// core, then a match cut: the core becomes the drop zone's mark on the page.
+export const RUSH_MS = 1100
+/** how far from the core the camera is when the cut happens (world units) */
+export const RUSH_ARRIVE = 2.2
+/** the core's square flying from where it was on screen to the drop-zone mark */
+export const LAND_MS = 650

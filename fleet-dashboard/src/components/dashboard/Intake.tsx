@@ -15,10 +15,11 @@ export interface QueueItem {
 
 const ACCEPT = ".pcap,.pcapng,.cap"
 
-function Mark({ className }: { className?: string }) {
+function Mark({ className, introTarget }: { className?: string; introTarget?: boolean }) {
   // the TunnelScope mark; the lit tunnel itself is now the page background
   return (
-    <div className={className}>
+    // introTarget: where the intro's core lands at the end of its rush (T-080)
+    <div className={className} data-intro-target={introTarget || undefined}>
       <svg viewBox="0 0 32 32" className="h-full w-full" fill="none" aria-hidden>
         <rect x="3" y="3" width="26" height="26" rx="7" stroke="var(--violet)" strokeWidth="0.8" opacity="0.35" />
         <rect x="8" y="8" width="16" height="16" rx="4.5" stroke="var(--violet)" strokeWidth="0.8" opacity="0.7" />
@@ -194,6 +195,7 @@ export function Intake({
           )}
         >
           <Mark
+            introTarget
             className={cn(
               "h-14 w-14 transition-transform duration-300 group-hover:scale-105",
               (dragging || tunnel === "busy") && "soft-blink",
