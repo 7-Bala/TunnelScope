@@ -332,3 +332,10 @@ used); unnamed DH groups scored as FAIL (strong 17/18 would have failed); RFC 82
 group numbers and passed group 22 (MUST NOT); weak *offered* groups invisible. New finding
 `ike_offered_dh` + rule `RFC8247-DH-OFFER`: the cloud-initiated arm negotiated MODP-2048 but offered
 groups 2 and 22. `experiments/exp13-cloud-vpn-proposals/RESULT.md`.
+
+## EXP-14 — Transport mode from the tunnel-mode size floor — PRE-REGISTRATION (2026-09-20)
+Pre-registered in `experiments/exp14-mode-size-floor/PREREG.md` before any capture. Revisits EXP-08's
+P44-2: a packet below the tunnel-mode floor cannot be tunnel mode.
+
+## EXP-15 — Eight traffic classes, IKE/DH suite variety, AH — PRE-REGISTRATION (2026-09-20)
+Pre-registered in `experiments/exp15-traffic-classes-suites-ah/PREREG.md` before any capture.
