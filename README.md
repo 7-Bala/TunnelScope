@@ -7,6 +7,14 @@ research-first Double Diamond process: every capability is placed on record as o
 measurable, inferable, or not recoverable — before it's built — and every verdict names the standard
 it's judged against and admits what it couldn't see.
 
+## Quick start
+
+```bash
+./start.sh          # checks the stack, builds the dashboard if needed, starts the engine, opens it
+./start.sh --dev    # same, plus hot-reload dev server
+./start.sh logs     # live logs (also in ./logs/)   ·   ./start.sh stop   ·   ./start.sh status   ·   ./start.sh test
+```
+
 ## Repository map
 
 | Path | What's there |

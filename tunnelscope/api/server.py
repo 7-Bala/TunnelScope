@@ -28,6 +28,7 @@ import os
 import sys
 import tempfile
 import threading
+import time
 import webbrowser
 import mimetypes
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -236,7 +237,10 @@ class _Handler(BaseHTTPRequestHandler):
             fd, tmp_path = tempfile.mkstemp(prefix=_TMP_PREFIX, suffix=".pcap")
             with os.fdopen(fd, "wb") as fh:
                 fh.write(data)
+            t0 = time.monotonic()
             a = analyze(tmp_path)
+            print(f"[tunnelscope serve] analysed {name}: {length} bytes, {len(a['sas'])} SA(s), "
+                  f"{time.monotonic() - t0:.2f}s", file=sys.stderr, flush=True)
             if url.path == "/api/analyze":
                 self._json(200, analysis_json(a, name))
             else:
@@ -251,6 +255,8 @@ class _Handler(BaseHTTPRequestHandler):
                 os.unlink(tmp_path)
 
     def log_message(self, fmt, *args):  # keep stderr access logging, just tag it
+        if self.path == "/health":  # start.sh polls this; don't drown the log
+            return
         sys.stderr.write(f"[tunnelscope serve] {self.address_string()} - {fmt % args}\n")
 
 
