@@ -6,6 +6,7 @@ import { PostureGauge } from "@/components/dashboard/PostureGauge"
 import { SeverityBars } from "@/components/dashboard/SeverityBars"
 import { FleetRegister } from "@/components/dashboard/FleetRegister"
 import { Intake, type QueueItem } from "@/components/dashboard/Intake"
+import { Insights } from "@/components/dashboard/Insights"
 import type { TunnelState } from "@/components/tunnel/BackgroundTunnel"
 import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
 import { analyzeCapture, engineHealth, ENGINE_OFFLINE } from "@/lib/api"
@@ -257,6 +258,7 @@ function App() {
                   </div>
                   <SeverityBars high={s.high} medium={s.medium} informational={s.informational} />
                 </div>
+                <Insights gateways={gateways} />
               </div>
 
               <FleetRegister gateways={gateways} title={view === "sample" ? "Sample fleet register" : "Analysed captures"} />

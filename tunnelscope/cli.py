@@ -120,7 +120,52 @@ def cmd_crosstier(args):
 
 def cmd_serve(args):
     from .api.server import run_server
-    run_server(port=args.port, open_browser=not args.no_browser)
+    if args.llm:
+        os.environ["TUNNELSCOPE_LLM"] = args.llm
+    run_server(port=args.port, open_browser=not args.no_browser, history=args.history)
+
+
+def _captures(target: str) -> list[str]:
+    from pathlib import Path
+    p = Path(target)
+    if p.is_dir():
+        return sorted(str(x) for x in p.rglob("*") if x.suffix in (".pcap", ".pcapng"))
+    return [target]
+
+
+def cmd_watch(args):
+    """Detect changes against each tunnel's learned normal, then record."""
+    from .anomaly.anomaly import History, observe
+    h = History(args.history)
+    out, worst = [], 0
+    for f in _captures(args.target):
+        a = analyze(f)
+        for res in observe(h, a["sas"], f, record=not args.no_record):
+            out.append({"source": f, **res})
+            worst = max(worst, 1 if res["status"] == "anomalous" else 0)
+    if args.json:
+        print(json.dumps(out, indent=2, default=str))
+    else:
+        for r in out:
+            tag = {"learning": f"learning ({r['observations']}/{r.get('needed', '?')})",
+                   "normal": "normal", "anomalous": "ANOMALOUS"}[r["status"]]
+            print(f"{os.path.basename(r['source'])}  {r['tunnel']}  {tag}")
+            for x in r["anomalies"]:
+                print(f"    [{x['severity']}/{x['layer']}] {x['message']}")
+    return 1 if (args.fail_on_anomaly and worst) else 0
+
+
+def cmd_explain(args):
+    from .api.server import analysis_json
+    from .explain.explain import explain_with_llm
+    a = analyze(args.pcap)
+    for sa in analysis_json(a, args.pcap)["sas"]:
+        r = explain_with_llm(sa, None, args.llm)
+        print(r["text"])
+        note = r.get("llm_error") or r.get("llm_rejected")
+        print(f"\n[{'written by ' + r['source'] + ' (' + r.get('model', '') + '), fact-checked against the evidence' if r['source'] != 'template' else 'evidence template'}]"
+              + (f"  note: {note}" if note else ""))
+        print()
 
 
 def cmd_doctor(args):
@@ -182,7 +227,20 @@ def main(argv=None):
     sv = sub.add_parser("serve", help="local dashboard: open a page, drop in pcaps, see findings (127.0.0.1 only, uploads not saved)")
     sv.add_argument("--port", type=int, default=8765)
     sv.add_argument("--no-browser", action="store_true", help="don't auto-open a browser tab")
+    sv.add_argument("--history", metavar="DIR", help="learn each tunnel's normal and flag changes; stores posture profiles (no packets) in DIR")
+    sv.add_argument("--llm", choices=["none", "ollama", "claude"], help="rewrite explanations with an LLM (default: none, fully offline)")
     sv.set_defaults(func=cmd_serve)
+    wt = sub.add_parser("watch", help="anomaly detection: compare each tunnel with its learned normal, then record it (role D)")
+    wt.add_argument("target", help="a capture, or a directory of captures (processed in name order)")
+    wt.add_argument("--history", required=True, metavar="DIR", help="where observations are kept")
+    wt.add_argument("--no-record", action="store_true", help="compare only; don't add these captures to the history")
+    wt.add_argument("--json", action="store_true")
+    wt.add_argument("--fail-on-anomaly", action="store_true", help="exit 1 if any tunnel is anomalous")
+    wt.set_defaults(func=cmd_watch)
+    ex = sub.add_parser("explain", help="plain-English explanation of a capture's verdicts, for non-experts")
+    ex.add_argument("pcap")
+    ex.add_argument("--llm", choices=["none", "ollama", "claude"], help="optionally rewrite with an LLM, fact-checked (default: none)")
+    ex.set_defaults(func=cmd_explain)
     fl = sub.add_parser("fleet", help="scan a directory of captures: one aggregated view, per-tunnel evidence kept intact (role B/D)")
     fl.add_argument("directory")
     fl.add_argument("-o", "--out", default="tunnelscope-fleet.html")

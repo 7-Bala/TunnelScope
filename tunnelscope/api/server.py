@@ -37,6 +37,8 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 from ..report.report import analyze
 from ..report.dashboard import _CSS, render_sas_html
+from ..anomaly.anomaly import History, observe
+from ..explain.explain import explain_sa, explain_with_llm, llm_provider
 
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB: generous for a capture, not for a DoS
 
@@ -57,6 +59,13 @@ def _dashboard_dir() -> Path:
 
 DASHBOARD_DIR = _dashboard_dir()
 _TMP_PREFIX = "tunnelscope-upload-"
+
+# Anomaly history (T-082): OFF unless a directory is given (serve --history, or
+# TUNNELSCOPE_HISTORY). When on, each analysed tunnel's posture profile (no
+# packets, no payload) is appended there, so the tool can learn what is normal.
+HISTORY_DIR: str | None = os.environ.get("TUNNELSCOPE_HISTORY") or None
+_HISTORY_LOCK = threading.Lock()
+MAX_JSON_BYTES = 2 * 1024 * 1024
 
 # Classic pcap (LE/BE) and pcapng magic numbers (Wireshark wiki, "Development/LibpcapFileFormat").
 _MAGIC = {
@@ -122,7 +131,7 @@ async function handleFiles(files) {{
 </script></body></html>"""
 
 
-def analysis_json(a: dict, source: str) -> dict:
+def analysis_json(a: dict, source: str, anomalies: list[dict] | None = None) -> dict:
     """Structured, JSON-safe view of report.analyze() for the React dashboard
     (T-060). Same data the HTML fragment renders, so the two never disagree."""
     summary = a["cbom"]["tunnelscope_sa_summary"]
@@ -150,6 +159,8 @@ def analysis_json(a: dict, source: str) -> dict:
             "score_stability": sa["sensitivity"]["verdict"],
             "gaps": summary[i]["gaps"],
         })
+        sas[-1]["anomaly"] = anomalies[i] if anomalies else None
+        sas[-1]["explanation"] = explain_sa(sas[-1], sas[-1]["anomaly"])
     return {"ok": True, "filename": source, "n_sas": len(sas), "sas": sas}
 
 
@@ -201,7 +212,10 @@ class _Handler(BaseHTTPRequestHandler):
     def do_GET(self):  # noqa: N802 (stdlib method name)
         path = urlparse(self.path).path
         if path == "/health":
-            self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file()})
+            self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file(),
+                             "history": bool(HISTORY_DIR), "llm": llm_provider()})
+        elif path == "/api/history":
+            self._json(200, history_summary())
         elif path.startswith("/api/"):
             self._json(404, {"ok": False, "error": "not found"})
         elif path == "/basic" or not self._static(path):
@@ -211,6 +225,9 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         url = urlparse(self.path)
+        if url.path == "/api/explain":
+            self._explain()
+            return
         if url.path not in ("/api/upload", "/api/analyze"):
             self._json(404, {"ok": False, "error": "not found"})
             return
@@ -241,8 +258,12 @@ class _Handler(BaseHTTPRequestHandler):
             a = analyze(tmp_path)
             print(f"[tunnelscope serve] analysed {name}: {length} bytes, {len(a['sas'])} SA(s), "
                   f"{time.monotonic() - t0:.2f}s", file=sys.stderr, flush=True)
+            anomalies = None
+            if HISTORY_DIR and url.path == "/api/analyze":
+                with _HISTORY_LOCK:
+                    anomalies = observe(History(HISTORY_DIR), a["sas"], name)
             if url.path == "/api/analyze":
-                self._json(200, analysis_json(a, name))
+                self._json(200, analysis_json(a, name, anomalies))
             else:
                 self._json(200, {"ok": True, "filename": name, "n_sas": len(a["sas"]),
                                   "html": render_sas_html(a)})
@@ -254,23 +275,60 @@ class _Handler(BaseHTTPRequestHandler):
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
+    def _explain(self):
+        """POST {sa, anomaly?} (one entry of /api/analyze's sas) -> the plain-
+        English explanation, rewritten by the configured LLM if there is one."""
+        try:
+            n = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            n = 0
+        if not 0 < n <= MAX_JSON_BYTES:
+            self._json(400, {"ok": False, "error": "expected a JSON body"})
+            return
+        try:
+            body = json.loads(self.rfile.read(n))
+            sa = body["sa"]
+            out = explain_with_llm(sa, sa.get("anomaly"))
+        except (ValueError, KeyError, TypeError) as e:
+            self._json(400, {"ok": False, "error": f"bad request: {type(e).__name__}"})
+            return
+        self._json(200, {"ok": True, **out})
+
     def log_message(self, fmt, *args):  # keep stderr access logging, just tag it
         if self.path == "/health":  # start.sh polls this; don't drown the log
             return
         sys.stderr.write(f"[tunnelscope serve] {self.address_string()} - {fmt % args}\n")
 
 
+def history_summary() -> dict:
+    if not HISTORY_DIR:
+        return {"ok": True, "enabled": False, "tunnels": []}
+    rows = History(HISTORY_DIR).load()
+    by: dict[str, dict] = {}
+    for r in rows:
+        t = by.setdefault(r["tunnel"], {"tunnel": r["tunnel"], "observations": 0})
+        t["observations"] += 1
+        t["last_at"], t["last_source"], t["last_profile"] = r["at"], r["source"], r["profile"]
+    return {"ok": True, "enabled": True, "tunnels": sorted(by.values(), key=lambda t: -t["last_at"])}
+
+
 def make_server(port: int = 8765) -> ThreadingHTTPServer:
     return ThreadingHTTPServer(("127.0.0.1", port), _Handler)
 
 
-def run_server(port: int = 8765, open_browser: bool = True) -> None:
+def run_server(port: int = 8765, open_browser: bool = True, history: str | None = None) -> None:
+    global HISTORY_DIR
+    if history:
+        HISTORY_DIR = history
     server = make_server(port)
     bound_port = server.server_address[1]
     url = f"http://127.0.0.1:{bound_port}/"
     ui = "dashboard" if (DASHBOARD_DIR / "index.html").is_file() else "basic page (no dashboard build found)"
     print(f"TunnelScope local {ui}: {url}")
-    print("Local only (127.0.0.1) — nothing leaves this machine; uploads are deleted after each response.")
+    print("Local only (127.0.0.1); uploads are deleted after each response.")
+    print(f"Anomaly history: {HISTORY_DIR + ' (posture profiles only, no packets)' if HISTORY_DIR else 'off'}")
+    llm = llm_provider()
+    print(f"LLM explanations: {llm}" + ("  (sends the explanation text, not the capture, to the provider)" if llm == "claude" else ""))
     if open_browser:
         threading.Timer(0.3, lambda: webbrowser.open(url)).start()
     try:

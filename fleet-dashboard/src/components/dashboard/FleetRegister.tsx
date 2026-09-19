@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils"
 import { type Gateway, type Finding, postureKind } from "@/lib/fleet"
 import { type AnalyzedSA, type FindingStatus, type VerdictResult, formatValue } from "@/lib/api"
+import { AttackerPane, ChangesPane, ExplainedPane } from "@/components/dashboard/TunnelAI"
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -41,13 +42,17 @@ const RESULT: Record<VerdictResult, { t: string; cls: string; order: number }> =
   PASS: { t: "Pass", cls: "text-pos", order: 4 },
 }
 
-type Pane = "verdicts" | "evidence" | "blind"
+type Pane = "explained" | "attacker" | "changes" | "verdicts" | "evidence" | "blind"
 
 function Detail({ sa }: { sa: AnalyzedSA }) {
-  const [pane, setPane] = useState<Pane>("verdicts")
+  const [pane, setPane] = useState<Pane>("explained")
   const verdicts = [...sa.verdicts].sort((a, b) => RESULT[a.verdict].order - RESULT[b.verdict].order)
   const blind = sa.findings.filter((f) => f.status === "NOT_OBSERVABLE" || f.status === "UNKNOWN")
-  const panes: { key: Pane; label: string; n: number }[] = [
+  const nAnom = sa.anomaly?.anomalies.filter((a) => a.severity !== "informational").length ?? 0
+  const panes: { key: Pane; label: string; n?: number }[] = [
+    { key: "explained", label: "Explained" },
+    { key: "attacker", label: "Attacker view" },
+    { key: "changes", label: "Changes", n: sa.anomaly ? nAnom : undefined },
     { key: "verdicts", label: "Verdicts", n: verdicts.length },
     { key: "evidence", label: "Evidence", n: sa.findings.length },
     { key: "blind", label: "Not visible from here", n: blind.length },
@@ -80,10 +85,14 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
               pane === p.key ? "border-violet text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
-            {p.label} <span className="font-mono text-[11px] text-faint tnum">{p.n}</span>
+            {p.label} {p.n !== undefined && <span className="font-mono text-[11px] text-faint tnum">{p.n}</span>}
           </button>
         ))}
       </div>
+
+      {pane === "explained" && <ExplainedPane sa={sa} />}
+      {pane === "attacker" && <AttackerPane sa={sa} />}
+      {pane === "changes" && <ChangesPane sa={sa} />}
 
       {pane === "verdicts" && (
         <div className="overflow-x-auto">
@@ -199,6 +208,9 @@ function Row({ g }: { g: Gateway }) {
             <span className="flex min-w-0 items-baseline gap-2">
               <span className="truncate text-[14px] font-medium text-foreground">{g.city}</span>
               {g.origin === "sample" && <span className="hidden shrink-0 font-mono text-[11px] text-faint sm:inline">{g.id}</span>}
+              {g.detail?.anomaly?.status === "anomalous" && (
+                <span className="shrink-0 rounded-full bg-neg-bg px-2 py-px text-[10.5px] font-medium text-neg">changed</span>
+              )}
             </span>
             <span className="mt-0.5 block truncate font-mono text-[11.5px] text-muted-foreground">
               {g.src} → {g.dst}

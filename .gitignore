@@ -72,3 +72,4 @@ build/bdist*/
 # start.sh runtime
 logs/
 .run/
+.tunnelscope-history/

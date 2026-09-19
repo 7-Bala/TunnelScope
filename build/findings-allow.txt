@@ -3,8 +3,7 @@
 # An entry that matches nothing is reported as stale; delete it once its change is merged.
 # (Emptied 2026-09-18 after T-053/T-057 reached main: see CHANGELOG and git history for those.)
 
-# EXP-13 (mentor follow-up C1), 2026-09-19
-* :: ike_offered_dh  # EXP-13 P5: new finding, the initiator's offered key-exchange groups
-* :: ike_prf  # EXP-13 P3: new finding, the IKE SA PRF (the hash that matters for AEAD suites)
-cloud/a-start.pcap :: ike_*  # EXP-13: suite taken from the LAST selecting IKE_SA_INIT response (was the INVALID_KE_PAYLOAD error)
-cloud/c-w.pcap :: ike_dh_group  # EXP-13: group 2 named MODP-1024 (was dh-2)
+# (EXP-13 entries removed 2026-09-19 after reaching main.)
+
+# T-082 AI layer, 2026-09-19
+* :: attacker_exposure  # T-082: new finding, the EXP-05 Random Forest attacker run live on each capture
