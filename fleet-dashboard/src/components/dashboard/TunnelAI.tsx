@@ -38,23 +38,58 @@ const LEVEL = {
   low: { t: "Low exposure", c: "text-pos", bar: "bg-pos" },
 } as const
 
-/** The EXP-05 Random Forest attacker, run on this capture by the engine. */
+type TrafficValue = {
+  class: string
+  label: string
+  probability: number
+  alternatives: { class: string; label: string; probability: number }[]
+}
+
+/** Traffic type (PS c) and attacker exposure, both from the Random Forest the
+ *  engine trains on our own lab traffic (EXP-05, EXP-15). */
 export function AttackerPane({ sa }: { sa: AnalyzedSA }) {
   const f = sa.findings.find((x) => x.attribute === "attacker_exposure")
+  const tt = sa.findings.find((x) => x.attribute === "traffic_type")
   const mx = sa.findings.find((x) => x.attribute === "metadata_exposure")
   const v = (f?.status === "MEASURED" ? f.value : null) as
     | { level: keyof typeof LEVEL; score: number; confidence: number; consistency: number; windows: number }
     | null
+  const t = (tt?.status === "INFERRED" ? tt.value : null) as TrafficValue | null
 
   return (
     <div className="max-w-[86ch]">
-      <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-        A passive eavesdropper can't read encrypted traffic, but it can see packet sizes, timing and direction. We trained a
-        Random Forest on our own lab traffic to play that eavesdropper (EXP-05: right 99.5–100% of the time on lab data). Here
-        it tries this tunnel. The score is how sure and how consistent it is; the traffic type it guesses is deliberately not
-        shown (on mixed traffic it can be confidently wrong).
-      </p>
+      <h3 className="text-[12px] font-medium text-faint">Traffic inside the tunnel</h3>
+      {t ? (
+        <div className="mt-2">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[20px] font-semibold text-foreground">{t.label}</span>
+            <span className="font-mono text-[13px] text-violet tnum">{Math.round(t.probability * 100)}% model confidence</span>
+          </div>
+          <ul className="mt-3 max-w-[460px] space-y-1.5">
+            {t.alternatives.map((a) => (
+              <li key={a.class} className="grid grid-cols-[170px_1fr_44px] items-center gap-3 text-[12px]">
+                <span className="truncate text-muted-foreground">{a.label}</span>
+                <span className="h-1.5 rounded-full bg-secondary">
+                  <span className="block h-1.5 rounded-full bg-violet" style={{ width: `${Math.round(a.probability * 100)}%` }} />
+                </span>
+                <span className="text-right font-mono text-faint tnum">{Math.round(a.probability * 100)}%</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">{tt?.note}</p>
+        </div>
+      ) : (
+        <p className="mt-2 rounded-xl border border-border px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground/85">Uncertain. </span>
+          {tt?.note?.replace(/^uncertain: /, "") ?? "This capture has no ESP traffic."}
+        </p>
+      )}
 
+      <h3 className="mt-6 text-[12px] font-medium text-faint">How exposed is the traffic's shape?</h3>
+      <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
+        A passive eavesdropper can't read encrypted traffic, but it sees packet sizes, timing and direction. The same model plays
+        that eavesdropper: the score is how sure and how consistent it is about this tunnel.
+      </p>
       {v ? (
         <div className="mt-4">
           <div className="flex items-baseline gap-3">
@@ -64,26 +99,17 @@ export function AttackerPane({ sa }: { sa: AnalyzedSA }) {
           </div>
           <div className="relative mt-3 h-2 w-full max-w-[420px] rounded-full bg-secondary" role="img" aria-label={`Exposure ${v.score} of 100`}>
             <div className={cn("h-2 rounded-full", LEVEL[v.level].bar)} style={{ width: `${v.score}%` }} />
-            {/* a coin-flip attacker over 5 traffic types would sit around 20 */}
-            <div className="absolute -top-1 h-4 w-px bg-foreground/50" style={{ left: "20%" }} title="chance level (1 in 5)" />
-          </div>
-          <div className="mt-1 flex max-w-[420px] justify-between text-[11px] text-faint">
-            <span>0</span>
-            <span style={{ marginLeft: "calc(20% - 24px)" }}>chance</span>
-            <span className="ml-auto">100</span>
+            {/* guessing at random among 8 traffic types would sit around 12 */}
+            <div className="absolute -top-1 h-4 w-px bg-foreground/50" style={{ left: "12.5%" }} title="chance level (1 in 8)" />
           </div>
           <dl className="mt-4 grid max-w-[520px] grid-cols-3 gap-3 text-[12px]">
             <div><dt className="text-faint">Average confidence</dt><dd className="font-mono tnum text-foreground/90">{Math.round(v.confidence * 100)}%</dd></div>
             <div><dt className="text-faint">Same guess in</dt><dd className="font-mono tnum text-foreground/90">{Math.round(v.consistency * 100)}% of windows</dd></div>
             <div><dt className="text-faint">Windows seen</dt><dd className="font-mono tnum text-foreground/90">{v.windows} × 2 s</dd></div>
           </dl>
-          <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">{f?.note}</p>
         </div>
       ) : (
-        <p className="mt-4 rounded-xl border border-border px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
-          <span className="font-medium text-foreground/85">Not measured. </span>
-          {f?.note ?? "This capture has no ESP traffic."}
-        </p>
+        <p className="mt-3 text-[12.5px] text-muted-foreground">Not measured: {f?.note ?? "no ESP traffic."}</p>
       )}
 
       {mx?.status === "MEASURED" && (

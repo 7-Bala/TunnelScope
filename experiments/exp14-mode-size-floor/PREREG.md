@@ -38,3 +38,10 @@ with/without timestamps) and 32 or 20 in transport mode; where the cipher overhe
 Evaluated leave-one-repetition-out; reported with calibrated confidence and an abstain rule. Because
 it is exploratory it ships only as INFERRED with its confidence and the stated basis, and only if its
 held-out accuracy is ≥ 0.95 with zero tunnel sessions called transport at the chosen threshold.
+
+## Addendum B (2026-09-20, AFTER analysis — a post-hoc fix, stated as such)
+The first shipped mode model called the tunnel capture `cs-aes256gcm16` "transport". Its ping size
+sweep spreads packets over BOTH modes' ACK buckets (purity 0.56), a pattern absent from the training
+sessions. Fix: abstain unless ≥ 80% of ACK-bucket packets sit on one mode's side (`MIN_PURITY`), and
+every tracked capture with a ground-truth mode is now an out-of-domain check in `analyze.py`. Because
+the guard was chosen after seeing that failure, the held-out numbers below are not a clean test of it.

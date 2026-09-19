@@ -1,4 +1,4 @@
-"""The Random Forest ATTACKER (EXP-05, CS-01), run live on a capture.
+"""The traffic classifier and Random Forest ATTACKER (EXP-05, EXP-15), run live on a capture.
 
 What it is: a model of a passive eavesdropper. It was trained on our own lab
 traffic (EXP-05: voip / web / bulk / interactive / video, with and without TFC
@@ -6,11 +6,14 @@ padding) to guess what kind of traffic is inside an encrypted ESP tunnel from
 packet sizes, timing and direction alone. On that data it was right almost
 every time (macro-F1 1.000 unpadded, 0.995 padded; leave-one-repetition-out).
 
-What it reports for a capture: how SURE and how CONSISTENT that attacker is
-about this tunnel's traffic, i.e. how exposed the traffic's shape is. It never
-reports WHICH class it guessed: EXP-05 showed that on mixed traffic the model is
-confidently wrong ("web, 100%" for video+interactive), so a label would be a
-false fact about the user's traffic (DEC-021). Exposure, not identification.
+What it reports for a capture (DEC-027, superseding DEC-021's "never a label"):
+  - attacker_exposure: how SURE and how CONSISTENT the attacker is, 0-100;
+  - traffic_type: the predicted type of traffic inside the tunnel (PS c), with
+    its calibrated confidence, ONLY when the prediction clears the abstain rule
+    (confident, consistent across windows, in distribution); otherwise the
+    finding is UNKNOWN "uncertain" and says why. EXP-05's failure (a confident
+    single label on mixed traffic) is the case the abstain rule exists for, and
+    EXP-15 measures how often it catches it.
 
 Trust limits, reported with every result:
   - the attacker learned five lab traffic types; traffic unlike anything it saw
@@ -29,15 +32,28 @@ from functools import lru_cache
 
 import numpy as np
 
-CLASSES = ["voip", "web", "bulk", "interactive", "video"]   # training labels, never output
+CLASSES = ["voip", "web", "bulk", "interactive", "video", "email", "messaging", "icmp"]
+# PS terms for display. These are traffic SHAPES from our generator, not the apps themselves.
+LABEL = {"voip": "VoIP call", "web": "Web browsing", "bulk": "File transfer", "interactive": "Interactive shell (SSH-like)",
+         "video": "Video streaming", "email": "E-mail (SMTP-like)", "messaging": "Messaging (WhatsApp-like)",
+         "icmp": "ICMP (ping)"}
+# Measured on EXP-15's mixed sessions (results/exp15_results.json): 20 of 28 were
+# named after the dominant one of their two traffic types; video+interactive was
+# read as web in 8 of 8. Stated with every prediction it affects.
+KNOWN_CONFUSION = {"web": "in our tests, video streaming mixed with an interactive session was also read as web browsing (8 of 8)"}
+MIXED_NOTE = ("if several kinds of traffic share this tunnel, this names the dominant one (true for 20 of 28 mixed "
+              "sessions in our tests)")
+# abstain rule (set from EXP-15's leave-one-repetition-out analysis; see RESULT.md)
+TAU = 0.60              # minimum mean top-class probability
+MIN_CONSISTENCY = 0.70  # minimum share of windows agreeing with the session's top class
 WIN = 2.0                  # seconds per window (EXP-05)
 MIN_PKTS = 3               # a window with fewer packets carries no usable signal
 SIZE_EDGES = [0, 128, 256, 512, 1024, 1600]
 MIN_WINDOWS = 3            # below this, too little traffic to say anything
-DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "exp05_windows.npz")
+DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "traffic_windows.npz")
 
-# EXP-05's measured attacker skill on its own lab data (results/exp05_results.json)
-REFERENCE = {"f1_unpadded": 1.000, "f1_tfc_padded": 0.995, "chance": round(1 / len(CLASSES), 3)}
+# measured skill on held-out repetitions (EXP-15 results/exp15_results.json)
+REFERENCE = {"f1_unpadded": 0.995, "f1_tfc_padded": 0.958, "chance": round(1 / len(CLASSES), 3)}
 
 
 def window_features(pkts: list[tuple[float, str, int]], complete_only: bool = True) -> list[list[float]]:
@@ -81,7 +97,7 @@ def _model():
 
     d = np.load(DATA, allow_pickle=False)
     X, y = d["X"], d["y"]
-    rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=1).fit(X, y)
+    rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=1, min_samples_leaf=2).fit(X, y)
     # out-of-distribution gate: how far is a window from the nearest training
     # window, compared with how far training windows are from each other
     sc = StandardScaler().fit(X)
@@ -125,8 +141,19 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     confidence = float(top.mean())
     score = round(100 * confidence * consistency)
     level = "high" if score >= 70 else "medium" if score >= 40 else "low"
+    mean_p = P.mean(axis=0)
+    order = np.argsort(mean_p)[::-1]
+    guess, p_guess = str(rf.classes_[order[0]]), float(mean_p[order[0]])
+    answer = p_guess >= TAU and consistency >= MIN_CONSISTENCY
     return {**base, "status": "measured", "level": level, "score": score,
             "confidence": round(confidence, 3), "consistency": round(float(consistency), 3),
+            "traffic": {"answered": answer, "class": guess if answer else None,
+                        "label": LABEL.get(guess) if answer else None, "probability": round(p_guess, 3),
+                        "alternatives": [{"class": str(rf.classes_[i]), "label": LABEL.get(str(rf.classes_[i])),
+                                          "probability": round(float(mean_p[i]), 3)} for i in order[:3]],
+                        "why_not": None if answer else (
+                            f"windows disagree (only {consistency:.0%} agree): likely mixed traffic"
+                            if consistency < MIN_CONSISTENCY else f"top probability {p_guess:.0%} is below {TAU:.0%}")},
             "note": _note(level, confidence, consistency, len(picks))}
 
 
@@ -136,11 +163,12 @@ def _note(level: str, conf: float, cons: float, n: int) -> str:
             "low": "cannot reliably tell what kind of traffic this tunnel carries"}[level]
     return (f"A passive attacker model trained on lab traffic {what}, from packet sizes and timing alone "
             f"(average confidence {conf:.0%}, same guess in {cons:.0%} of {n} windows). "
-            "Encryption hides the content, not the shape. The guessed type is deliberately not shown.")
+            "Encryption hides the content, not the shape.")
 
 
 def extract_attacker(rec) -> None:
-    """Pipeline hook: add a MEASURED/UNKNOWN 'attacker_exposure' finding."""
+    """Pipeline hook: 'attacker_exposure' (MEASURED/UNKNOWN) and 'traffic_type'
+    (INFERRED with its probability, or UNKNOWN when the classifier abstains)."""
     from ..evidence.record import EvidencePtr, Finding, Status, Vantage
     esp = getattr(rec, "_esp", [])
     if not esp:
@@ -149,7 +177,27 @@ def extract_attacker(rec) -> None:
     if r["status"] != "measured":
         rec.add(Finding("attacker_exposure", Status.UNKNOWN, Vantage.T0, "random-forest attacker (EXP-05)",
                         note=r["note"]))
+        rec.add(Finding("traffic_type", Status.UNKNOWN, Vantage.T0, "traffic classifier (EXP-15)",
+                        note="uncertain: " + r["note"]))
         return
+    t = r["traffic"]
+    ev = [EvidencePtr(rec.source_pcap, esp[0]["frame"], "esp sizes/timing/direction", f"{r['windows']} windows")]
+    if t["answered"]:
+        alts = ", ".join(f"{a['label']} {a['probability']:.0%}" for a in t["alternatives"][1:])
+        rec.add(Finding("traffic_type", Status.INFERRED, Vantage.T0, "traffic classifier (EXP-15)",
+                        value={"class": t["class"], "label": t["label"], "probability": t["probability"],
+                               "alternatives": t["alternatives"]},
+                        confidence=t["probability"], evidence=ev,
+                        note=f"predicted from packet sizes, timing and direction over {r['windows']} windows; "
+                             f"{r['consistency']:.0%} of windows agree. Next most likely: {alts}. Classes are traffic "
+                             "shapes from the lab generator (e.g. WhatsApp-like messaging), not app fingerprints; "
+                             + MIXED_NOTE
+                             + (f"; caution: {KNOWN_CONFUSION[t['class']]}" if t["class"] in KNOWN_CONFUSION else "")
+                             + "."))
+    else:
+        rec.add(Finding("traffic_type", Status.UNKNOWN, Vantage.T0, "traffic classifier (EXP-15)",
+                        note=f"uncertain: {t['why_not']}. Closest guesses: "
+                             + ", ".join(f"{a['label']} {a['probability']:.0%}" for a in t["alternatives"])))
     rec.add(Finding("attacker_exposure", Status.MEASURED, Vantage.T0, "random-forest attacker (EXP-05)",
                     value={k: r[k] for k in ("level", "score", "confidence", "consistency", "windows")},
                     confidence=1.0,

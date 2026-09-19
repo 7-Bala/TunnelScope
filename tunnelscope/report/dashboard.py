@@ -9,10 +9,11 @@ from __future__ import annotations
 import html
 import json
 
+from .labels import label
 from .report import analyze
 
 _CSS = """
-:root{--bg:#f6f7f9;--card:#fff;--ink:#1a2230;--muted:#6b7684;--line:#e3e7 ;
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1a2230;--muted:#6b7684;--line:#e3e7ea;
 --pass:#1a7f4b;--fail:#c0392b;--warn:#b8860b;--unk:#8a94a3;--pq:#6c3fc4;--accent:#0b6bcb}
 @media(prefers-color-scheme:dark){:root{--bg:#12151a;--card:#1b2028;--ink:#e8ecf1;--muted:#9aa4b2;--line:#2a313c}}
 *{box-sizing:border-box}body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
@@ -59,6 +60,27 @@ def render_sas_html(a: dict) -> str:
         body.append('<div class="card">')
         body.append(f'<div class="sa-h"><div><b>SA {i}</b> &nbsp;{html.escape(r.src)} ↔ {html.escape(r.dst)}</div>'
                     f'<span class="posture {dg}">{html.escape(posture)}</span></div>')
+        # risk, confidence, traffic (T-083)
+        rk, cf = sa["risk"]["risk"], sa["risk"]["confidence"]
+        tt = r.findings.get("traffic_type")
+        md = r.findings.get("mode")
+        traffic = (f'{html.escape(tt.value["label"])} ({round(100 * tt.value["probability"])}% model confidence)'
+                   if tt is not None and tt.value else "uncertain")
+        mode = html.escape(md.value) if md is not None and md.value else "not determinable"
+        body.append('<div class="scores">'
+                    f'<div class="score"><div class="b">Risk score</div><div class="v">{rk["score"]}</div>'
+                    f'<div class="c">{html.escape(rk["band"])} · {rk["assessable"]}/{rk["total"]} threats assessable</div></div>'
+                    f'<div class="score"><div class="b">Evidence confidence</div><div class="v">{cf["score"]}%</div>'
+                    f'<div class="c">{cf["observed"]} observed · {cf["inferred"]} inferred · {cf["not_visible"]} not visible</div></div>'
+                    f'<div class="score"><div class="b">Traffic inside</div><div class="v" style="font-size:15px">{traffic}</div>'
+                    f'<div class="c">mode: {mode}</div></div></div>')
+        body.append('<h3>Threat matrix</h3><table><tr><th>Threat</th><th>Status</th><th>Likelihood</th><th>Impact</th><th>Why</th></tr>')
+        for t in sa["risk"]["threats"]:
+            tag = {"present": "t-fail", "mitigated": "t-pass"}.get(t["status"], "t-unknown")
+            body.append(f'<tr><td>{html.escape(t["id"] + " " + t["name"])}</td>'
+                        f'<td><span class="tag {tag}">{html.escape(t["status"].replace("_", " "))}</span></td>'
+                        f'<td>{t["likelihood_label"]}</td><td>{t["impact_label"]}</td><td class="note">{html.escape(t["reason"])}</td></tr>')
+        body.append('</table>')
         # scores
         body.append('<div class="scores">')
         for b, s in sa["scores"].items():
@@ -80,7 +102,7 @@ def render_sas_html(a: dict) -> str:
         body.append('<h3>Evidence</h3><table><tr><th>Attribute</th><th>Status</th><th>Value</th><th>Vantage</th><th>Method</th></tr>')
         for attr, f in r.findings.items():
             val = "—" if f.value is None else html.escape(str(f.value))
-            body.append(f'<tr><td>{html.escape(attr)}</td><td>{_tag(f.status.value)}</td>'
+            body.append(f'<tr><td>{html.escape(label(attr))}</td><td>{_tag(f.status.value)}</td>'
                         f'<td>{val}</td><td>{f.vantage.value}</td><td class="note">{html.escape(f.method)}</td></tr>')
         body.append('</table>')
         gaps = a["cbom"]["tunnelscope_sa_summary"][i-1]["gaps"]

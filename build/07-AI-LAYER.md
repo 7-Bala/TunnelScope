@@ -12,7 +12,8 @@ Forest, Isolation Forest), the way numpy supplies arithmetic; it ships no traine
 
 | Feature | Model | Built by us? | Why this model |
 |---|---|---|---|
-| Attacker view | Random Forest (scikit-learn), 200 trees | **Yes**: trained on our EXP-05 lab traffic (380 windows, 40 sessions) | Already validated in EXP-05 as the attacker model; small, explainable, runs offline in ~0.6 s |
+| Traffic type + attacker view | Random Forest (scikit-learn), 200 trees | **Yes**: trained on our EXP-05 + EXP-15 lab traffic (1,375 windows, 152 sessions, 8 classes) | Already validated in EXP-05 as the attacker model; small, explainable, runs offline in ~0.6 s |
+| Tunnel/transport mode (ESP) | Random Forest on ACK-size buckets (EXP-14) | **Yes**: trained on EXP-15 tunnel vs transport sessions | Ships only because it met a bar declared before the data; abstains outside TCP-over-AEAD |
 | Anomaly detection | Rules + robust z-score + Isolation Forest (scikit-learn) | **Yes**: learns each organisation's own tunnels from their own history | No pretrained model exists for IPsec posture, and "normal" differs per network, so it must learn on site; unsupervised, so no labelled attacks are needed |
 | Plain-English explanations | None: generated from the verdicts and a glossary we wrote | Yes, fully | Explaining a verdict needs no model; any language model would have to be someone else's, and could add facts |
 
@@ -57,3 +58,11 @@ Forest, Isolation Forest), the way numpy supplies arithmetic; it ships no traine
   Training our own language model is not realistic (it needs vast text and compute) and would
   risk inventing facts. `tests/test_ai_layer.py::test_no_outside_model_is_used` fails if an LLM
   client, a model download or a network call appears in the package.
+
+## 4. Update T-083 (2026-09-20): the traffic TYPE is now shown (DEC-027)
+The classifier's prediction is an INFERRED `traffic_type` finding with its probability and the next
+alternatives, shown only when windows agree (≥ 70%) and the probability is ≥ 60%; otherwise
+"uncertain". EXP-15: macro-F1 0.995 (tunnel), 0.958 (TFC padding), 0.986 across ciphers, calibration
+error 0.049. Pre-registered failure kept: mixed traffic is abstained on in only 29% of sessions; the
+dominant type is named in 20 of 28 and video+interactive reads as web 8 of 8, which every such
+answer now states.

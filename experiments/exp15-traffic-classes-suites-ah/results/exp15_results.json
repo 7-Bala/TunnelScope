@@ -1,0 +1,283 @@
+{
+  "n_windows": 1375,
+  "n_sessions": 152,
+  "classes": [
+    "voip",
+    "web",
+    "bulk",
+    "interactive",
+    "video",
+    "email",
+    "messaging",
+    "icmp"
+  ],
+  "windows_per_class": {
+    "web": 186,
+    "video": 220,
+    "interactive": 220,
+    "voip": 199,
+    "bulk": 220,
+    "messaging": 131,
+    "email": 73,
+    "icmp": 126
+  },
+  "folds": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "window_macro_f1": {
+    "transport": 0.9957,
+    "tunnel": 0.9947,
+    "tunnel+tfc": 0.9581,
+    "tunnel-cbc": 1.0
+  },
+  "window_per_class_f1_tunnel": {
+    "bulk": 1.0,
+    "email": 0.9714,
+    "icmp": 1.0,
+    "interactive": 1.0,
+    "messaging": 0.9863,
+    "video": 1.0,
+    "voip": 1.0,
+    "web": 1.0
+  },
+  "tau": 0.3,
+  "session_accuracy_all": 1.0,
+  "session_answered_share": 1.0,
+  "session_accuracy_answered": 1.0,
+  "session_ece": 0.0485,
+  "session_by_arm": {
+    "transport": {
+      "n": 32,
+      "accuracy": 1.0,
+      "answered": 1.0
+    },
+    "tunnel+tfc": {
+      "n": 52,
+      "accuracy": 1.0,
+      "answered": 1.0
+    },
+    "tunnel": {
+      "n": 52,
+      "accuracy": 1.0,
+      "answered": 1.0
+    },
+    "tunnel-cbc": {
+      "n": 16,
+      "accuracy": 1.0,
+      "answered": 1.0
+    }
+  },
+  "session_errors": [],
+  "mux_sessions": 28,
+  "mux_abstain_rate": 0.2857,
+  "mux_detail": [
+    {
+      "session": "exp05-mux-video_interactive-rep1",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.831,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-bulk_icmp-rep1",
+      "truth": "bulk+icmp",
+      "pred": "bulk",
+      "conf": 0.992,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-voip_web-rep1",
+      "truth": "voip+web",
+      "pred": "voip",
+      "conf": 0.999,
+      "in_dist": 0.22
+    },
+    {
+      "session": "exp15-mux-email_messaging-rep1",
+      "truth": "email+messaging",
+      "pred": "messaging",
+      "conf": 0.515,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-bulk_voip-rep1",
+      "truth": "bulk+voip",
+      "pred": "bulk",
+      "conf": 0.946,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-voip_web-rep1",
+      "truth": "voip+web",
+      "pred": "web",
+      "conf": 0.456,
+      "in_dist": 0.0
+    },
+    {
+      "session": "exp15-mux-video_interactive-rep1",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.821,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-voip_web-rep2",
+      "truth": "voip+web",
+      "pred": "web",
+      "conf": 0.664,
+      "in_dist": 0.0
+    },
+    {
+      "session": "exp15-mux-video_interactive-rep2",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.882,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-voip_web-rep2",
+      "truth": "voip+web",
+      "pred": "voip",
+      "conf": 1.0,
+      "in_dist": 0.1
+    },
+    {
+      "session": "exp05-mux-video_interactive-rep2",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.882,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-bulk_icmp-rep2",
+      "truth": "bulk+icmp",
+      "pred": "bulk",
+      "conf": 0.982,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-email_messaging-rep2",
+      "truth": "email+messaging",
+      "pred": "messaging",
+      "conf": 0.774,
+      "in_dist": 0.7
+    },
+    {
+      "session": "exp05-mux-bulk_voip-rep2",
+      "truth": "bulk+voip",
+      "pred": "bulk",
+      "conf": 0.934,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-video_interactive-rep3",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.879,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-video_interactive-rep3",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.868,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-voip_web-rep3",
+      "truth": "voip+web",
+      "pred": "voip",
+      "conf": 1.0,
+      "in_dist": 0.22
+    },
+    {
+      "session": "exp15-mux-email_messaging-rep3",
+      "truth": "email+messaging",
+      "pred": "messaging",
+      "conf": 0.688,
+      "in_dist": 0.78
+    },
+    {
+      "session": "exp15-mux-bulk_icmp-rep3",
+      "truth": "bulk+icmp",
+      "pred": "bulk",
+      "conf": 0.993,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-bulk_voip-rep3",
+      "truth": "bulk+voip",
+      "pred": "bulk",
+      "conf": 0.925,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-voip_web-rep3",
+      "truth": "voip+web",
+      "pred": "web",
+      "conf": 0.769,
+      "in_dist": 0.0
+    },
+    {
+      "session": "exp15-mux-video_interactive-rep4",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.887,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp15-mux-voip_web-rep4",
+      "truth": "voip+web",
+      "pred": "voip",
+      "conf": 1.0,
+      "in_dist": 0.11
+    },
+    {
+      "session": "exp15-mux-email_messaging-rep4",
+      "truth": "email+messaging",
+      "pred": "messaging",
+      "conf": 0.663,
+      "in_dist": 0.67
+    },
+    {
+      "session": "exp15-mux-bulk_icmp-rep4",
+      "truth": "bulk+icmp",
+      "pred": "bulk",
+      "conf": 0.99,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-voip_web-rep4",
+      "truth": "voip+web",
+      "pred": "voip",
+      "conf": 1.0,
+      "in_dist": 0.11
+    },
+    {
+      "session": "exp05-mux-video_interactive-rep4",
+      "truth": "video+interactive",
+      "pred": "web",
+      "conf": 0.896,
+      "in_dist": 1.0
+    },
+    {
+      "session": "exp05-mux-bulk_voip-rep4",
+      "truth": "bulk+voip",
+      "pred": "bulk",
+      "conf": 0.919,
+      "in_dist": 1.0
+    }
+  ],
+  "cross_cipher_macro_f1": 0.9862,
+  "predictions": {
+    "P15-1 tunnel macro-F1 >= 0.90": true,
+    "P15-2 email/messaging/icmp F1 >= 0.80": true,
+    "P15-3 TFC macro-F1 >= 0.80": true,
+    "P15-4 mux abstained >= 80%": false,
+    "P15-5 session ECE <= 0.10": true,
+    "P15-6 GCM->CBC macro-F1 >= 0.80": true
+  }
+}

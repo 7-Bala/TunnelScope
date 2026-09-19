@@ -88,6 +88,10 @@ def explain_sa(sa: dict, anomaly: dict | None = None) -> dict:
             points.append({"kind": "fail", "rule_id": v["rule_id"], "severity": v["severity"],
                            "text": f"{v['rule_id']} ({v['severity']}): {v['title']}{seen}."})
     f = {x["attribute"]: x for x in sa.get("findings", [])}
+    tt = f.get("traffic_type")
+    if tt and tt["status"] == "INFERRED":
+        points.append({"kind": "exposure", "text": f"Traffic inside (model prediction, {round(100 * tt['value']['probability'])}% "
+                                                   f"confidence): {tt['value']['label']}. {tt['note']}"})
     ax = f.get("attacker_exposure")
     if ax and ax["status"] == "MEASURED":
         points.append({"kind": "exposure", "text": f"Traffic shape: {ax['note']}"})

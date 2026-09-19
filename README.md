@@ -12,6 +12,7 @@ it's judged against and admits what it couldn't see.
 ```bash
 ./start.sh          # checks the stack, builds the dashboard if needed, starts the engine, opens it
 ./start.sh --dev    # same, plus hot-reload dev server
+./start.sh --live-follow DIR   # also analyse a live stream (files a sensor rotates into DIR)
 ./start.sh logs     # live logs (also in ./logs/)   ·   ./start.sh stop   ·   ./start.sh status   ·   ./start.sh test
 ```
 

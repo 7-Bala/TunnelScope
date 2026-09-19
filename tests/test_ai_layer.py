@@ -50,17 +50,34 @@ def test_attacker_generalises_to_a_held_out_repetition():
     assert (rf.predict(d["X"][te]) == d["y"][te]).mean() > 0.9
 
 
-def test_attacker_measures_and_never_names_the_traffic_type():
+def test_attacker_names_the_traffic_type_only_with_its_confidence():
+    """DEC-027 (supersedes DEC-021): a label is shown only together with its
+    probability and alternatives, and only when the abstain rule is cleared."""
     r = at.assess_exposure(_esp(_session("exp05-tfc-video-rep2")))
     assert r["status"] == "measured" and r["level"] == "high"
-    blob = json.dumps(r).lower()
-    assert not any(c in blob for c in at.CLASSES), "DEC-021: no traffic label in the output"
+    t = r["traffic"]
+    if t["answered"]:
+        assert t["class"] in at.CLASSES and 0 < t["probability"] <= 1 and t["alternatives"]
+    else:
+        assert t["class"] is None and t["why_not"]
 
 
-def test_mixed_traffic_is_flagged_not_scored():
+def test_mixed_traffic_label_outside_the_mix_carries_its_warning():
+    """EXP-15 P15-4 failed: most mixed sessions are named after their dominant
+    type, but video+interactive reads as web. Every such label must say so."""
+    from tunnelscope.evidence.record import EvidenceRecord
     mux = sorted(f[:-12] for f in os.listdir(EXP05) if f.startswith("exp05-mux") and f.endswith(".pkts.csv.gz"))
-    r = at.assess_exposure(_esp(_session(mux[0])))
-    assert r["status"] == "out_of_distribution" and r["level"] is None
+    outside = 0
+    for m in mux:
+        rec = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="x")
+        rec._esp = _esp(_session(m))
+        at.extract_attacker(rec)
+        f = rec.findings["traffic_type"]
+        parts = m.split("-")[2].split("_")
+        if f.value and f.value["class"] not in parts:
+            outside += 1
+            assert "caution" in f.note and "dominant" in f.note, m
+    assert outside >= 1       # the known confusion really is exercised
 
 
 def test_too_little_traffic_is_insufficient():

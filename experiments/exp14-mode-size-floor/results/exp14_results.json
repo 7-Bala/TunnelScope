@@ -1,0 +1,90 @@
+{
+  "floor_aead": 56,
+  "n_sessions": 96,
+  "P14-1 false transport on tunnel sessions": 0,
+  "P14-4 TFC sessions fired": 0,
+  "P14-3 floor coverage on transport, by class": {
+    "bulk": 0.0,
+    "email": 0.0,
+    "icmp": 0.0,
+    "interactive": 0.0,
+    "messaging": 0.0,
+    "video": 0.0,
+    "voip": 0.0,
+    "web": 0.0
+  },
+  "model_by_tau": [
+    {
+      "tau": 0.8,
+      "answered": 44,
+      "of": 64,
+      "accuracy": 1.0,
+      "tunnel_called_transport": 0
+    },
+    {
+      "tau": 0.85,
+      "answered": 44,
+      "of": 64,
+      "accuracy": 1.0,
+      "tunnel_called_transport": 0
+    },
+    {
+      "tau": 0.9,
+      "answered": 44,
+      "of": 64,
+      "accuracy": 1.0,
+      "tunnel_called_transport": 0
+    },
+    {
+      "tau": 0.95,
+      "answered": 43,
+      "of": 64,
+      "accuracy": 1.0,
+      "tunnel_called_transport": 0
+    }
+  ],
+  "model_chosen": {
+    "tau": 0.8,
+    "answered": 44,
+    "of": 64,
+    "accuracy": 1.0,
+    "tunnel_called_transport": 0
+  },
+  "model_ships": true,
+  "model_coverage_by_class": {
+    "bulk": 1.0,
+    "email": 0.5,
+    "icmp": 0.0,
+    "interactive": 1.0,
+    "messaging": 1.0,
+    "video": 1.0,
+    "voip": 0.0,
+    "web": 1.0
+  },
+  "model_errors": [],
+  "buckets": {
+    "transport_ack": [
+      24,
+      36
+    ],
+    "tunnel_ack": [
+      44,
+      56
+    ]
+  },
+  "ood_claims": [
+    {
+      "path": "a7-cs-transport-aes256gcm16.pcap",
+      "truth": "transport",
+      "got": "transport",
+      "method": "size_floor (EXP-14)"
+    },
+    {
+      "path": "cs-transport-aes256gcm16.pcap",
+      "truth": "transport",
+      "got": "transport",
+      "method": "size_floor (EXP-14)"
+    }
+  ],
+  "ood_false": []
+}

@@ -194,5 +194,6 @@ component (leakage measurement).
 **Became less likely:** any claim that a tool can name the application inside an IPsec tunnel as a
 fact.
 
-**Still untested:** tunnel/transport mode inference (A7), constant-rate IP-TFS (kernel), vendor
-stacks (Cisco/Palo Alto/Fortinet), real WAN conditions.
+**Still untested:** constant-rate IP-TFS (kernel), vendor stacks (Cisco/Palo Alto/Fortinet), real WAN
+conditions. (Mode inference, A7, was resolved by EXP-08 and revisited by EXP-14; this line said
+"untested" until 2026-09-20, which was stale.)
