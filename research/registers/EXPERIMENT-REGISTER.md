@@ -339,3 +339,14 @@ P44-2: a packet below the tunnel-mode floor cannot be tunnel mode.
 
 ## EXP-15 — Eight traffic classes, IKE/DH suite variety, AH — PRE-REGISTRATION (2026-09-20)
 Pre-registered in `experiments/exp15-traffic-classes-suites-ah/PREREG.md` before any capture.
+
+### EXP-14 — RESULT (2026-09-20)
+Size floor: 0 false transport (P14-1, P14-4 held), both transport captures found (P14-2), but ~0%
+coverage on realistic traffic (P14-3 failed, as predicted in addendum A before data). ACK-size model
+(exploratory): 44/64 held-out sessions answered, 100% correct, 0 tunnel→transport; one post-hoc false
+positive on a ping sweep fixed by a purity guard (addendum B). `experiments/exp14-mode-size-floor/RESULT.md`.
+
+### EXP-15 — RESULT (2026-09-20)
+8-class traffic classifier: macro-F1 0.995 tunnel, 0.958 TFC, 0.986 cross-cipher, ECE 0.049. P15-4
+failed: mixed traffic abstained in 29%, video+interactive read as web 8/8 (stated in the output).
+Suites (9) and AH (5) all match endpoint ground truth. `experiments/exp15-traffic-classes-suites-ah/RESULT.md`.

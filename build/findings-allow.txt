@@ -7,3 +7,11 @@
 
 # T-082 AI layer, 2026-09-19
 * :: attacker_exposure  # T-082: new finding, the EXP-05 Random Forest attacker run live on each capture
+
+# T-083 PS gap closure, 2026-09-20
+* :: ipsec_protocols  # T-083: new finding, which IPsec protocol(s) carry the SA (ESP/AH)
+* :: sequence_integrity  # T-083: new finding, per-SPI sequence numbers (replay, RFC 4303 3.3.3)
+* :: traffic_type  # T-083 / DEC-027: new finding, predicted traffic type with confidence, or uncertain
+* :: mode  # T-083 / DEC-029: mode no longer blanket NOT_OBSERVABLE: AH next header, EXP-14 floor/model, else UNKNOWN
+* :: esp_cipher_family  # T-083: sieve gained 3DES and SHA-384/512 CBC families (EXP-15 found 3DES missing)
+* :: attacker_exposure  # T-083: attacker retrained on 8 classes (EXP-05 + EXP-15), scores shift

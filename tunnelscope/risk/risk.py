@@ -4,7 +4,7 @@ Built only from verdicts and findings the pipeline already produced (I8).
 Each threat names the evidence that raised or cleared it; a threat whose
 evidence is UNKNOWN is "not assessable" and is never counted as mitigated.
 
-Risk score (DEC-025): noisy-OR over present threats,
+Risk score (DEC-028): noisy-OR over present threats,
     risk = 100 * (1 - prod(1 - 0.6 * likelihood * impact / 9)),
 likelihood and impact on 1..3. One critical threat (3x3) gives 60, two give
 84; adding a present threat never lowers the score; 0 means no threat was

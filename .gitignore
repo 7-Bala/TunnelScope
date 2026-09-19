@@ -77,3 +77,4 @@ logs/
 # sessions are large, so their per-packet tables are committed and pcaps hashed.
 !testbed/captures/exp15/*.pcap
 testbed/captures/exp15/traffic/*.pcap
+testbed/captures/live/

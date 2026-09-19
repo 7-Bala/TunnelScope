@@ -59,7 +59,8 @@ def executive_report(a: dict) -> str:
                     val = val.get("label") or val.get("verdict") or val
                 if isinstance(val, list):
                     val = ", ".join(map(str, val))
-                conf = f" (confidence {round(100 * f.confidence)}%)" if f.status.value == "INFERRED" and f.confidence else ""
+                conf = (f" ({'model estimate, ' if 'model' in f.method or 'classifier' in f.method else ''}"
+                        f"confidence {min(99, round(100 * f.confidence))}%)" if f.status.value == "INFERRED" and f.confidence else "")
                 L.append(f"- **{what}:** {val}{conf}")
         present = [t for t in sa["risk"]["threats"] if t["status"] == "present"]
         if present:

@@ -5,12 +5,12 @@ than the evidence shows. Every new output is either OBSERVED, INFERRED with its 
 UNKNOWN. Where the PS asks for something the wire cannot show, we build the closest honest thing
 and state the limit on screen.
 
-## Decisions this plan needs (recorded as DEC-024/025 in research/registers/DECISIONS.md)
-- **DEC-024 supersedes DEC-021:** the traffic type inside ESP IS shown, but only with a calibrated
+## Decisions this plan needs (recorded as DEC-027..030 in research/registers/DECISIONS.md)
+- **DEC-027 supersedes DEC-021:** the traffic type inside ESP IS shown, but only with a calibrated
   confidence, only for in-distribution traffic, and only above an abstain threshold; otherwise the
   answer is "uncertain" (mixed or unfamiliar traffic). The failure DEC-021 was about (confidently
   wrong on mixtures) becomes a tested abstain case.
-- **DEC-025 amends DEC-007:** one overall risk score is shown, derived from the threat matrix, always
+- **DEC-028 amends DEC-007:** one overall risk score is shown, derived from the threat matrix, always
   with its breakdown (threats, baselines, coverage) underneath. It is a risk score, not a compliance
   score, and it shows how much of the assessment was possible (coverage).
 

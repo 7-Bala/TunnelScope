@@ -47,13 +47,19 @@ export function LiveView() {
 
   const windows = st.windows ?? []
   // latest state per tunnel, and each tunnel's risk over time (oldest -> newest)
-  const tunnels: Record<string, { risk: number[]; last: NonNullable<(typeof windows)[number]["sas"]>[number] }> = {}
+  // every alert is kept with the window it came from: a later, milder window must
+  // never push an earlier downgrade out of view
+  type Alert = { severity: string; message: string; file: string; at: number }
+  const tunnels: Record<string, { risk: number[]; last: NonNullable<(typeof windows)[number]["sas"]>[number]; alerts: Alert[] }> = {}
   ;[...windows].reverse().forEach((w) =>
     (w.sas ?? []).forEach((sa) => {
       const key = [sa.src, sa.dst].sort().join(" ↔ ")
-      const t = (tunnels[key] ??= { risk: [], last: sa })
+      const t = (tunnels[key] ??= { risk: [], last: sa, alerts: [] })
       t.risk.push(sa.risk.risk.score)
       t.last = sa
+      ;(sa.anomaly?.anomalies ?? [])
+        .filter((a) => a.severity !== "informational")
+        .forEach((a) => t.alerts.push({ severity: a.severity, message: a.message, file: w.file, at: w.at }))
     }),
   )
   const stale = st.last_at && now / 1000 - st.last_at > 3 * (st.window_s ?? 30)
@@ -81,13 +87,14 @@ export function LiveView() {
           <ul className="divide-y divide-border/60">
             {Object.entries(tunnels).map(([k, t]) => {
               const an = t.last.anomaly
-              const bad = an?.anomalies.filter((a) => a.severity !== "informational") ?? []
+              const bad = [...t.alerts].reverse().sort((a, b) => (a.severity === "high" ? 0 : 1) - (b.severity === "high" ? 0 : 1)).slice(0, 8)
+              const changed = t.alerts.length > 0
               const max = Math.max(...t.risk, 1)
               return (
                 <li key={k} className="px-5 py-3.5">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span className="font-mono text-[12.5px] text-foreground/90">{k}</span>
-                    {an?.status === "anomalous" && <span className="rounded-full bg-neg-bg px-2 py-px text-[10.5px] font-medium text-neg">changed</span>}
+                    {changed && <span className="rounded-full bg-neg-bg px-2 py-px text-[10.5px] font-medium text-neg">changed</span>}
                     {an?.status === "learning" && <span className="rounded-full bg-secondary px-2 py-px text-[10.5px] text-faint">learning</span>}
                     <span className="ml-auto flex items-center gap-2 text-[12px] text-faint">
                       risk <RiskBadge risk={t.last.risk.risk} />
@@ -107,7 +114,10 @@ export function LiveView() {
                   {bad.length > 0 && (
                     <ul className="mt-2 space-y-1 text-[12.5px] text-muted-foreground">
                       {bad.map((a, i) => (
-                        <li key={i}><span className={a.severity === "high" ? "text-neg" : "text-warn"}>●</span> {a.message}</li>
+                        <li key={i}>
+                          <span className={a.severity === "high" ? "text-neg" : "text-warn"}>●</span> {a.message}
+                          <span className="ml-2 font-mono text-[11px] text-faint">{a.file} · {ago(now, a.at)}</span>
+                        </li>
                       ))}
                     </ul>
                   )}

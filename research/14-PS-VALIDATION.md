@@ -59,3 +59,28 @@ can be tiny in either mode. The inference is one-way: a packet at or above the f
 Worth a pre-registered experiment; would turn a ❌ into "INFERRED when provable, else UNKNOWN".
 
 Also: `experiments/RESULTS.md` line 197 still lists mode inference as "untested"; stale since EXP-08.
+
+
+## Status after T-083 (2026-09-20, same day)
+Built from `build/08-PS-GAP-CLOSURE-PLAN.md`, each item with tests and an end-to-end run.
+
+| PS item | Before | Now | Evidence |
+|---|---|---|---|
+| Traffic types (VoIP, WhatsApp, e-mail, web, ICMP, video) | ⚠️ 5 shapes | ✅ 8 shapes incl. e-mail, messaging (WhatsApp-like), ICMP; still shape models, not real apps | `testbed/scripts/tgen.py`, EXP-15 (152 sessions) |
+| Different DH groups | ⚠️ | ✅ MODP-1024/1536/2048/3072/4096, ECP-256/384, Curve25519, +ML-KEM-768 | EXP-15 part B, 9/9 match swanctl |
+| AH | ❌ | ✅ lab arms + parsing: mode and integrity from the plaintext header, AH-only fails confidentiality | EXP-15 part C, 5/5 |
+| Live network streams | ❌ | ✅ `tunnelscope live` / `serve --live-*`: capture windows; dashboard Live tab; Docker downgrade run flagged | `tunnelscope/live/`, `testbed/scripts/run_live_demo.sh` |
+| Tunnel / transport mode | ❌ | ⚠️→✅ AH: observed; ESP: transport proven below the size floor, else an ACK-size model (44/64 held-out sessions answered, 100% correct) for TCP over AEAD; else unknown. Never for UDP/ICMP-only or CBC tunnels | EXP-14 |
+| Encryption algorithm (demo trap) | ⚠️ | ⚠️ labelled apart: "Handshake (IKE SA) encryption" vs "Data (ESP) cipher: candidates". The data cipher is still a candidate set (wire limit) | `tunnelscope/report/labels.py` |
+| Predict traffic type | ⛔ | ✅ shown with probability + alternatives (macro-F1 0.995, TFC 0.958); abstains when windows disagree; known weakness stated with the answer (mixed video+interactive reads as web) | EXP-15 part A, DEC-027 |
+| Replay protection | ❌ | ✅ per-SPI sequence analysis + RFC4303-SEQ rule; capture duplicates not called replays; receiver enforcement still not visible | `tunnelscope/evidence/protocol.py` |
+| Threat matrix | ❌ | ✅ 12 threats × likelihood/impact, each citing its evidence | `tunnelscope/risk/risk.py` |
+| Risk score | ⛔ | ✅ one 0–100 risk score with drivers + coverage; per-baseline scores still shown | DEC-028 |
+| AI confidence score | ⚠️ | ✅ model confidence on every model output; evidence confidence per tunnel; confidence column in Evidence | |
+| Cipher strength (3DES) | — | ✅ RFC 8221 baseline: 3DES, AH integrity, confidentiality | `rules/rfc8221-4303-ipsec.yaml` |
+| Demo video | ❌ | ❌ user records it; script updated (`build/sih/DEMO-SCRIPT.md`) | |
+
+Still true after T-083: the AI identifies the traffic type, mode (partly) and anomalies; the IKE
+fields are still read by parsing, which is the correct method for plaintext. Key length on the ESP
+side is still impossible from outside (EXP-02). Only one IPsec stack (strongSwan 6.1) produced the
+new captures.

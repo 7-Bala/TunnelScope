@@ -50,8 +50,8 @@ def check(row):
             issues.append(f"mode claimed {got} but ground truth is {gt_mode}")
         if not gt_mode:
             issues.append(f"mode claimed {got} with no ground truth to check it")
-        if got == "tunnel" and F["mode"].method != "ah_next_header":
-            issues.append("tunnel mode claimed from ESP traffic (only transport is provable)")
+        if got == "tunnel" and F["mode"].method not in ("ah_next_header", "ack_size_model (EXP-14 exploratory)"):
+            issues.append(f"tunnel mode claimed by {F['mode'].method} (only AH or the evaluated ACK model may)")
 
     # never an ESP-side key length
     if "esp_key_length" in F:
