@@ -120,8 +120,6 @@ def cmd_crosstier(args):
 
 def cmd_serve(args):
     from .api.server import run_server
-    if args.llm:
-        os.environ["TUNNELSCOPE_LLM"] = args.llm
     run_server(port=args.port, open_browser=not args.no_browser, history=args.history)
 
 
@@ -157,14 +155,10 @@ def cmd_watch(args):
 
 def cmd_explain(args):
     from .api.server import analysis_json
-    from .explain.explain import explain_with_llm
+    from .explain.explain import as_text, explain_sa
     a = analyze(args.pcap)
     for sa in analysis_json(a, args.pcap)["sas"]:
-        r = explain_with_llm(sa, None, args.llm)
-        print(r["text"])
-        note = r.get("llm_error") or r.get("llm_rejected")
-        print(f"\n[{'written by ' + r['source'] + ' (' + r.get('model', '') + '), fact-checked against the evidence' if r['source'] != 'template' else 'evidence template'}]"
-              + (f"  note: {note}" if note else ""))
+        print(as_text(explain_sa(sa)))
         print()
 
 
@@ -228,7 +222,6 @@ def main(argv=None):
     sv.add_argument("--port", type=int, default=8765)
     sv.add_argument("--no-browser", action="store_true", help="don't auto-open a browser tab")
     sv.add_argument("--history", metavar="DIR", help="learn each tunnel's normal and flag changes; stores posture profiles (no packets) in DIR")
-    sv.add_argument("--llm", choices=["none", "ollama", "claude"], help="rewrite explanations with an LLM (default: none, fully offline)")
     sv.set_defaults(func=cmd_serve)
     wt = sub.add_parser("watch", help="anomaly detection: compare each tunnel with its learned normal, then record it (role D)")
     wt.add_argument("target", help="a capture, or a directory of captures (processed in name order)")
@@ -239,7 +232,6 @@ def main(argv=None):
     wt.set_defaults(func=cmd_watch)
     ex = sub.add_parser("explain", help="plain-English explanation of a capture's verdicts, for non-experts")
     ex.add_argument("pcap")
-    ex.add_argument("--llm", choices=["none", "ollama", "claude"], help="optionally rewrite with an LLM, fact-checked (default: none)")
     ex.set_defaults(func=cmd_explain)
     fl = sub.add_parser("fleet", help="scan a directory of captures: one aggregated view, per-tunnel evidence kept intact (role B/D)")
     fl.add_argument("directory")

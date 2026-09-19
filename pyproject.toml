@@ -19,9 +19,6 @@ dependencies = ["scikit-learn>=1.3", "numpy>=1.24", "PyYAML>=6.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
-# optional: `tunnelscope explain --llm claude` / `serve --llm claude` (T-082). Not needed
-# for anything else; --llm ollama uses the stdlib only.
-llm = ["anthropic>=1.7"]
 
 [project.scripts]
 tunnelscope = "tunnelscope.cli:main"
