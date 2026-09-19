@@ -45,6 +45,73 @@ export interface AnalyzedSA {
   scores: Record<string, ScoreRow>
   score_stability: "stable" | "fragile"
   gaps: { attribute: string; status?: string; note?: string }[]
+  /** per-tunnel anomaly result; null when the engine runs without --history */
+  anomaly: AnomalyResult | null
+  /** plain-English explanation, always built from the verdicts (template) */
+  explanation: Explanation
+}
+
+export interface Anomaly {
+  layer: "posture" | "traffic" | "model"
+  kind: "downgrade" | "upgrade" | "change" | "new_failure" | "shift" | "outlier" | "fleet_outlier"
+  severity: "high" | "medium" | "informational"
+  attribute: string
+  usual: unknown
+  now: unknown
+  message: string
+}
+
+export interface AnomalyResult {
+  tunnel: string
+  status: "learning" | "normal" | "anomalous"
+  observations: number
+  needed?: number
+  anomalies: Anomaly[]
+  layers?: string[]
+}
+
+export interface Explanation {
+  summary: string
+  points: { kind: "fail" | "ok" | "exposure" | "anomaly"; text: string; rule_id?: string; severity?: string }[]
+  unseen: string[]
+  source: string
+  text?: string
+  model?: string
+  llm_error?: string
+  llm_rejected?: string
+}
+
+export interface EngineInfo {
+  ok: boolean
+  history: boolean
+  llm: "none" | "ollama" | "claude" | string
+}
+
+export async function engineInfo(): Promise<EngineInfo | null> {
+  try {
+    const res = await fetch("/health", { cache: "no-store" })
+    if (!res.ok) return null
+    const b = await res.json()
+    return b?.ok ? { ok: true, history: !!b.history, llm: b.llm ?? "none" } : null
+  } catch {
+    return null
+  }
+}
+
+/** Ask the engine to rewrite a tunnel's explanation with its configured LLM.
+ *  The engine fact-checks the rewrite and falls back to the template text. */
+export async function explainWithAI(sa: AnalyzedSA): Promise<Explanation | { error: string }> {
+  try {
+    const res = await fetch("/api/explain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sa }),
+    })
+    const b = await res.json()
+    return b.ok ? (b as Explanation) : { error: b.error ?? "the engine refused the request" }
+  } catch {
+    return { error: ENGINE_OFFLINE }
+  }
 }
 
 export type AnalyzeResult =

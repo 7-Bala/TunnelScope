@@ -19,6 +19,9 @@ dependencies = ["scikit-learn>=1.3", "numpy>=1.24", "PyYAML>=6.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# optional: `tunnelscope explain --llm claude` / `serve --llm claude` (T-082). Not needed
+# for anything else; --llm ollama uses the stdlib only.
+llm = ["anthropic>=1.7"]
 
 [project.scripts]
 tunnelscope = "tunnelscope.cli:main"
@@ -30,4 +33,4 @@ include = ["tunnelscope*"]
 # copy (including an air-gapped one, build/05-DEPLOYMENT-ONPREM.md) is complete.
 # tunnelscope/web/ is filled by build/offline/make_bundle.sh; it is gitignored.
 [tool.setuptools.package-data]
-tunnelscope = ["rules/*.yaml", "rules/context/*.yaml", "web/*", "web/**/*"]
+tunnelscope = ["rules/*.yaml", "rules/context/*.yaml", "models/*.npz", "web/*", "web/**/*"]

@@ -11,6 +11,7 @@ from collections import defaultdict
 from .record import EvidenceRecord, Finding, Status, Vantage, EvidencePtr
 from ..ingest import tshark
 from ..leakage.leakage import extract_leakage
+from ..leakage.attacker import extract_attacker
 
 
 # --------------------------------------------------------------------------- #
@@ -569,7 +570,7 @@ def extract_offered_dh(r: EvidenceRecord) -> None:
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,
                   extract_cipher_sieve, extract_pfs, extract_sa_lifecycle, extract_mode,
                   extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_offered_dh,
-                  extract_leakage]
+                  extract_leakage, extract_attacker]
 
 
 def build_records(pcap: str) -> list[EvidenceRecord]:

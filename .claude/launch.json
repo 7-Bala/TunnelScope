@@ -14,14 +14,16 @@
     },
     {
       "name": "tunnelscope-serve",
-      "runtimeExecutable": "python3",
+      "runtimeExecutable": ".venv/bin/python",
       "runtimeArgs": [
         "-m",
         "tunnelscope.cli",
         "serve",
         "--no-browser",
         "--port",
-        "8765"
+        "8765",
+        "--history",
+        ".tunnelscope-history"
       ],
       "port": 8765
     }

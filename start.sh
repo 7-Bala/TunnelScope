@@ -5,11 +5,12 @@
 #   ./start.sh -d           start in the background and return; ./start.sh stop ends it
 #   ./start.sh stop|status|logs|test|doctor
 # Options: --port N (engine, default 8765)  --no-browser  --rebuild (force dashboard rebuild)
+#          --llm none|ollama|claude (AI rewrite of explanations, default none)  --no-history (no anomaly learning)
 # Everything is local: the engine binds 127.0.0.1 only. Logs: ./logs/  State: ./.run/
 set -uo pipefail
 cd "$(dirname "$0")"
 ROOT=$PWD LOGS=$ROOT/logs RUN=$ROOT/.run VENV=$ROOT/.venv DASH=$ROOT/fleet-dashboard
-PORT=${TUNNELSCOPE_PORT:-8765}; DEV=0; DETACH=0; BROWSER=1; REBUILD=0; CMD=start
+PORT=${TUNNELSCOPE_PORT:-8765}; LLM=${TUNNELSCOPE_LLM:-none}; HIST=$ROOT/.tunnelscope-history; DEV=0; DETACH=0; BROWSER=1; REBUILD=0; CMD=start
 mkdir -p "$LOGS" "$RUN"
 
 if [ -t 1 ]; then B=$'\033[1m'; G=$'\033[32m'; Y=$'\033[33m'; R=$'\033[31m'; D=$'\033[2m'; N=$'\033[0m'; else B= G= Y= R= D= N=; fi
@@ -22,7 +23,9 @@ while [ $# -gt 0 ]; do case $1 in
   start|stop|status|logs|test|doctor) CMD=$1;;
   --dev) DEV=1;; -d|--detach) DETACH=1;; --no-browser) BROWSER=0;; --rebuild) REBUILD=1;;
   --port) PORT=${2:?--port needs a number}; shift;;
-  -h|--help) sed -n 2,8p "$0" | sed 's/^# \{0,1\}//'; exit 0;;
+  --llm) LLM=${2:?--llm needs none, ollama or claude}; shift;;
+  --no-history) HIST="";;
+  -h|--help) sed -n 2,9p "$0" | sed 's/^# \{0,1\}//'; exit 0;;
   *) die "unknown argument: $1 (try --help)";; esac; shift; done
 
 pidalive() { [ -f "$1" ] && kill -0 "$(cat "$1")" 2>/dev/null; }
@@ -97,11 +100,17 @@ if pidalive "$RUN/engine.pid" || health >/dev/null; then
 else
   rotate "$LOGS/engine.log"
   say "starting engine …"
-  nohup "$VENV/bin/python" -m tunnelscope.cli serve --no-browser --port "$PORT" >>"$LOGS/engine.log" 2>&1 &
+  if [ "$LLM" = ollama ] && ! curl -fsS --max-time 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+    warn "--llm ollama: no Ollama server on 127.0.0.1:11434 (run: ollama serve; ollama pull \${TUNNELSCOPE_OLLAMA_MODEL:-llama3.2}). Explanations fall back to the evidence text."
+  fi
+  if [ "$LLM" = claude ]; then
+    py -c 'import anthropic' 2>/dev/null || { say "installing the anthropic SDK for --llm claude …"; py -m pip install -q anthropic >>"$LOGS/setup.log" 2>&1 || warn "could not install anthropic"; }
+  fi
+  nohup "$VENV/bin/python" -m tunnelscope.cli serve --no-browser --port "$PORT" --llm "$LLM" ${HIST:+--history "$HIST"} >>"$LOGS/engine.log" 2>&1 &
   echo $! >"$RUN/engine.pid"
   for _ in $(seq 1 40); do health >/dev/null && break; pidalive "$RUN/engine.pid" || break; sleep 0.25; done
   health >/dev/null || { tail -10 "$LOGS/engine.log"; rm -f "$RUN/engine.pid"; die "engine did not come up (logs/engine.log). Port $PORT busy? try --port"; }
-  ok "engine healthy on http://127.0.0.1:$PORT"
+  ok "engine healthy on http://127.0.0.1:$PORT  ${D}(anomaly history: ${HIST:-off}; LLM: $LLM)${N}"
 fi
 URL=http://127.0.0.1:$PORT/
 if [ $DEV -eq 1 ]; then
