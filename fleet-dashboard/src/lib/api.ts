@@ -18,6 +18,9 @@ export interface VerdictRow {
 
 export interface FindingRow {
   attribute: string
+  /** plain name (handshake vs data cipher etc.), from tunnelscope/report/labels.py */
+  label?: string
+  confidence?: number | null
   status: FindingStatus
   value: unknown
   vantage: string
@@ -49,6 +52,68 @@ export interface AnalyzedSA {
   anomaly: AnomalyResult | null
   /** plain-English explanation, always built from the verdicts (template) */
   explanation: Explanation
+  /** threat matrix, overall risk score and evidence confidence (tunnelscope/risk/risk.py) */
+  risk: RiskResult
+}
+
+export interface Threat {
+  id: string
+  name: string
+  impact: 1 | 2 | 3
+  likelihood: 0 | 1 | 2 | 3
+  impact_label: string
+  likelihood_label: string
+  description: string
+  status: "present" | "not_seen" | "mitigated" | "not_assessable"
+  evidence: string[]
+  reason: string
+}
+
+export interface RiskResult {
+  threats: Threat[]
+  risk: {
+    score: number
+    band: "critical" | "high" | "medium" | "low" | "none observed"
+    present: number
+    assessable: number
+    total: number
+    coverage: number
+    top: { id: string; name: string; likelihood: number; impact: number }[]
+    note: string
+  }
+  confidence: { score: number; observed: number; inferred: number; not_visible: number; attributes: number; note: string }
+}
+
+export interface LiveWindow {
+  file: string
+  at: number
+  ok: boolean
+  error?: string
+  n_sas?: number
+  seconds?: number
+  sas?: AnalyzedSA[]
+}
+
+export interface LiveStatus {
+  ok: boolean
+  enabled: boolean
+  source?: string
+  window_s?: number
+  started?: number
+  last_at?: number | null
+  windows?: LiveWindow[]
+  errors?: LiveWindow[]
+  capturing?: boolean | null
+}
+
+export async function liveStatus(): Promise<LiveStatus | null> {
+  try {
+    const res = await fetch("/api/live", { cache: "no-store" })
+    if (!res.ok) return null
+    return (await res.json()) as LiveStatus
+  } catch {
+    return null
+  }
 }
 
 export interface Anomaly {
@@ -80,6 +145,7 @@ export interface Explanation {
 export interface EngineInfo {
   ok: boolean
   history: boolean
+  live: boolean
 }
 
 export async function engineInfo(): Promise<EngineInfo | null> {
@@ -87,7 +153,7 @@ export async function engineInfo(): Promise<EngineInfo | null> {
     const res = await fetch("/health", { cache: "no-store" })
     if (!res.ok) return null
     const b = await res.json()
-    return b?.ok ? { ok: true, history: !!b.history } : null
+    return b?.ok ? { ok: true, history: !!b.history, live: !!b.live } : null
   } catch {
     return null
   }

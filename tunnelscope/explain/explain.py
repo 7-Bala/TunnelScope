@@ -38,6 +38,21 @@ GLOSSARY = {
     "DST-PQ-DOWNGRADE": ("a post-quantum key exchange was offered but the tunnel fell back to classical only",
                          "that fallback is exactly what a downgrade attack would cause",
                          "find out why the peer refused ML-KEM, and stop allowing the classical-only fallback"),
+    "RFC4301-CONFIDENTIALITY": ("this traffic is protected only by AH, which checks integrity but does not encrypt",
+                                "anyone on the network path can read the content",
+                                "switch the tunnel from AH to ESP (with AES-GCM)"),
+    "RFC8221-AH-INTEG": ("the AH integrity algorithm is HMAC-MD5-96, which RFC 8221 forbids",
+                         "MD5 is broken and must not protect anything",
+                         "change the AH integrity setting to HMAC-SHA2-256 or stronger"),
+    "RFC8221-AH-LEGACY": ("AH uses a 96-bit legacy integrity algorithm (MD5, SHA-1 or XCBC; the wire cannot tell which)",
+                          "RFC 8221 forbids MD5 and expects SHA-1 to be demoted",
+                          "use HMAC-SHA2-256 or stronger for AH"),
+    "RFC8221-ESP-3DES": ("the data cipher can only be 3DES, which RFC 8221 says should not be used",
+                         "3DES is slow and has a small block size that limits safe data volumes",
+                         "move the data (ESP) cipher to AES-GCM"),
+    "RFC4303-SEQ": ("a packet was sent twice with the same sequence number on one tunnel",
+                    "that is what a replay attack looks like on the wire (or a broken sender)",
+                    "confirm anti-replay is on at both ends, and investigate who sent the repeated packet"),
 }
 
 # what a status means, for gaps

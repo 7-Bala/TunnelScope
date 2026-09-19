@@ -10,7 +10,7 @@ function Wordmark() {
   )
 }
 
-export type View = "uploads" | "sample"
+export type View = "uploads" | "sample" | "live"
 export type Engine = "checking" | "online" | "offline"
 
 export function Topbar({
@@ -26,8 +26,9 @@ export function Topbar({
   sampleCount: number
   lastAnalysed: Date | null
 }) {
-  const tabs: { key: View; label: string; count: number }[] = [
+  const tabs: { key: View; label: string; count?: number }[] = [
     { key: "uploads", label: "Your captures", count: uploadCount },
+    { key: "live", label: "Live" },
     { key: "sample", label: "Sample fleet", count: sampleCount },
   ]
 
@@ -54,7 +55,9 @@ export function Topbar({
             )}
           >
             {t.label}
-            <span className={cn("font-mono text-[11px] tnum", view === t.key ? "text-violet" : "text-faint")}>{t.count}</span>
+            {t.count !== undefined && (
+              <span className={cn("font-mono text-[11px] tnum", view === t.key ? "text-violet" : "text-faint")}>{t.count}</span>
+            )}
           </button>
         ))}
       </div>

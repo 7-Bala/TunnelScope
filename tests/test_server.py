@@ -60,7 +60,7 @@ def test_health(server):
     resp = conn.getresponse()
     import json
     assert resp.status == 200
-    assert json.loads(resp.read()) == {"ok": True, "dashboard": False, "history": False}
+    assert json.loads(resp.read()) == {"ok": True, "dashboard": False, "history": False, "live": False}
 
 
 def test_real_pcap_upload_returns_findings(server):

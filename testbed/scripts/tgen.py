@@ -5,13 +5,13 @@
   client:  tgen.py client <class> <server_ip> <duration_s> <seed> [bind_ip]
 
 Classes model the traffic *shapes* the PS lists (VoIP, web, file/bulk,
-interactive, video). They are shape models, not application replays: what a
+interactive, video; EXP-15 added e-mail, messaging (WhatsApp-like) and ICMP). They are shape models, not application replays: what a
 passive ESP observer sees is size/timing/direction, and that's what these
 control. Every random draw comes from random.Random(seed), so a session is
 reproducible from (class, seed).
 
 Ports: voip udp 5004 · web tcp 8080 · bulk tcp 5201 · interactive tcp 2222 ·
-video tcp 8090.
+video tcp 8090 · email tcp 2525 · messaging tcp 5222 · icmp (ping, no port).
 """
 import random
 import socket
@@ -21,7 +21,8 @@ import sys
 import threading
 import time
 
-PORTS = {"voip": 5004, "web": 8080, "bulk": 5201, "interactive": 2222, "video": 8090}
+PORTS = {"voip": 5004, "web": 8080, "bulk": 5201, "interactive": 2222, "video": 8090,
+         "email": 2525, "messaging": 5222}
 
 
 # ----------------------------------------------------------------- server ---
@@ -72,9 +73,26 @@ class EchoHandler(socketserver.BaseRequestHandler):
             pass
 
 
+class RRHandler(socketserver.BaseRequestHandler):
+    # request/response: 4-byte request size + 4-byte reply size, then the
+    # request bytes; the server answers with reply-size bytes. Used by the
+    # SMTP-shaped and messaging-shaped classes, whose two directions differ.
+    def handle(self):
+        try:
+            while True:
+                req, rep = struct.unpack("!II", _recv_exact(self.request, 8))
+                if req:
+                    _recv_exact(self.request, req)
+                if rep:
+                    self.request.sendall(b"r" * rep)
+        except (ConnectionError, OSError):
+            pass
+
+
 def serve(bind):
     for cls, handler in (("web", WebHandler), ("bulk", BulkHandler),
-                         ("interactive", EchoHandler), ("video", WebHandler)):
+                         ("interactive", EchoHandler), ("video", WebHandler),
+                         ("email", RRHandler), ("messaging", RRHandler)):
         srv = _TCP((bind, PORTS[cls]), handler)
         threading.Thread(target=srv.serve_forever, daemon=True).start()
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -154,7 +172,60 @@ def video(dst, dur, rng, bind):
             time.sleep(max(0, 1.0 - (time.time() - seg_start)))
 
 
-CLIENTS = {"voip": voip, "web": web, "bulk": bulk, "interactive": interactive, "video": video}
+def _rr(s, req, rep):
+    s.sendall(struct.pack("!II", req, rep) + b"q" * req)
+    if rep:
+        _recv_exact(s, rep)
+
+
+def email(dst, dur, rng, bind):
+    """SMTP-shaped submission: greeting, EHLO/MAIL/RCPT/DATA line exchanges
+    (tens of bytes each way), a message body (lognormal, median ~8 KB, 10%
+    carry a 100-600 KB attachment), QUIT; then idle until the next mail."""
+    t0 = time.time()
+    while time.time() - t0 < dur:
+        with _tcp(dst, PORTS["email"], bind) as s:
+            _rr(s, 0, 60)                                   # 220 greeting
+            _rr(s, 20, 180)                                 # EHLO -> 250 capabilities
+            for _ in range(rng.randint(1, 3)):              # MAIL FROM + RCPT TO lines
+                _rr(s, rng.randint(24, 48), 30)
+            _rr(s, 6, 40)                                   # DATA -> 354
+            body = int(min(max(rng.lognormvariate(9.0, 1.0), 800), 200_000))
+            if rng.random() < 0.10:
+                body += rng.randint(100_000, 600_000)       # attachment
+            _rr(s, body, 50)                                # message, then 250 queued
+            _rr(s, 6, 20)                                   # QUIT -> 221
+        time.sleep(min(rng.expovariate(1 / 2.5), 8))        # next mail
+
+
+def messaging(dst, dur, rng, bind):
+    """WhatsApp-shaped chat: ONE long-lived connection, short text messages
+    (60-400 B) sent in bursts with typing pauses, small delivery/read receipts
+    back, periodic keepalives, and an occasional photo (30-300 KB)."""
+    t0 = time.time(); last_ka = t0
+    with _tcp(dst, PORTS["messaging"], bind) as s:
+        while time.time() - t0 < dur:
+            for _ in range(rng.randint(1, 4)):              # a burst of messages
+                _rr(s, rng.randint(60, 400), rng.randint(40, 70))   # message -> receipt
+                time.sleep(rng.uniform(0.05, 0.6))
+            if rng.random() < 0.12:
+                _rr(s, rng.randint(30_000, 300_000), 60)    # photo
+            _rr(s, 0, rng.randint(60, 400))                 # the other side replies
+            if time.time() - last_ka > 5:
+                _rr(s, 16, 16); last_ka = time.time()       # keepalive
+            time.sleep(min(rng.expovariate(1 / 1.2), 5))    # typing / reading
+
+
+def icmp(dst, dur, rng, bind):
+    """ping: one echo request per second (default 56 B payload), reply back."""
+    import subprocess
+    args = ["ping", "-q", "-c", str(max(1, int(dur))), "-i", "1", "-s", str(rng.choice([56, 56, 56, 64, 120]))]
+    if bind:
+        args += ["-I", bind]
+    subprocess.run(args + [dst], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+CLIENTS = {"voip": voip, "email": email, "messaging": messaging, "icmp": icmp, "web": web, "bulk": bulk, "interactive": interactive, "video": video}
 
 
 def main():

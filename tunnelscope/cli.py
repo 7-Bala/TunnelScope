@@ -120,7 +120,42 @@ def cmd_crosstier(args):
 
 def cmd_serve(args):
     from .api.server import run_server
-    run_server(port=args.port, open_browser=not args.no_browser, history=args.history)
+    run_server(port=args.port, open_browser=not args.no_browser, history=args.history,
+               live_follow=args.live_follow, live_interface=args.live_interface, live_window=args.window)
+
+
+def cmd_live(args):
+    """Analyse a live stream window by window (interface ring buffer or a sensor's rotating files)."""
+    from .live.live import LiveMonitor
+    mon = LiveMonitor(interface=args.interface, follow=args.follow, window=args.window,
+                      history=args.history, keep=args.keep)
+    mon.start_capture()
+    print(f"live: {mon.status()['source']}, {mon.window}s windows"
+          + (f", learning into {args.history}" if args.history else "") + " (Ctrl-C stops)", file=sys.stderr)
+
+    def show(row):
+        if args.json:
+            print(json.dumps(row, default=str), flush=True)
+            return
+        if not row["ok"]:
+            print(f"{row['file']}: ERROR {row['error']}", flush=True)
+            return
+        if not row["n_sas"]:
+            print(f"{row['file']}: no IPsec traffic in this window", flush=True)
+        for sa in row["sas"]:
+            rk = sa["risk"]["risk"]
+            an = sa.get("anomaly") or {}
+            tag = {"anomalous": "  CHANGED", "learning": "  learning", "normal": ""}.get(an.get("status"), "")
+            print(f"{row['file']}: {sa['src']} <-> {sa['dst']}  risk {rk['score']} ({rk['band']}){tag}", flush=True)
+            for x in an.get("anomalies", []):
+                if x["severity"] != "informational":
+                    print(f"      [{x['severity']}] {x['message']}", flush=True)
+    try:
+        mon.run(on_window=show, max_windows=args.max_windows)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        mon.stop()
 
 
 def _captures(target: str) -> list[str]:
@@ -222,7 +257,20 @@ def main(argv=None):
     sv.add_argument("--port", type=int, default=8765)
     sv.add_argument("--no-browser", action="store_true", help="don't auto-open a browser tab")
     sv.add_argument("--history", metavar="DIR", help="learn each tunnel's normal and flag changes; stores posture profiles (no packets) in DIR")
+    sv.add_argument("--live-follow", metavar="DIR", help="also analyse a live stream: capture files a sensor rotates into DIR")
+    sv.add_argument("--live-interface", metavar="IFACE", help="also analyse a live stream captured on IFACE (needs capture permission)")
+    sv.add_argument("--window", type=int, default=30, help="live window length in seconds (default 30)")
     sv.set_defaults(func=cmd_serve)
+    lv = sub.add_parser("live", help="analyse a live network stream window by window (interface or a sensor's rotating files)")
+    src = lv.add_mutually_exclusive_group(required=True)
+    src.add_argument("--interface", "-i", help="network interface to capture on (needs capture permission)")
+    src.add_argument("--follow", metavar="DIR", help="directory a sensor rotates capture files into (e.g. tcpdump -G 30 -w 'DIR/w-%%s.pcap')")
+    lv.add_argument("--window", type=int, default=30, help="seconds per window (default 30)")
+    lv.add_argument("--history", metavar="DIR", help="anomaly history: compare each window with the tunnel's past")
+    lv.add_argument("--keep", action="store_true", help="keep analysed window files (default: delete them)")
+    lv.add_argument("--json", action="store_true", help="one JSON object per window")
+    lv.add_argument("--max-windows", type=int, help="stop after N windows (testing)")
+    lv.set_defaults(func=cmd_live)
     wt = sub.add_parser("watch", help="anomaly detection: compare each tunnel with its learned normal, then record it (role D)")
     wt.add_argument("target", help="a capture, or a directory of captures (processed in name order)")
     wt.add_argument("--history", required=True, metavar="DIR", help="where observations are kept")

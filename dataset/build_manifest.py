@@ -74,6 +74,7 @@ def experiment_of(relpath, name):
     if relpath.startswith("exp12/"): return "EXP-12-rekey-cadence"
     if relpath.startswith("encap/"): return "T-057-encapsulation"
     if relpath.startswith("cloud/"): return "EXP-13-cloud-vpn"
+    if relpath.startswith("exp15/"): return "EXP-15-suites-ah"
     if relpath.startswith("exp06r2"): return "EXP-06r2-failure-diagnosis"
     if relpath.startswith("exp07"): return "EXP-07-libreswan"
     if name.startswith("rekey-"): return "EXP-03-pfs"
@@ -113,6 +114,9 @@ def split_of(experiment, name):
     # EXP-13: cloud-style proposal sets; ground truth per arm in its groundtruth.json,
     # checked by tests/test_cloud_vpn.py rather than the IPv4 arm-name e2e schema.
     if experiment == "EXP-13-cloud-vpn": return "excluded"
+    # EXP-15 parts B/C: IKE/DH suites and AH, checked against their groundtruth.json
+    # by build/validate_e2e.py (check_exp15); part A traffic tables have their own manifest.
+    if experiment == "EXP-15-suites-ah": return "excluded"
     if "rep5" in name: return "locked_test"
     if "rep4" in name: return "validation"
     if experiment == "EXP-07-libreswan": return "locked_test"   # cross-impl = generalisation test
@@ -123,6 +127,8 @@ def main():
     rows = []
     for p in sorted(CAP.rglob("*.pcap")):
         rel = str(p.relative_to(CAP))
+        if rel.startswith(("exp05/", "exp15/traffic/")):   # traffic-class sub-datasets (own manifests)
+            continue
         if rel.startswith("exp05/"):        # EXP-05 is a separate sub-dataset (traffic-class
             continue                         # ground truth) with its own hash manifest + tables
         name = p.stem
@@ -131,6 +137,7 @@ def main():
         impl = (IMPL["exp07"] if rel.startswith("exp07")
                 else IMPL["exp10"] if rel.startswith("exp10")
                 else IMPL["default_pq"] if name.startswith(("classical-baseline", "pq-mlkem768", "pq-downgrade", "tfc-sample"))
+                or rel.startswith("exp15/")
                 else IMPL["default"])
         gt = dict(GT.get(arm, {}))
         gtf = p.with_suffix(".groundtruth.json")

@@ -23,3 +23,18 @@ either mode. The rule is not applied when TFC padding is detected, and every fin
 
 **Verdict rule:** if P14-1 and P14-2 hold, ship as `mode` = transport, status INFERRED (basis: size
 floor), else UNKNOWN "not provable from this capture". Tunnel mode is never claimed from traffic alone.
+
+## Addendum A (2026-09-20, written while EXP-15 part A was still capturing, before any of its data was read)
+Working through the arithmetic for real traffic before the data exists: the floor rule needs an
+upper-layer packet under ~26 bytes. A default ping (56-byte payload) and a TCP pure ACK with
+timestamps (32-byte header) both sit above the GCM floor in transport mode, so **P14-3 is expected
+to fail on realistic traffic**; the rule will mostly fire on tiny packets (size sweeps, empty UDP).
+
+**Exploratory (not confirmatory) follow-up, declared now:** a mode classifier trained on EXP-15's
+tunnel vs transport sessions (same 8 classes, same cipher). Basis: the commonest small packet in a
+TCP-carrying SA is the pure ACK, whose inner length is 52 or 40 bytes in tunnel mode (IPv4 + TCP
+with/without timestamps) and 32 or 20 in transport mode; where the cipher overhead is unambiguous
+(all surviving sieve families share IV/ICV/alignment), the observer can compute that length.
+Evaluated leave-one-repetition-out; reported with calibrated confidence and an abstain rule. Because
+it is exploratory it ships only as INFERRED with its confidence and the stated basis, and only if its
+held-out accuracy is ≥ 0.95 with zero tunnel sessions called transport at the chosen threshold.

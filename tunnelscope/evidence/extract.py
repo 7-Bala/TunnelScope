@@ -12,6 +12,7 @@ from .record import EvidenceRecord, Finding, Status, Vantage, EvidencePtr
 from ..ingest import tshark
 from ..leakage.leakage import extract_leakage
 from ..leakage.attacker import extract_attacker
+from .protocol import extract_ah, extract_ipsec_protocols, extract_mode, extract_sequence
 
 
 # --------------------------------------------------------------------------- #
@@ -89,6 +90,22 @@ def group_sas(pcap: str) -> list[EvidenceRecord]:
         esp_r._esp_only = True
         _set_child_spis(esp_r)
         recs[("esp", pair)] = esp_r
+
+    # AH (T-083): attached by address pair exactly like ESP. An AH-only flow with
+    # no IKE in the capture gets its own record, as ESP-only flows do.
+    ah_by_pair = defaultdict(list)
+    for p in tshark.ah_packets(pcap):
+        ah_by_pair[tuple(sorted([p["src"], p["dst"]]))].append(p)
+    for r in recs.values():
+        r._ah = ah_by_pair.get(tuple(sorted([r.src, r.dst])), [])
+    have = {tuple(sorted([r.src, r.dst])) for r in recs.values()}
+    for pair, pkts in ah_by_pair.items():
+        if pair in have:
+            continue
+        ah_r = EvidenceRecord(src=pkts[0]["src"], dst=pkts[0]["dst"], source_pcap=pcap)
+        ah_r._ike, ah_r._esp, ah_r._ah = [], [], pkts
+        ah_r._esp_only = True
+        recs[("ah", pair)] = ah_r
 
     return list(recs.values())
 
@@ -276,13 +293,6 @@ def extract_sa_lifecycle(r: EvidenceRecord) -> None:
                        "negotiated lifetime - IKEv2 does not negotiate one (F-02)"))
 
 
-def extract_mode(r: EvidenceRecord) -> None:
-    """R4 tunnel/transport. EXP-08: NOT-OBSERVABLE at T0 from ESP alone."""
-    r.add(Finding("mode", Status.NOT_OBSERVABLE, Vantage.T0, "mode (EXP-08)",
-                  note="tunnel vs transport is not recoverable from passive ESP (every length is "
-                       "valid in both modes; the inner IP header is encrypted). Report from T2/topology."))
-
-
 def extract_auth_hint(r: EvidenceRecord) -> None:
     """R7/OQ-05 (T-048, EXP-11): does the on-wire trace tell us the PEER
     AUTHENTICATION METHOD (PSK / certificate / EAP) this specific tunnel used?
@@ -419,6 +429,11 @@ _SIEVE = {
     "AES-GCM-16": dict(iv=8, icv=16, align=4),
     "AES-CCM-16": dict(iv=8, icv=16, align=4),
     "ChaCha20-Poly1305": dict(iv=8, icv=16, align=4),
+    # added 2026-09-20 (EXP-15): without these, a 3DES tunnel was reported as
+    # "CBC excluded" with the true family missing from the candidate set
+    "AES-CBC+HMAC-SHA384-192": dict(iv=16, icv=24, align=16),
+    "AES-CBC+HMAC-SHA512-256": dict(iv=16, icv=32, align=16),
+    "3DES-CBC+HMAC-SHA1-96": dict(iv=8, icv=12, align=8),
 }
 
 
@@ -567,8 +582,8 @@ def extract_offered_dh(r: EvidenceRecord) -> None:
                   note=f"groups {who} offered in IKE_SA_INIT; the responder's acceptable set is not visible"))
 
 
-ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke,
-                  extract_cipher_sieve, extract_pfs, extract_sa_lifecycle, extract_mode,
+ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke, extract_ipsec_protocols, extract_ah,
+                  extract_cipher_sieve, extract_pfs, extract_sa_lifecycle, extract_mode, extract_sequence,
                   extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_offered_dh,
                   extract_leakage, extract_attacker]
 

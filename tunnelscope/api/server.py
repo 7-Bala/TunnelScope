@@ -39,6 +39,8 @@ from ..report.report import analyze
 from ..report.dashboard import _CSS, render_sas_html
 from ..anomaly.anomaly import History, observe
 from ..explain.explain import explain_sa
+from ..report.labels import label
+from ..risk.risk import assess_risk
 
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB: generous for a capture, not for a DoS
 
@@ -65,6 +67,7 @@ _TMP_PREFIX = "tunnelscope-upload-"
 # packets, no payload) is appended there, so the tool can learn what is normal.
 HISTORY_DIR: str | None = os.environ.get("TUNNELSCOPE_HISTORY") or None
 _HISTORY_LOCK = threading.Lock()
+LIVE = None        # a live.LiveMonitor when serve runs with --live-follow / --live-interface
 
 # Classic pcap (LE/BE) and pcapng magic numbers (Wireshark wiki, "Development/LibpcapFileFormat").
 _MAGIC = {
@@ -151,7 +154,8 @@ def analysis_json(a: dict, source: str, anomalies: list[dict] | None = None) -> 
                        "title": v["title"], "message": v["message"]}
                       for v in verdicts if v["verdict"] == "FAIL"],
             "verdicts": verdicts,
-            "findings": [{"attribute": attr, "status": f.status.value, "value": f.value,
+            "findings": [{"attribute": attr, "label": label(attr), "status": f.status.value, "value": f.value,
+                          "confidence": f.confidence,
                           "vantage": f.vantage.value, "method": f.method, "note": f.note}
                          for attr, f in r.findings.items()],
             "scores": sa["scores"],
@@ -159,6 +163,7 @@ def analysis_json(a: dict, source: str, anomalies: list[dict] | None = None) -> 
             "gaps": summary[i]["gaps"],
         })
         sas[-1]["anomaly"] = anomalies[i] if anomalies else None
+        sas[-1]["risk"] = assess_risk(r, sa["verdicts"], sas[-1]["anomaly"]) if anomalies else sa["risk"]
         sas[-1]["explanation"] = explain_sa(sas[-1], sas[-1]["anomaly"])
     return {"ok": True, "filename": source, "n_sas": len(sas), "sas": sas}
 
@@ -212,9 +217,16 @@ class _Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/health":
             self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file(),
-                             "history": bool(HISTORY_DIR)})
+                             "history": bool(HISTORY_DIR), "live": LIVE is not None})
         elif path == "/api/history":
             self._json(200, history_summary())
+        elif path == "/api/live":
+            if LIVE is None:
+                self._json(200, {"ok": True, "enabled": False})
+            else:
+                st = LIVE.status()
+                st["windows"] = st["windows"][:20]
+                self._json(200, {"ok": True, **st})
         elif path.startswith("/api/"):
             self._json(404, {"ok": False, "error": "not found"})
         elif path == "/basic" or not self._static(path):
@@ -293,10 +305,16 @@ def make_server(port: int = 8765) -> ThreadingHTTPServer:
     return ThreadingHTTPServer(("127.0.0.1", port), _Handler)
 
 
-def run_server(port: int = 8765, open_browser: bool = True, history: str | None = None) -> None:
-    global HISTORY_DIR
+def run_server(port: int = 8765, open_browser: bool = True, history: str | None = None,
+               live_follow: str | None = None, live_interface: str | None = None, live_window: int = 30) -> None:
+    global HISTORY_DIR, LIVE
     if history:
         HISTORY_DIR = history
+    if live_follow or live_interface:
+        from ..live.live import LiveMonitor
+        LIVE = LiveMonitor(interface=live_interface, follow=live_follow, window=live_window, history=HISTORY_DIR)
+        LIVE.start_capture()
+        threading.Thread(target=LIVE.run, daemon=True).start()
     server = make_server(port)
     bound_port = server.server_address[1]
     url = f"http://127.0.0.1:{bound_port}/"
@@ -304,6 +322,7 @@ def run_server(port: int = 8765, open_browser: bool = True, history: str | None 
     print(f"TunnelScope local {ui}: {url}")
     print("Local only (127.0.0.1); uploads are deleted after each response.")
     print(f"Anomaly history: {HISTORY_DIR + ' (posture profiles only, no packets)' if HISTORY_DIR else 'off'}")
+    print(f"Live analysis: {LIVE.status()['source'] + f', {LIVE.window}s windows' if LIVE else 'off'}")
     if open_browser:
         threading.Timer(0.3, lambda: webbrowser.open(url)).start()
     try:
@@ -311,4 +330,6 @@ def run_server(port: int = 8765, open_browser: bool = True, history: str | None 
     except KeyboardInterrupt:
         print("\nstopped")
     finally:
+        if LIVE:
+            LIVE.stop()
         server.server_close()

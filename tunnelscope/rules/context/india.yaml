@@ -20,7 +20,7 @@ clauses:
     in_force: "2027-05-13"
     text: "appropriate data security measures, such as securing of personal data through encryption, obfuscation, masking or the use of virtual tokens mapped to that personal data"
     relevance: "Where personal data crosses this IPsec link: is it encrypted, with what, and would the endpoint accept weaker (downgrade exposure)."
-    evidence_rules: [V-207205, V-207193, V-207223, RFC8247-DH-MUST, RFC8247-DH-OFFER, RFC8247-ENCR, CVE-2026-78135]
+    evidence_rules: [V-207205, V-207193, V-207223, RFC8247-DH-MUST, RFC8247-DH-OFFER, RFC8247-ENCR, CVE-2026-78135, RFC4301-CONFIDENTIALITY, RFC8221-ESP-3DES, RFC4303-SEQ]
     does_not_show: "Whether this link carries personal data at all; encryption at rest; masking or tokenisation; any other path the data takes."
   - id: DPDP-R6-1g
     instrument: "Digital Personal Data Protection Rules, 2025"
@@ -38,7 +38,7 @@ clauses:
     issued: "2023-06-30"   # guidance for government entities, not a statute with a commencement date
     text: "Identify and classify sensitive/personal data and apply measures for encrypting such data in transit and at rest."
     relevance: "Evidence for the 'in transit' half, for data that crosses IPsec links."
-    evidence_rules: [V-207193, V-207223, RFC8247-DH-MUST, RFC8247-ENCR]
+    evidence_rules: [V-207193, V-207223, RFC8247-DH-MUST, RFC8247-ENCR, RFC4301-CONFIDENTIALITY, RFC8221-ESP-3DES]
     does_not_show: "Data classification; encryption at rest; the DLP deployment the same clause asks for."
   - id: CERTIN-GE-4.5.7
     instrument: "CERT-In Guidelines on Information Security Practices for Government Entities (June 2023)"

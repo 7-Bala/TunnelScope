@@ -6,11 +6,12 @@
 #   ./start.sh stop|status|logs|test|doctor
 # Options: --port N (engine, default 8765)  --no-browser  --rebuild (force dashboard rebuild)
 #          --no-history (don't learn tunnels' normal behaviour / no anomaly detection)
+#          --live-follow DIR | --live-interface IFACE [--window S]  (live stream analysis, dashboard "Live" tab)
 # Everything is local: the engine binds 127.0.0.1 only. Logs: ./logs/  State: ./.run/
 set -uo pipefail
 cd "$(dirname "$0")"
 ROOT=$PWD LOGS=$ROOT/logs RUN=$ROOT/.run VENV=$ROOT/.venv DASH=$ROOT/fleet-dashboard
-PORT=${TUNNELSCOPE_PORT:-8765}; HIST=$ROOT/.tunnelscope-history; DEV=0; DETACH=0; BROWSER=1; REBUILD=0; CMD=start
+PORT=${TUNNELSCOPE_PORT:-8765}; HIST=$ROOT/.tunnelscope-history; LIVE=();  DEV=0; DETACH=0; BROWSER=1; REBUILD=0; CMD=start
 mkdir -p "$LOGS" "$RUN"
 
 if [ -t 1 ]; then B=$'\033[1m'; G=$'\033[32m'; Y=$'\033[33m'; R=$'\033[31m'; D=$'\033[2m'; N=$'\033[0m'; else B= G= Y= R= D= N=; fi
@@ -24,7 +25,8 @@ while [ $# -gt 0 ]; do case $1 in
   --dev) DEV=1;; -d|--detach) DETACH=1;; --no-browser) BROWSER=0;; --rebuild) REBUILD=1;;
   --port) PORT=${2:?--port needs a number}; shift;;
   --no-history) HIST="";;
-  -h|--help) sed -n 2,9p "$0" | sed 's/^# \{0,1\}//'; exit 0;;
+  --live-follow|--live-interface|--window) LIVE+=("$1" "${2:?$1 needs a value}"); shift;;
+  -h|--help) sed -n 2,10p "$0" | sed 's/^# \{0,1\}//'; exit 0;;
   *) die "unknown argument: $1 (try --help)";; esac; shift; done
 
 pidalive() { [ -f "$1" ] && kill -0 "$(cat "$1")" 2>/dev/null; }
@@ -99,11 +101,11 @@ if pidalive "$RUN/engine.pid" || health >/dev/null; then
 else
   rotate "$LOGS/engine.log"
   say "starting engine …"
-  nohup "$VENV/bin/python" -m tunnelscope.cli serve --no-browser --port "$PORT" ${HIST:+--history "$HIST"} >>"$LOGS/engine.log" 2>&1 &
+  nohup "$VENV/bin/python" -m tunnelscope.cli serve --no-browser --port "$PORT" ${HIST:+--history "$HIST"} ${LIVE[@]+"${LIVE[@]}"} >>"$LOGS/engine.log" 2>&1 &
   echo $! >"$RUN/engine.pid"
   for _ in $(seq 1 40); do health >/dev/null && break; pidalive "$RUN/engine.pid" || break; sleep 0.25; done
   health >/dev/null || { tail -10 "$LOGS/engine.log"; rm -f "$RUN/engine.pid"; die "engine did not come up (logs/engine.log). Port $PORT busy? try --port"; }
-  ok "engine healthy on http://127.0.0.1:$PORT  ${D}(anomaly history: ${HIST:-off})${N}"
+  ok "engine healthy on http://127.0.0.1:$PORT  ${D}(anomaly history: ${HIST:-off}; live: ${LIVE[*]:-off})${N}"
 fi
 URL=http://127.0.0.1:$PORT/
 if [ $DEV -eq 1 ]; then

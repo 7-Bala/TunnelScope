@@ -17,12 +17,12 @@ the configuration we set, confirmed by the endpoint's own `swanctl`/`pluto` log 
 `*.groundtruth.json` files). It is **never** inferred from the capture — no circular validation.
 
 ## Contents
-- **87 pcaps** across: EXP-01/02-cipher (12), EXP-03-pfs (2), EXP-04-pq (7), EXP-05-leakage (1), EXP-06r1-superseded (2), EXP-06r2-failure-diagnosis (35), EXP-07-libreswan (10), EXP-08-mode (2), EXP-10-openbsd-iked (2), EXP-11-auth-method (2), EXP-12-rekey-cadence (1), EXP-13-cloud-vpn (5), EXPLOITLAB-live-cve78135 (1), SYNTHETIC-detector-fixture (1), T-057-encapsulation (4).
+- **103 pcaps** across: EXP-01/02-cipher (12), EXP-03-pfs (2), EXP-04-pq (7), EXP-05-leakage (1), EXP-06r1-superseded (2), EXP-06r2-failure-diagnosis (35), EXP-07-libreswan (10), EXP-08-mode (2), EXP-10-openbsd-iked (2), EXP-11-auth-method (2), EXP-12-rekey-cadence (1), EXP-13-cloud-vpn (5), EXP-15-suites-ah (14), EXPLOITLAB-live-cve78135 (1), SYNTHETIC-detector-fixture (3), T-057-encapsulation (4).
 - **52 EXP-05 rows** as per-packet tables (`testbed/captures/exp05/*.pkts.csv.gz`), raw pcaps
   hashed in `testbed/captures/exp05/manifest.csv`.
 
 ## Splits (by session/configuration, never by packet or flow — DEC-009)
-excluded: 16, locked_test: 17, train: 47, validation: 7.
+excluded: 32, locked_test: 17, train: 47, validation: 7.
 - `locked_test` includes the held-out rep5 families **and the entire Libreswan set** (cross-
   implementation generalisation is a test, not training).
 - Leakage controls: EXP-02 is a built-in negative control (AES-128 vs 256 must be near-chance);
