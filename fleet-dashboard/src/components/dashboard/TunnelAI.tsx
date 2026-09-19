@@ -1,94 +1,33 @@
-import { useEffect, useState } from "react"
-import { Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { type AnalyzedSA, type Explanation, type EngineInfo, engineInfo, explainWithAI, formatValue } from "@/lib/api"
+import { type AnalyzedSA, formatValue } from "@/lib/api"
 
-// One engine check per page load, shared by every open tunnel.
-let info: Promise<EngineInfo | null> | null = null
-const getInfo = () => (info ??= engineInfo())
-
-const LLM_NAME: Record<string, string> = { claude: "Claude", ollama: "local model (Ollama)" }
-
-/** Plain-English explanation. The template text is built from the verdicts by
- *  the engine; the AI rewrite is optional and fact-checked there. */
+/** Plain-English explanation, built by the engine from the verdicts and a
+ *  fixed glossary. No language model is involved. */
 export function ExplainedPane({ sa }: { sa: AnalyzedSA }) {
-  const [llm, setLlm] = useState<string>("none")
-  const [ai, setAi] = useState<Explanation | null>(null)
-  const [state, setState] = useState<"idle" | "working" | "error">("idle")
-  const [err, setErr] = useState("")
-  useEffect(() => {
-    getInfo().then((i) => setLlm(i?.llm ?? "none"))
-  }, [])
   const e = sa.explanation
-
-  const rewrite = async () => {
-    setState("working")
-    const r = await explainWithAI(sa)
-    if ("error" in r) {
-      setErr(r.error)
-      setState("error")
-    } else {
-      setAi(r)
-      setState("idle")
-    }
-  }
-
-  const aiUsed = ai && ai.source !== "template"
-  const problem = ai?.llm_rejected || ai?.llm_error
-
   return (
     <div className="max-w-[86ch]">
-      {aiUsed ? (
-        <p className="whitespace-pre-line text-[13.5px] leading-relaxed text-foreground/90">{ai.text}</p>
-      ) : (
-        <>
-          <p className="text-[13.5px] leading-relaxed text-foreground/90">{e.summary}</p>
-          <ul className="mt-3 space-y-2.5">
-            {e.points.map((p, i) => (
-              <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-muted-foreground">
-                <span
-                  aria-hidden
-                  className={cn(
-                    "mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full",
-                    p.kind === "fail" && p.severity === "high" ? "bg-neg" : p.kind === "fail" ? "bg-warn" : p.kind === "ok" ? "bg-pos" : "bg-violet",
-                  )}
-                />
-                <span>{p.text}</span>
-              </li>
-            ))}
-          </ul>
-          {e.unseen.length > 0 && (
-            <p className="mt-3 text-[12.5px] leading-relaxed text-faint">Not visible in this capture: {e.unseen.join("; ")}.</p>
-          )}
-        </>
+      <p className="text-[13.5px] leading-relaxed text-foreground/90">{e.summary}</p>
+      <ul className="mt-3 space-y-2.5">
+        {e.points.map((p, i) => (
+          <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-muted-foreground">
+            <span
+              aria-hidden
+              className={cn(
+                "mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full",
+                p.kind === "fail" && p.severity === "high" ? "bg-neg" : p.kind === "fail" ? "bg-warn" : p.kind === "ok" ? "bg-pos" : "bg-violet",
+              )}
+            />
+            <span>{p.text}</span>
+          </li>
+        ))}
+      </ul>
+      {e.unseen.length > 0 && (
+        <p className="mt-3 text-[12.5px] leading-relaxed text-faint">Not visible in this capture: {e.unseen.join("; ")}.</p>
       )}
-
-      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3 text-[12px]">
-        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-silver">
-          {aiUsed ? `Rewritten by ${ai.model}, checked against the evidence` : "Written from the verdicts (no AI)"}
-        </span>
-        {llm !== "none" && !aiUsed && (
-          <button
-            type="button"
-            onClick={rewrite}
-            disabled={state === "working"}
-            className="inline-flex items-center gap-1.5 rounded-full border border-violet/40 px-2.5 py-1 font-medium text-violet transition-colors hover:bg-violet-bg disabled:opacity-60"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {state === "working" ? "Rewriting…" : `Rewrite with ${LLM_NAME[llm] ?? llm}`}
-          </button>
-        )}
-        {aiUsed && (
-          <button type="button" onClick={() => setAi(null)} className="font-medium text-muted-foreground hover:text-foreground">
-            Show the evidence text
-          </button>
-        )}
-        {llm === "none" && (
-          <span className="text-faint">AI rewrite is off. Start the engine with --llm ollama or --llm claude to enable it.</span>
-        )}
-        {problem && <span className="text-warn">{problem}</span>}
-        {state === "error" && <span className="text-neg">{err}</span>}
-      </div>
+      <p className="mt-4 border-t border-border pt-3 text-[11.5px] text-faint">
+        Written directly from the verdicts above. Nothing here comes from a language model.
+      </p>
     </div>
   )
 }

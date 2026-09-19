@@ -38,7 +38,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 from ..report.report import analyze
 from ..report.dashboard import _CSS, render_sas_html
 from ..anomaly.anomaly import History, observe
-from ..explain.explain import explain_sa, explain_with_llm, llm_provider
+from ..explain.explain import explain_sa
 
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB: generous for a capture, not for a DoS
 
@@ -65,7 +65,6 @@ _TMP_PREFIX = "tunnelscope-upload-"
 # packets, no payload) is appended there, so the tool can learn what is normal.
 HISTORY_DIR: str | None = os.environ.get("TUNNELSCOPE_HISTORY") or None
 _HISTORY_LOCK = threading.Lock()
-MAX_JSON_BYTES = 2 * 1024 * 1024
 
 # Classic pcap (LE/BE) and pcapng magic numbers (Wireshark wiki, "Development/LibpcapFileFormat").
 _MAGIC = {
@@ -213,7 +212,7 @@ class _Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/health":
             self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file(),
-                             "history": bool(HISTORY_DIR), "llm": llm_provider()})
+                             "history": bool(HISTORY_DIR)})
         elif path == "/api/history":
             self._json(200, history_summary())
         elif path.startswith("/api/"):
@@ -225,9 +224,6 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         url = urlparse(self.path)
-        if url.path == "/api/explain":
-            self._explain()
-            return
         if url.path not in ("/api/upload", "/api/analyze"):
             self._json(404, {"ok": False, "error": "not found"})
             return
@@ -275,25 +271,6 @@ class _Handler(BaseHTTPRequestHandler):
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def _explain(self):
-        """POST {sa, anomaly?} (one entry of /api/analyze's sas) -> the plain-
-        English explanation, rewritten by the configured LLM if there is one."""
-        try:
-            n = int(self.headers.get("Content-Length", "0"))
-        except ValueError:
-            n = 0
-        if not 0 < n <= MAX_JSON_BYTES:
-            self._json(400, {"ok": False, "error": "expected a JSON body"})
-            return
-        try:
-            body = json.loads(self.rfile.read(n))
-            sa = body["sa"]
-            out = explain_with_llm(sa, sa.get("anomaly"))
-        except (ValueError, KeyError, TypeError) as e:
-            self._json(400, {"ok": False, "error": f"bad request: {type(e).__name__}"})
-            return
-        self._json(200, {"ok": True, **out})
-
     def log_message(self, fmt, *args):  # keep stderr access logging, just tag it
         if self.path == "/health":  # start.sh polls this; don't drown the log
             return
@@ -327,8 +304,6 @@ def run_server(port: int = 8765, open_browser: bool = True, history: str | None 
     print(f"TunnelScope local {ui}: {url}")
     print("Local only (127.0.0.1); uploads are deleted after each response.")
     print(f"Anomaly history: {HISTORY_DIR + ' (posture profiles only, no packets)' if HISTORY_DIR else 'off'}")
-    llm = llm_provider()
-    print(f"LLM explanations: {llm}" + ("  (sends the explanation text, not the capture, to the provider)" if llm == "claude" else ""))
     if open_browser:
         threading.Timer(0.3, lambda: webbrowser.open(url)).start()
     try:

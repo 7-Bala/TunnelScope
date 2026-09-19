@@ -61,7 +61,7 @@ export function Insights({ gateways }: { gateways: Gateway[] }) {
           {n(exp.none, "text-faint", "not measurable")}
         </Row>
         <Row label="Explanations">
-          <span className="text-faint">{!info || info.llm === "none" ? "from the verdicts" : `+ ${info.llm} rewrite`}</span>
+          <span className="text-faint">from the verdicts</span>
         </Row>
       </div>
       <p className="px-5 pb-3.5 text-[11.5px] leading-relaxed text-faint">Open a tunnel for the explanation, attacker view and changes.</p>

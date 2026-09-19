@@ -1,16 +1,20 @@
 # 07 — The AI layer (T-082, 2026-09-20)
 
-Three features, each using the kind of AI that fits its job, each with a stated limit.
+Three features, each with a stated limit. **Every model is trained by the project on its own data;
+no pretrained or third-party AI model is used anywhere (decision 2026-09-20).**
 Code: `tunnelscope/leakage/attacker.py`, `tunnelscope/anomaly/`, `tunnelscope/explain/`.
 Tests: `tests/test_ai_layer.py` (18).
 
 ## Which model, and did we build it?
 
+"Built by us" means trained by us on our own data. scikit-learn supplies the algorithms (Random
+Forest, Isolation Forest), the way numpy supplies arithmetic; it ships no trained model.
+
 | Feature | Model | Built by us? | Why this model |
 |---|---|---|---|
 | Attacker view | Random Forest (scikit-learn), 200 trees | **Yes**: trained on our EXP-05 lab traffic (380 windows, 40 sessions) | Already validated in EXP-05 as the attacker model; small, explainable, runs offline in ~0.6 s |
 | Anomaly detection | Rules + robust z-score + Isolation Forest (scikit-learn) | **Yes**: learns each organisation's own tunnels from their own history | No pretrained model exists for IPsec posture, and "normal" differs per network, so it must learn on site; unsupervised, so no labelled attacks are needed |
-| Plain-English explanations | Template from the verdicts, optionally rewritten by an LLM: **Claude Opus 5** (online) or a **local open-weight model via Ollama** (air-gapped) | Template: yes. LLM: **no, we use an existing one** | Training an LLM is neither possible nor needed; the LLM only rewords text we generate, and a fact check rejects any new rule, algorithm or number |
+| Plain-English explanations | None: generated from the verdicts and a glossary we wrote | Yes, fully | Explaining a verdict needs no model; any language model would have to be someone else's, and could add facts |
 
 ## 1. Random Forest attacker (`attacker_exposure` finding)
 - Features per 2-second window: sizes, timing and direction (identical to EXP-05, test-enforced).
@@ -48,11 +52,8 @@ Tests: `tests/test_ai_layer.py` (18).
 ## 3. Plain-English explanations (`tunnelscope explain`, dashboard "Explained" tab)
 - The template states every FAIL with what the rule means, why it matters and what to do (a glossary
   of all 9 rules, test-enforced), plus everything the capture could not show.
-- The LLM rewrite is off by default (I9, offline). `--llm ollama` needs `ollama serve` and a pulled
-  model (`TUNNELSCOPE_OLLAMA_MODEL`, default `llama3.2`). `--llm claude` needs `pip install
-  tunnelscope[llm]` and Anthropic credentials, and sends only the explanation text (never the
-  capture) to the API.
-- **Fact check:** every rule ID, algorithm name and number in the rewrite must already appear in the
-  template text, and "compliant" is banned. On failure, the template is shown with the reason.
-- Not verified live here: no Anthropic credentials and no Ollama model on this machine. Both paths
-  are tested with stand-in providers, and the unavailable case falls back correctly.
+- No language model. An optional LLM rewrite (Claude or a local Ollama model) was built and then
+  removed the same day, at the user's decision: every model in TunnelScope must be trained by us.
+  Training our own language model is not realistic (it needs vast text and compute) and would
+  risk inventing facts. `tests/test_ai_layer.py::test_no_outside_model_is_used` fails if an LLM
+  client, a model download or a network call appears in the package.

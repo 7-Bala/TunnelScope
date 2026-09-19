@@ -157,35 +157,21 @@ def test_every_rule_has_a_plain_explanation():
     assert ids <= set(ex.GLOSSARY)
 
 
+def test_no_outside_model_is_used():
+    """Decision 2026-09-20: every model is trained by the project. No LLM client,
+    no model download, no network call anywhere in the package."""
+    import pathlib
+    pkg = pathlib.Path(ex.__file__).parents[1]
+    src = "\n".join(p.read_text() for p in pkg.rglob("*.py")).lower()
+    for banned in ("anthropic", "openai", "ollama", "gemini", "urllib.request.urlopen", "transformers", "huggingface"):
+        assert banned not in src, banned
+
+
 def test_template_covers_every_fail(sa_cw):
     e = ex.explain_sa(sa_cw)
     fails = {v["rule_id"] for v in sa_cw["verdicts"] if v["verdict"] == "FAIL"}
     assert {p["rule_id"] for p in e["points"] if p["kind"] == "fail"} == fails
     assert "compliant" not in ex.as_text(e).lower()
-
-
-def test_fact_check():
-    src = "V-207193 failed: MODP-1024 was seen. 2 high."
-    assert ex.check_rewrite(src, "Rule V-207193 failed because MODP-1024 is weak.") is None
-    assert "MODP-768" in ex.check_rewrite(src, "It used MODP-768.")
-    assert "V-207205" in ex.check_rewrite(src, "V-207205 also failed.")
-    assert "90" in ex.check_rewrite(src, "90 percent of tunnels")
-    assert ex.check_rewrite(src, "The tunnel is compliant.") is not None
-
-
-def test_llm_output_is_used_only_if_it_passes(sa_cw, monkeypatch):
-    monkeypatch.setitem(ex.PROVIDERS, "fake", lambda t: ("Two high-severity problems: V-207193 and RFC8247-DH-MUST.", "fake-1"))
-    r = ex.explain_with_llm(sa_cw, provider="fake")
-    assert r["source"] == "fake" and r["model"] == "fake-1"
-    monkeypatch.setitem(ex.PROVIDERS, "fake", lambda t: ("It uses MODP-768 and is compliant.", "fake-1"))
-    r = ex.explain_with_llm(sa_cw, provider="fake")
-    assert r["source"] == "template" and "MODP-768" in r["llm_rejected"]
-    def boom(t):
-        raise ConnectionError("no network")
-    monkeypatch.setitem(ex.PROVIDERS, "fake", boom)
-    r = ex.explain_with_llm(sa_cw, provider="fake")
-    assert r["source"] == "template" and "no network" in r["llm_error"]
-    assert ex.explain_with_llm(sa_cw, provider="none")["source"] == "template"
 
 
 # --------------------------------------------------------------- server ---
@@ -199,15 +185,12 @@ def test_server_history_and_explain(tmp_path, monkeypatch):
     try:
         base = f"http://127.0.0.1:{port}"
         h = json.load(urllib.request.urlopen(base + "/health"))
-        assert h["history"] is True and h["llm"] == "none"
+        assert h["history"] is True and "llm" not in h
         data = open(os.path.join(CAP, "cloud", "c-w.pcap"), "rb").read()
         res = json.load(urllib.request.urlopen(urllib.request.Request(base + "/api/analyze?name=c-w.pcap", data)))
         sa = res["sas"][0]
         assert sa["anomaly"]["status"] == "learning" and sa["explanation"]["source"] == "template"
-        req = urllib.request.Request(base + "/api/explain", json.dumps({"sa": sa}).encode(),
-                                     {"Content-Type": "application/json"})
-        e = json.load(urllib.request.urlopen(req))
-        assert e["ok"] and e["text"].startswith("This tunnel")
+        assert sa["explanation"]["summary"].startswith("This tunnel")
         hist = json.load(urllib.request.urlopen(base + "/api/history"))
         assert hist["tunnels"][0]["observations"] == 1
     finally:
