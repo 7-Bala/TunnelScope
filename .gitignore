@@ -68,3 +68,7 @@ tunnelscope/web/
 build/offline/out/
 build/lib/
 build/bdist*/
+
+# start.sh runtime
+logs/
+.run/
