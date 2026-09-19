@@ -195,6 +195,8 @@ REQUIRED_FIELDS = (
     "esp.spi", "esp.sequence",
     # T-057: IPv6 and UDP-encapsulated ESP offsets
     "ip.hdr_len", "ipv6.src", "ipv6.dst", "ipv6.plen", "ipv6.nxt", "udp.length",
+    # T-083: AH (RFC 4302), whose header is not encrypted
+    "ah.spi", "ah.sequence", "ah.next_header", "ah.icv",
 )
 
 
@@ -334,6 +336,25 @@ def esp_packets(pcap: str) -> list[dict]:
     return pkts
 
 
+@_memo
+def ah_packets(pcap: str) -> list[dict]:
+    """AH packets (RFC 4302). AH authenticates but does not encrypt, so its
+    header is readable: next_header (4 = IPv4, 41 = IPv6 inside -> tunnel mode;
+    an upper-layer protocol -> transport mode) and the ICV, whose length names
+    the integrity algorithm's output size."""
+    fields = ["frame.number", "frame.time_relative", "ip.src", "ip.dst", "ip.len",
+              "ipv6.src", "ipv6.dst", "ipv6.plen", "ah.spi", "ah.sequence", "ah.next_header", "ah.icv"]
+    pkts = []
+    for r in _run_fields(pcap, "ah", fields):
+        r = (r + [""] * len(fields))[:len(fields)]
+        fn, t, src, dst, iplen, src6, dst6, plen6, spi, seq, nh, icv = r
+        pkts.append(dict(frame=_int(fn), t=_float(t), src=_first(src) or _first(src6),
+                         dst=_first(dst) or _first(dst6), ip_len=_ipv4_equivalent_len(iplen, plen6),
+                         spi=_first(spi), seq=_int(_first(seq)), next_header=_int(_first(nh)),
+                         icv_len=len(_first(icv) or "") // 2))
+    return pkts
+
+
 def capture_summary(pcap: str) -> dict:
     """Quick shape of a capture: does it contain IKE, ESP, which exchanges."""
     p = Path(pcap)
@@ -341,8 +362,9 @@ def capture_summary(pcap: str) -> dict:
         raise InputError(f"capture not found: {pcap}")
     ike = ike_messages(pcap)
     esp = esp_packets(pcap)
+    ah = ah_packets(pcap)
     exch = sorted({m["exchange_name"] for m in ike if m["exchange"] is not None})
-    return {"pcap": str(pcap), "n_ike": len(ike), "n_esp": len(esp),
+    return {"pcap": str(pcap), "n_ike": len(ike), "n_esp": len(esp), "n_ah": len(ah),
             "exchanges": exch,
             "has_ike_sa_init": any(m["exchange"] == 34 for m in ike)}
 

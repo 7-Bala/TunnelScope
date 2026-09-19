@@ -9,8 +9,9 @@ def test_reports_generate_and_separate_statuses():
     # technical report keeps observed vs inferred distinct and cites authority
     assert "not observable" in tech.lower() or "not-observable" in tech.lower()
     assert "DISA" in tech and "RFC 8247" in tech
-    # a NOT_OBSERVABLE finding (mode) must never render as a value
-    assert "| mode |" in tech and "not observable" in tech
+    # an undeterminable finding (mode) must never render as a value
+    assert "| Tunnel / transport mode | unknown | — |" in tech
+    assert "### Threat matrix" in tech and "Risk score" in ex
 
 def test_exec_flags_high_severity():
     a = analyze(os.path.join(CAP, "classical-baseline.pcap"))

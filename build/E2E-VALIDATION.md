@@ -1,8 +1,8 @@
 # TunnelScope — End-to-End Validation (T-039)
 
-Ran the full pipeline (ingest → evidence → assess) over **69 captures** and checked every finding against the causal ground truth in `dataset/MANIFEST.csv`.
+Ran the full pipeline (ingest → evidence → assess) over **85 captures** and checked every finding against the causal ground truth in `dataset/MANIFEST.csv`.
 
-**Result: 69/69 captures pass; 0 mismatch(es).**
+**Result: 85/85 captures pass; 0 mismatch(es).**
 
 ## Coverage by experiment
 
@@ -13,10 +13,12 @@ Ran the full pipeline (ingest → evidence → assess) over **69 captures** and 
 - EXP-06r2-failure-diagnosis: 35 captures
 - EXP-07-libreswan: 10 captures
 - EXP-08-mode: 2 captures
+- EXP-15-suites-ah: 14 captures
+- SYNTHETIC-replay: 2 captures
 
 ## Standing anti-overclaim checks (every capture)
 
-- mode is never claimed as a value at T0 (EXP-08): enforced
+- mode is claimed only when it matches ground truth, and tunnel mode only from AH's plaintext next header (EXP-08/14): enforced
 - no ESP-side key-length finding ever exists (F-05/EXP-02): enforced
 
 ## Mismatches

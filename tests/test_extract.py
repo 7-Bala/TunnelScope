@@ -42,10 +42,14 @@ def test_finding(pcap, attr, status, value):
     assert f.value == value, f"{pcap}:{attr} value {f.value} != {value}"
 
 
-def test_mode_never_claimed_at_t0():
-    # EXP-08: mode must be NOT_OBSERVABLE from passive ESP - never a value.
+def test_mode_never_claimed_without_proof():
+    # EXP-08/14: a tunnel capture with no packet below the tunnel-mode size floor
+    # gets NO mode value (never "tunnel" from traffic alone); the transport capture
+    # of the same traffic is proven transport by its sub-floor packets.
     f = _main("cs-aes256gcm16.pcap").findings["mode"]
-    assert f.status.value == "NOT_OBSERVABLE" and f.value is None
+    assert f.status.value == "UNKNOWN" and f.value is None
+    t = _main("cs-transport-aes256gcm16.pcap").findings["mode"]
+    assert t.status.value == "INFERRED" and t.value == "transport" and "size" in t.method
 
 
 def test_key_length_never_read_from_esp():
@@ -219,6 +223,7 @@ def test_esp_only_rekey_stays_one_tunnel(monkeypatch):
     merged = first + [dict(p, t=p["t"] + t0, frame=p["frame"] + len(first)) for p in second]
     monkeypatch.setattr(extract.tshark, "ike_messages", lambda pcap: [])
     monkeypatch.setattr(extract.tshark, "esp_packets", lambda pcap: merged)
+    monkeypatch.setattr(extract.tshark, "ah_packets", lambda pcap: [])
     recs = extract.group_sas("merged-rekey")
     assert len(recs) == 1, "a rekeying ESP-only tunnel must not be split per SPI"
     r = recs[0]

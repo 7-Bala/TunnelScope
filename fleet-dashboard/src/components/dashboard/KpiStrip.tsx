@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 
 interface Readout {
   label: string
-  value: number
+  value: number | string
   tone?: "violet" | "pos" | "warn" | "neg"
   foot: string
 }

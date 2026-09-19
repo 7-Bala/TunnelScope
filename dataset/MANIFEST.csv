@@ -75,6 +75,20 @@ exp10/obsd-vendor.pcap,ccd40cd3a840d38e582d152dee454ce0d8eb0b610e958303fd2cdd656
 exp11/certauth.pcap,6d4a3e8e8b00b3bb37dc21d57b82c2d1be24d7b1f082a8d6a16fc77ad3d8c097,4373,6,EXP-11-auth-method,,strongswan-5.9.8,"T0/T1 (router, keyless)",certauth.groundtruth.json,,,,,,excluded
 exp11/psk-control.pcap,cba6ad21dda0d0f76b10ccb531c2df7982b5657f4547c83d556dafd9a81cf096,1785,4,EXP-11-auth-method,,strongswan-5.9.8,"T0/T1 (router, keyless)",psk-control.groundtruth.json,,,,,,excluded
 exp12/rekey-cadence.pcap,e38bbe2b7a3f5df4e78af49a383d89f1bba3a9544da3c0b39d15aca37bdeea53,7400,32,EXP-12-rekey-cadence,,strongswan-5.9.8,"T0/T1 (router, keyless)",rekey-cadence.groundtruth.json,,,,,,excluded
+exp15/a-tra-sha1.pcap,66b72a7430ec88e305ef180e4b0ec3b83a2c4a6c2b6d7cbe4a4a118e0b0d315a,22136,64,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",a-tra-sha1.groundtruth.json,,,,,,excluded
+exp15/a-tra-sha256.pcap,02d07d3f61de1ca2972d66a174ed230a386beefb6bc58cf367e3494317216ee4,22360,64,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",a-tra-sha256.groundtruth.json,,,,,,excluded
+exp15/a-tra-sha512.pcap,1d2ed6c2985c04269e0d576bc55a6377c41381740e94289db674465be08c3a35,23256,64,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",a-tra-sha512.groundtruth.json,,,,,,excluded
+exp15/a-tun-sha256.pcap,a4d0fc58455ea570ae13260fb24d2f524108f7647bb544394fb7e46d18ec76e8,23464,64,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",a-tun-sha256.groundtruth.json,,,,,,excluded
+exp15/a-tun-sha384.pcap,442f0d7725be9dcc592d2d2b38efa9b9d6ad188887ff6eeb09ba9fae2baa8e51,23912,64,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",a-tun-sha384.groundtruth.json,,,,,,excluded
+exp15/s-3des.pcap,3fffeb6f428a0b91a83cf259889fac56075012b411656324d998357b05c5887e,23336,64,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-3des.groundtruth.json,,,,,,excluded
+exp15/s-ecp256.pcap,57921ccffe965e5e240e30deef5f5df6fe6c42ac7df10eab619244e96bec4029,23084,62,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-ecp256.groundtruth.json,,,,,,excluded
+exp15/s-ecp384.pcap,df8da85878eb441be43d23987bc897a58072010c8faae2c306a632a5ec239d76,23404,62,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-ecp384.groundtruth.json,,,,,,excluded
+exp15/s-mlkem.pcap,1c25ba9fc080e25f40d3224f0e70737e279151b7dae100daf09a77c72fae0e0f,26186,67,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-mlkem.groundtruth.json,,,,,,excluded
+exp15/s-modp1024.pcap,20a8d6d56688b770e6624eb4196607553ff81f4d9619414526974c0529d93e21,24080,64,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-modp1024.groundtruth.json,,,,,,excluded
+exp15/s-modp1536.pcap,9f31fe0480257fb3261af7f37954512ff16b322a2fa1a99f69a2aab364a473be,24116,62,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-modp1536.groundtruth.json,,,,,,excluded
+exp15/s-modp3072.pcap,fbdc2b74c2a62ebf7905b07a8a56b5afec899c3227995f6e0ec0438c3ecf1e82,25300,62,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-modp3072.groundtruth.json,,,,,,excluded
+exp15/s-modp4096.pcap,a19be4ba9d03b34705c64d421d9bc9d13aef8dab6658d68f0fc6a1af7445553c,25220,62,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-modp4096.groundtruth.json,,,,,,excluded
+exp15/s-x25519.pcap,20500d2f9fb61b1a1a02ba2da8e6ae725b44c5e57470fcb0e0e836e3652ab679,23124,62,EXP-15-suites-ah,,strongswan-6.1.0,"T0/T1 (router, keyless)",s-x25519.groundtruth.json,,,,,,excluded
 exploitlab/cve-2026-78135-live.pcap,f08caadd2d28519090c708c0182b1d7fb7148cb596b769d3590e127904792891,1472,4,EXPLOITLAB-live-cve78135,,strongswan-5.9.8,"T0/T1 (router, keyless)",cve-2026-78135-live.groundtruth.json,,,,,,excluded
 fail-proposal-mismatch.pcap,991565abc5dd0f3deb9f27f5054415ac0b3a66ff08deaddd2a42343f16eeda0c,45320,144,EXP-06r1-superseded,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,train
 fail-ts-mismatch.pcap,328afc27f4c88d633f7e0bbb5dc55821b4120e4d347197ff5bec9eb3d9aa019c,43648,140,EXP-06r1-superseded,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,train
@@ -85,4 +99,6 @@ pq-mlkem768.pcap,87b45ab3934c437f0d80d3f268273b5f9083c6ff30cc718b2a26a9a3196eb68
 rekey-cs-pfs-off-aes256gcm16-run2.pcap,e3beb15b5e2b6a357af19d97619f53bdfad8c3a42732b7ba392a5ed67e06b779,832,4,EXP-03-pfs,cs-pfs-off-aes256gcm16,strongswan-5.9.8,"T0/T1 (router, keyless)",,AES-GCM-16,256,tunnel,False,,train
 rekey-cs-pfs-on-aes256gcm16-run2.pcap,78d01f9897bdbc92eb63f9e0a085339b4a390525f740477c9360b6fd781cb6cc,1376,4,EXP-03-pfs,cs-pfs-on-aes256gcm16,strongswan-5.9.8,"T0/T1 (router, keyless)",,AES-GCM-16,256,tunnel,True,,train
 synthetic/cve-2026-78135-plaintext-positive.pcap,799818c810779aa467a4368ef7a61bd192c89793c2d91049a931097da1bcb865,952,4,SYNTHETIC-detector-fixture,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,excluded
+synthetic/replay-attack.pcap,c70218738ec6a643aab69875dca7a2d441293849a20b5304ef4d26fd199af9c7,42138,137,SYNTHETIC-detector-fixture,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,excluded
+synthetic/replay-capture-dup.pcap,d97e792fb69a47f40d0a7aed9f24470cf2cd689ae832d32aee3afe7268193c62,42138,137,SYNTHETIC-detector-fixture,,strongswan-5.9.8,"T0/T1 (router, keyless)",,,,,,,excluded
 tfc-sample.pcap,95c036f99b642ca86edd731f5402037465f4089ccc68ce0098291eeda6decdc2,36744,24,EXP-05-leakage,tfc-sample,strongswan-6.1.0,"T0/T1 (router, keyless)",,AES-GCM-16,256,tunnel,False,,train

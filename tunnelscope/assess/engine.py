@@ -86,6 +86,17 @@ def _assert(op: str, want, value) -> bool | None:
         if any(g in want for g in ids if g is not None):
             return False
         return None if any(g is None for g in ids) else True
+    if op == "contains":     return isinstance(value, list) and want in value
+    if op in ("candidates_not_all_in", "candidates_none_in"):
+        # value: a candidate SET (the wire narrows it, can't always resolve it)
+        if not isinstance(value, list) or not value:
+            return None
+        bad = [v for v in value if v in want]
+        if op == "candidates_none_in":
+            return None if bad and len(bad) < len(value) else not bad
+        return None if bad and len(bad) < len(value) else len(bad) < len(value)
+    if op == "seq_clean":
+        return isinstance(value, dict) and value.get("replayed", 0) == 0 and value.get("resets", 0) == 0
     if op == "pq_present":   return isinstance(value, list) and any("ML-KEM" in str(v) for v in value)
     raise ValueError(f"unknown assert op: {op}")
 
@@ -109,6 +120,11 @@ def assess_record(rec: EvidenceRecord, baselines: list[dict] | None = None) -> l
     verdicts = []
     for b in baselines:
         for rule in b["rules"]:
+            need = rule.get("applies_to_protocol")
+            if need:
+                pf = rec.findings.get("ipsec_protocols")
+                if not (pf is not None and isinstance(pf.value, list) and need in pf.value):
+                    continue     # e.g. no AH verdict for an ESP-only SA: not applicable, not "unknown"
             f = rec.findings.get(rule["attribute"])
             common = dict(baseline=b["baseline"], authority=b["authority"], rule_id=rule["id"],
                           title=rule["title"], severity=rule.get("severity", "medium"),

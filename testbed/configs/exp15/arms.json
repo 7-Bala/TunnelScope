@@ -1,0 +1,175 @@
+{
+  "t-tun": {
+    "j": 0,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "esp",
+    "child": "aes256gcm16",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "traffic: tunnel, AES-GCM-256"
+  },
+  "t-tfc": {
+    "j": 1,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "esp",
+    "child": "aes256gcm16",
+    "mode": "tunnel",
+    "extra": [
+      "tfc_padding = mtu"
+    ],
+    "desc": "traffic: tunnel, TFC padding to MTU"
+  },
+  "t-tra": {
+    "j": 2,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "esp",
+    "child": "aes256gcm16",
+    "mode": "transport",
+    "extra": [],
+    "desc": "traffic: transport, AES-GCM-256"
+  },
+  "t-mux": {
+    "j": 3,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "esp",
+    "child": "aes256gcm16",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "traffic: tunnel, two classes at once"
+  },
+  "t-cbc": {
+    "j": 4,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "esp",
+    "child": "aes128-sha256",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "traffic: tunnel, AES-CBC-128 + HMAC-SHA-256"
+  },
+  "s-modp1024": {
+    "j": 10,
+    "ike": "aes128-sha1-modp1024",
+    "proto": "esp",
+    "child": "aes128-sha1",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: MODP-1024, AES-128, SHA-1 (weak)"
+  },
+  "s-modp1536": {
+    "j": 11,
+    "ike": "aes128-sha256-modp1536",
+    "proto": "esp",
+    "child": "aes128-sha256",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: MODP-1536 (SHOULD NOT)"
+  },
+  "s-modp3072": {
+    "j": 12,
+    "ike": "aes256-sha256-modp3072",
+    "proto": "esp",
+    "child": "aes256-sha256-modp3072",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: MODP-3072, PFS"
+  },
+  "s-modp4096": {
+    "j": 13,
+    "ike": "aes256-sha384-modp4096",
+    "proto": "esp",
+    "child": "aes256gcm16-modp4096",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: MODP-4096, SHA-384, PFS"
+  },
+  "s-ecp256": {
+    "j": 14,
+    "ike": "aes128gcm16-prfsha256-ecp256",
+    "proto": "esp",
+    "child": "aes128gcm16",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: ECP-256, AES-GCM-128"
+  },
+  "s-ecp384": {
+    "j": 15,
+    "ike": "aes256gcm16-prfsha384-ecp384",
+    "proto": "esp",
+    "child": "aes256gcm16-ecp384",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: ECP-384, AES-GCM-256, PFS"
+  },
+  "s-x25519": {
+    "j": 16,
+    "ike": "aes256-sha256-x25519",
+    "proto": "esp",
+    "child": "chacha20poly1305",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: Curve25519, ChaCha20-Poly1305 ESP"
+  },
+  "s-3des": {
+    "j": 17,
+    "ike": "3des-sha1-modp1024",
+    "proto": "esp",
+    "child": "3des-sha1",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: 3DES, SHA-1, MODP-1024 (legacy)"
+  },
+  "s-mlkem": {
+    "j": 18,
+    "ike": "aes256-sha256-x25519-ke1_mlkem768",
+    "proto": "esp",
+    "child": "aes256gcm16",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "suite: Curve25519 + ML-KEM-768 hybrid"
+  },
+  "a-tun-sha256": {
+    "j": 20,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "ah",
+    "child": "sha256",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "AH tunnel, HMAC-SHA-256-128"
+  },
+  "a-tra-sha256": {
+    "j": 21,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "ah",
+    "child": "sha256",
+    "mode": "transport",
+    "extra": [],
+    "desc": "AH transport, HMAC-SHA-256-128"
+  },
+  "a-tra-sha1": {
+    "j": 22,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "ah",
+    "child": "sha1",
+    "mode": "transport",
+    "extra": [],
+    "desc": "AH transport, HMAC-SHA-1-96"
+  },
+  "a-tun-sha384": {
+    "j": 23,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "ah",
+    "child": "sha384",
+    "mode": "tunnel",
+    "extra": [],
+    "desc": "AH tunnel, HMAC-SHA-384-192"
+  },
+  "a-tra-sha512": {
+    "j": 24,
+    "ike": "aes256-sha256-modp2048",
+    "proto": "ah",
+    "child": "sha512",
+    "mode": "transport",
+    "extra": [],
+    "desc": "AH transport, HMAC-SHA-512-256"
+  }
+}

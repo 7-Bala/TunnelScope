@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { type Gateway, type Finding, postureKind } from "@/lib/fleet"
 import { type AnalyzedSA, type FindingStatus, type VerdictResult, formatValue } from "@/lib/api"
 import { AttackerPane, ChangesPane, ExplainedPane } from "@/components/dashboard/TunnelAI"
+import { RiskBadge, ThreatPane } from "@/components/dashboard/ThreatMatrix"
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -42,7 +43,7 @@ const RESULT: Record<VerdictResult, { t: string; cls: string; order: number }> =
   PASS: { t: "Pass", cls: "text-pos", order: 4 },
 }
 
-type Pane = "explained" | "attacker" | "changes" | "verdicts" | "evidence" | "blind"
+type Pane = "explained" | "threats" | "attacker" | "changes" | "verdicts" | "evidence" | "blind"
 
 function Detail({ sa }: { sa: AnalyzedSA }) {
   const [pane, setPane] = useState<Pane>("explained")
@@ -51,7 +52,8 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
   const nAnom = sa.anomaly?.anomalies.filter((a) => a.severity !== "informational").length ?? 0
   const panes: { key: Pane; label: string; n?: number }[] = [
     { key: "explained", label: "Explained" },
-    { key: "attacker", label: "Attacker view" },
+    { key: "threats", label: "Threats", n: sa.risk?.risk.present },
+    { key: "attacker", label: "Traffic & exposure" },
     { key: "changes", label: "Changes", n: sa.anomaly ? nAnom : undefined },
     { key: "verdicts", label: "Verdicts", n: verdicts.length },
     { key: "evidence", label: "Evidence", n: sa.findings.length },
@@ -91,6 +93,7 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
       </div>
 
       {pane === "explained" && <ExplainedPane sa={sa} />}
+      {pane === "threats" && sa.risk && <ThreatPane risk={sa.risk} />}
       {pane === "attacker" && <AttackerPane sa={sa} />}
       {pane === "changes" && <ChangesPane sa={sa} />}
 
@@ -129,19 +132,23 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
                 <th className="py-1.5 pr-3 font-medium">Attribute</th>
                 <th className="py-1.5 pr-3 font-medium">Status</th>
                 <th className="py-1.5 pr-3 font-medium">Value</th>
+                <th className="py-1.5 pr-3 font-medium">Confidence</th>
                 <th className="py-1.5 font-medium">Vantage</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
               {sa.findings.map((f) => (
                 <tr key={f.attribute} className="align-top">
-                  <td className="py-2 pr-3 font-mono text-[12px] text-foreground/90">{f.attribute}</td>
+                  <td className="py-2 pr-3 text-[12.5px] text-foreground/90" title={f.attribute}>{f.label ?? f.attribute}</td>
                   <td className="py-2 pr-3">
                     <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS[f.status].cls)}>
                       {STATUS[f.status].t}
                     </span>
                   </td>
                   <td className="max-w-[420px] break-words py-2 pr-3 font-mono text-[12px] text-muted-foreground">{formatValue(f.value)}</td>
+                  <td className="py-2 pr-3 font-mono text-[12px] text-faint tnum">
+                    {f.status === "UNKNOWN" || f.status === "NOT_OBSERVABLE" || f.confidence == null ? "—" : `${Math.round(f.confidence * 100)}%`}
+                  </td>
                   <td className="py-2 font-mono text-[12px] text-faint" title={f.method}>{f.vantage}</td>
                 </tr>
               ))}
@@ -156,7 +163,7 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
           {blind.map((f) => (
             <li key={f.attribute} className="py-2.5">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[12px] text-foreground/90">{f.attribute}</span>
+                <span className="text-[12.5px] text-foreground/90" title={f.attribute}>{f.label ?? f.attribute}</span>
                 <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS[f.status].cls)}>{STATUS[f.status].t}</span>
               </div>
               {f.note && <p className="mt-1 max-w-[80ch] text-[12.5px] leading-relaxed text-muted-foreground">{f.note}</p>}
@@ -218,6 +225,12 @@ function Row({ g }: { g: Gateway }) {
             <span className="mt-1 block text-[12px] sm:hidden">{counts}</span>
           </span>
 
+          {g.detail?.risk && (
+            <span className="hidden shrink-0 flex-col items-end sm:flex" title={g.detail.risk.risk.note}>
+              <RiskBadge risk={g.detail.risk.risk} />
+              <span className="text-[10.5px] text-faint">risk</span>
+            </span>
+          )}
           <span className="hidden shrink-0 text-[12px] sm:block">{counts}</span>
           <ChevronDown className={cn("mt-1 h-4 w-4 shrink-0 text-faint transition-transform duration-200 sm:mt-0", open && "rotate-180 text-violet")} />
         </CollapsibleTrigger>

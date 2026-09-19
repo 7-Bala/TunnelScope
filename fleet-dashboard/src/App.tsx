@@ -7,6 +7,8 @@ import { SeverityBars } from "@/components/dashboard/SeverityBars"
 import { FleetRegister } from "@/components/dashboard/FleetRegister"
 import { Intake, type QueueItem } from "@/components/dashboard/Intake"
 import { Insights } from "@/components/dashboard/Insights"
+import { FleetThreats } from "@/components/dashboard/FleetThreats"
+import { LiveView } from "@/components/dashboard/LiveView"
 import type { TunnelState } from "@/components/tunnel/BackgroundTunnel"
 import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
 import { analyzeCapture, engineHealth, ENGINE_OFFLINE } from "@/lib/api"
@@ -132,7 +134,7 @@ function App() {
   }, [addFiles])
 
   const uploads = useMemo(() => queue.flatMap((q) => results[q.key] ?? []), [queue, results])
-  const gateways = view === "sample" ? GATEWAYS : uploads
+  const gateways = view === "sample" ? GATEWAYS : view === "live" ? [] : uploads
   const s = fleetStats(gateways)
   const busy = queue.some((q) => q.status === "queued" || q.status === "analysing")
   const tunnel: TunnelState = dragging ? "over" : busy ? "busy" : (flash ?? "idle")
@@ -154,7 +156,16 @@ function App() {
   const readouts = [
     { label: view === "sample" ? "Gateways" : "Tunnels", value: s.total, foot: view === "sample" ? "lab captures" : "security associations" },
     { label: "PQ-ready", value: s.counts.pq, tone: "pos" as const, foot: "hybrid ML-KEM selected" },
-    { label: "PQ not selected", value: s.counts.downgraded, tone: s.counts.downgraded ? ("warn" as const) : undefined, foot: "PQ offered, classical used" },
+    (() => {
+      const rs = gateways.flatMap((g) => (g.detail?.risk ? [g.detail.risk.risk] : []))
+      const worst = rs.length ? rs.reduce((a, b) => (b.score > a.score ? b : a)) : null
+      return {
+        label: "Highest risk",
+        value: worst ? worst.score : "—",
+        tone: worst ? (worst.score >= 45 ? ("neg" as const) : worst.score >= 20 ? ("warn" as const) : ("pos" as const)) : undefined,
+        foot: worst ? `${worst.band}, from the threat matrix` : "upload captures to score",
+      }
+    })(),
     { label: "High severity", value: s.high, tone: s.high ? ("neg" as const) : undefined, foot: "failed checks, each cited" },
     { label: "CVE-2026-78135", value: s.cve, tone: s.cve ? ("neg" as const) : undefined, foot: s.cve ? "pre-auth Child SA attempt" : "pattern not seen" },
   ]
@@ -198,7 +209,7 @@ function App() {
           </div>
         )}
 
-        <div className="mb-8">
+        <div className={cn("mb-8", view === "live" && "hidden")}>
           <Intake
             queue={queue}
             tunnel={tunnel}
@@ -218,7 +229,9 @@ function App() {
           </p>
         )}
 
-        {h ? (
+        {view === "live" ? (
+          <LiveView />
+        ) : h ? (
           <>
             <section className="mb-5">
               <div className="max-w-[52ch]">
@@ -258,6 +271,7 @@ function App() {
                   </div>
                   <SeverityBars high={s.high} medium={s.medium} informational={s.informational} />
                 </div>
+                <FleetThreats gateways={gateways} />
                 <Insights gateways={gateways} />
               </div>
 

@@ -73,3 +73,7 @@ build/bdist*/
 logs/
 .run/
 .tunnelscope-history/
+# EXP-15 (T-083): suite/AH captures are small primary evidence (tracked); traffic
+# sessions are large, so their per-packet tables are committed and pcaps hashed.
+!testbed/captures/exp15/*.pcap
+testbed/captures/exp15/traffic/*.pcap
