@@ -44,6 +44,28 @@ TRANSFORM_TYPE = {1: "ENCR", 2: "PRF", 3: "INTEG", 4: "KE", 5: "ESN",
                   10: "ADDKE5", 11: "ADDKE6", 12: "ADDKE7"}
 
 
+# T-085: an ICMP error QUOTES the header of the packet that caused it, so a
+# "destination unreachable" carries an ESP/AH/ISAKMP header inside it. tshark's
+# display filters match those too, and with occurrence=a the quoted packet's
+# ip.len is read instead of the real one. Found on a third-party capture
+# (Wireshark wiki ipsec_esp_capture_2: half the "ESP" frames were ICMP errors
+# quoting ESP), where it made the cipher sieve exclude the true cipher.
+#
+# Excluding every frame that contains ICMP would be wrong: AH does not encrypt,
+# so a genuine AH packet carrying a ping legitimately contains ICMP. The layer
+# order decides it - "ip:icmp:ip:esp" is quoted, "ip:ah:ip:icmp" is real - so
+# each row carries frame.protocols and is kept only when the IPsec layer comes
+# before any ICMP layer.
+def _outermost(protocols: str, layer: str) -> bool:
+    if not protocols:
+        return True
+    parts = protocols.split(":")
+    if layer not in parts:
+        return True
+    first_icmp = min((parts.index(p) for p in ("icmp", "icmpv6") if p in parts), default=len(parts))
+    return parts.index(layer) < first_icmp
+
+
 def tshark_bin() -> str:
     b = shutil.which("tshark")
     if not b:
@@ -192,7 +214,7 @@ REQUIRED_FIELDS = (
     "isakmp.tf.type", "isakmp.tf.id", "isakmp.vid_string",
     "isakmp.certreq.type", "isakmp.tf.id.encr", "isakmp.ike2.attr.key_length",
     "isakmp.tf.id.prf", "isakmp.tf.id.integ", "isakmp.tf.id.dh",
-    "esp.spi", "esp.sequence",
+    "esp.spi", "esp.sequence", "frame.protocols",
     # T-057: IPv6 and UDP-encapsulated ESP offsets
     "ip.hdr_len", "ipv6.src", "ipv6.dst", "ipv6.plen", "ipv6.nxt", "udp.length",
     # T-083: AH (RFC 4302), whose header is not encrypted
@@ -243,13 +265,15 @@ def ike_messages(pcap: str) -> list[dict]:
               "isakmp.messageid", "isakmp.length",
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
               "isakmp.vid_string", "isakmp.certreq.type",
-              "isakmp.tf.id.dh", "isakmp.tf.id.integ"]
+              "isakmp.tf.id.dh", "isakmp.tf.id.integ", "frame.protocols"]
     rows = _run_fields(pcap, "isakmp", fields)
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         (fn, t, src, dst, iplen, src6, dst6, plen6, ispi, rspi, exch, flags, mid, ilen,
-         notify, tftype, tfid, vid, certreq, tfdh, tfinteg) = r
+         notify, tftype, tfid, vid, certreq, tfdh, tfinteg, protos) = r
+        if not _outermost(protos, "isakmp"):
+            continue                      # quoted inside an ICMP error, not a real message
 
         def ints(s):
             # tolerant on purpose: tshark may print these hex or decimal, and a
@@ -309,12 +333,14 @@ def esp_packets(pcap: str) -> list[dict]:
     measurements skip the packet instead of using a wrong length."""
     fields = ["frame.number", "frame.time_relative", "ip.src", "ip.dst",
               "ip.len", "ip.hdr_len", "ipv6.src", "ipv6.dst", "ipv6.plen", "ipv6.nxt",
-              "udp.length", "esp.spi", "esp.sequence"]
+              "udp.length", "esp.spi", "esp.sequence", "frame.protocols"]
     rows = _run_fields(pcap, "esp", fields)
     pkts = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
-        fn, t, src, dst, iplen, hdrlen, src6, dst6, plen6, nxt6, udplen, spi, seq = r
+        fn, t, src, dst, iplen, hdrlen, src6, dst6, plen6, nxt6, udplen, spi, seq, protos = r
+        if not _outermost(protos, "esp"):
+            continue                      # an ICMP error quoting this ESP header, not a real packet
         content, encap = None, "native"
         if udplen:
             encap = "udp"
@@ -343,11 +369,14 @@ def ah_packets(pcap: str) -> list[dict]:
     an upper-layer protocol -> transport mode) and the ICV, whose length names
     the integrity algorithm's output size."""
     fields = ["frame.number", "frame.time_relative", "ip.src", "ip.dst", "ip.len",
-              "ipv6.src", "ipv6.dst", "ipv6.plen", "ah.spi", "ah.sequence", "ah.next_header", "ah.icv"]
+              "ipv6.src", "ipv6.dst", "ipv6.plen", "ah.spi", "ah.sequence", "ah.next_header", "ah.icv",
+              "frame.protocols"]
     pkts = []
     for r in _run_fields(pcap, "ah", fields):
         r = (r + [""] * len(fields))[:len(fields)]
-        fn, t, src, dst, iplen, src6, dst6, plen6, spi, seq, nh, icv = r
+        fn, t, src, dst, iplen, src6, dst6, plen6, spi, seq, nh, icv, protos = r
+        if not _outermost(protos, "ah"):
+            continue
         pkts.append(dict(frame=_int(fn), t=_float(t), src=_first(src) or _first(src6),
                          dst=_first(dst) or _first(dst6), ip_len=_ipv4_equivalent_len(iplen, plen6),
                          spi=_first(spi), seq=_int(_first(seq)), next_header=_int(_first(nh)),
