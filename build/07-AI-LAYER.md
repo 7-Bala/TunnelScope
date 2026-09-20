@@ -66,3 +66,12 @@ alternatives, shown only when windows agree (≥ 70%) and the probability is ≥
 error 0.049. Pre-registered failure kept: mixed traffic is abstained on in only 29% of sessions; the
 dominant type is named in 20 of 28 and video+interactive reads as web 8 of 8, which every such
 answer now states.
+
+## 5. Update EXP-16 (2026-09-20): generalisation, and a second model
+- The classifier now trains on **1,964 windows / 216 sessions**: synthetic shapes, **real lab
+  applications**, and **Libreswan**-carried traffic. Held-out repetition macro-F1 **0.986**.
+- **Cross-implementation:** 1.000 on Libreswan (trained on strongSwan only).
+- **Synthetic-only → real applications: 0.461.** Stated in the product next to every prediction.
+- **Mixed-traffic detector** (second stage, Random Forest on the first model's probability pattern):
+  92.9% of mixed sessions caught, 8.3% of single sessions wrongly flagged, video+interactive 100%.
+  Ships only because it met the bar pre-registered in EXP-16.

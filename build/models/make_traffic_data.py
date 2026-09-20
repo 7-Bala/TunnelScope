@@ -20,11 +20,16 @@ sys.path.insert(0, str(ROOT))
 from tunnelscope.leakage.attacker import window_features  # noqa: E402
 
 SOURCES = [("EXP-05", ROOT / "testbed/captures/exp05", ("base", "tfc")),
-           ("EXP-15", ROOT / "testbed/captures/exp15/traffic", ("tun", "tfc", "tra", "cbc"))]
-ARM_NAME = {"base": "tunnel", "tun": "tunnel", "tfc": "tunnel+tfc", "tra": "transport", "cbc": "tunnel-cbc"}
+           ("EXP-15", ROOT / "testbed/captures/exp15/traffic", ("tun", "tfc", "tra", "cbc")),
+           # EXP-16: REAL applications (Chromium, OpenSSH, Postfix, XMPP, RTP) and
+           # the same synthetic classes through Libreswan (cross-implementation)
+           ("EXP-16", ROOT / "testbed/captures/exp16", ("real", "lsw"))]
+ARM_NAME = {"base": "tunnel", "tun": "tunnel", "tfc": "tunnel+tfc", "tra": "transport", "cbc": "tunnel-cbc",
+            "real": "real-apps", "lsw": "libreswan"}
 
 
-def load(include_mux=False):
+def load(include_mux=False, keep=None):
+    """keep: only these arm names (after ARM_NAME mapping); None = all."""
     X, y, arm, rep, sess, src = [], [], [], [], [], []
     for tag, cap, arms in SOURCES:
         seen = set()
@@ -35,8 +40,11 @@ def load(include_mux=False):
             with gzip.open(cap / f"{t}.pkts.csv.gz", "rt") as f:
                 next(f)
                 pk = [(float(a_), d, int(n)) for a_, d, n in (l.strip().split(",") for l in f) if n]
+            name = ARM_NAME.get(a, a)
+            if keep is not None and name not in keep:
+                continue
             for v in window_features(pk):
-                X.append(v); y.append(cls); arm.append(ARM_NAME.get(a, a)); rep.append(int(r))
+                X.append(v); y.append(cls); arm.append(name); rep.append(int(r))
                 sess.append(t); src.append(tag)
     return (np.array(X, float), np.array(y), np.array(arm), np.array(rep), np.array(sess), np.array(src))
 

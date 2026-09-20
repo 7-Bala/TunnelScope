@@ -84,3 +84,17 @@ Still true after T-083: the AI identifies the traffic type, mode (partly) and an
 fields are still read by parsing, which is the correct method for plaintext. Key length on the ESP
 side is still impossible from outside (EXP-02). Only one IPsec stack (strongSwan 6.1) produced the
 new captures.
+
+
+## After EXP-16 (2026-09-20): what the generalisation tests changed
+- **Traffic types:** the dataset now includes **real applications** (Chromium over HTTPS, OpenSSH
+  shell and SFTP, Postfix/swaks e-mail, XMPP messaging, ffmpeg RTP, ping) captured through the
+  tunnel, alongside the synthetic shapes: 216 sessions in total.
+- **A second IPsec implementation:** the same classes captured through **Libreswan 5.4**. The
+  strongSwan-trained model scored **1.000** on them, so nothing in the method depends on the stack.
+- **The honest finding:** a model trained only on the synthetic shapes scored **0.461** on real
+  applications (file transfer 0.00). Accuracy in this task is set by how much the training traffic
+  resembles the traffic in front of it — not by model tuning, and not by more repetitions (adding
+  two more moved the score by 0.000).
+- **Mixed traffic**, EXP-15's failed prediction, is now caught by a second-stage detector (92.9% of
+  mixed sessions, 8.3% of single ones wrongly flagged, and 100% of the video+interactive case).

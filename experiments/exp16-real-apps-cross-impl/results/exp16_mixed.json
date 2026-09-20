@@ -1,0 +1,92 @@
+{
+  "n_sessions": 244,
+  "n_mixed": 28,
+  "by_tau": [
+    {
+      "tau": 0.2,
+      "mixed_caught": 0.929,
+      "single_wrongly_flagged": 0.083,
+      "video_interactive_caught": 1.0
+    },
+    {
+      "tau": 0.25,
+      "mixed_caught": 0.929,
+      "single_wrongly_flagged": 0.069,
+      "video_interactive_caught": 1.0
+    },
+    {
+      "tau": 0.3,
+      "mixed_caught": 0.929,
+      "single_wrongly_flagged": 0.06,
+      "video_interactive_caught": 1.0
+    },
+    {
+      "tau": 0.35,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.051,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.4,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.046,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.45,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.037,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.5,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.028,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.55,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.028,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.6,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.019,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.65,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.019,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.7,
+      "mixed_caught": 0.893,
+      "single_wrongly_flagged": 0.005,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.75,
+      "mixed_caught": 0.75,
+      "single_wrongly_flagged": 0.0,
+      "video_interactive_caught": 0.875
+    },
+    {
+      "tau": 0.8,
+      "mixed_caught": 0.75,
+      "single_wrongly_flagged": 0.0,
+      "video_interactive_caught": 0.875
+    }
+  ],
+  "chosen": {
+    "tau": 0.2,
+    "mixed_caught": 0.929,
+    "single_wrongly_flagged": 0.083,
+    "video_interactive_caught": 1.0
+  },
+  "ships": true,
+  "P16-5": true
+}

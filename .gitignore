@@ -78,3 +78,6 @@ logs/
 !testbed/captures/exp15/*.pcap
 testbed/captures/exp15/traffic/*.pcap
 testbed/captures/live/
+# EXP-16: real-application and Libreswan traffic sessions — large pcaps hashed in
+# captures/exp16/manifest.csv; the committed evidence is the per-packet tables.
+testbed/captures/exp16/*.pcap

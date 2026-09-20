@@ -1,0 +1,40 @@
+{
+  "synthetic_windows": 1375,
+  "real_windows": 305,
+  "libreswan_windows": 284,
+  "real_sessions": 32,
+  "libreswan_sessions": 32,
+  "P16-1 synthetic->real macro_f1": 0.4612,
+  "P16-1 synthetic->real session accuracy": 0.5312,
+  "P16-1 real sessions": 32,
+  "P16-1 per class": {
+    "bulk": 0.0,
+    "email": 0.98,
+    "icmp": 0.713,
+    "interactive": 0.185,
+    "messaging": 0.182,
+    "video": 0.222,
+    "voip": 0.961,
+    "web": 0.446
+  },
+  "P16-2 real LORO macro_f1": [
+    1.0,
+    0.9821,
+    1.0,
+    1.0
+  ],
+  "P16-2 mean": 0.9955,
+  "P16-3 strongswan->libreswan macro_f1": 1.0,
+  "P16-3 libreswan session accuracy": 1.0,
+  "P16-6 macro_f1 reps1-4": 0.983,
+  "P16-6 macro_f1 reps1-6": 0.983,
+  "P16-6 delta": 0.0,
+  "combined_windows": 1964,
+  "combined LORO macro_f1": 0.9856,
+  "verdicts": {
+    "P16-1 synthetic->real >= 0.60": false,
+    "P16-2 real LORO >= 0.85": true,
+    "P16-3 cross-implementation >= 0.90": true,
+    "P16-6 reps delta <= 0.02": true
+  }
+}
