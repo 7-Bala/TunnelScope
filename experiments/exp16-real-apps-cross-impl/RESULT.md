@@ -34,6 +34,13 @@ So the case that defeated confidence in EXP-15 (video+interactive read as "web b
 now caught. About 7% of mixed sessions still slip through; when the label that slips through is a
 measured confusion, the finding says so.
 
+## Sanity check of the shipped model (not a held-out number)
+Run over all 64 EXP-16 sessions, which are part of its training data: **62 answered correctly, 0
+answered wrongly, 2 abstained** — both real Chromium sessions, flagged as "mixed traffic". A page
+load does fetch many assets at once, so the flag is arguable, but by our labels it is a false flag
+(the detector's measured rate is 8.3%). The honest accuracy figures are the leave-one-repetition-out
+ones above, not this.
+
 ## Scope and limits
 - "Real applications" means real software against **lab servers**: no third-party service, account,
   credential or personal data (decided before capturing). Lab LAN, no WAN loss or jitter.
