@@ -81,6 +81,11 @@ services:
     container_name: sih26-alice-pq
     hostname: alice-pq
     cap_add: [NET_ADMIN, NET_RAW]
+    sysctls:
+      # EXP-16: real app hosts sit BEHIND these gateways, so they must forward
+      net.ipv4.ip_forward: 1
+      net.ipv4.conf.all.rp_filter: 0
+      net.ipv4.conf.default.rp_filter: 0
     networks:
       net-a: { ipv4_address: 10.10.1.20 }
     environment:
@@ -100,6 +105,11 @@ services:
     container_name: sih26-bob-pq
     hostname: bob-pq
     cap_add: [NET_ADMIN, NET_RAW]
+    sysctls:
+      # EXP-16: real app hosts sit BEHIND these gateways, so they must forward
+      net.ipv4.ip_forward: 1
+      net.ipv4.conf.all.rp_filter: 0
+      net.ipv4.conf.default.rp_filter: 0
     networks:
       net-b: { ipv4_address: 10.10.2.20 }
     environment:
@@ -148,6 +158,36 @@ services:
       - ./configs/exp07/ipsec.secrets:/etc/ipsec.secrets:ro
       - ./captures:/captures
     depends_on: [router]
+
+  # EXP-16: real application hosts behind the strongSwan gateways (lab-only
+  # clients and servers: Chromium, nginx, OpenSSH, Postfix/swaks, Prosody, ffmpeg)
+  apps-a:
+    image: sih26-apps
+    container_name: sih26-apps-a
+    hostname: apps-a
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-a: { ipv4_address: 10.10.1.50 }
+    environment:
+      ROUTE_CIDR: 10.10.2.0/24
+      ROUTE_GW: 10.10.1.20        # via the alice-pq gateway, so traffic enters the tunnel
+    volumes:
+      - ./captures:/captures
+    depends_on: [alice-pq]
+
+  apps-b:
+    image: sih26-apps
+    container_name: sih26-apps-b
+    hostname: apps-b
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-b: { ipv4_address: 10.10.2.50 }
+    environment:
+      ROUTE_CIDR: 10.10.1.0/24
+      ROUTE_GW: 10.10.2.20
+    volumes:
+      - ./captures:/captures
+    depends_on: [bob-pq]
 
 networks:
   net-a:

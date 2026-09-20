@@ -62,22 +62,27 @@ def test_attacker_names_the_traffic_type_only_with_its_confidence():
         assert t["class"] is None and t["why_not"]
 
 
-def test_mixed_traffic_label_outside_the_mix_carries_its_warning():
-    """EXP-15 P15-4 failed: most mixed sessions are named after their dominant
-    type, but video+interactive reads as web. Every such label must say so."""
+def test_mixed_traffic_is_flagged_as_mixed(mux_sessions=None):
+    """EXP-16 D: the second-stage detector catches sessions carrying two kinds
+    of traffic, including video+interactive, which confidence alone could not
+    (EXP-15 P15-4). A label may still be given, but only if it is in the mix."""
     from tunnelscope.evidence.record import EvidenceRecord
     mux = sorted(f[:-12] for f in os.listdir(EXP05) if f.startswith("exp05-mux") and f.endswith(".pkts.csv.gz"))
-    outside = 0
+    flagged = 0
     for m in mux:
         rec = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="x")
         rec._esp = _esp(_session(m))
         at.extract_attacker(rec)
         f = rec.findings["traffic_type"]
         parts = m.split("-")[2].split("_")
-        if f.value and f.value["class"] not in parts:
-            outside += 1
-            assert "caution" in f.note and "dominant" in f.note, m
-    assert outside >= 1       # the known confusion really is exercised
+        if f.value is None:
+            flagged += 1
+            assert "mixed" in f.note or "unlike the lab traffic" in f.note   # either abstain path
+        elif f.value["class"] not in parts:
+            # the detector misses ~7% of mixed sessions (EXP-16 D); when the label
+            # that slips through is one of the measured confusions, it must say so
+            assert "caution" in f.note, (m, f.value["class"])
+    assert flagged / len(mux) >= 0.8, f"only {flagged}/{len(mux)} mixed sessions flagged"
 
 
 def test_too_little_traffic_is_insufficient():

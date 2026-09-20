@@ -354,3 +354,11 @@ Suites (9) and AH (5) all match endpoint ground truth. `experiments/exp15-traffi
 ## EXP-16 — Real applications, cross-implementation, mixed detector — PRE-REGISTRATION (2026-09-20)
 Pre-registered in `experiments/exp16-real-apps-cross-impl/PREREG.md` before any capture. Scope of
 recording decided first: lab-only clients and servers, no third-party service, account or personal data.
+
+### EXP-16 — RESULT (2026-09-20)
+P16-1 **FAILED**: a synthetic-trained classifier scored macro-F1 0.461 on real applications (file
+transfer 0.00, messaging 0.18, interactive 0.19) — the lab's 0.995 was a property of the traffic
+generator, not of the model. P16-2 held (trained on real sessions: 0.995), P16-3 held
+(strongSwan→Libreswan 1.000), P16-6 held (extra repetitions moved nothing, delta 0.000), P16-5 held
+(mixed detector 92.9% caught / 8.3% false / video+interactive 100%). Shipped model retrained on all
+1,964 windows (LORO 0.986). `experiments/exp16-real-apps-cross-impl/RESULT.md`.

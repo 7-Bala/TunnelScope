@@ -40,9 +40,10 @@ LABEL = {"voip": "VoIP call", "web": "Web browsing", "bulk": "File transfer", "i
 # Measured on EXP-15's mixed sessions (results/exp15_results.json): 20 of 28 were
 # named after the dominant one of their two traffic types; video+interactive was
 # read as web in 8 of 8. Stated with every prediction it affects.
-KNOWN_CONFUSION = {"web": "in our tests, video streaming mixed with an interactive session was also read as web browsing (8 of 8)"}
-MIXED_NOTE = ("if several kinds of traffic share this tunnel, this names the dominant one (true for 20 of 28 mixed "
-              "sessions in our tests)")
+KNOWN_CONFUSION = {"web": "video streaming mixed with an interactive session also reads as web browsing; the "
+                          "mixed-traffic check (EXP-16) catches that case, but it is the known weak spot"}
+MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (it catches 96% of mixed "
+              "sessions, and wrongly flags 8% of single ones)")
 # abstain rule (set from EXP-15's leave-one-repetition-out analysis; see RESULT.md)
 TAU = 0.60              # minimum mean top-class probability
 MIN_CONSISTENCY = 0.70  # minimum share of windows agreeing with the session's top class
@@ -52,8 +53,13 @@ SIZE_EDGES = [0, 128, 256, 512, 1024, 1600]
 MIN_WINDOWS = 3            # below this, too little traffic to say anything
 DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "traffic_windows.npz")
 
-# measured skill on held-out repetitions (EXP-15 results/exp15_results.json)
-REFERENCE = {"f1_unpadded": 0.995, "f1_tfc_padded": 0.958, "chance": round(1 / len(CLASSES), 3)}
+# Measured on held-out repetitions: EXP-15 (synthetic shapes) and EXP-16 (real
+# lab applications + Libreswan). The last number is the one to keep in mind: a
+# model trained ONLY on synthetic shapes scored 0.46 on real applications, so
+# training data that looks like the target traffic is what matters, not the tuning.
+REFERENCE = {"f1_unpadded": 0.995, "f1_tfc_padded": 0.958, "f1_real_apps_loro": 0.995,
+             "f1_cross_implementation": 1.0, "f1_synthetic_only_on_real_apps": 0.461,
+             "chance": round(1 / len(CLASSES), 3)}
 
 
 def window_features(pkts: list[tuple[float, str, int]], complete_only: bool = True) -> list[list[float]]:
@@ -144,14 +150,23 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     mean_p = P.mean(axis=0)
     order = np.argsort(mean_p)[::-1]
     guess, p_guess = str(rf.classes_[order[0]]), float(mean_p[order[0]])
-    answer = p_guess >= TAU and consistency >= MIN_CONSISTENCY
+    # second stage (EXP-16 D): is this ONE kind of traffic, or several at once?
+    # Confidence cannot tell (EXP-15 P15-4), the probability pattern can.
+    from .mixed import is_mixed
+    mx = is_mixed(P)
+    mixed, p_mixed = mx if mx else (False, None)
+    answer = p_guess >= TAU and consistency >= MIN_CONSISTENCY and not mixed
     return {**base, "status": "measured", "level": level, "score": score,
             "confidence": round(confidence, 3), "consistency": round(float(consistency), 3),
             "traffic": {"answered": answer, "class": guess if answer else None,
                         "label": LABEL.get(guess) if answer else None, "probability": round(p_guess, 3),
                         "alternatives": [{"class": str(rf.classes_[i]), "label": LABEL.get(str(rf.classes_[i])),
                                           "probability": round(float(mean_p[i]), 3)} for i in order[:3]],
+                        "mixed": mixed, "mixed_probability": p_mixed,
+                        "dominant": {"class": guess, "label": LABEL.get(guess), "probability": round(p_guess, 3)},
                         "why_not": None if answer else (
+                            f"two or more kinds of traffic are sharing this tunnel ({p_mixed:.0%} confidence); "
+                            f"the loudest one looks like {LABEL.get(guess)}" if mixed else
                             f"windows disagree (only {consistency:.0%} agree): likely mixed traffic"
                             if consistency < MIN_CONSISTENCY else f"top probability {p_guess:.0%} is below {TAU:.0%}")},
             "note": _note(level, confidence, consistency, len(picks))}
@@ -190,14 +205,17 @@ def extract_attacker(rec) -> None:
                         confidence=t["probability"], evidence=ev,
                         note=f"predicted from packet sizes, timing and direction over {r['windows']} windows; "
                              f"{r['consistency']:.0%} of windows agree. Next most likely: {alts}. Classes are traffic "
-                             "shapes from the lab generator (e.g. WhatsApp-like messaging), not app fingerprints; "
+                             "classes are learned from our lab traffic (synthetic shapes plus real browser, SSH, "
+                             "SFTP, SMTP, XMPP and RTP sessions), not from app fingerprints; traffic unlike anything "
+                             "in that training set can be misread (EXP-16: a synthetic-only model scored 0.46 on real "
+                             "applications); "
                              + MIXED_NOTE
                              + (f"; caution: {KNOWN_CONFUSION[t['class']]}" if t["class"] in KNOWN_CONFUSION else "")
                              + "."))
     else:
-        rec.add(Finding("traffic_type", Status.UNKNOWN, Vantage.T0, "traffic classifier (EXP-15)",
-                        note=f"uncertain: {t['why_not']}. Closest guesses: "
-                             + ", ".join(f"{a['label']} {a['probability']:.0%}" for a in t["alternatives"])))
+        note = ("mixed traffic: " if t.get("mixed") else "uncertain: ") + t["why_not"] + ". Closest guesses: " \
+               + ", ".join(f"{a['label']} {a['probability']:.0%}" for a in t["alternatives"])
+        rec.add(Finding("traffic_type", Status.UNKNOWN, Vantage.T0, "traffic classifier (EXP-15/16)", note=note))
     rec.add(Finding("attacker_exposure", Status.MEASURED, Vantage.T0, "random-forest attacker (EXP-05)",
                     value={k: r[k] for k in ("level", "score", "confidence", "consistency", "windows")},
                     confidence=1.0,

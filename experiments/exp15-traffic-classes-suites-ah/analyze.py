@@ -63,8 +63,9 @@ def ece(conf, correct, bins=10):
 
 
 def main():
-    X, y, arm, rep, sess, src = load()
-    Xm, ym, armm, repm, sessm, _ = load(include_mux=True)
+    SYN = ("tunnel", "tunnel+tfc", "transport", "tunnel-cbc")   # EXP-15's own arms only
+    X, y, arm, rep, sess, src = load(keep=SYN)
+    Xm, ym, armm, repm, sessm, _ = load(include_mux=True, keep=SYN + ("mux",))
     mux = armm == "mux"
     Xm, repm, sessm, ym = Xm[mux], repm[mux], sessm[mux], ym[mux]
     res = {"n_windows": int(len(y)), "n_sessions": int(len(set(sess))), "classes": CLASSES,
