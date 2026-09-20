@@ -434,6 +434,17 @@ _SIEVE = {
     "AES-CBC+HMAC-SHA384-192": dict(iv=16, icv=24, align=16),
     "AES-CBC+HMAC-SHA512-256": dict(iv=16, icv=32, align=16),
     "3DES-CBC+HMAC-SHA1-96": dict(iv=8, icv=12, align=8),
+    # added 2026-09-20 (T-085) after third-party captures used ciphers the table
+    # did not list: without them the "candidates" set could not contain the truth.
+    # Several share an (IV, ICV, alignment) signature and are therefore not
+    # separable by length alone - they are listed separately so the set is honest.
+    "AES-CTR+HMAC-SHA1-96": dict(iv=8, icv=12, align=4),
+    "DES-CBC+HMAC-96": dict(iv=8, icv=12, align=8),
+    "Blowfish-CBC+HMAC-96": dict(iv=8, icv=12, align=8),
+    "Twofish-CBC+HMAC-96": dict(iv=16, icv=12, align=16),
+    "CAST-CBC+HMAC-96": dict(iv=8, icv=12, align=8),
+    "NULL+HMAC-96": dict(iv=0, icv=12, align=4),
+    "NULL+HMAC-SHA256-128": dict(iv=0, icv=16, align=4),
 }
 
 
@@ -460,7 +471,9 @@ def extract_cipher_sieve(r: EvidenceRecord) -> None:
         klass = "AEAD/stream (CBC excluded)" if (has_aead and not has_cbc) else                 "CBC or AEAD/stream (ambiguous)" if (has_cbc and has_aead) else "CBC-mode"
         r.add(Finding("esp_cipher_family", Status.INFERRED, Vantage.T0, "cipher_sieve (EXP-01)",
                       value=survivors, confidence=0.9, evidence=ev,
-                      note=f"one-directional sieve -> {klass}; {len(survivors)} candidate(s)"))
+                      note=f"one-directional sieve -> {klass}; {len(survivors)} candidate(s) among the "
+                           f"{len(_SIEVE)} families modelled. ESP with no integrity at all (RFC 8221: MUST NOT "
+                           "outside AEAD) or a cipher outside that table would not appear here"))
 
 
 def extract_early_childsa_cve(r: EvidenceRecord) -> None:
