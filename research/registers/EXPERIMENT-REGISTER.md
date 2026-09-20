@@ -362,3 +362,9 @@ generator, not of the model. P16-2 held (trained on real sessions: 0.995), P16-3
 (strongSwan→Libreswan 1.000), P16-6 held (extra repetitions moved nothing, delta 0.000), P16-5 held
 (mixed detector 92.9% caught / 8.3% false / video+interactive 100%). Shipped model retrained on all
 1,964 windows (LORO 0.986). `experiments/exp16-real-apps-cross-impl/RESULT.md`.
+
+## EXP-17 — Network conditions: delay, jitter and packet loss — PRE-REGISTRATION (2026-09-20)
+Pre-registered in `experiments/exp17-network-conditions/PREREG.md` before any capture. The run script
+was smoke-tested first (mechanics only; every smoke output was deleted, none was analysed). The smoke
+test found and fixed a silent failure in the real-application server setup (Prosody half-starting as
+root); `run_exp16.sh` had the same latent pattern and got the same fix.

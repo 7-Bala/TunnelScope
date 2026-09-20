@@ -31,7 +31,11 @@ reduce() {   # $1 tag, $2 "out" source address
 }
 
 if [[ "$PART" == *A* ]]; then
-    bash "$HERE/apps_server_setup.sh" >/dev/null 2>&1
+    bash "$HERE/apps_server_setup.sh" > "$OUT/apps_setup.log" 2>&1
+    for p in 443 22 25 5222; do
+        docker exec sih26-apps-b sh -c "ss -lnt 2>/dev/null | grep -q ':$p '" \
+          || { echo "FATAL: apps-b is not listening on port $p; see $OUT/apps_setup.log"; exit 4; }
+    done
     docker cp "$HERE/apps_client.py" sih26-apps-a:/tmp/apps_client.py >/dev/null
     for s in alice bob; do
         docker cp "$HERE/../configs/exp16/$s.conf" "sih26-$s-pq:/tmp/e16.conf" >/dev/null
