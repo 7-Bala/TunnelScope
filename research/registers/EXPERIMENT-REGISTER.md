@@ -350,3 +350,7 @@ positive on a ping sweep fixed by a purity guard (addendum B). `experiments/exp1
 8-class traffic classifier: macro-F1 0.995 tunnel, 0.958 TFC, 0.986 cross-cipher, ECE 0.049. P15-4
 failed: mixed traffic abstained in 29%, video+interactive read as web 8/8 (stated in the output).
 Suites (9) and AH (5) all match endpoint ground truth. `experiments/exp15-traffic-classes-suites-ah/RESULT.md`.
+
+## EXP-16 — Real applications, cross-implementation, mixed detector — PRE-REGISTRATION (2026-09-20)
+Pre-registered in `experiments/exp16-real-apps-cross-impl/PREREG.md` before any capture. Scope of
+recording decided first: lab-only clients and servers, no third-party service, account or personal data.
