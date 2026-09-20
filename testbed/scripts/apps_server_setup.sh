@@ -72,9 +72,13 @@ apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq --no-install-recomm
     lua-sec lua-expat lua-filesystem lua-socket lua-event lua-bitop >/dev/null 2>&1 || true
 mkdir -p /var/log/prosody /var/lib/prosody && chown -R prosody:prosody /var/log/prosody /var/lib/prosody
 mkdir -p /var/run/prosody && chown prosody:prosody /var/run/prosody
-pgrep -f "lua.*prosody" >/dev/null || (setsid prosody >/var/log/prosody/stdout.log 2>&1 &)
-sleep 3
-prosodyctl register alice lab.test labpass-not-a-secret 2>/dev/null || true
-prosodyctl register bob lab.test labpass-not-a-secret 2>/dev/null || true
+# Prosody refuses to run as root (it half-starts: a process exists but nothing listens), so run it as its own
+# user, always from a clean start, and WAIT until port 5222 is actually open.
+pkill -f "lua.*prosody" 2>/dev/null; sleep 1
+touch /var/log/prosody/stdout.log && chown prosody:prosody /var/log/prosody/stdout.log
+setsid su -s /bin/sh prosody -c prosody >/var/log/prosody/stdout.log 2>&1 &
+for _ in $(seq 1 20); do ss -lnt 2>/dev/null | grep -q ":5222 " && break; sleep 1; done
+su -s /bin/sh prosody -c "prosodyctl register alice lab.test labpass-not-a-secret" 2>/dev/null || true
+su -s /bin/sh prosody -c "prosodyctl register bob lab.test labpass-not-a-secret" 2>/dev/null || true
 echo "servers up: nginx $(pgrep -c nginx), sshd $(pgrep -c sshd), postfix $(pgrep -c master), prosody $(pgrep -cf "lua.*prosody")"
 IN

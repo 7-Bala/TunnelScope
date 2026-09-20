@@ -81,3 +81,7 @@ testbed/captures/live/
 # EXP-16: real-application and Libreswan traffic sessions — large pcaps hashed in
 # captures/exp16/manifest.csv; the committed evidence is the per-packet tables.
 testbed/captures/exp16/*.pcap
+handoff/reviews/
+# EXP-17: session pcaps are large (hashed in manifest.csv); the small IKE bring-up captures are tracked
+!testbed/captures/exp17/ike/*.pcap
+testbed/captures/exp17/exp17-*.pcap
