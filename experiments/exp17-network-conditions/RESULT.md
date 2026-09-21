@@ -22,7 +22,7 @@ None
 See the reviewer's interpretation below.
 
 
-## Reviewer's interpretation (Claude, reviewed by the owner)
+## Reviewer's interpretation
 
 **Outcome: 2 of 6 predictions held (P17-4, P17-6); 4 failed (P17-1, P17-2, P17-3, P17-5). Nothing was tuned.**
 
