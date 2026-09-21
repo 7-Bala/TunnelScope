@@ -156,25 +156,26 @@ async function rounded(file, w = 1700, r = 30) {
 
   // ============ 5  One rule, one pipeline
   { const s = pres.addSlide(); base(s, 5, "The solution", "One rule and one pipeline");
-    const st = [["Capture", "pcap file or live stream"], ["Read", "tshark reads IKE, ESP and AH headers"], ["Evidence", "labelled findings, each with its packet"], ["Judge", "5 written baselines, cited verdicts"], ["Score", "12 threats, risk score, confidence"], ["Deliver", "dashboard, reports, CBOM"]];
+    const st = [["Capture", "pcap file or live stream", "tcpdump, dumpcap"], ["Read", "tshark reads IKE, ESP and AH headers", "tshark"], ["Evidence", "labelled findings, each with its packet", "Python"], ["Judge", "5 written baselines, cited verdicts", "YAML rules"], ["Score", "12 threats, risk score, confidence", "scikit-learn"], ["Deliver", "dashboard, reports, CBOM", "React, TypeScript"]];
     const bw = 1.72, gap = (CW - 6 * bw) / 5;
     st.forEach((b, i) => { const x = M + i * (bw + gap); const hi = i === 2 || i === 4;
-      panel(s, x, 1.75, bw, 1.5, { fill: hi ? C.VIOLET : C.SURF, ft: hi ? 90 : 0, line: hi ? C.VIOLET : C.HAIR });
+      panel(s, x, 1.75, bw, 1.8, { fill: hi ? C.VIOLET : C.SURF, ft: hi ? 90 : 0, line: hi ? C.VIOLET : C.HAIR });
       text(s, String(i + 1).padStart(2, "0"), { x: x + 0.16, y: 1.85, w: 0.6, h: 0.22, fontFace: MONO, fontSize: 9.5, color: C.FAINT });
       text(s, b[0], { x: x + 0.16, y: 2.1, w: bw - 0.3, h: 0.35, fontSize: 16, bold: true });
       text(s, b[1], { x: x + 0.16, y: 2.5, w: bw - 0.3, h: 0.7, fontSize: 11, color: C.MUTED, lineSpacingMultiple: 1.06 });
+      text(s, b[2], { x: x + 0.16, y: 3.22, w: bw - 0.3, h: 0.24, fontFace: MONO, fontSize: 9, color: C.VIOLET });
       if (i < 5) arrow(s, x + bw + 0.03, 2.5, x + bw + gap - 0.03, 2.5, C.FAINT); });
-    text(s, "THE ONE RULE: EVERY FACT CARRIES A LABEL", { x: M, y: 3.5, w: 8, h: 0.25, fontFace: MONO, fontSize: 10, color: C.FAINT, charSpacing: 2 });
+    text(s, "THE ONE RULE: EVERY FACT CARRIES A LABEL", { x: M, y: 3.75, w: 8, h: 0.25, fontFace: MONO, fontSize: 10, color: C.FAINT, charSpacing: 2 });
     const rows = [["OBSERVED", "violet", "Read straight from the packets", "IKE cipher: AES-CBC-256"], ["INFERRED", "silver", "Deduced, with a confidence", "Traffic: web, 91%"], ["MEASURED", "violet", "Computed from the traffic", "Leakage: 4.0 bits/packet"],
       ["UNKNOWN", "faint", "Not in this capture", "Rekey interval, no rekey seen"], ["NOT OBSERVABLE", "faint", "Cannot be seen from outside", "How peers authenticated"]];
     const cw = (CW - 4 * 0.15) / 5;
-    rows.forEach((r, i) => { const x = M + i * (cw + 0.15); panel(s, x, 3.85, cw, 1.75);
-      chip(s, r[0], x + 0.15, 4.0, cw - 0.3, r[1], 0.28, 9.5);
-      text(s, r[2], { x: x + 0.15, y: 4.42, w: cw - 0.3, h: 0.55, fontSize: 12, bold: true, lineSpacingMultiple: 1.04 });
-      text(s, r[3], { x: x + 0.15, y: 5.05, w: cw - 0.3, h: 0.5, fontFace: MONO, fontSize: 9.5, color: C.MUTED }); });
-    panel(s, M, 5.85, CW, 0.95, { fill: C.VIOLET, ft: 90, line: C.VIOLET, lw: 1.25 });
-    text(s, [{ text: "Unknown is never scored as safe.  ", options: { bold: true, fontSize: 18 } }, { text: "Fully offline, never decrypts, and every verdict names its rule.", options: { color: C.MUTED, fontSize: 14 } }], { x: M + 0.35, y: 5.85, w: CW - 0.7, h: 0.95, valign: "middle" });
-    s.addNotes("About 60 seconds. Walk left to right. A capture or live stream goes in; tshark reads only headers; we turn packets into labelled findings, judge them against five written baselines, then score them into a threat matrix and risk score. The row of five labels is the principle the whole tool is built on: observed and measured come straight from the capture, inferred carries a confidence, and unknown and not observable are real answers that are never quietly turned into a pass. This is enforced in code: an unknown finding cannot carry a value.");
+    rows.forEach((r, i) => { const x = M + i * (cw + 0.15); panel(s, x, 4.05, cw, 1.65);
+      chip(s, r[0], x + 0.15, 4.2, cw - 0.3, r[1], 0.28, 9.5);
+      text(s, r[2], { x: x + 0.15, y: 4.6, w: cw - 0.3, h: 0.55, fontSize: 12, bold: true, lineSpacingMultiple: 1.04 });
+      text(s, r[3], { x: x + 0.15, y: 5.17, w: cw - 0.3, h: 0.45, fontFace: MONO, fontSize: 9.5, color: C.MUTED }); });
+    panel(s, M, 5.92, CW, 0.88, { fill: C.VIOLET, ft: 90, line: C.VIOLET, lw: 1.25 });
+    text(s, [{ text: "Unknown is never scored as safe.  ", options: { bold: true, fontSize: 18 } }, { text: "Fully offline, never decrypts, and every verdict names its rule.", options: { color: C.MUTED, fontSize: 14 } }], { x: M + 0.35, y: 5.92, w: CW - 0.7, h: 0.88, valign: "middle" });
+    s.addNotes("About 60 seconds. Under each box is what it is built with (Python, tshark, scikit-learn, YAML rules, React and TypeScript). Walk left to right. A capture or live stream goes in; tshark reads only headers; we turn packets into labelled findings, judge them against five written baselines, then score them into a threat matrix and risk score. The row of five labels is the principle the whole tool is built on: observed and measured come straight from the capture, inferred carries a confidence, and unknown and not observable are real answers that are never quietly turned into a pass. This is enforced in code: an unknown finding cannot carry a value.");
   }
 
   // ============ 6  Standards and the AI
@@ -225,7 +226,7 @@ async function rounded(file, w = 1700, r = 30) {
     text(s, "Traffic inside the tunnel", { x: M + w + 0.25, y, w, h: 0.3, fontSize: 14.5, bold: true }); text(s, "Predicted type with its confidence and runners-up, or \"uncertain\". Here: messaging, 98%.", { x: M + w + 0.25, y: y + 0.32, w, h: 0.5, fontSize: 11.5, color: C.MUTED, lineSpacingMultiple: 1.04 });
     const tabs = ["Explained", "Threats", "Traffic & exposure", "Changes", "Verdicts", "Evidence", "Not visible from here", "Live"]; let x = M;
     tabs.forEach((t) => { const tw = 0.3 + t.length * 0.078; chip(s, t, x, 6.62, tw, t === "Not visible from here" ? "violet" : "silver", 0.28, 9); x += tw + 0.1; });
-    s.addNotes("About 2 minutes, and this is where you demo live. Real dashboard, real captures. Steps: run ./start.sh, drop in a weak-cipher capture, and show the risk score and threat matrix. Open a tunnel and read the plain-English explanation of every failed check. Open the Traffic tab: predicted type, confidence, runners-up. Then the Live tab: a tunnel that re-negotiates with weaker settings is flagged as changed, with the downgrades named. Always end on Not visible from here, the list of what the capture cannot show.");
+    s.addNotes("About 2 minutes, and this is where you demo live using the demo kit: drop in 01-weak-cipher, then 02-pq-downgrade, then 04-ah-no-encryption, then 06-traffic-messaging, then run the live demo (play_live.sh). Kit guide: DEMO-GUIDE.pdf. Real dashboard, real captures. Steps: run ./start.sh, drop in a weak-cipher capture, and show the risk score and threat matrix. Open a tunnel and read the plain-English explanation of every failed check. Open the Traffic tab: predicted type, confidence, runners-up. Then the Live tab: a tunnel that re-negotiates with weaker settings is flagged as changed, with the downgrades named. Always end on Not visible from here, the list of what the capture cannot show.");
   }
 
   // ============ 9  Measured, not claimed
