@@ -204,7 +204,7 @@ def extract_attacker(rec) -> None:
                                "alternatives": t["alternatives"]},
                         confidence=t["probability"], evidence=ev,
                         note=f"predicted from packet sizes, timing and direction over {r['windows']} windows; "
-                             f"{r['consistency']:.0%} of windows agree. Next most likely: {alts}. Classes are traffic "
+                             f"{r['consistency']:.0%} of windows agree. Next most likely: {alts}. The traffic "
                              "classes are learned from our lab traffic (synthetic shapes plus real browser, SSH, "
                              "SFTP, SMTP, XMPP and RTP sessions), not from app fingerprints; traffic unlike anything "
                              "in that training set can be misread (EXP-16: a synthetic-only model scored 0.46 on real "
