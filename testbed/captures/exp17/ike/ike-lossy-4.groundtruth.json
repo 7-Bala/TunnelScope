@@ -1,0 +1,7 @@
+{
+  "arm": "ike-lossy-4",
+  "profile": "lossy",
+  "initiate_result": "initiate completed successfully",
+  "alice_list_sas": "t-tun: #10, ESTABLISHED, IKEv2, 721d4891caa99b21_i* 517eafb86a924b4d_r\n  local  'a-t-tun' @ 10.10.1.210[4500]\n  remote 'b-t-tun' @ 10.10.2.210[4500]\n  AES_CBC-256/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048\n  established 7s ago, rekeying in 14261s\n  t-tun: #10, reqid 1, INSTALLED, TUNNEL, ESP:AES_GCM_16-256\n    installed 7s ago, expires in 7193s\n    in  c9ec9a06,    336 bytes,     4 packets,     3s ago\n    out ce9cf5eb,    336 bytes,     4 packets,     3s ago\n    local  10.10.1.210/32\n    remote 10.10.2.210/32\n",
+  "note": "T2 ground truth from swanctl on the endpoint, never from the analyzer."
+}
