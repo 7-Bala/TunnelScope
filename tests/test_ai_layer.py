@@ -217,3 +217,14 @@ def test_server_history_and_explain(tmp_path, monkeypatch):
         assert hist["tunnels"][0]["observations"] == 1
     finally:
         srv.shutdown()
+
+
+def test_traffic_type_note_reads_as_one_sentence():
+    """Regression: an earlier edit produced 'Classes are traffic classes are learned...'
+    (a duplicated phrase visible to users on the Traffic tab)."""
+    from tunnelscope.evidence.record import EvidenceRecord
+    rec = EvidenceRecord(src="10.0.0.1", dst="10.0.0.2", source_pcap="x")
+    rec._esp = _esp(_session("exp05-tfc-video-rep2"))
+    at.extract_attacker(rec)
+    note = rec.findings["traffic_type"].note
+    assert "Classes are traffic classes" not in note and "classes are learned from our lab traffic" in note
