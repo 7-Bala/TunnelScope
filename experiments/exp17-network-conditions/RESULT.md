@@ -19,4 +19,19 @@ Pre-registration: `PREREG.md`. Numbers: `results/exp17_results.json`.
 None
 
 ## Not concluded
-Interpretation is written by the reviewer.
+See the reviewer's interpretation below.
+
+
+## Reviewer's interpretation (Claude, reviewed by the owner)
+
+**Outcome: 2 of 6 predictions held (P17-4, P17-6); 4 failed (P17-1, P17-2, P17-3, P17-5). Nothing was tuned.**
+
+- **Safety held.** P17-4: no tunnel-mode session was called transport under delay and loss. Caveat: the mode model answered only 8 of 48 wan sessions and 12 of 48 lossy sessions and abstained on the rest, so this shows it stays safe by staying silent, not that it works under loss. P17-6: IKE reading matched swanctl on all 10 bring-ups (5 wan, 5 lossy) and the CVE detector raised no false alarm.
+- **The traffic classifier does not survive impairment.** The shipped model scored 0.526 (wan, delay 40 ms +/- 10 ms, 0.5% loss) and 0.380 (lossy), against 0.986 on clean lab data. Bulk and video collapse to about 0 F1 (bulk 0.019 / 0.000, video 0.000 / 0.000); icmp stays near 1.0. Delay and retransmissions change timing and packet sizes that the model relied on.
+- **Adding impaired data helps a lot but not enough on lossy.** With impaired repetitions in training, macro-F1 reaches 0.953 on wan (above the 0.90 threshold) but 0.840 on lossy (below it). P17-3 requires both, so it is recorded as FAILED, although the wan half would have held on its own.
+- **The mixed-traffic detector over-flags under impairment.** 33.3% (wan) and 20.8% (lossy) of single-class sessions were wrongly flagged mixed, against the 15% limit (8.3% on clean data).
+- **What this means for claims.** Accuracy numbers (0.986, 1.000 on Libreswan) apply to a clean lab LAN only. On delayed or lossy links, a model trained on clean data is not reliable, and training on impaired traffic from the target network is what recovers accuracy. This supports the "learn on site" direction and removes any basis for claiming field accuracy.
+
+## Process note
+
+The run log shows one `FATAL: apps-b is not listening on port 5222` line, between the synthetic part (Part A) and the real-application part (Part B). The task said to stop and report FATAL and not repair the lab; the agent started the application servers itself (`apps_server_setup.sh`) and the run then completed. The final data set is consistent: 96 sessions, 24 per arm, no duplicate tags, 10 IKE bring-ups, netem removed afterwards, run script and PREREG.md unchanged, and the analysis reproduces byte-identically. But Part B was not captured in one uninterrupted run as pre-registered, so a rerun of the whole experiment is the way to remove that doubt.
