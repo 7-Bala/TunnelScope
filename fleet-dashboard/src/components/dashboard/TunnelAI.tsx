@@ -1,3 +1,6 @@
+import { useState } from "react"
+import { ChevronDown } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 import { type AnalyzedSA, formatValue } from "@/lib/api"
 
@@ -45,9 +48,21 @@ type TrafficValue = {
   alternatives: { class: string; label: string; probability: number }[]
 }
 
+const MEASURED_POINTS = [
+  "What is scored: the model looks at 2-second slices of the tunnel's packet sizes, timing and direction and guesses the traffic type. It never sees the content, which is encrypted.",
+  "The accuracy score is macro-F1, averaged over the 8 traffic types so a rare type counts as much as a common one. 1.0 is perfect; guessing at random scores about 0.12.",
+  "How it was tested: every setup was recorded several times. The model is trained without one repetition and scored on that one, so it is never scored on data it trained on.",
+  "Result on runs it had not seen: 0.986, from 1,964 two-second windows across 216 sessions (synthetic traffic shapes, real applications, and a second IPsec implementation).",
+  "Different VPN software: trained on strongSwan traffic, it scored 1.000 on Libreswan traffic.",
+  "The warning that matters: a model trained only on synthetic traffic scored 0.461 on real applications. A model is only as good as how closely its training traffic resembles yours.",
+  "Mixed traffic: a second check flags tunnels carrying several kinds of traffic at once. It catches 92.9% of mixed sessions and wrongly flags 8.3% of single-type sessions.",
+  "Lab only: one lab network, no internet delay or packet loss, our own servers. Read these scores as evidence that the method works, not as accuracy in the field.",
+] as const
+
 /** Traffic type (PS c) and attacker exposure, both from the Random Forest the
  *  engine trains on our own lab traffic (EXP-05, EXP-15). */
 export function AttackerPane({ sa }: { sa: AnalyzedSA }) {
+  const [open, setOpen] = useState(false)
   const f = sa.findings.find((x) => x.attribute === "attacker_exposure")
   const tt = sa.findings.find((x) => x.attribute === "traffic_type")
   const mx = sa.findings.find((x) => x.attribute === "metadata_exposure")
@@ -115,6 +130,28 @@ export function AttackerPane({ sa }: { sa: AnalyzedSA }) {
       {mx?.status === "MEASURED" && (
         <p className="mt-3 text-[12px] text-faint">Channel leakage measured directly: {formatValue(mx.value)}.</p>
       )}
+
+      <div className="mt-6 border-t border-border pt-4">
+        <Collapsible open={open} onOpenChange={setOpen}>
+          <CollapsibleTrigger
+            aria-label="How these numbers were measured"
+            className="flex w-full cursor-pointer items-center justify-between gap-2 text-left text-[12px] font-medium text-faint transition-colors hover:text-muted-foreground"
+          >
+            <span>How these numbers were measured</span>
+            <ChevronDown className={cn("h-4 w-4 shrink-0 text-faint transition-transform duration-200", open && "rotate-180 text-violet")} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3">
+            <ol className="space-y-2 pl-4 list-decimal text-[12.5px] leading-relaxed text-muted-foreground">
+              {MEASURED_POINTS.map((point, i) => (
+                <li key={i}>{point}</li>
+              ))}
+            </ol>
+            <p className="mt-3 text-[11.5px] text-faint">
+              Sources: experiments/exp15-traffic-classes-suites-ah and experiments/exp16-real-apps-cross-impl (RESULT.md).
+            </p>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
     </div>
   )
 }
