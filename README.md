@@ -14,7 +14,7 @@ it's judged against and admits what it couldn't see.
 ./start.sh --dev    # same, plus hot-reload dev server
 ./start.sh --live-follow DIR   # also analyse a live stream (files a sensor rotates into DIR)
 ./start.sh logs     # live logs (also in ./logs/)   ·   ./start.sh stop   ·   ./start.sh status   ·   ./start.sh test
-tunnelscope report <capture.pcap>
+.venv/bin/tunnelscope report <capture.pcap>     # after ./start.sh has created the .venv
 ```
 
 ## Repository map
@@ -34,15 +34,15 @@ tunnelscope report <capture.pcap>
 
 ## Status
 
-The tool is built and operating as a passive IPsec analysis and posture assessment framework, verified by 175 passing unit tests and 103 tracked captures. Current task tracking and the active roadmap are maintained in [`TODO.md`](TODO.md).
+The tool is built and operating as a passive IPsec analysis and posture assessment framework, checked by 175 unit tests and a dataset of 103 hash-verified captures. Current task tracking and the active roadmap are maintained in [`TODO.md`](TODO.md).
 
 Core capabilities:
 - Ingests IKE key-exchange handshakes and ESP/AH packets from pcap files or live network streams via tshark.
 - Labels every finding with an explicit certainty tier (OBSERVED, INFERRED, MEASURED, UNKNOWN, or NOT_OBSERVABLE), ensuring unknown properties are never scored as safe.
 - Judges observed facts against written cryptographic and posture baselines (DISA VPN SRG, RFC 8247, RFC 8221/4303, post-quantum readiness, and the CVE-2026-78135 pattern).
-- Constructs an adversary threat matrix linking observed weaknesses to exploitable threat capabilities.
+- Builds a threat matrix of 12 threats, each rated by likelihood and impact and tied to the evidence behind it.
 - Computes an overall tunnel risk score on a 0–100 scale paired with an evidence-confidence metric.
-- Predicts encrypted traffic categories using an in-house trained Random Forest model with calibrated confidence scores.
+- Predicts encrypted traffic categories using an in-house trained Random Forest model with its confidence.
 - Detects behavioral anomalies and configuration drift from historical tunnel norms, such as cipher downgrades.
 - Exports executive summaries, technical reports, and CycloneDX Cryptographic Bills of Materials (CBOM).
 - Hosts a self-contained local web dashboard for interactive capture analysis.
@@ -57,10 +57,10 @@ Core capabilities:
 
 ## How it was validated
 
-- `exp01-cipher-sieve`: no result yet
-- `exp02-negative-control`: no result yet
-- `exp03-pfs-signature`: no result yet
-- `exp04-pq-length-asymmetry`: no result yet
+- `exp01-cipher-sieve`: EXP-01 — ESP cipher-family sieve: **PARTIAL**, it narrows to a 5–6-member ambiguity class, not the 2 predicted ([`experiments/RESULTS.md`](experiments/RESULTS.md))
+- `exp02-negative-control`: EXP-02 — AES-128/256 negative control: **PASS**, the ESP-length sets are identical between the two key lengths ([`experiments/RESULTS.md`](experiments/RESULTS.md))
+- `exp03-pfs-signature`: EXP-03 — PFS length signature: **CONFIRMED**, CREATE_CHILD_SA size differs with and without PFS by a 256-byte gap ([`experiments/RESULTS.md`](experiments/RESULTS.md))
+- `exp04-pq-length-asymmetry`: EXP-04 — PQ key-exchange observability: **CONFIRMED, and exceeded**, 4 independent deterministic signals found ([`experiments/RESULTS.md`](experiments/RESULTS.md))
 - [`exp05-metadata-leakage`](experiments/exp05-metadata-leakage/RESULT.md): EXP-05 — Metadata Leakage: **TFC padding hides every packet size and buys no protection**
 - [`exp06-failure-diagnosis`](experiments/exp06-failure-diagnosis/RESULT.md): EXP-06 — Failure-Mode Diagnosis: Round 1 Result — **INCONCLUSIVE (testbed design flaw found)**
 - [`exp07-libreswan-generalization`](experiments/exp07-libreswan-generalization/RESULT.md): EXP-07 — Cross-Implementation (Libreswan 5.4): **protocol facts hold; two signals are implementation-dependent**
