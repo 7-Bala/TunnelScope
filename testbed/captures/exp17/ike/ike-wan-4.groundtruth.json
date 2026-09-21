@@ -1,0 +1,7 @@
+{
+  "arm": "ike-wan-4",
+  "profile": "wan",
+  "initiate_result": "initiate completed successfully",
+  "alice_list_sas": "t-tun: #5, ESTABLISHED, IKEv2, 4ea526e68e2ba49c_i* 17e261fcbac3beb4_r\n  local  'a-t-tun' @ 10.10.1.210[4500]\n  remote 'b-t-tun' @ 10.10.2.210[4500]\n  AES_CBC-256/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048\n  established 7s ago, rekeying in 13898s\n  t-tun: #5, reqid 1, INSTALLED, TUNNEL, ESP:AES_GCM_16-256\n    installed 7s ago, expires in 7193s\n    in  cbcc99b5,    336 bytes,     4 packets,     3s ago\n    out c225b8f3,    336 bytes,     4 packets,     3s ago\n    local  10.10.1.210/32\n    remote 10.10.2.210/32\n",
+  "note": "T2 ground truth from swanctl on the endpoint, never from the analyzer."
+}
