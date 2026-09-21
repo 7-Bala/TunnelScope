@@ -462,3 +462,4 @@ not a compressed version.)
 
 - **2026-09-21** — User asked for an updated deck in the website's fonts and colours, then limited it to 10 slides. Built as T-092 (see Done). Before presenting: change the Video status on slide 10 once the demo video exists, and install the fonts on the presenting machine.
 - **2026-09-21** — User asked for a packet dump to demo, the prototype walk-through, and an explanation of every attribute and the stack. Built as T-093; the live-demo instructions were tested exactly as written and a real bug in them fixed.
+- **2026-09-21** — Added "How these numbers were measured" panel on Traffic & exposure tab (T-088); evidence: check table (check_all --fast PASS, browser 0 errors, 375px responsive).
