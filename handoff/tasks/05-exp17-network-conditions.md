@@ -94,7 +94,7 @@ APPEND (do not edit existing lines) a section `### EXP-17 — RESULT (<today>)` 
 STEP 6. `ALLOW="experiments/exp17-network-conditions/ testbed/captures/exp17/ research/registers/EXPERIMENT-REGISTER.md" build/check_all.sh --fast`
 must be `RESULT: PASS`. Add one line to `TODO.md`. `git add` the per-packet tables, `manifest.csv`, the `ike/`
 folder, results, RESULT.md (the `.pcap` session files are git-ignored; do not force-add them).
-Commit: `T-091: EXP-17 network conditions, results` plus Co-Authored-By.
+Commit: `T-091: EXP-17 network conditions, results`, with no Co-Authored-By line.
 
 REPORT: the run log tail (`tail -5 logs/exp17_run.log`), any FATAL/WARNING lines, the analyze output,
 the verdict table, the check table.
