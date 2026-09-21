@@ -464,3 +464,4 @@ not a compressed version.)
 - **2026-09-21** — User asked for a packet dump to demo, the prototype walk-through, and an explanation of every attribute and the stack. Built as T-093; the live-demo instructions were tested exactly as written and a real bug in them fixed.
 - **2026-09-21** — Added "How these numbers were measured" panel on Traffic & exposure tab (T-088); evidence: check table (check_all --fast PASS, browser 0 errors, 375px responsive).
 - **2026-09-21** — Traffic dataset datasheet generator built (T-089); evidence: check table (check_all --fast PASS, 8/8 datasheet tests pass, 300 sessions / 2,464,991 packets verified).
+- **2026-09-21** — EXP-17 network conditions (delay, jitter, packet loss) captured and analysed (T-091); evidence: 96 sessions, 10 IKE bring-ups, check_all --fast PASS, results in experiments/exp17-network-conditions/results/exp17_results.json.

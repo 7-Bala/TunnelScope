@@ -368,3 +368,11 @@ Pre-registered in `experiments/exp17-network-conditions/PREREG.md` before any ca
 was smoke-tested first (mechanics only; every smoke output was deleted, none was analysed). The smoke
 test found and fixed a silent failure in the real-application server setup (Prosody half-starting as
 root); `run_exp16.sh` had the same latent pattern and got the same fix.
+
+### EXP-17 — RESULT (2026-09-21)
+P17-1 FAILED: the shipped classifier scored window-level macro-F1 0.5257 on the wan profile across 495 pooled windows (syn 0.5453, real 0.5308), falling short of the 0.70 threshold.
+P17-2 FAILED: the shipped classifier scored window-level macro-F1 0.3802 on the lossy profile across 519 pooled windows (syn 0.4235, real 0.3440), falling short of the 0.50 threshold.
+P17-3 FAILED: leave-one-repetition-out retraining over the three impaired repetitions reached mean macro-F1 0.9533 on wan (rep1 0.9313, rep2 0.9559, rep3 0.9726) but 0.8398 on lossy (rep1 0.8089, rep2 0.8412, rep3 0.8692), missing the 0.90 threshold on lossy.
+P17-4 Held: the ACK-size mode model answered zero tunnel-mode sessions as transport across all 96 sessions in both profiles (wan: 8 tunnel, 40 abstained; lossy: 12 tunnel, 36 abstained).
+P17-5 FAILED: the mixed-traffic detector wrongly flagged 33.33% of wan single-class sessions (16/48) and 20.83% of lossy single-class sessions (10/48), exceeding the 15% threshold on both profiles.
+P17-6 Held: on 100% of established IKE bring-ups under impairment (5 wan, 5 lossy), IKE encryption, DH group and integrity matched swanctl ground truth with zero mismatches, and the CVE-2026-78135 detector produced zero FAIL verdicts (10 PASS).

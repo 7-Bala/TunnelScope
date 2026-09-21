@@ -1,0 +1,148 @@
+{
+  "exp17_sessions": 96,
+  "P17-1": {
+    "windows": 495,
+    "macro_f1": 0.5257,
+    "per_part": {
+      "syn": 0.5453,
+      "real": 0.5308
+    },
+    "per_class": {
+      "bulk": 0.0189,
+      "email": 0.3733,
+      "icmp": 1.0,
+      "interactive": 0.7904,
+      "messaging": 0.8293,
+      "video": 0.0,
+      "voip": 0.6936,
+      "web": 0.5
+    }
+  },
+  "P17-2": {
+    "windows": 519,
+    "macro_f1": 0.3802,
+    "per_part": {
+      "syn": 0.4235,
+      "real": 0.344
+    },
+    "per_class": {
+      "bulk": 0.0,
+      "email": 0.1071,
+      "icmp": 0.9524,
+      "interactive": 0.5038,
+      "messaging": 0.6267,
+      "video": 0.0,
+      "voip": 0.5556,
+      "web": 0.2963
+    }
+  },
+  "P17-3": {
+    "wan": {
+      "loro_macro_f1": {
+        "rep1": 0.9313,
+        "rep2": 0.9559,
+        "rep3": 0.9726
+      },
+      "mean": 0.9533
+    },
+    "lossy": {
+      "loro_macro_f1": {
+        "rep1": 0.8089,
+        "rep2": 0.8412,
+        "rep3": 0.8692
+      },
+      "mean": 0.8398
+    }
+  },
+  "P17-4": {
+    "by_profile": {
+      "wan": {
+        "syn": {
+          "tunnel": 4,
+          "transport": 0,
+          "abstained": 20
+        },
+        "real": {
+          "tunnel": 4,
+          "transport": 0,
+          "abstained": 20
+        },
+        "total": {
+          "tunnel": 8,
+          "transport": 0,
+          "abstained": 40
+        }
+      },
+      "lossy": {
+        "syn": {
+          "tunnel": 8,
+          "transport": 0,
+          "abstained": 16
+        },
+        "real": {
+          "tunnel": 4,
+          "transport": 0,
+          "abstained": 20
+        },
+        "total": {
+          "tunnel": 12,
+          "transport": 0,
+          "abstained": 36
+        }
+      }
+    },
+    "total_transport": 0
+  },
+  "P17-5": {
+    "wan": {
+      "total_sessions": 48,
+      "flagged_mixed": 16,
+      "flagged_share": 0.3333,
+      "answered_correct": 5,
+      "answered_wrong": 0,
+      "abstained_other": 27
+    },
+    "lossy": {
+      "total_sessions": 48,
+      "flagged_mixed": 10,
+      "flagged_share": 0.2083,
+      "answered_correct": 11,
+      "answered_wrong": 0,
+      "abstained_other": 27
+    }
+  },
+  "P17-6": {
+    "by_profile": {
+      "wan": {
+        "established": 5,
+        "not_established": 0,
+        "mismatches": [],
+        "cve_verdicts": {
+          "PASS": 5,
+          "UNKNOWN": 0,
+          "FAIL": 0
+        }
+      },
+      "lossy": {
+        "established": 5,
+        "not_established": 0,
+        "mismatches": [],
+        "cve_verdicts": {
+          "PASS": 5,
+          "UNKNOWN": 0,
+          "FAIL": 0
+        }
+      }
+    },
+    "total_mismatches": 0,
+    "total_cve_fail": 0
+  },
+  "verdicts": {
+    "P17-1 wan macro_f1 >= 0.70": false,
+    "P17-2 lossy macro_f1 >= 0.50": false,
+    "P17-3 loro mean >= 0.90 both": false,
+    "P17-4 zero transport answers": true,
+    "P17-5 flagged share <= 0.15 both": false,
+    "P17-6 zero mismatches and zero CVE FAIL": true
+  }
+}
