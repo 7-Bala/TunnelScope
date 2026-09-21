@@ -33,7 +33,7 @@ folders (`handoff/`, `tunnelscope/`, `fleet-dashboard/`, `dataset/`, `build/`). 
   3. Add a section "Honest limits" containing EXACTLY the text under HONEST LIMITS below.
   4. Add a section "How it was validated" with a bullet per experiment folder in `experiments/`
      (name plus one line taken from that folder's `RESULT.md` heading or first paragraph, copied, not
-     invented), each linking to the `RESULT.md`. Experiments with no `RESULT.md`: write "no result yet".
+     invented), each linking to the `RESULT.md`. Experiments with no `RESULT.md`: FIRST check whether the folder has a `results/` directory or a row in `experiments/RESULTS.md`; if it does, use that row's outcome word (PASS / PARTIAL / CONFIRMED) and link to `experiments/RESULTS.md`. Write "no result yet" ONLY when the folder has neither.
 
 WHAT IT DOES (rewrite in your own words, keep the meaning):
 - Reads IKE handshakes and ESP/AH packets from a pcap (or a live stream) with tshark.
