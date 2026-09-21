@@ -43,8 +43,8 @@ If `.venv` is missing, run `./start.sh` once (it creates it).
 ## How to work
 1. `git checkout -b task/<short-name>` from `main`. Never commit to `main`. Never push to `main`.
 2. Do ONLY what the task says, in ONLY the files it lists. Need another file? Stop and say why.
-3. Small commits. Message: `T-XXX: what and why`, then a blank line, then
-   `Co-Authored-By: <your model name> <noreply@example.com>`.
+3. Small commits. Message: `T-XXX: what and why`. Do NOT add any Co-Authored-By, "Generated with" or tool/model
+   name to commits or files: the repo owner is the only contributor.
 4. Run `build/check_all.sh --fast` before each commit. Run the full `build/check_all.sh` at the end.
 5. Add one line to `TODO.md` (changelog at the bottom) saying what you did and the evidence.
 6. Finish with the REPORT in the task file, pasting real command output. Not summaries of it.

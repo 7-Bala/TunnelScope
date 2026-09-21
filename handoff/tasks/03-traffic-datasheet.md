@@ -73,7 +73,7 @@ every number in it against a manual command, for example
 `.venv/bin/python -c "..."` or `gzip -dc <one table> | wc -l`. Paste those confirmations.
 
 STEP 4. `ALLOW="dataset/build_traffic_datasheet.py dataset/TRAFFIC-DATASHEET.md tests/test_traffic_datasheet.py" build/check_all.sh --fast`
-must be `RESULT: PASS`. Add one line to `TODO.md`. Commit: `T-089: traffic dataset datasheet generator` plus Co-Authored-By.
+must be `RESULT: PASS`. Add one line to `TODO.md`. Commit: `T-089: traffic dataset datasheet generator`, with no Co-Authored-By line.
 
 REPORT: check table; the "Contents" tables pasted; the discrepancies list; your manual confirmations.
 

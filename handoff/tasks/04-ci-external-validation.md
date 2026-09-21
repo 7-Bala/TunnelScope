@@ -33,7 +33,7 @@ Verify:
   4. `ALLOW=".github/workflows/ci.yml" build/check_all.sh --fast` is `RESULT: PASS`.
 
 You cannot run GitHub Actions locally. Say so in your report; do not claim the job runs until CI shows it.
-Add one line to `TODO.md`. Commit: `T-090: run third-party capture validation in CI (non-blocking)` plus Co-Authored-By.
+Add one line to `TODO.md`. Commit: `T-090: run third-party capture validation in CI (non-blocking)`, with no Co-Authored-By line.
 
 REPORT: the verification outputs, the added lines, and the sentence "Not yet run on GitHub".
 

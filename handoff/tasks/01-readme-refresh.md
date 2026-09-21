@@ -61,7 +61,7 @@ STEP 3. Check your own work:
 
 STEP 4. `ALLOW="README.md" build/check_all.sh --fast` must end with `RESULT: PASS`.
 Add one line to the bottom of `TODO.md`: `- **<today>** README refreshed (T-087 canary task); evidence: check table.`
-Commit: `T-087: refresh README to the current state` plus the Co-Authored-By line. Do not push to main.
+Commit: `T-087: refresh README to the current state`, with no Co-Authored-By line. Do not push to main.
 
 REPORT (paste real output, not a summary): the check table; the list of numbers with their source
 commands; the list of links you verified; anything you were unsure about.

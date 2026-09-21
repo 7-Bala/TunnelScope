@@ -49,7 +49,7 @@ Verify in this order and paste the output of each:
      Report the browser console error count (must be 0).
   4. `./start.sh stop`
 
-Add one line to the bottom of `TODO.md`. Commit: `T-088: how-measured panel on the Traffic tab` plus Co-Authored-By.
+Add one line to the bottom of `TODO.md`. Commit: `T-088: how-measured panel on the Traffic tab`, with no Co-Authored-By line.
 
 REPORT: the check table, both screenshots, console error count, the diff (`git diff main --stat`).
 
