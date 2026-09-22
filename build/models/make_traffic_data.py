@@ -23,9 +23,11 @@ SOURCES = [("EXP-05", ROOT / "testbed/captures/exp05", ("base", "tfc")),
            ("EXP-15", ROOT / "testbed/captures/exp15/traffic", ("tun", "tfc", "tra", "cbc")),
            # EXP-16: REAL applications (Chromium, OpenSSH, Postfix, XMPP, RTP) and
            # the same synthetic classes through Libreswan (cross-implementation)
-           ("EXP-16", ROOT / "testbed/captures/exp16", ("real", "lsw"))]
+           ("EXP-16", ROOT / "testbed/captures/exp16", ("real", "lsw")),
+           ("EXP-17", ROOT / "testbed/captures/exp17", ("wan-syn", "lossy-syn", "wan-real", "lossy-real"))]
 ARM_NAME = {"base": "tunnel", "tun": "tunnel", "tfc": "tunnel+tfc", "tra": "transport", "cbc": "tunnel-cbc",
-            "real": "real-apps", "lsw": "libreswan"}
+            "real": "real-apps", "lsw": "libreswan",
+            "wan-syn": "wan", "lossy-syn": "lossy", "wan-real": "wan-real-apps", "lossy-real": "lossy-real-apps"}
 
 
 def load(include_mux=False, keep=None):
