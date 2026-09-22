@@ -278,3 +278,71 @@ def test_rephrase_module_exports():
     assert callable(rp.rephrase)
     assert callable(rp.guardrail_facts_match)
     assert callable(rp._facts)
+
+
+def test_guardrail_rejects_ipv6_tampering():
+    """Guardrail 2: detects and rejects IPv6 address tampering, corruption, or endpoint swaps."""
+    orig = "This tunnel between 2001:db8:a::1 and 2001:db8:b::1 was checked."
+    # Destination replaced by duplicate source
+    cand_dup = "This tunnel between 2001:db8:a::1 and 2001:db8:a::1 was checked."
+    assert not guardrail_facts_match(orig, cand_dup)
+
+    # Destination mutated to a different IPv6 address
+    cand_mut = "This tunnel between 2001:db8:a::1 and 2001:db8:c::1 was checked."
+    assert not guardrail_facts_match(orig, cand_mut)
+
+    # IPv6 preserved with legitimate rephrasing passes
+    cand_ok = "Verification was conducted for the tunnel linking 2001:db8:a::1 to 2001:db8:b::1."
+    assert guardrail_facts_match(orig, cand_ok)
+
+
+def test_guardrail_rejects_semver_mutation():
+    """Guardrail 2: extracts multi-dot versions (e.g. 6.1.0) and rejects version mutations."""
+    orig = "Patch strongSwan to version 6.1.0 to mitigate CVE-2026-78135."
+    assert "6.1.0" in _facts(orig)
+    assert "CVE-2026-78135" in _facts(orig)
+
+    cand_mut = "Patch strongSwan to version 7.8.9 to mitigate CVE-2026-78135."
+    assert not guardrail_facts_match(orig, cand_mut)
+
+    cand_ok = "To resolve CVE-2026-78135, upgrade strongSwan software to 6.1.0."
+    assert guardrail_facts_match(orig, cand_ok)
+
+
+def test_guardrail_rejects_banned_compliance_claims():
+    """Guardrail 2: hard reject on candidate introducing 'compliant', 'compliance', or 'complies'."""
+    orig = "V-207193 (high): Diffie-Hellman group 16 using AES-GCM cipher."
+    cand_comp = "The tunnel is compliant with V-207193 (high): Diffie-Hellman group 16 using AES-GCM cipher."
+    assert not guardrail_facts_match(orig, cand_comp)
+
+    cand_lies = "The tunnel complies with rule V-207193 (high): Diffie-Hellman group 16 using AES-GCM cipher."
+    assert not guardrail_facts_match(orig, cand_lies)
+
+
+def test_guardrail_handles_wire_sieve_ciphers():
+    """Guardrail 2: extracts ChaCha20-Poly1305 and other wire sieve suites and rejects omission."""
+    orig = "Observed cipher family was ChaCha20-Poly1305 across ESP traffic."
+    facts = _facts(orig)
+    assert "ChaCha20-Poly1305" in facts
+    assert "ESP" in facts
+
+    cand_omit = "Observed cipher family across ESP traffic was not listed."
+    assert not guardrail_facts_match(orig, cand_omit)
+
+    cand_ok = "ESP traffic for this tunnel actively negotiated ChaCha20-Poly1305."
+    assert guardrail_facts_match(orig, cand_ok)
+
+
+def test_clean_candidate_json_and_reasoning_tags():
+    """Verify cleaning of JSON payloads, <thinking> and <thought> tags, and bold formatting."""
+    raw_json = '```json\n{"rephrased": "The tunnel between 10.20.1.10 and 10.20.2.10 was checked."}\n```'
+    assert _clean_candidate(raw_json) == "The tunnel between 10.20.1.10 and 10.20.2.10 was checked."
+
+    raw_thinking = "<thinking>internal reasoning notes</thinking> The tunnel between 10.20.1.10 and 10.20.2.10 was checked."
+    assert _clean_candidate(raw_thinking) == "The tunnel between 10.20.1.10 and 10.20.2.10 was checked."
+
+    raw_thought = "<thought>internal step</thought> The tunnel between 10.20.1.10 and 10.20.2.10 was checked."
+    assert _clean_candidate(raw_thought) == "The tunnel between 10.20.1.10 and 10.20.2.10 was checked."
+
+    raw_bold = "**The tunnel between 10.20.1.10 and 10.20.2.10 was checked.**"
+    assert _clean_candidate(raw_bold) == "The tunnel between 10.20.1.10 and 10.20.2.10 was checked."
