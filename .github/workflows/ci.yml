@@ -105,3 +105,27 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  external:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the findings differential checks out the base commit
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tshark (non-interactive - it prompts for a Wireshark-group capture-permission choice by default)
+        run: |
+          echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
+
+      - name: Install TunnelScope + dev deps
+        run: pip install -e ".[dev]"
+
+      - name: Third-party captures (Wireshark wiki)
+        run: python3 build/validate_external.py
