@@ -46,7 +46,7 @@ Two places this applies, both already deterministic-text today:
 | Decision | Choice | Why |
 |---|---|---|
 | Framework | `mlx-lm` (Python package on top of `ml-explore/mlx`) | Apple's own framework, built for Apple Silicon's unified memory; no separate server process required the way Ollama needs one |
-| Model | **`mlx-community/Qwen3.5-4B-MLX-4bit`** — decided 2026-09-22 for the M4 16GB machine (see below). Fallback: `mlx-community/Qwen3-4B-Instruct-2507-4bit` (one generation older, more community mileage) if the 3.5 build has structured-output issues | ~2.3–2.5GB at 4-bit, comfortable on 16GB unified memory alongside the dashboard/engine/Docker; strong instruction-following at small scale is what this task needs (reword + obey a JSON schema), not reasoning depth — a 4B model has no business inventing security facts either way, since it's never asked to, it only rewrites given text |
+| Model | **`MiniCPM5-2B`** (4-bit if an MLX quant exists at build time, else the 8-bit seen on `omlx.ai`) — revised 2026-09-22, superseding the Qwen pick below, after checking `omlx.ai`'s community benchmark leaderboard. Second choice: `gemma-4-E4B-it-MLX-4bit`, the only model of those compared actually benchmarked on an M4 — by far the fastest prompt-processing of the set (627–637 tok/s vs 165–168 for the 9B models), which shortens time-to-first-token before generation even starts. Superseded: `Qwen3.5-4B-MLX-4bit` (2026-09-22 pick, see below) | MiniCPM5-2B (OpenBMB, released 2026-09-07) scores 53.9 on OpenBMB's own 34-benchmark suite vs Qwen3.5-4B's 51.1 — beating a 4B model at half the size — and ships Apache 2.0 (cleanly resolves the licence guardrail, unlike Qwen's terms which need separate checking). Its instruction-following score specifically is reported as "closer to parity" with bigger models, not a clear win — the honest caveat, since that's the exact metric this task depends on. Smallest footprint of anything considered (~1.1–2.5GB depending on quant) — most headroom on the M4 alongside the dashboard/engine/Docker |
 | Network | None, ever, for this feature | The whole point of choosing MLX over a cloud API is removing the network dependency and the "your data left the machine" objection |
 | Default | **Off** | Matches the existing pattern (`--llm` was opt-in for the earlier, removed feature); plain deterministic text is always what ships without a flag |
 | Platform gate | Feature silently absent unless `sys.platform == "darwin"` and Apple Silicon (`platform.machine() == "arm64"`) | MLX doesn't run elsewhere; must never error on Linux CI or an Intel Mac, just not offer the toggle |
@@ -201,6 +201,18 @@ way `build/09-REMEDIATION-ROADMAP.md` is for the remediation loop.
 - [MLX — ml-explore/mlx](https://github.com/ml-explore/mlx)
 - [mlx-lm — run LLMs with MLX](https://github.com/ml-explore/mlx-lm)
 - [Apple Machine Learning Research — Exploring LLMs with MLX](https://machinelearning.apple.com/research/exploring-llms-mlx-m5)
-- [mlx-community/Qwen3.5-4B-MLX-4bit](https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit) — chosen model
-- [mlx-community/Qwen3-4B-Instruct-2507-4bit](https://huggingface.co/mlx-community/Qwen3-4B-Instruct-2507-4bit) — fallback model
-- [mlx-community (Hugging Face org)](https://huggingface.co/mlx-community) — ~4,800 pre-converted MLX models, the "this site" referred to for model selection
+- [mlx-community/Qwen3.5-4B-MLX-4bit](https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit) — superseded pick, see below
+- [mlx-community/Qwen3-4B-Instruct-2507-4bit](https://huggingface.co/mlx-community/Qwen3-4B-Instruct-2507-4bit) — superseded fallback
+- [mlx-community (Hugging Face org)](https://huggingface.co/mlx-community) — ~4,800 pre-converted MLX models
+- `omlx.ai` community benchmark leaderboard — user-provided screenshot, 2026-09-22 (live site, not independently re-browsed): M4 (10c)/16GB/4-bit numbers for `gemma-4-E4B-it-MLX-4bit` (PP 627–637 tok/s, TG 20.8–21.3 tok/s) and M1 (8c)/16GB/8-bit numbers for `MiniCPM5-2B-8bit` (TG 19.3–21.0 tok/s); this is the site the model choice below was revised from
+- [MiniCPM5-2B tops open models under 4B — OpenBMB](https://rits.shanghai.nyu.edu/ai/minicpm5-2b-tops-open-models-under-4b/) — 53.9 vs Qwen3.5-4B's 51.1 on OpenBMB's own 34-benchmark suite, Apache 2.0
+- [unsloth/gemma-4-E4B-it-UD-MLX-4bit](https://huggingface.co/unsloth/gemma-4-E4B-it-UD-MLX-4bit) — Gemma 4 E4B MLX build
+
+## Model pick, superseded (kept for the record — see the table above for the current pick)
+
+2026-09-22, earlier the same day: `mlx-community/Qwen3.5-4B-MLX-4bit` was picked from a plain
+listing of the `mlx-community` Hugging Face org, without comparative benchmark data. Superseded
+once `omlx.ai`'s live leaderboard gave actual throughput numbers and OpenBMB's own comparison
+table showed MiniCPM5-2B beating Qwen3.5-4B at half the size. Left here rather than deleted, in
+keeping with the project's practice of correcting findings in place instead of hiding an earlier
+call (see DEC-025 superseding DEC-020, DEC-027 superseding DEC-021, DEC-029 amending DEC-024).
