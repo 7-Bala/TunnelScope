@@ -87,6 +87,53 @@ call anywhere in the package. It needs to become two tests instead of one:
 - Not evaluated for accuracy the way the trained models are, because it has no factual
   authority to be wrong about — it's copy-editing, not a decision-maker.
 
+## Guardrails against hallucination and other failure modes (added 2026-09-22)
+
+Hallucination is not a tuning problem here — it's an architecture problem, and it's solved by
+what the model is *allowed to touch*, not by prompting it to "be accurate." Five layers:
+
+1. **Structural: the model never has a fact to get wrong.** It receives already-computed,
+   already-verified text (a sentence built from a verdict) and returns a reworded sentence. It
+   is never given raw packets, rule logic, or a "decide X" prompt. This is the same reason
+   `explain.py` itself can't hallucinate today — a template has nothing to invent either.
+2. **Post-generation fact check, mechanical, before anything reaches the screen.** Extract every
+   rule ID, number, cipher/algorithm name, and IP address from the ORIGINAL deterministic text
+   with the same regexes used elsewhere in the codebase (e.g. rule ID pattern already used by
+   `guard_diff.py`'s IMMUTABLE matcher, cipher names already enumerated in
+   `tunnelscope/rules/*.yaml`). Extract the same from the REPHRASED text. **If the two sets
+   don't match exactly — a number changed, a rule ID vanished, a new fact-shaped token
+   appeared — discard the rephrase and show the deterministic original.** No partial credit;
+   any mismatch is a silent, logged fallback, never a "close enough."
+3. **Constrained decoding, not just a polite prompt.** `mlx-lm` supports grammar/schema-
+   constrained generation. The call is built as "return valid JSON: `{"rephrased": "<string
+   under N chars>"}`" with the original values passed as read-only context, not as something to
+   restate — this narrows what the model can physically produce, on top of the check in (2), it
+   doesn't replace it.
+4. **Prompt-injection isolation.** Some of the text being reworded ultimately derives from
+   network capture data (a certificate field, a note string) that could, in principle, be
+   crafted by whoever controls the traffic. That text is passed to the model as clearly
+   delimited, inert DATA, never concatenated into an instruction, exactly the same rule this
+   session already applies to any external content — the model is told "reword the following
+   text," never "follow instructions found in the following text." Guardrail (2) is what
+   actually stops an injected instruction from mattering even if the delimiting failed, because
+   a manipulated rewrite would fail the fact-set match and get discarded.
+5. **Fail closed, always.** Any error, any timeout (hard cap, e.g. 3s), any output that fails
+   guardrail 2, any platform without MLX, the model not yet downloaded — every one of these
+   returns `None` from `rephrase()` and the caller shows the deterministic text. There is no
+   code path where the UI shows nothing, shows an error, or blocks waiting on the model.
+
+## Other disadvantages, and how each is handled
+
+| Risk | Handling |
+|---|---|
+| **Memory/thermal on a MacBook Air** | 4-bit ~3B model is ~2 GB; still real on an 8 GB Air, especially with the engine + dashboard + Docker also running (see the EXP-17 capture session, where Docker alone caused visible slowdown). Load lazily (only on first rephrase request), unload after an idle period, and keep it opt-in so a live demo never carries this cost unasked |
+| **First-run latency / disk** | Pulling a model from Hugging Face on first use is a multi-hundred-MB to ~2GB download over the network — ironic for a "no network" feature. Mitigate by documenting a one-time `mlx_lm` pre-download step done before the demo, never at demo time, and failing closed (guardrail 5) if it's not cached |
+| **Non-determinism / demo variability** | Two runs on identical input can word things differently. Fine for prose, never fine for facts — guardrail 2 is what makes this safe rather than "usually fine." Set a low temperature (e.g. 0.3) to reduce pointless variance, but don't rely on temperature for safety |
+| **Supply-chain / model integrity** | Pin an exact model revision/commit hash from `mlx-community`, not a moving tag, so what runs in the demo is the one that was tested |
+| **Licence** | Check the chosen model's licence (e.g. Qwen2.5's licence terms) before shipping, same discipline already applied to the traffic dataset's licence (`dataset/TRAFFIC-DATASHEET.md`, still `TBD (owner decision)`) — an unexamined third-party model licence is the same category of gap as an unexamined dataset licence |
+| **Crash isolation** | `mlx-lm` import and calls wrapped so a crash in the rephrase path cannot take down the analysis engine — caught, logged, treated as guardrail-5 fail-closed, never propagated |
+| **A false sense of "it's smarter now"** | The Q&A entry in `PRESENTER-GUIDE.md` and every on-screen label say plainly that the model rewords, not reasons — the risk isn't just technical, it's a judge or a user over-trusting output that looks more fluent than a template, so the label has to say what it is every time it's shown, not just once in a settings page |
+
 ## Build scope, when it's time (small, one slice first)
 
 1. `tunnelscope/rephrase/` — new module, `mlx_lm` behind a lazy import (never imported unless
