@@ -191,7 +191,7 @@ def cmd_watch(args):
 def cmd_explain(args):
     from .api.server import analysis_json
     from .explain.explain import as_text, explain_sa
-    local_llm = getattr(args, "local_llm", False)
+    local_llm = True if getattr(args, "local_llm", False) else None
     a = analyze(args.pcap)
     for sa in analysis_json(a, args.pcap)["sas"]:
         print(as_text(explain_sa(sa, local_llm=local_llm)))

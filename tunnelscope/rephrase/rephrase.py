@@ -74,7 +74,7 @@ CIPHER_ALGORITHM_TOKENS = {
 }
 
 _RULE_ID_REGEX = re.compile(
-    r"(?<![\w-])(?:V-\d+|RFC\d+(?:-[A-Z0-9]+)+|CVE-\d+-\d+|DST-PQ(?:-[A-Z0-9]+)+)(?![\w-])"
+    r"(?<![\w-])(?:V-\d+|RFC\d+(?:-[A-Z0-9]+)+|CVE-\d+-\d+|DST-PQ(?:-[A-Z0-9]+)+|DPDP-R\d+-\d+[a-z]?|CERTIN-GE-\d+(?:\.\d+)*)(?![\w-])"
 )
 _ALGO_REGEX = re.compile(
     r"(?<![\w-])(?:"
@@ -84,6 +84,7 @@ _ALGO_REGEX = re.compile(
 _NUMBER_REGEX = re.compile(r"\d+(?:\.\d+)?")
 
 _MODEL_CACHE: dict[str, Any] = {}
+_MODEL_LOCK = threading.Lock()
 
 
 def available() -> bool:
@@ -93,14 +94,14 @@ def available() -> bool:
     try:
         import mlx_lm  # noqa: F401
         return True
-    except Exception:
+    except (ImportError, Exception):
         return False
 
 
 def _facts(text: str) -> set[str]:
     """Extract rule IDs, numbers, and known cipher/algorithm tokens."""
     facts: set[str] = set()
-    if not text:
+    if not text or not isinstance(text, str):
         return facts
     for m in _RULE_ID_REGEX.finditer(text):
         facts.add(m.group(0))
@@ -113,15 +114,18 @@ def _facts(text: str) -> set[str]:
 
 def guardrail_facts_match(original: str, candidate: str) -> bool:
     """Guardrail 2: returns True iff candidate has the EXACT same facts as original."""
+    if not original or not candidate or not isinstance(original, str) or not isinstance(candidate, str):
+        return False
     return _facts(original) == _facts(candidate)
 
 
 def _get_model(model_id: str = MODEL_ID) -> tuple[Any, Any]:
-    """Lazy model loader cached at module level."""
-    if model_id not in _MODEL_CACHE:
-        import mlx_lm
-        _MODEL_CACHE[model_id] = mlx_lm.load(model_id)
-    return _MODEL_CACHE[model_id]
+    """Lazy model loader cached at module level (thread-safe)."""
+    with _MODEL_LOCK:
+        if model_id not in _MODEL_CACHE:
+            import mlx_lm
+            _MODEL_CACHE[model_id] = mlx_lm.load(model_id)
+        return _MODEL_CACHE[model_id]
 
 
 def rephrase(text: str, timeout_s: float = 3.0) -> str | None:
@@ -130,7 +134,7 @@ def rephrase(text: str, timeout_s: float = 3.0) -> str | None:
     Fail closed: returns None on any error, timeout, platform absence, or fact mismatch.
     Never raises.
     """
-    if not available() or not text or not text.strip():
+    if not available() or not text or not isinstance(text, str) or not text.strip():
         return None
 
     try:
@@ -140,9 +144,10 @@ def rephrase(text: str, timeout_s: float = 3.0) -> str | None:
         return None
 
     content = (
-        "Reword the following text into clear, natural prose. "
-        "Preserve all rule IDs, numbers, and algorithm names exactly as written. "
-        "Do not add any facts. Return ONLY the reworded text with no preamble and no markdown formatting:\n\n"
+        "Rewrite the following security text to improve flow and readability for a non-technical reader. "
+        "Use different words and sentence phrasing. Keep all numbers as digits. "
+        "Do not alter, omit, or add any numbers, rule IDs, or cipher/group names. "
+        "Return ONLY the revised text with no introduction and no markdown formatting:\n\n"
         f"{text}"
     )
 
@@ -158,9 +163,10 @@ def rephrase(text: str, timeout_s: float = 3.0) -> str | None:
             )
     else:
         prompt = (
-            "Reword the following text into clear, natural prose. "
-            "Preserve all rule IDs, numbers, and algorithm names exactly as written. "
-            "Do not add any facts. Return ONLY the reworded text with no preamble and no markdown formatting:\n\n"
+            "Rewrite the following security text to improve flow and readability for a non-technical reader. "
+            "Use different words and sentence phrasing. Keep all numbers as digits. "
+            "Do not alter, omit, or add any numbers, rule IDs, or cipher/group names. "
+            "Return ONLY the revised text with no introduction and no markdown formatting:\n\n"
             f"Original: {text}\n\nReworded:"
         )
 
@@ -194,16 +200,35 @@ def rephrase(text: str, timeout_s: float = 3.0) -> str | None:
     elif "<think>" in candidate:
         candidate = candidate.split("<think>")[0].strip()
 
-    if candidate.startswith("```") and candidate.endswith("```"):
-        candidate = candidate.strip("`").strip()
-    if candidate.startswith('"') and candidate.endswith('"'):
+    if candidate.startswith("```"):
+        lines = candidate.splitlines()
+        if len(lines) > 1 and lines[0].startswith("```"):
+            candidate = "\n".join(lines[1:])
+        else:
+            candidate = candidate.lstrip("`").strip()
+    if candidate.endswith("```"):
+        lines = candidate.splitlines()
+        if lines and lines[-1].strip() == "```":
+            candidate = "\n".join(lines[:-1])
+        else:
+            candidate = candidate.rstrip("`").strip()
+    candidate = candidate.strip()
+    if (candidate.startswith('"') and candidate.endswith('"')) or (
+        candidate.startswith("'") and candidate.endswith("'")
+    ):
         candidate = candidate[1:-1].strip()
-    if candidate.lower().startswith("reworded:"):
-        candidate = candidate[9:].strip()
+    for prefix in ("reworded:", "rephrased:", "revised:", "original:", "text:"):
+        if candidate.lower().startswith(prefix):
+            candidate = candidate[len(prefix):].strip()
 
     # Guardrail 2: discard if facts do not match exactly
     if not guardrail_facts_match(text, candidate):
         logger.debug("Rephrase discarded: fact-set mismatch")
+        return None
+
+    # If the candidate was repeated verbatim without any rewording, return None
+    if candidate.strip() == text.strip():
+        logger.debug("Rephrase discarded: verbatim repetition (unchanged)")
         return None
 
     return candidate

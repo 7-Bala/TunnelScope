@@ -200,7 +200,7 @@ def test_rephrase_is_never_imported_by_fact_producing_code():
         dirpath = pkg / d
         if not dirpath.exists():
             continue
-        for p in dirpath.glob("*.py"):
+        for p in dirpath.rglob("*.py"):
             assert "rephrase" not in p.read_text().lower(), f"{p.name} mentions rephrase"
 
 

@@ -67,7 +67,7 @@ def _posture_line(sa: dict) -> str:
     return f"Post-quantum posture: {p}."
 
 
-def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool = False) -> dict:
+def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool | None = None) -> dict:
     """Stage 1. `sa` is one entry of api.server.analysis_json()['sas']."""
     fails = [v for v in sa["verdicts"] if v["verdict"] == "FAIL"]
     passes = [v for v in sa["verdicts"] if v["verdict"] == "PASS"]
@@ -110,7 +110,14 @@ def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool = False) -
         points.insert(0, {"kind": "ok", "text": "No rule failed. That is not the same as secure: "
                                                 "some checks could not be made from this capture (listed below)."})
     res = {"summary": head + " " + _posture_line(sa), "points": points, "unseen": unseen, "source": "template"}
-    if local_llm or bool(os.environ.get("TUNNELSCOPE_LOCAL_LLM")):
+
+    if local_llm is None:
+        env_flag = os.environ.get("TUNNELSCOPE_LOCAL_LLM", "").strip().lower()
+        use_llm = env_flag in ("1", "true", "yes", "on")
+    else:
+        use_llm = bool(local_llm)
+
+    if use_llm:
         try:
             from ..rephrase.rephrase import rephrase
             rephrased_sum = rephrase(res["summary"])
@@ -127,12 +134,12 @@ def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool = False) -
 
 
 def as_text(e: dict) -> str:
-    summary = e.get("summary_rephrased") or e["summary"]
+    summary = e.get("summary_rephrased") or e.get("summary", "")
     points = []
-    for p in e["points"]:
+    for p in e.get("points", []):
         txt = p.get("text_rephrased") or p.get("text", "")
         points.append(f"- {txt}")
     L = [summary, ""] + points
-    if e["unseen"]:
+    if e.get("unseen"):
         L += ["", "Not visible in this capture:"] + [f"- {u}" for u in e["unseen"]]
     return "\n".join(L)
