@@ -7,12 +7,15 @@ from __future__ import annotations
 
 from collections import Counter
 import contextlib
+import ipaddress
+import json
 import logging
 import os
 import platform
 import re
 import sys
 import threading
+import time
 from typing import Any
 
 logger = logging.getLogger("tunnelscope.rephrase")
@@ -20,23 +23,39 @@ logger = logging.getLogger("tunnelscope.rephrase")
 MODEL_ID = "openbmb/MiniCPM5-2B-MLX"
 FALLBACK_MODEL_ID = "unsloth/gemma-4-E4B-it-UD-MLX-4bit"
 
-# Closed list of cipher/algorithm/protocol tokens collected from tunnelscope/rules/*.yaml
+# Closed list of cipher/algorithm/protocol tokens collected from tunnelscope/rules/*.yaml,
+# evidence wire sieve, and protocol extractors.
 CIPHER_ALGORITHM_TOKENS = {
     # Protocols and versions
     "IKEv1",
     "IKEv2",
     "ESP",
     "AH",
-    # Encryption ciphers
+    # Encryption ciphers & suites
     "AES",
     "AES-GCM",
+    "AES-GCM-16",
     "AES-CBC",
     "AES-CBC-256",
+    "AES-CTR",
+    "AES-CCM",
+    "AES-CCM-16",
     "ChaCha20",
+    "ChaCha20-Poly1305",
+    "Poly1305",
     "3DES",
     "3DES-CBC",
     "3DES-CBC+HMAC-SHA1-96",
     "ENCR_3DES",
+    "DES",
+    "DES-CBC",
+    "DES-CBC+HMAC-96",
+    "Blowfish",
+    "Blowfish-CBC+HMAC-96",
+    "Twofish",
+    "Twofish-CBC+HMAC-96",
+    "CAST",
+    "CAST-CBC+HMAC-96",
     # Integrity / hash algorithms
     "HMAC-MD5-96",
     "HMAC-SHA1-96",
@@ -46,6 +65,14 @@ CIPHER_ALGORITHM_TOKENS = {
     "HMAC-SHA2-384-192",
     "HMAC-SHA2-512-256",
     "AES-XCBC-96",
+    "AES-128-GMAC",
+    "AES-256-GMAC",
+    "AES-CTR+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CBC+HMAC-SHA1-96",
+    "AES-CBC+HMAC-SHA384-192",
+    "AES-CBC+HMAC-SHA512-256",
     "SHA-1",
     "SHA-2",
     "SHA-384",
@@ -81,13 +108,22 @@ CIPHER_ALGORITHM_TOKENS = {
 _RULE_ID_REGEX = re.compile(
     r"(?<![\w-])(?:V-\d+|RFC\d+(?:-[A-Z0-9]+)+|CVE-\d+-\d+|DST-PQ(?:-[A-Z0-9]+)+|DPDP-R\d+-\d+[a-z]?|CERTIN-GE-\d+(?:\.\d+)*)(?![\w-])"
 )
-_IP_REGEX = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+_IPV4_PAT = r"\b(?:\d{1,3}\.){3}\d{1,3}\b"
+_IPV6_PAT = (
+    r"(?:\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b)"
+    r"|(?:\b(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}\b)"
+    r"|(?:\b::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}\b)"
+    r"|(?:\b(?:[0-9a-fA-F]{1,4}:)+::\b)"
+    r"|(?:\b::\b)"
+)
+_IP_REGEX = re.compile(rf"(?:{_IPV4_PAT}|{_IPV6_PAT})")
 _ALGO_REGEX = re.compile(
     r"(?<![\w-])(?:"
     + "|".join(re.escape(t) for t in sorted(CIPHER_ALGORITHM_TOKENS, key=len, reverse=True))
     + r")(?![\w-])"
 )
-_NUMBER_REGEX = re.compile(r"(?<![\w.-])\d+(?:\.\d+)?(?![\w.-])")
+_NUMBER_REGEX = re.compile(r"(?<![\w-])\d+(?:\.\d+)*(?![\w-])")
+_BANNED_COMPLIANCE = re.compile(r"\b(complian(?:t|ce)|compl(?:y|ies))\b", re.IGNORECASE)
 
 _MODEL_CACHE: dict[str, Any] = {}
 _MODEL_LOCK = threading.Lock()
@@ -117,22 +153,27 @@ def _fact_tokens(text: str) -> list[str]:
         tokens.append(m.group(0))
         occupied_spans.append((m.start(), m.end()))
 
-    # 2. IP addresses (atomic entity extraction, per build/10-LOCAL-AI-RUNTIME.md)
+    # 2. IP addresses (IPv4 & IPv6 atomic entity extraction, per build/10-LOCAL-AI-RUNTIME.md)
     for m in _IP_REGEX.finditer(text):
-        tokens.append(m.group(0))
-        occupied_spans.append((m.start(), m.end()))
+        ip_str = m.group(0)
+        try:
+            ipaddress.ip_address(ip_str)
+            tokens.append(ip_str)
+            occupied_spans.append((m.start(), m.end()))
+        except ValueError:
+            pass
 
-    # 3. Cipher / algorithm tokens from rules
+    # 3. Cipher / algorithm tokens from rules and evidence extractors
     for m in _ALGO_REGEX.finditer(text):
         start, end = m.start(), m.end()
-        if not any(s <= start and end <= e for s, e in occupied_spans):
+        if not any(max(s, start) < min(e, end) for s, e in occupied_spans):
             tokens.append(m.group(0))
             occupied_spans.append((start, end))
 
-    # 4. Standalone numbers (outside rule IDs, IPs, and cipher spans)
+    # 4. Standalone numbers & versions (outside rule IDs, IPs, and cipher spans)
     for m in _NUMBER_REGEX.finditer(text):
         start, end = m.start(), m.end()
-        if not any(s <= start and end <= e for s, e in occupied_spans):
+        if not any(max(s, start) < min(e, end) for s, e in occupied_spans):
             tokens.append(m.group(0))
 
     return tokens
@@ -147,9 +188,11 @@ def guardrail_facts_match(original: str, candidate: str) -> bool:
     """Guardrail 2: returns True iff candidate has the EXACT same facts as original.
 
     Enforces both set equality and token occurrence frequency (multiset) equality.
-    Rejects empty strings or non-string inputs.
+    Rejects empty strings, non-string inputs, or introduced compliance claims.
     """
     if not original or not candidate or not isinstance(original, str) or not isinstance(candidate, str):
+        return False
+    if _BANNED_COMPLIANCE.search(candidate) and not _BANNED_COMPLIANCE.search(original):
         return False
     orig_tokens = _fact_tokens(original)
     cand_tokens = _fact_tokens(candidate)
@@ -200,11 +243,27 @@ def _clean_candidate(raw: str) -> str:
         return ""
     candidate = raw.strip()
 
-    if "</think>" in candidate:
-        candidate = candidate.split("</think>")[-1].strip()
-    elif "<think>" in candidate:
-        candidate = candidate.split("<think>")[0].strip()
+    # Strip thinking / thought / reasoning blocks
+    candidate = re.sub(
+        r"<(?:think|thinking|thought)>.*?</(?:think|thinking|thought)>\s*",
+        "",
+        candidate,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    candidate = re.sub(
+        r"^.*?</(?:think|thinking|thought)>\s*",
+        "",
+        candidate,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    candidate = re.sub(
+        r"<(?:think|thinking|thought)>.*$",
+        "",
+        candidate,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
 
+    # Strip markdown code blocks
     if candidate.startswith("```"):
         lines = candidate.splitlines()
         if len(lines) > 1 and lines[0].startswith("```"):
@@ -217,6 +276,22 @@ def _clean_candidate(raw: str) -> str:
             candidate = "\n".join(lines[:-1])
         else:
             candidate = candidate.rstrip("`").strip()
+
+    # Unwrap JSON payload if model returned JSON
+    candidate = candidate.strip()
+    if candidate.startswith("{") and candidate.endswith("}"):
+        try:
+            data = json.loads(candidate)
+            if isinstance(data, dict):
+                for k in ("rephrased", "text", "response", "output", "sentence", "result"):
+                    if k in data and isinstance(data[k], str):
+                        candidate = data[k]
+                        break
+                else:
+                    if len(data) == 1 and isinstance(next(iter(data.values())), str):
+                        candidate = next(iter(data.values()))
+        except Exception:
+            pass
 
     preamble_re = re.compile(
         r"^(?:(?:here is (?:the|a) (?:revised|reworded|rephrased|rewritten) (?:text|version|sentence):?)"
@@ -232,7 +307,12 @@ def _clean_candidate(raw: str) -> str:
             candidate.startswith("'") and candidate.endswith("'")
         ):
             candidate = candidate[1:-1].strip()
+        if candidate.startswith("**") and candidate.endswith("**"):
+            candidate = candidate[2:-2].strip()
+        elif candidate.startswith("*") and candidate.endswith("*"):
+            candidate = candidate[1:-1].strip()
 
+    candidate = re.sub(r"\s+", " ", candidate).strip()
     return candidate
 
 
@@ -255,15 +335,27 @@ def rephrase(text: str, timeout_s: float = 3.0) -> str | None:
     if not available() or not text or not isinstance(text, str) or not text.strip():
         return None
 
-    if not _GEN_LOCK.acquire(blocking=True, timeout=timeout_s):
+    t0 = time.monotonic()
+    deadline = t0 + timeout_s
+
+    remaining_lock = max(0.001, deadline - time.monotonic())
+    if not _GEN_LOCK.acquire(blocking=True, timeout=remaining_lock):
         logger.debug("Rephrase discarded: generation lock busy / timed out")
         return None
 
     try:
+        if time.monotonic() >= deadline:
+            logger.debug("Rephrase discarded: timeout budget exhausted before load")
+            return None
+
         try:
             model, tokenizer = _get_model(MODEL_ID)
         except Exception as e:
             logger.debug("Failed to load MLX model: %s", e)
+            return None
+
+        if time.monotonic() >= deadline:
+            logger.debug("Rephrase discarded: timeout budget exhausted after load")
             return None
 
         content = (
@@ -311,7 +403,8 @@ def rephrase(text: str, timeout_s: float = 3.0) -> str | None:
 
         t = threading.Thread(target=_worker, daemon=True)
         t.start()
-        t.join(timeout=timeout_s)
+        remaining_gen = max(0.001, deadline - time.monotonic())
+        t.join(timeout=remaining_gen)
 
         if not res_box or t.is_alive():
             logger.debug("Generation timed out or produced no output")
