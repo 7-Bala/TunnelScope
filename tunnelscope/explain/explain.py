@@ -9,6 +9,8 @@ Invariant I8 holds by construction: the only facts are the evidence graph's.
 """
 from __future__ import annotations
 
+import os
+
 # What each rule means, in plain words, and what to do about a FAIL.
 GLOSSARY = {
     "V-207205": ("the tunnel uses the old IKEv1 handshake instead of IKEv2",
@@ -65,7 +67,7 @@ def _posture_line(sa: dict) -> str:
     return f"Post-quantum posture: {p}."
 
 
-def explain_sa(sa: dict, anomaly: dict | None = None) -> dict:
+def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool = False) -> dict:
     """Stage 1. `sa` is one entry of api.server.analysis_json()['sas']."""
     fails = [v for v in sa["verdicts"] if v["verdict"] == "FAIL"]
     passes = [v for v in sa["verdicts"] if v["verdict"] == "PASS"]
@@ -107,11 +109,30 @@ def explain_sa(sa: dict, anomaly: dict | None = None) -> dict:
     if not fails:
         points.insert(0, {"kind": "ok", "text": "No rule failed. That is not the same as secure: "
                                                 "some checks could not be made from this capture (listed below)."})
-    return {"summary": head + " " + _posture_line(sa), "points": points, "unseen": unseen, "source": "template"}
+    res = {"summary": head + " " + _posture_line(sa), "points": points, "unseen": unseen, "source": "template"}
+    if local_llm or bool(os.environ.get("TUNNELSCOPE_LOCAL_LLM")):
+        try:
+            from ..rephrase.rephrase import rephrase
+            rephrased_sum = rephrase(res["summary"])
+            if rephrased_sum is not None:
+                res["summary_rephrased"] = rephrased_sum
+            for pt in res["points"]:
+                if "text" in pt:
+                    rephrased_pt = rephrase(pt["text"])
+                    if rephrased_pt is not None:
+                        pt["text_rephrased"] = rephrased_pt
+        except Exception:
+            pass
+    return res
 
 
 def as_text(e: dict) -> str:
-    L = [e["summary"], ""] + [f"- {p['text']}" for p in e["points"]]
+    summary = e.get("summary_rephrased") or e["summary"]
+    points = []
+    for p in e["points"]:
+        txt = p.get("text_rephrased") or p.get("text", "")
+        points.append(f"- {txt}")
+    L = [summary, ""] + points
     if e["unseen"]:
         L += ["", "Not visible in this capture:"] + [f"- {u}" for u in e["unseen"]]
     return "\n".join(L)
