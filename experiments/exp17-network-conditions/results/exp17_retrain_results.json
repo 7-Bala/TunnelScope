@@ -1,0 +1,49 @@
+{
+  "exp17_sessions": 256,
+  "wan": {
+    "loro_macro_f1": {
+      "rep1": 1.0,
+      "rep2": 0.9824,
+      "rep3": 0.9932,
+      "rep4": 0.9889,
+      "rep5": 0.9591,
+      "rep6": 0.9798,
+      "rep7": 0.9891,
+      "rep8": 0.982
+    },
+    "mean": 0.9843,
+    "total_sessions": 128,
+    "flagged_mixed": 0,
+    "flagged_share": 0.0,
+    "answered_correct": 128,
+    "answered_wrong": 0,
+    "abstained_other": 0
+  },
+  "lossy": {
+    "loro_macro_f1": {
+      "rep1": 0.8723,
+      "rep2": 0.905,
+      "rep3": 0.919,
+      "rep4": 0.8966,
+      "rep5": 0.9104,
+      "rep6": 0.9653,
+      "rep7": 0.9054,
+      "rep8": 0.9356
+    },
+    "mean": 0.9137,
+    "total_sessions": 128,
+    "flagged_mixed": 19,
+    "flagged_share": 0.1484,
+    "answered_correct": 109,
+    "answered_wrong": 0,
+    "abstained_other": 0
+  },
+  "verdicts": {
+    "wan macro-F1 >= 0.90": true,
+    "lossy macro-F1 >= 0.90": true,
+    "wan and lossy both reach >= 0.90 macro-F1": true,
+    "wan mixed false-flag rate <= 0.15": true,
+    "lossy mixed false-flag rate <= 0.15": true,
+    "mixed false-flag rate <= 15% both profiles": true
+  }
+}
