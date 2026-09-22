@@ -131,3 +131,86 @@ def test_model_constants():
     """Verify published official model ID and fallback model ID."""
     assert MODEL_ID == "openbmb/MiniCPM5-2B-MLX"
     assert FALLBACK_MODEL_ID == "unsloth/gemma-4-E4B-it-UD-MLX-4bit"
+
+
+def test_guardrail_rejects_empty_and_none():
+    """Guardrail 2: must reject empty strings or None candidates even if original has no facts."""
+    assert not guardrail_facts_match("No rule failed.", "")
+    assert not guardrail_facts_match("No rule failed.", None)
+    assert not guardrail_facts_match("", "No rule failed.")
+    assert not guardrail_facts_match(None, "No rule failed.")
+    assert not guardrail_facts_match("", "")
+    assert not guardrail_facts_match(None, None)
+
+
+def test_rephrase_empty_or_invalid_input_returns_none():
+    """Rephrase fail-closed on empty, whitespace, or invalid types."""
+    assert rephrase("") is None
+    assert rephrase("   \n\t  ") is None
+    assert rephrase(None) is None
+    assert rephrase(123) is None
+
+
+def test_rephrase_timeout_fails_closed(monkeypatch):
+    """Rephrase fail-closed on timeout (returns None without raising)."""
+    import time
+    def _slow_generate(*args, **kwargs):
+        time.sleep(0.5)
+        return "reworded"
+
+    monkeypatch.setattr("tunnelscope.rephrase.rephrase._get_model", lambda: ("model", "tok"))
+    monkeypatch.setattr("mlx_lm.generate", _slow_generate)
+    assert rephrase("Some text to rephrase", timeout_s=0.05) is None
+
+
+def test_rephrase_exception_fails_closed(monkeypatch):
+    """Rephrase fail-closed on model load or generation exceptions (never raises)."""
+    monkeypatch.setattr("tunnelscope.rephrase.rephrase._get_model", lambda: (_ for _ in ()).throw(RuntimeError("OOM")))
+    assert rephrase("Some text to rephrase") is None
+
+
+def test_env_var_strict_boolean_parsing(monkeypatch):
+    """TUNNELSCOPE_LOCAL_LLM must strictly parse 1/true/yes, rejecting 0/false/empty."""
+    pcap = os.path.join(CAP, "cloud", "c-w.pcap")
+    a = analyze(pcap)
+    sa = analysis_json(a, "c-w.pcap")["sas"][0]
+
+    # Explicit False must override ambient env var
+    monkeypatch.setenv("TUNNELSCOPE_LOCAL_LLM", "1")
+    out_disabled = explain_sa(sa, local_llm=False)
+    assert "summary_rephrased" not in out_disabled
+
+    # '0' and 'false' must NOT enable local LLM
+    monkeypatch.setenv("TUNNELSCOPE_LOCAL_LLM", "0")
+    out_zero = explain_sa(sa)
+    assert "summary_rephrased" not in out_zero
+
+    monkeypatch.setenv("TUNNELSCOPE_LOCAL_LLM", "false")
+    out_false = explain_sa(sa)
+    assert "summary_rephrased" not in out_false
+
+
+def test_fact_extractor_handles_cve_dst_and_decimals():
+    """Fact extractor captures CVE IDs, DST-PQ IDs, decimals, and various ciphers."""
+    text = (
+        "CVE-2026-78135 (high): early child SA. Also DST-PQ-DOWNGRADE fallback. "
+        "Confidence: 99.5% with ChaCha20 and Curve25519."
+    )
+    facts = _facts(text)
+    assert "CVE-2026-78135" in facts
+    assert "DST-PQ-DOWNGRADE" in facts
+    assert "99.5" in facts
+    assert "ChaCha20" in facts
+    assert "Curve25519" in facts
+
+
+def test_rephrase_module_exports():
+    """Verify tunnelscope.rephrase.rephrase exports expected public interface."""
+    import tunnelscope.rephrase.rephrase as rp
+    assert rp.MODEL_ID == MODEL_ID
+    assert rp.FALLBACK_MODEL_ID == FALLBACK_MODEL_ID
+    assert callable(rp.available)
+    assert callable(rp.rephrase)
+    assert callable(rp.guardrail_facts_match)
+    assert callable(rp._facts)
+
