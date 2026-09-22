@@ -24,4 +24,4 @@ Old DNS resolver library will be used
 More help can be found on our website, at https://prosody.im/doc/depends
 **************************
 
-servers up: nginx 11, sshd 2, postfix 1, prosody 1
+servers up: nginx 11, sshd 1, postfix 1, prosody 1
