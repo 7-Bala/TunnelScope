@@ -51,6 +51,21 @@ Two places this applies, both already deterministic-text today:
 | Default | **Off** | Matches the existing pattern (`--llm` was opt-in for the earlier, removed feature); plain deterministic text is always what ships without a flag |
 | Platform gate | Feature silently absent unless `sys.platform == "darwin"` and Apple Silicon (`platform.machine() == "arm64"`) | MLX doesn't run elsewhere; must never error on Linux CI or an Intel Mac, just not offer the toggle |
 | Fallback | Deterministic text always available and always shown first; rephrase is an additional "hear it differently" view, not a replacement | Keeps every claim traceable even when the feature is on |
+
+### Why not a bigger model (asked and decided, 2026-09-22)
+
+All 4-bit, on the M4 16GB machine:
+
+| Size | Weight size | What actually happens |
+|---|---|---|
+| 4B (chosen) | ~2.3–2.5GB | Headroom for dashboard + engine + Docker running alongside; fast per-call latency |
+| 7–8B | ~4–4.5GB | Fits alone; the real cost is speed, not memory — slower generation means guardrail 5's timeout (3s) is hit more often, so MORE silent fallbacks to plain text, not fewer. Marginal fluency gain for a reword+schema task |
+| 14B | ~7.5–8GB | Half the machine's memory to one model; fine alone, risky once Docker is also running (already observed real Docker-vs-engine contention earlier this session, different Air) — exactly the wrong moment for lag, during a live demo |
+| 30B+ | ~16–18GB+ | Does not fit; swaps to disk, unusable live |
+
+**The guardrails (fact-set check, constrained generation, fail-closed) do not get relaxed at any size.** A bigger model is not inherently safer — it can be more fluent while still wrong, which makes it *harder* to eyeball-catch, not easier. Model size was never the safety layer; guardrail 2 (the mechanical fact-set match) is, regardless of which model sits behind it.
+
+**Decision: stay on 4B.** The task — reword an already-correct sentence, obey a JSON schema — is an instruction-following/format-compliance problem, where small modern models are already strong, not a reasoning problem where size would help. The only real reason to size up later is empirical: if guardrail 2's rejection rate turns out high in practice (model often drifts out of schema). If so, the ceiling is `mlx-community/Qwen3-8B-Instruct-2507-4bit` — never higher, given the machine has to run everything else during a live demo too. Not sizing up to "look more impressive" — the guardrails don't care about parameter count, and neither should the model choice.
 | UI disclosure | Every rephrased panel keeps a visible label: "Rephrased locally on this device from the facts to the left — the facts themselves come only from the verdicts, never from this model" | The existing explain panel already says "Nothing here comes from a language model" — that line must change to name exactly what the model does and does not touch, not go silent |
 
 ## What the "every model trained by us" claim becomes
