@@ -149,6 +149,37 @@ what the model is *allowed to touch*, not by prompting it to "be accurate." Five
 | **Crash isolation** | `mlx-lm` import and calls wrapped so a crash in the rephrase path cannot take down the analysis engine — caught, logged, treated as guardrail-5 fail-closed, never propagated |
 | **A false sense of "it's smarter now"** | The Q&A entry in `PRESENTER-GUIDE.md` and every on-screen label say plainly that the model rewords, not reasons — the risk isn't just technical, it's a judge or a user over-trusting output that looks more fluent than a template, so the label has to say what it is every time it's shown, not just once in a settings page |
 
+## Can AI bridge the zero-day gap? (asked and decided, 2026-09-22)
+
+**No, not as the detector — that was already tried and rejected once.** DEC-006 rejected
+pretrained transformer-style traffic models (ET-BERT/YaTC/NetMamba class) as the core detection
+engine: they collapsed from 98% to 10.9% under honest data splits, and a plain Random Forest on
+hand-engineered features beat them outright. The same reasoning applies to using an LLM as a
+zero-day detector: it has no special ability to recognize an attack pattern it has never seen,
+it would be pattern-matching against training data exactly like the rule engine does (just less
+transparently), and it isn't even given raw packets in this design. **The thing that already
+does genuine novel-pattern detection is the Isolation Forest anomaly layer** — a trained model,
+on our own data, unsupervised. That doesn't need an LLM added to it; it needs nothing changed.
+
+**Yes, for triage — a new, narrower use, on top of the existing rephrase layer.** Once the
+anomaly layer flags a deviation (posture changed, a traffic z-score exceeded, an Isolation
+Forest outlier score), a human still has to decide what to check first. A local model can draft
+a short list of plausible things to investigate, from the anomaly's own feature-level output —
+never a diagnosis, never naming a vulnerability, always phrased as "possible things to check."
+
+This needs a THIRD authority tier, stricter than rephrasing:
+
+| Tier | What the model may do | Guardrail |
+|---|---|---|
+| Rephrase (existing) | Reword an already-computed sentence | Fact-set match against the original — any drift, discard |
+| **Suggest (new)** | Given an anomaly's changed features, draft candidate things a human might check | Every suggestion is prefixed "possible, unverified" in the UI; the model NEVER outputs a rule ID, CVE, cipher name, or verdict — a filter strips any if generated, same as guardrail 2's set-check, run in reverse (checking that no NEW fact-shaped token appears, not that the old ones survived) |
+| Decide/assert (never) | Name what the vulnerability is, confirm it's real, choose or apply a fix | Stays entirely human — no model tier is ever granted this |
+
+Same model (`Qwen3.5-4B-MLX-4bit`), same off-by-default/local-only/fail-closed rules as the
+rephrase layer — this is an additional prompt/guardrail pair for the same runtime, not a second
+system. Scoped smaller than remediation (`build/09-REMEDIATION-ROADMAP.md`) and can ship after
+or alongside it.
+
 ## Build scope, when it's time (small, one slice first)
 
 1. `tunnelscope/rephrase/` — new module, `mlx_lm` behind a lazy import (never imported unless
