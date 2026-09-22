@@ -46,7 +46,7 @@ Two places this applies, both already deterministic-text today:
 | Decision | Choice | Why |
 |---|---|---|
 | Framework | `mlx-lm` (Python package on top of `ml-explore/mlx`) | Apple's own framework, built for Apple Silicon's unified memory; no separate server process required the way Ollama needs one |
-| Model | A small instruction-tuned model from the `mlx-community` Hugging Face org, quantized 4-bit — e.g. `mlx-community/Qwen2.5-3B-Instruct-4bit` | Small enough to run acceptably on a MacBook Air; a 3B model has no business inventing security facts, which is fine since it's never asked to — it only rewrites given text. Swappable; not load-bearing which exact model is picked |
+| Model | **`mlx-community/Qwen3.5-4B-MLX-4bit`** — decided 2026-09-22 for the M4 16GB machine (see below). Fallback: `mlx-community/Qwen3-4B-Instruct-2507-4bit` (one generation older, more community mileage) if the 3.5 build has structured-output issues | ~2.3–2.5GB at 4-bit, comfortable on 16GB unified memory alongside the dashboard/engine/Docker; strong instruction-following at small scale is what this task needs (reword + obey a JSON schema), not reasoning depth — a 4B model has no business inventing security facts either way, since it's never asked to, it only rewrites given text |
 | Network | None, ever, for this feature | The whole point of choosing MLX over a cloud API is removing the network dependency and the "your data left the machine" objection |
 | Default | **Off** | Matches the existing pattern (`--llm` was opt-in for the earlier, removed feature); plain deterministic text is always what ships without a flag |
 | Platform gate | Feature silently absent unless `sys.platform == "darwin"` and Apple Silicon (`platform.machine() == "arm64"`) | MLX doesn't run elsewhere; must never error on Linux CI or an Intel Mac, just not offer the toggle |
@@ -155,3 +155,6 @@ way `build/09-REMEDIATION-ROADMAP.md` is for the remediation loop.
 - [MLX — ml-explore/mlx](https://github.com/ml-explore/mlx)
 - [mlx-lm — run LLMs with MLX](https://github.com/ml-explore/mlx-lm)
 - [Apple Machine Learning Research — Exploring LLMs with MLX](https://machinelearning.apple.com/research/exploring-llms-mlx-m5)
+- [mlx-community/Qwen3.5-4B-MLX-4bit](https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit) — chosen model
+- [mlx-community/Qwen3-4B-Instruct-2507-4bit](https://huggingface.co/mlx-community/Qwen3-4B-Instruct-2507-4bit) — fallback model
+- [mlx-community (Hugging Face org)](https://huggingface.co/mlx-community) — ~4,800 pre-converted MLX models, the "this site" referred to for model selection
