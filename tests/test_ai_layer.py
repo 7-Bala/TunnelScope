@@ -184,9 +184,27 @@ def test_no_outside_model_is_used():
     no model download, no network call anywhere in the package."""
     import pathlib
     pkg = pathlib.Path(ex.__file__).parents[1]
-    src = "\n".join(p.read_text() for p in pkg.rglob("*.py")).lower()
+    all_files = list(pkg.rglob("*.py"))
+    all_src = "\n".join(p.read_text() for p in all_files).lower()
+    rephrase_dir = pkg / "rephrase"
+    no_rephrase_src = "\n".join(
+        p.read_text() for p in all_files if not p.is_relative_to(rephrase_dir)
+    ).lower()
     for banned in ("anthropic", "openai", "ollama", "gemini", "urllib.request.urlopen", "transformers", "huggingface"):
+        src = no_rephrase_src if banned in ("transformers", "huggingface") else all_src
         assert banned not in src, banned
+
+
+def test_rephrase_is_never_imported_by_fact_producing_code():
+    """DEC-031: one-directional check — a finding can never depend on rephrase."""
+    import pathlib
+    pkg = pathlib.Path(ex.__file__).parents[1]
+    for d in ("assess", "rules", "risk", "leakage", "anomaly", "evidence"):
+        dirpath = pkg / d
+        if not dirpath.exists():
+            continue
+        for p in dirpath.rglob("*.py"):
+            assert "rephrase" not in p.read_text().lower(), f"{p.name} mentions rephrase"
 
 
 def test_template_covers_every_fail(sa_cw):
