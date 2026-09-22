@@ -270,7 +270,8 @@ No pretrained or third-party AI model is used, and a test fails if one is ever a
 - **How accurate is it on real traffic?** 0.986 macro-F1 on held-out runs. A model trained on synthetic traffic only scored 0.461 on real applications, which is why the shipped model also trains on real ones. One lab, no real WAN yet.
 - **Why several scores instead of one?** DISA and RFC 8247 disagree about some groups. One blended number would hide that.
 - **What is the risk score based on?** A designed formula over rated threats. It ranks tunnels sensibly; it is not a measured probability of an attack.
-- **What would you do next?** Delay and packet loss (already pre-registered), vendor equipment and a real cloud tunnel, and learning on the customer's own network.
+- **What would you do next?** Delay and packet loss (already pre-registered), vendor equipment and a real cloud tunnel, and learning on the customer's own network. Since EXP-17 ran: we found and closed that gap already — the traffic classifier's accuracy under delay/loss went from 0.53/0.38 to 0.98/0.91 by retraining on impaired-network captures (`experiments/exp17-network-conditions/`).
+- **Isn't this still just a report? The auditor still has to read it and patch things by hand.** That's a fair read of today's build, and it's exactly what a judge panel told us. The fix isn't to make TunnelScope guess a patch and apply it quietly — that would break the evidence discipline the whole tool is built on. The design we're taking into the next phase (`build/09-REMEDIATION-ROADMAP.md`) is: for each failed rule, propose the exact config fix, show it to the human, and only on an explicit Approve does TunnelScope apply it, re-capture, and re-verify the verdict actually flipped to PASS. It stays human-gated by design, the same way every other claim in this tool stays evidence-gated — "applied" and "confirmed fixed" are reported as two different things, never assumed together.
 
 ## 8. Where to show the code
 
