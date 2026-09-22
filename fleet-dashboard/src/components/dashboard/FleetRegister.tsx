@@ -6,6 +6,7 @@ import { type Gateway, type Finding, postureKind } from "@/lib/fleet"
 import { type AnalyzedSA, type FindingStatus, type VerdictResult, formatValue } from "@/lib/api"
 import { AttackerPane, ChangesPane, ExplainedPane } from "@/components/dashboard/TunnelAI"
 import { RiskBadge, ThreatPane } from "@/components/dashboard/ThreatMatrix"
+import { RemediationControl } from "@/components/dashboard/RemediationPane"
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -115,7 +116,8 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
                   <td className="py-2 pr-3 font-mono text-[12px] text-foreground/90">{v.rule_id}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{v.baseline}</td>
                   <td className="py-2 leading-snug text-muted-foreground">
-                    {v.verdict === "FAIL" ? v.message || v.title : v.observed != null ? `observed ${formatValue(v.observed)}` : v.title}
+                    <div>{v.verdict === "FAIL" ? v.message || v.title : v.observed != null ? `observed ${formatValue(v.observed)}` : v.title}</div>
+                    {v.verdict === "FAIL" && <RemediationControl ruleId={v.rule_id} observed={v.observed} />}
                   </td>
                 </tr>
               ))}
