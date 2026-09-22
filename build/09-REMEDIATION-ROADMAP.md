@@ -54,6 +54,15 @@ FAIL verdict (already exists)
 Reject stops at stage 2 and just records the decision (for the audit trail — "flagged,
 human declined, reason: X" is itself useful evidence for a compliance report).
 
+## A note on stage 1's prose (added 2026-09-22)
+
+Stage 1's commands and rule targeting must stay exactly as deterministic as the table below —
+that does not change. Its human-facing "why this matters" sentence, however, is a candidate for
+the local, on-device MLX rephrasing layer designed in `build/10-LOCAL-AI-RUNTIME.md` (DEC-031):
+optional, off by default, rewords only, never touches which command runs or which endpoint it
+targets. Read that document before building either this or the rephrase layer, since they share
+one boundary — a model may reword a finished sentence, never decide a fact.
+
 ## Stage 1: the remediation glossary
 
 Same shape as `GLOSSARY` in `tunnelscope/explain/explain.py`, one dict entry per rule ID, but
