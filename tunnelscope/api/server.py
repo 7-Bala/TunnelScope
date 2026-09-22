@@ -39,6 +39,7 @@ from ..report.report import analyze
 from ..report.dashboard import _CSS, render_sas_html
 from ..anomaly.anomaly import History, observe
 from ..explain.explain import explain_sa
+from ..remediate.plan import plan_for
 from ..report.labels import label
 from ..risk.risk import assess_risk
 
@@ -234,8 +235,37 @@ class _Handler(BaseHTTPRequestHandler):
             # there is no dashboard build
             self._bytes(200, _PAGE.format(css=_CSS).encode(), "text/html; charset=utf-8")
 
+    def _remediate_plan(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length <= 0:
+            self._json(400, {"ok": False, "error": "empty body"})
+            return
+        if length > 1024 * 1024:
+            self._json(413, {"ok": False, "error": "payload too large"})
+            return
+        try:
+            data = self.rfile.read(length)
+            body = json.loads(data.decode("utf-8"))
+        except Exception:
+            self._json(400, {"ok": False, "error": "invalid json"})
+            return
+        if not isinstance(body, dict) or "rule_id" not in body:
+            self._json(400, {"ok": False, "error": "missing rule_id"})
+            return
+        plan = plan_for(body.get("rule_id"), observed=body.get("observed"))
+        if plan is None:
+            self._json(404, {"ok": False, "error": "unknown rule"})
+            return
+        self._json(200, plan)
+
     def do_POST(self):  # noqa: N802
         url = urlparse(self.path)
+        if url.path == "/api/remediate/plan":
+            self._remediate_plan()
+            return
         if url.path not in ("/api/upload", "/api/analyze"):
             self._json(404, {"ok": False, "error": "not found"})
             return
