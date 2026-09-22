@@ -1,6 +1,8 @@
 """Tests for local on-device MLX rephrase layer (DEC-031, T-093)."""
 import json
 import os
+import threading
+import time
 import pytest
 
 from tunnelscope.rephrase.rephrase import (
@@ -10,6 +12,9 @@ from tunnelscope.rephrase.rephrase import (
     guardrail_facts_match,
     rephrase,
     _facts,
+    _fact_tokens,
+    _clean_candidate,
+    _GEN_LOCK,
 )
 from tunnelscope.explain.explain import explain_sa, as_text
 from tunnelscope.report.report import analyze
@@ -41,6 +46,14 @@ def test_fact_extractor_identifies_rule_number_and_cipher():
     assert "Diffie-Hellman" in facts
 
 
+def test_fact_extractor_exact_token_count():
+    """6.c: Fact extractor finds exactly three facts on a 3-fact input, with no spurious digit splits."""
+    text = "Rule V-207193 failed: group 16 is below requirements. Seen MODP-1024."
+    facts = _facts(text)
+    assert facts == {"V-207193", "16", "MODP-1024"}
+    assert len(facts) == 3
+
+
 def test_guardrail_discard_on_fact_mismatch():
     """6.d: Guardrail 2 directly discards candidates with fact-set mismatches."""
     original = "V-207193 (high): group 16 with AES-GCM. Why it matters: weak. What to do: configure ECP-384."
@@ -64,6 +77,46 @@ def test_guardrail_discard_on_fact_mismatch():
     # 5. Matching facts with reworded phrasing returns True
     cand_ok = "Under rule V-207193 (high), group 16 was negotiated using AES-GCM; recommend moving to ECP-384."
     assert guardrail_facts_match(original, cand_ok)
+
+
+def test_guardrail_rejects_hallucinated_digits():
+    """Guardrail 2: rejects hallucinated digits matching internal substrings of identifiers."""
+    orig = "Confidence: 99.5% with ChaCha20."
+    cand = "Confidence: 99.5% with ChaCha20 and 20 dropped packets."
+    assert not guardrail_facts_match(orig, cand)
+
+    orig_cipher = "V-207193 (high): key exchange uses MODP-1024"
+    cand_cipher = "Under rule V-207193 (high), key exchange uses MODP-1024 across 1024 dropped packets"
+    assert not guardrail_facts_match(orig_cipher, cand_cipher)
+
+
+def test_guardrail_rejects_ip_truncation():
+    """Guardrail 2: rejects candidates that truncate or corrupt IP addresses."""
+    orig_ip = "This tunnel between 192.168.1.1 and 192.168.1.2 was checked"
+    cand_ip = "This tunnel between 192.168.1.1 and 1.2 was checked"
+    assert not guardrail_facts_match(orig_ip, cand_ip)
+
+
+def test_guardrail_rejects_count_shift():
+    """Guardrail 2: rejects candidates that alter token frequencies (multiset mismatch)."""
+    orig_cnt = "This tunnel was checked against 12 rules: 6 passed, 6 failed."
+    cand_cnt = "This tunnel was checked against 12 rules: 6 passed, 12 failed."
+    assert not guardrail_facts_match(orig_cnt, cand_cnt)
+
+
+def test_clean_candidate_preambles_and_quotes():
+    """Verify cleaning of conversational preambles, fences, thinking tags, and quotes."""
+    c1 = _clean_candidate('Reworded: "The tunnel between 10.20.1.10 and 10.20.2.10 was checked."')
+    assert c1 == "The tunnel between 10.20.1.10 and 10.20.2.10 was checked."
+
+    c2 = _clean_candidate('Here is the revised text: Sure! "The tunnel was checked."')
+    assert c2 == "The tunnel was checked."
+
+    c3 = _clean_candidate('```markdown\nThe tunnel was checked.\n```')
+    assert c3 == "The tunnel was checked."
+
+    c4 = _clean_candidate('<think>reasoning...</think> The tunnel was checked.')
+    assert c4 == "The tunnel was checked."
 
 
 def test_baseline_byte_identical_with_flag_off(monkeypatch):
@@ -153,7 +206,6 @@ def test_rephrase_empty_or_invalid_input_returns_none():
 
 def test_rephrase_timeout_fails_closed(monkeypatch):
     """Rephrase fail-closed on timeout (returns None without raising)."""
-    import time
     def _slow_generate(*args, **kwargs):
         time.sleep(0.5)
         return "reworded"
@@ -167,6 +219,19 @@ def test_rephrase_exception_fails_closed(monkeypatch):
     """Rephrase fail-closed on model load or generation exceptions (never raises)."""
     monkeypatch.setattr("tunnelscope.rephrase.rephrase._get_model", lambda: (_ for _ in ()).throw(RuntimeError("OOM")))
     assert rephrase("Some text to rephrase") is None
+
+
+def test_rephrase_lock_serializes_concurrent_requests(monkeypatch):
+    """Rephrase fail-closed when generation lock is held by another worker."""
+    monkeypatch.setattr("tunnelscope.rephrase.rephrase._get_model", lambda: ("model", "tok"))
+    monkeypatch.setattr("mlx_lm.generate", lambda *args, **kwargs: "reworded")
+
+    # Manually hold lock to simulate busy generation queue
+    _GEN_LOCK.acquire()
+    try:
+        assert rephrase("Some text to rephrase", timeout_s=0.01) is None
+    finally:
+        _GEN_LOCK.release()
 
 
 def test_env_var_strict_boolean_parsing(monkeypatch):
@@ -213,4 +278,3 @@ def test_rephrase_module_exports():
     assert callable(rp.rephrase)
     assert callable(rp.guardrail_facts_match)
     assert callable(rp._facts)
-
