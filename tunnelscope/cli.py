@@ -191,9 +191,10 @@ def cmd_watch(args):
 def cmd_explain(args):
     from .api.server import analysis_json
     from .explain.explain import as_text, explain_sa
+    local_llm = True if getattr(args, "local_llm", False) else None
     a = analyze(args.pcap)
     for sa in analysis_json(a, args.pcap)["sas"]:
-        print(as_text(explain_sa(sa)))
+        print(as_text(explain_sa(sa, local_llm=local_llm)))
         print()
 
 
@@ -280,6 +281,8 @@ def main(argv=None):
     wt.set_defaults(func=cmd_watch)
     ex = sub.add_parser("explain", help="plain-English explanation of a capture's verdicts, for non-experts")
     ex.add_argument("pcap")
+    ex.add_argument("--local-llm", action="store_true",
+                    help="rephrase findings locally on-device with MLX (Apple Silicon only, DEC-031)")
     ex.set_defaults(func=cmd_explain)
     fl = sub.add_parser("fleet", help="scan a directory of captures: one aggregated view, per-tunnel evidence kept intact (role B/D)")
     fl.add_argument("directory")
