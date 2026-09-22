@@ -134,12 +134,15 @@ def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool | None = N
 
 
 def as_text(e: dict) -> str:
-    summary = e.get("summary_rephrased") or e.get("summary", "")
-    points = []
+    lines = [e.get("summary", "")]
+    if e.get("summary_rephrased"):
+        lines.append(f"  (rephrased locally: {e['summary_rephrased']})")
+    lines.append("")
     for p in e.get("points", []):
-        txt = p.get("text_rephrased") or p.get("text", "")
-        points.append(f"- {txt}")
-    L = [summary, ""] + points
+        lines.append(f"- {p.get('text', '')}")
+        if p.get("text_rephrased"):
+            lines.append(f"  (rephrased locally: {p['text_rephrased']})")
     if e.get("unseen"):
-        L += ["", "Not visible in this capture:"] + [f"- {u}" for u in e["unseen"]]
-    return "\n".join(L)
+        lines += ["", "Not visible in this capture:"] + [f"- {u}" for u in e["unseen"]]
+    return "\n".join(lines)
+
