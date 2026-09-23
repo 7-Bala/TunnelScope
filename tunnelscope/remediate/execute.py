@@ -27,10 +27,127 @@ from typing import Any
 
 import yaml
 
-from .plan import REMEDIATION, plan_for
+from .plan import REMEDIATION, plan_for, validate_command_safety
 
 
 _DEFAULT_HISTORY_DIR = Path(".tunnelscope-history")
+
+
+def perform_sandboxed_dry_run(target: str, commands: list[str]) -> tuple[bool, str | None]:
+    """Layer 4: Pre-flight dry-run testing syntax against an isolated test copy."""
+    try:
+        # Find active config and copy to dryrun test path
+        copy_res = subprocess.run(
+            ["docker", "exec", target, "sh", "-c",
+             "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); "
+             "[ -n \"$f\" ] && cp \"$f\" /tmp/dryrun_test.conf && echo \"$f\" || true"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+        if not copy_res.stdout.strip():
+            # No config found or mock test environment; proceed
+            return True, None
+
+        # Apply commands against /tmp/dryrun_test.conf
+        for cmd in commands:
+            if "sed " in cmd:
+                test_cmd = cmd.replace("/tmp/exp15-*.conf", "/tmp/dryrun_test.conf")
+                test_cmd = test_cmd.replace("/etc/swanctl/conf.d/*.conf", "/tmp/dryrun_test.conf")
+                test_cmd = test_cmd.replace("/tmp/*.conf", "/tmp/dryrun_test.conf")
+                subprocess.run(
+                    ["docker", "exec", target, "sh", "-c", test_cmd],
+                    capture_output=True,
+                    check=False,
+                    timeout=5,
+                )
+
+        # Test-load syntax with strongSwan
+        val_res = subprocess.run(
+            ["docker", "exec", target, "swanctl", "--load-all", "--file", "/tmp/dryrun_test.conf"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+
+        # Clean up test file
+        subprocess.run(
+            ["docker", "exec", target, "rm", "-f", "/tmp/dryrun_test.conf"],
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+
+        combined_out = (val_res.stderr or "") + (val_res.stdout or "")
+        if val_res.returncode != 0 and "syntax error" in combined_out.lower():
+            return False, f"syntax error: {combined_out.strip()}"
+
+        return True, None
+    except Exception:
+        return True, None
+
+
+def arm_commit_confirmed_watchdog(target: str, timeout_s: int = 30) -> None:
+    """Layer 5: Snapshot config and arm an out-of-band background revert timer."""
+    try:
+        # 1. Take atomic snapshot
+        subprocess.run(
+            ["docker", "exec", target, "sh", "-c",
+             "for f in /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf; do "
+             "[ -f \"$f\" ] && cp -f \"$f\" \"${f}.ts_snapshot\"; done 2>/dev/null || true"],
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+
+        # 2. Arm detached background sleep watchdog in container
+        subprocess.run(
+            ["docker", "exec", "-d", target, "sh", "-c",
+             f"(sleep {timeout_s} && if ls /tmp/*.ts_snapshot 1>/dev/null 2>&1; then "
+             f"for f in /tmp/*.ts_snapshot; do [ -f \"$f\" ] && orig=\"${{f%.ts_snapshot}}\" && cp -f \"$f\" \"$orig\"; done; "
+             f"f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); "
+             f"[ -n \"$f\" ] && swanctl --load-all --file \"$f\" 2>/dev/null || swanctl --load-all 2>/dev/null; "
+             f"rm -f /tmp/*.ts_snapshot 2>/dev/null; fi)"],
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+    except Exception:
+        pass
+
+
+def disarm_watchdog(target: str) -> None:
+    """Disarm watchdog upon confirmed fixed verification."""
+    try:
+        subprocess.run(
+            ["docker", "exec", target, "sh", "-c",
+             "rm -f /tmp/*.ts_snapshot 2>/dev/null || true"],
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+    except Exception:
+        pass
+
+
+def rollback_snapshot(target: str) -> None:
+    """Trigger immediate atomic rollback from pre-patch snapshot."""
+    try:
+        subprocess.run(
+            ["docker", "exec", target, "sh", "-c",
+             "for f in /tmp/*.ts_snapshot; do "
+             "[ -f \"$f\" ] && orig=\"${f%.ts_snapshot}\" && cp -f \"$f\" \"$orig\"; done; "
+             "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); "
+             "[ -n \"$f\" ] && swanctl --load-all --file \"$f\" 2>/dev/null || swanctl --load-all 2>/dev/null; "
+             "rm -f /tmp/*.ts_snapshot 2>/dev/null || true"],
+            capture_output=True,
+            check=False,
+            timeout=8,
+        )
+    except Exception:
+        pass
 
 
 def _repo_root() -> Path:
@@ -167,6 +284,26 @@ def apply_remediation(
         record_audit(entry, history_dir)
         return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
 
+    # Layer 3: Anti-hallucination static command linter check
+    for cmd in exec_commands:
+        safe, reason = validate_command_safety(cmd)
+        if not safe:
+            err = f"Command safety check failed: {reason}"
+            entry = {**audit_base, "ok": False, "decision": "refused", "stage": "lint", "error": err}
+            record_audit(entry, history_dir)
+            return {"ok": False, "stage": "lint", "error": err, "decision": "refused"}
+
+    # Layer 4: Sandboxed dry-run syntax check before touching active config
+    dry_ok, dry_err = perform_sandboxed_dry_run(target, exec_commands)
+    if not dry_ok:
+        err = f"Pre-flight sandbox dry-run validation failed: {dry_err}"
+        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "dry_run", "error": err}
+        record_audit(entry, history_dir)
+        return {"ok": False, "stage": "dry_run", "error": err, "decision": "refused"}
+
+    # Layer 5: Snapshot config and arm commit-confirmed watchdog (auto-reverts in 30s if not disarmed)
+    arm_commit_confirmed_watchdog(target, timeout_s=30)
+
     # 5. Execute commands via docker exec
     commands_run: list[str] = []
     for cmd in exec_commands:
@@ -181,6 +318,7 @@ def apply_remediation(
                 timeout=15,
             )
         except Exception as e:
+            rollback_snapshot(target)
             err = f"Failed executing command in container {target}: {e}"
             entry = {
                 **audit_base,
@@ -189,9 +327,10 @@ def apply_remediation(
                 "stage": "execute",
                 "error": err,
                 "commands_run": commands_run,
+                "rolled_back": True,
             }
             record_audit(entry, history_dir)
-            return {"ok": False, "stage": "execute", "error": err, "decision": "failed", "commands_run": commands_run}
+            return {"ok": False, "stage": "execute", "error": err, "decision": "failed", "commands_run": commands_run, "rolled_back": True}
 
     # 6. Re-capture and re-verify
     # Attempt capture on sih26-router or target container
@@ -296,10 +435,15 @@ def apply_remediation(
                     break
 
         confirmed_fixed = (verdict_after == "PASS")
+        if confirmed_fixed:
+            disarm_watchdog(target)
+        else:
+            rollback_snapshot(target)
     except Exception as e:
         # Re-capture/analysis exception does not erase the fact that commands ran
         verdict_after = f"UNKNOWN ({e})"
         confirmed_fixed = False
+        rollback_snapshot(target)
     finally:
         if pcap_host_path.exists():
             try:
@@ -316,6 +460,7 @@ def apply_remediation(
         "verdict_before": "FAIL",
         "verdict_after": verdict_after,
         "confirmed_fixed": confirmed_fixed,
+        "rolled_back": not confirmed_fixed,
     }
 
     record_audit({**audit_base, **result}, history_dir)

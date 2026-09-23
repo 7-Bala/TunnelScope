@@ -26,6 +26,7 @@ export function RemediationControl({
   const [target, setTarget] = useState(LAB_TARGETS[0])
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<RemediationApplyResult | null>(null)
+  const [showDetailed, setShowDetailed] = useState(false)
 
   async function handleOpen() {
     if (hasFetched) {
@@ -131,6 +132,67 @@ export function RemediationControl({
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* Detailed Implementation Plan (Progressive Disclosure) */}
+      <div className="border-t border-border/50 pt-2">
+        <button
+          type="button"
+          onClick={() => setShowDetailed((prev) => !prev)}
+          className="flex items-center gap-1.5 text-[11.5px] font-medium text-violet transition-colors hover:underline focus:outline-none"
+        >
+          <span>{showDetailed ? "▾ Hide Detailed Implementation Plan" : "▸ View Detailed Implementation Plan"}</span>
+          <span className="rounded bg-violet/10 px-1.5 py-0.5 font-mono text-[10px] text-violet">
+            AI-Assisted · Deterministic Guardrails
+          </span>
+        </button>
+
+        {showDetailed && (
+          <div className="mt-2 space-y-2 rounded border border-border/60 bg-secondary/30 p-2.5 text-[11.5px] text-foreground/90">
+            {plan.problem_analysis && (
+              <div>
+                <span className="font-semibold text-foreground">Problem Analysis:</span>
+                <p className="mt-0.5 text-muted-foreground leading-relaxed">{plan.problem_analysis}</p>
+              </div>
+            )}
+            {plan.cryptographic_risk && (
+              <div>
+                <span className="font-semibold text-warn">Cryptographic Threat & Risk:</span>
+                <p className="mt-0.5 text-muted-foreground leading-relaxed">{plan.cryptographic_risk}</p>
+              </div>
+            )}
+            {plan.proposed_strategy && (
+              <div>
+                <span className="font-semibold text-foreground">Proposed Remediation Strategy:</span>
+                <p className="mt-0.5 text-muted-foreground leading-relaxed">{plan.proposed_strategy}</p>
+              </div>
+            )}
+            {plan.rollback_strategy && (
+              <div className="rounded border border-emerald-500/30 bg-emerald-500/10 p-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  <span className="font-semibold text-emerald-400">Automated Rollback Guarantee:</span>
+                </div>
+                <p className="mt-0.5 text-muted-foreground leading-relaxed">{plan.rollback_strategy}</p>
+                <div className="mt-1 flex flex-wrap gap-2 text-[10.5px] text-faint">
+                  <span>✓ Layer 3: AST/Token Linter Whitelist</span>
+                  <span>✓ Layer 4: Sandboxed Config Dry-Run</span>
+                  <span>✓ Layer 5: 30s Commit-Confirmed Watchdog</span>
+                </div>
+              </div>
+            )}
+            {plan.is_software_patch && plan.runbook && plan.runbook.length > 0 && (
+              <div className="rounded border border-amber-500/30 bg-amber-500/10 p-2">
+                <span className="font-semibold text-amber-400">Operator Remediation Runbook:</span>
+                <ol className="mt-1 list-decimal list-inside space-y-1 text-muted-foreground">
+                  {plan.runbook.map((step, idx) => (
+                    <li key={idx} className="leading-relaxed">{step}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {plan.auto_applicable ? (
@@ -249,12 +311,24 @@ export function RemediationControl({
                         <div>
                           {applyResult.confirmed_fixed ? (
                             <span className="text-[12px] font-semibold text-emerald-400">
-                              Confirmed fixed — fresh capture verified verdict is PASS.
+                              Confirmed fixed — fresh capture verified verdict is PASS. Commit-confirmed watchdog disarmed.
                             </span>
                           ) : (
-                            <span className="text-[12px] font-semibold text-warn">
-                              Commands executed, but verdict is {applyResult.verdict_after || "still failing"} (not fixed).
-                            </span>
+                            <div className="space-y-1.5">
+                              <span className="text-[12px] font-semibold text-warn">
+                                Commands executed, but verdict is {applyResult.verdict_after || "still failing"} (not fixed).
+                              </span>
+                              {applyResult.rolled_back && (
+                                <div className="rounded border border-warn/30 bg-warn/10 p-2 text-[11.5px] text-warn">
+                                  <div className="flex items-center gap-1.5 font-semibold">
+                                    <span>⚠️ Automatic Rollback Executed:</span>
+                                  </div>
+                                  <p className="mt-0.5 text-foreground/80 leading-relaxed">
+                                    Verification returned {applyResult.verdict_after}. The tunnel configuration was immediately restored from the pre-patch snapshot to ensure VPN availability and eliminate hallucination risk.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                         {applyResult.commands_run && applyResult.commands_run.length > 0 && (

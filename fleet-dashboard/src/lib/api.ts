@@ -209,14 +209,24 @@ export type RemediationPlan = {
   commands: string[]
   auto_applicable: boolean
   observed: unknown
+  problem_analysis?: string
+  cryptographic_risk?: string
+  proposed_strategy?: string
+  rollback_strategy?: string
+  is_software_patch?: boolean
+  runbook?: string[]
 }
 
-export async function remediationPlan(ruleId: string, observed?: unknown): Promise<RemediationPlan | null> {
+export async function remediationPlan(
+  ruleId: string,
+  observed?: unknown,
+  detailed: boolean = true,
+): Promise<RemediationPlan | null> {
   try {
     const res = await fetch("/api/remediate/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rule_id: ruleId, observed: observed ?? null }),
+      body: JSON.stringify({ rule_id: ruleId, observed: observed ?? null, detailed }),
     })
     if (!res.ok) return null
     return (await res.json()) as RemediationPlan
@@ -235,6 +245,7 @@ export type RemediationApplyResult = {
   verdict_before?: string
   verdict_after?: string
   confirmed_fixed?: boolean
+  rolled_back?: boolean
 }
 
 export async function applyRemediation(

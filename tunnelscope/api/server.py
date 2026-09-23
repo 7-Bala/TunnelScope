@@ -255,7 +255,7 @@ class _Handler(BaseHTTPRequestHandler):
         if not isinstance(body, dict) or "rule_id" not in body:
             self._json(400, {"ok": False, "error": "missing rule_id"})
             return
-        plan = plan_for(body.get("rule_id"), observed=body.get("observed"))
+        plan = plan_for(body.get("rule_id"), observed=body.get("observed"), detailed=bool(body.get("detailed", False)))
         if plan is None:
             self._json(404, {"ok": False, "error": "unknown rule"})
             return
