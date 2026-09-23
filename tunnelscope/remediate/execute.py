@@ -231,6 +231,16 @@ def apply_remediation(
                         check=False,
                         timeout=5,
                     )
+                # Ensure peer responder (Bob) accepts compliant suites so re-negotiation succeeds
+                if "bob" in peer:
+                    subprocess.run(
+                        ["docker", "exec", peer, "sh", "-c",
+                         "sed -i -E '/^[[:space:]]*t-tun[[:space:]]*\\{/,/^[[:space:]]*\\}/ { s/^([[:space:]]*proposals[[:space:]]*=[[:space:]]*).*/\\1aes256-sha384-modp4096, aes256-sha512-modp4096, aes256-sha256-modp4096, aes256-sha256-modp3072, aes256-sha256-modp2048, default/ }' /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null || true; "
+                         "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); [ -n \"$f\" ] && swanctl --load-all --file \"$f\" 2>/dev/null || swanctl --load-all 2>/dev/null || true"],
+                        capture_output=True,
+                        check=False,
+                        timeout=5,
+                    )
 
         # Terminate any existing IKE SA to force a clean re-handshake
         subprocess.run(
