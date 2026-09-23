@@ -80,9 +80,11 @@ def perform_sandboxed_dry_run(target: str, commands: list[str]) -> tuple[bool, s
             timeout=5,
         )
 
-        combined_out = (val_res.stderr or "") + (val_res.stdout or "")
-        if val_res.returncode != 0 and "syntax error" in combined_out.lower():
-            return False, f"syntax error: {combined_out.strip()}"
+        combined_out = ((val_res.stderr or "") + " " + (val_res.stdout or "")).strip()
+        if val_res.returncode != 0:
+            if "syntax error" in combined_out.lower():
+                return False, f"syntax error: {combined_out}"
+            return False, f"syntax/config validation error (exit {val_res.returncode}): {combined_out}"
 
         return True, None
     except Exception:
@@ -417,28 +419,57 @@ def apply_remediation(
         )
         time.sleep(1)
 
-        # Run analysis on the fresh capture
+        # Run analysis on the fresh capture (Layer 5 & Global Regression Guard)
+        sas: list[dict[str, Any]] = []
         if pcap_host_path.is_file() and pcap_host_path.stat().st_size > 0:
             from ..report.report import analyze
             analysis = analyze(str(pcap_host_path))
-            for sa in analysis.get("sas", []):
+            sas = analysis.get("sas", [])
+
+        if not sas:
+            # Global Regression Guard: Outage detected -- no SAs negotiated
+            verdict_after = "REGRESSION"
+            confirmed_fixed = False
+            rollback_snapshot(target)
+        else:
+            target_verdicts: list[str] = []
+            any_other_failed: bool = False
+            for sa in sas:
                 for v in sa.get("verdicts", []):
                     v_id = getattr(v, "rule_id", None) or (v.get("rule_id") if isinstance(v, dict) else None)
+                    v_val = str(getattr(v, "verdict", None) or (v.get("verdict") if isinstance(v, dict) else None)).upper()
                     if v_id == rule_id:
-                        v_val = str(getattr(v, "verdict", None) or (v.get("verdict") if isinstance(v, dict) else None)).upper()
-                        if v_val in ("PASS", "FAIL"):
-                            verdict_after = v_val
-                            break
-                        elif verdict_after == "UNKNOWN":
-                            verdict_after = v_val
-                if verdict_after in ("PASS", "FAIL"):
-                    break
+                        target_verdicts.append(v_val)
+                    else:
+                        if v_val in ("FAIL", "CONTRADICTORY"):
+                            any_other_failed = True
 
-        confirmed_fixed = (verdict_after == "PASS")
-        if confirmed_fixed:
-            disarm_watchdog(target)
-        else:
-            rollback_snapshot(target)
+            # Order-independent target aggregation: any FAIL or CONTRADICTORY is an overall failure
+            if "FAIL" in target_verdicts:
+                target_verdict = "FAIL"
+            elif "CONTRADICTORY" in target_verdicts:
+                target_verdict = "CONTRADICTORY"
+            elif "PASS" in target_verdicts:
+                target_verdict = "PASS"
+            elif target_verdicts:
+                target_verdict = target_verdicts[0]
+            else:
+                target_verdict = None
+
+            if target_verdict == "PASS":
+                if any_other_failed:
+                    # Global Regression Guard: target passed but another rule broke!
+                    verdict_after = "REGRESSION"
+                    confirmed_fixed = False
+                    rollback_snapshot(target)
+                else:
+                    verdict_after = "PASS"
+                    confirmed_fixed = True
+                    disarm_watchdog(target)
+            else:
+                verdict_after = target_verdict or "FAIL"
+                confirmed_fixed = False
+                rollback_snapshot(target)
     except Exception as e:
         # Re-capture/analysis exception does not erase the fact that commands ran
         verdict_after = f"UNKNOWN ({e})"

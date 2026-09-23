@@ -212,6 +212,7 @@ export type RemediationPlan = {
   problem_analysis?: string
   cryptographic_risk?: string
   proposed_strategy?: string
+  config_diff?: string
   rollback_strategy?: string
   is_software_patch?: boolean
   runbook?: string[]

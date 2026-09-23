@@ -167,6 +167,31 @@ export function RemediationControl({
                 <p className="mt-0.5 text-muted-foreground leading-relaxed">{plan.proposed_strategy}</p>
               </div>
             )}
+            {plan.config_diff && (
+              <div>
+                <span className="font-semibold text-foreground">Configuration Diff Preview:</span>
+                <pre className="mt-1 overflow-x-auto rounded border border-border/70 bg-secondary/60 p-2 font-mono text-[11px] leading-relaxed text-foreground/90">
+                  {plan.config_diff.split("\n").map((line, idx) => {
+                    const isRemoved = line.startsWith("-")
+                    const isAdded = line.startsWith("+")
+                    const isComment = line.startsWith("#")
+                    return (
+                      <div
+                        key={idx}
+                        className={cn(
+                          isRemoved && "text-red-400 bg-red-500/10 px-1 rounded-sm",
+                          isAdded && "text-emerald-400 bg-emerald-500/10 px-1 rounded-sm",
+                          isComment && "text-faint italic",
+                          !isRemoved && !isAdded && !isComment && "text-foreground/80",
+                        )}
+                      >
+                        {line}
+                      </div>
+                    )
+                  })}
+                </pre>
+              </div>
+            )}
             {plan.rollback_strategy && (
               <div className="rounded border border-emerald-500/30 bg-emerald-500/10 p-2">
                 <div className="flex items-center gap-1.5">
@@ -324,7 +349,9 @@ export function RemediationControl({
                                     <span>⚠️ Automatic Rollback Executed:</span>
                                   </div>
                                   <p className="mt-0.5 text-foreground/80 leading-relaxed">
-                                    Verification returned {applyResult.verdict_after}. The tunnel configuration was immediately restored from the pre-patch snapshot to ensure VPN availability and eliminate hallucination risk.
+                                    {applyResult.verdict_after === "REGRESSION"
+                                      ? "Global Regression Guard detected cross-rule regression or SA outage after remediation. The tunnel configuration was immediately restored from the pre-patch snapshot to ensure zero service disruption."
+                                      : `Verification returned ${applyResult.verdict_after}. The tunnel configuration was immediately restored from the pre-patch snapshot to ensure VPN availability and eliminate hallucination risk.`}
                                   </p>
                                 </div>
                               )}
