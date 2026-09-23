@@ -216,6 +216,10 @@ export type RemediationPlan = {
   rollback_strategy?: string
   is_software_patch?: boolean
   runbook?: string[]
+  /** config_diff is a hand-written illustration, not read from any configuration */
+  config_diff_is_example?: boolean
+  /** false when the rule has no safe automated fix yet (a manual change is needed) */
+  automated_fix_available?: boolean
 }
 
 export async function remediationPlan(
@@ -238,15 +242,62 @@ export async function remediationPlan(
 
 export type RemediationApplyResult = {
   ok: boolean
+  decision?: "applied" | "refused" | "failed"
   stage?: string
   error?: string
   rule_id?: string
   target?: string
+  token?: string
   commands_run?: string[]
+  /** measured on a baseline capture taken just before the change */
   verdict_before?: string
   verdict_after?: string
   confirmed_fixed?: boolean
+  reason?: string
+  /** rules that were not failing before the change and are failing after it */
+  regressions?: string[]
   rolled_back?: boolean
+  /** restored files compared byte for byte with the originals; null when nothing was rolled back */
+  rollback_verified?: boolean | null
+  /** after a rollback: tunnel re-negotiated on the restored settings, and no rule worse than the baseline */
+  service_restored?: { tunnel_up: boolean; matches_baseline: boolean; worse_than_baseline?: string[]; detail?: string } | null
+  dry_run_diff?: Record<string, string>
+  peer?: { container: string; commands_run: string[]; dry_run_diff: Record<string, string> } | null
+  watchdog_timeout_s?: number
+}
+
+export type RemediationPreview = {
+  ok: boolean
+  stage?: string
+  error?: string
+  /** real unified diff per config file, from a dry run on copies inside the container */
+  diff?: Record<string, string>
+  peer?: { container: string; diff: Record<string, string>; why: string } | null
+}
+
+export type LabTarget = { name: string; running: boolean }
+
+export async function remediationTargets(): Promise<{ targets: LabTarget[]; recommended: string } | null> {
+  try {
+    const res = await fetch("/api/remediate/targets", { cache: "no-store" })
+    if (!res.ok) return null
+    return (await res.json()) as { targets: LabTarget[]; recommended: string }
+  } catch {
+    return null
+  }
+}
+
+export async function previewRemediation(ruleId: string, target: string): Promise<RemediationPreview> {
+  try {
+    const res = await fetch("/api/remediate/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rule_id: ruleId, target }),
+    })
+    return (await res.json()) as RemediationPreview
+  } catch (e) {
+    return { ok: false, error: String(e) }
+  }
 }
 
 export async function applyRemediation(
