@@ -8,9 +8,13 @@ from __future__ import annotations
 import re
 
 BANNED_COMMAND_TOKENS = {
-    "rm", "dd", "mkfs", "iptables", "nftables", "curl", "wget", "nc", "netcat",
-    "sudo", "chmod", "chown", "reboot", "shutdown", "poweroff", "init", "telinit",
-    ">", ">>", "eval", "python", "perl", "bash", "zsh", "dash",
+    "rm", "dd", "mkfs", "iptables", "nftables", "curl", "wget", "nc", "netcat", "ncat", "socat",
+    "sudo", "su", "chmod", "chown", "chgrp", "reboot", "shutdown", "poweroff", "init", "telinit", "halt",
+    ">", ">>", "eval", "exec", "python", "python2", "python3", "perl", "ruby", "lua", "php", "node",
+    "bash", "sh", "zsh", "dash", "ash", "busybox", "kill", "pkill", "killall",
+    "cat", "tee", "cp", "mv", "ln", "unlink", "rmdir", "touch",
+    "env", "export", "source", "useradd", "usermod", "userdel", "groupadd",
+    "apt", "apt-get", "apk", "yum", "dnf", "pacman",
 }
 
 
@@ -23,18 +27,20 @@ def validate_command_safety(cmd: str) -> tuple[bool, str | None]:
 
     clean = cmd.strip()
     # Check for file redirection operators (allow silencing to /dev/null)
-    without_devnull = re.sub(r"[0-9]?>/dev/null", "", clean)
+    without_devnull = re.sub(r"[0-9]?>\s*/dev/null", "", clean)
     if ">" in without_devnull:
         return False, "file redirection operators ('>') are strictly prohibited"
 
-    # Token check
-    tokens = set(re.findall(r"\b[a-zA-Z0-9_\-\./]+\b", clean))
-    for banned in BANNED_COMMAND_TOKENS:
-        if banned in tokens:
-            return False, f"prohibited shell token '{banned}' found in command"
+    # Token check in appearance order
+    tokens = re.findall(r"\b[a-zA-Z0-9_\-\./]+\b", clean)
+    for t in tokens:
+        if t in BANNED_COMMAND_TOKENS:
+            return False, f"prohibited shell token '{t}' found in command"
+        if re.match(r"^python[0-9.]*$", t):
+            return False, f"prohibited shell token '{t}' found in command"
 
     # Must start with allowed verbs: sed, swanctl, or safe file-detect wrapper
-    if not (clean.startswith("sed ") or clean.startswith("swanctl ") or clean.startswith("f=$(") or "swanctl --load-all" in clean):
+    if not (clean.startswith(("sed ", "swanctl ", "f=$(")) or clean == "swanctl --load-all"):
         return False, "command must start with sed or swanctl"
 
     return True, None
@@ -48,6 +54,7 @@ REMEDIATION = {
         "problem_analysis": "IKEv1 protocol detected in handshake. DISA SRG V-207205 and RFC 8247 mandate IKEv2 exclusively.",
         "cryptographic_risk": "IKEv1 lacks protection against quantum downgrade, has known aggressive mode PSK offline dictionary attacks, and lacks modern anti-DDoS cookie exchange.",
         "proposed_strategy": "Set connection version = 2 in swanctl configuration and reload strongSwan daemon.",
+        "config_diff": "- version = 1\n+ version = 2",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -64,6 +71,7 @@ REMEDIATION = {
         "problem_analysis": "Diffie-Hellman group negotiated is Group 14 (MODP-2048) or lower. DISA SRG mandates Group 16 (MODP-4096) or ECP-384.",
         "cryptographic_risk": "MODP-2048 provides only ~112 bits of classical security margin and is acutely vulnerable to nation-state Harvest-Now-Decrypt-Later (HNDL) attacks.",
         "proposed_strategy": "Replace modp1024/1536/2048 proposals with modp4096, preserving encryption and integrity algorithms.",
+        "config_diff": "- proposals = aes256-sha256-modp2048\n+ proposals = aes256-sha256-modp4096",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -79,6 +87,7 @@ REMEDIATION = {
         "problem_analysis": "IKE integrity algorithm is below SHA2-384. DISA SRG mandates SHA2-384 or SHA2-512 for FIPS 140-3 compliance.",
         "cryptographic_risk": "Weaker hash functions have lower collision resistance, compromising packet authenticity under quantum or advanced cryptanalysis.",
         "proposed_strategy": "Upgrade proposal integrity tokens from sha1/sha256/md5 to sha384 in swanctl connection proposals.",
+        "config_diff": "- proposals = aes256-sha256-modp4096\n+ proposals = aes256-sha384-modp4096",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -94,6 +103,7 @@ REMEDIATION = {
         "problem_analysis": "Negotiated Diffie-Hellman group is deprecated/forbidden by RFC 8247 (MODP-768, MODP-1024, or MODP-1536).",
         "cryptographic_risk": "Logjam attack susceptibility and feasible discrete logarithm computation by well-funded adversaries.",
         "proposed_strategy": "Substitute legacy MODP groups with RFC 8247 MUST group MODP-3072 or higher.",
+        "config_diff": "- proposals = aes256-sha256-modp1024\n+ proposals = aes256-sha256-modp3072",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -110,6 +120,7 @@ REMEDIATION = {
         "problem_analysis": "Responder or initiator still offers deprecated DH groups in SA proposals despite picking a higher group.",
         "cryptographic_risk": "Allows active man-in-the-middle attackers to perform downgrade attacks during IKE_SA_INIT.",
         "proposed_strategy": "Remove legacy DH groups from peer proposals list across both endpoints.",
+        "config_diff": "- proposals = aes256-sha256-modp3072, aes256-sha256-modp1024\n+ proposals = aes256-sha256-modp3072",
         "rollback_strategy": "Manual coordination across endpoints; no automated cross-container execution.",
         "is_software_patch": False,
         "runbook": [],
@@ -122,6 +133,7 @@ REMEDIATION = {
         "problem_analysis": "IKE handshake uses legacy CBC mode without authenticated encryption (AEAD).",
         "cryptographic_risk": "CBC mode is susceptible to padding oracle side-channels and separate MAC integrity race conditions.",
         "proposed_strategy": "Transition IKE proposal to modern AEAD cipher aes256gcm16-prfsha256-modp3072.",
+        "config_diff": "- proposals = aes256-sha256-modp3072\n+ proposals = aes256gcm16-prfsha256-modp3072",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -137,6 +149,7 @@ REMEDIATION = {
         "problem_analysis": "Early Child SA timing leak and state-machine vulnerability in strongSwan 6.1.0 (CVE-2026-78135).",
         "cryptographic_risk": "Allows remote unauthenticated attacker to bypass verification gates via out-of-order early Child SA packets.",
         "proposed_strategy": "Software daemon patch required. Cannot be remediated via swanctl configuration edits.",
+        "config_diff": "# Software patch required: strongSwan 6.1.0 early Child SA state machine\n# No configuration file modification",
         "rollback_strategy": "Advisory only; operator runs package upgrade or git cherry-pick in maintenance window.",
         "is_software_patch": True,
         "runbook": [
@@ -156,6 +169,7 @@ REMEDIATION = {
         "problem_analysis": "Classical-only key exchange in use without Post-Quantum hybrid protection (NQM DST-PQ-KE mandate).",
         "cryptographic_risk": "Traffic recorded today can be decrypted retroactively once cryptanalytically relevant quantum computers (CRQC) emerge.",
         "proposed_strategy": "Append ML-KEM-768 hybrid key exchange (ke1_ke2 = ke1_mlkem768) to proposals.",
+        "config_diff": "- proposals = aes256-sha384-modp4096\n+ proposals = aes256-sha384-modp4096-ke1_mlkem768",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -172,6 +186,7 @@ REMEDIATION = {
         "problem_analysis": "Tunnel negotiates PQ hybrid but retains classical-only fallback proposals in configuration.",
         "cryptographic_risk": "Active network adversary can drop IKE_INTERMEDIATE packets to force tunnel into classical fallback.",
         "proposed_strategy": "Enforce strict post-quantum policy by removing classical-only proposals from connection definitions.",
+        "config_diff": "- proposals = aes256-sha384-modp4096-ke1_mlkem768, aes256-sha384-modp4096\n+ proposals = aes256-sha384-modp4096-ke1_mlkem768",
         "rollback_strategy": "Manual coordination across endpoints.",
         "is_software_patch": False,
         "runbook": [],
@@ -184,6 +199,7 @@ REMEDIATION = {
         "problem_analysis": "Authentication Header (AH) used without Encapsulating Security Payload (ESP).",
         "cryptographic_risk": "AH provides zero payload confidentiality; all plaintext application data is visible to wiretappers.",
         "proposed_strategy": "Migrate security policy from AH to ESP tunnel mode with aes256gcm16.",
+        "config_diff": "- ah_proposals = sha256\n+ esp_proposals = aes256gcm16",
         "rollback_strategy": "Architectural migration; requires coordinated child SA transition.",
         "is_software_patch": False,
         "runbook": [],
@@ -196,6 +212,7 @@ REMEDIATION = {
         "problem_analysis": "AH uses broken MD5 hashing algorithm for packet authentication.",
         "cryptographic_risk": "MD5 has practical collision attacks allowing packet forgery and tampering.",
         "proposed_strategy": "Set AH integrity to sha256 or sha512 in ah_proposals.",
+        "config_diff": "- ah_proposals = md5\n+ ah_proposals = sha256",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -211,6 +228,7 @@ REMEDIATION = {
         "problem_analysis": "AH uses truncated 96-bit MAC with legacy SHA-1 or MD5.",
         "cryptographic_risk": "96-bit truncation reduces forgery resistance below modern 128-bit cryptographic requirements.",
         "proposed_strategy": "Upgrade ah_proposals to standard SHA-256 (128-bit truncated) or SHA-512.",
+        "config_diff": "- ah_proposals = sha1\n+ ah_proposals = sha256",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -226,6 +244,7 @@ REMEDIATION = {
         "problem_analysis": "ESP payload encrypted with legacy Triple-DES (3DES-CBC).",
         "cryptographic_risk": "Sweet32 attack (CVE-2016-2183): 64-bit block cipher collision attacks recover plaintext after ~32GB of data.",
         "proposed_strategy": "Upgrade esp_proposals to modern 128-bit block AEAD cipher aes256gcm16.",
+        "config_diff": "- esp_proposals = 3des-sha1\n+ esp_proposals = aes256gcm16",
         "rollback_strategy": "Atomic snapshot of swanctl.conf + 30s Commit-Confirmed Watchdog revert timer.",
         "is_software_patch": False,
         "runbook": [],
@@ -241,6 +260,7 @@ REMEDIATION = {
         "problem_analysis": "Anti-replay window sequence number anomaly or sequence space exhaustion.",
         "cryptographic_risk": "Possible packet injection, replay attack, or severe out-of-order network routing.",
         "proposed_strategy": "Diagnostic symptom investigation. Inspect gateway counters and routing infrastructure.",
+        "config_diff": "# Diagnostic investigation required: anti-replay window and sequence numbers\n# No configuration file modification",
         "rollback_strategy": "Diagnostic finding; no config change to roll back.",
         "is_software_patch": True,
         "runbook": [
@@ -272,6 +292,7 @@ def plan_for(rule_id: str, observed=None, include_exec: bool = False, detailed: 
         res["problem_analysis"] = entry.get("problem_analysis", "")
         res["cryptographic_risk"] = entry.get("cryptographic_risk", "")
         res["proposed_strategy"] = entry.get("proposed_strategy", "")
+        res["config_diff"] = entry.get("config_diff", "")
         res["rollback_strategy"] = entry.get("rollback_strategy", "")
         res["is_software_patch"] = entry.get("is_software_patch", False)
         res["runbook"] = list(entry.get("runbook", []))
