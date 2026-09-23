@@ -1,4 +1,10 @@
-# Generative remediation, safely — design (not built)
+# Generative remediation, safely — design (safety layers built; generator not built)
+
+> **Status 2026-09-24.** Steps 2 and 4-8 below are built, tested against a fake lab that holds
+> real file contents (`tests/fake_lab.py`), and proven in the live Docker lab. **Step 1 (the
+> generator) is not built:** every plan and every command is still written by hand in
+> `tunnelscope/remediate/plan.py`. Step 3 (self-critique) needs a generator and is not built.
+> See "Review of the first build" at the end for what the first implementation got wrong.
 
 ## What was asked
 
@@ -140,3 +146,30 @@ evaluation harness the same way EXP-16/EXP-17 measured the traffic classifier:
 
 Recommended order: 1, then 2, then 3 — the safety net has to exist before the thing it's
 protecting against does.
+
+## Review of the first build (2026-09-24)
+
+The first implementation (T-097, T-098) had every layer named, but reading the code and running it
+against the real lab showed most of them were weaker than their names. What was found and fixed:
+
+| Layer | What the first build did | What was wrong | Now |
+|---|---|---|---|
+| 2 command check | A list of banned words (rm, curl, sudo...) plus "starts with sed or swanctl" | A deny-list, not an allowlist. 10 of 12 structural attacks passed: sed's own `e` (runs a shell), `w`, `r`, `;` chaining, backticks, `$(...)`, `&&` after the reload, editing files outside the config set. The "100% catch rate" benchmark only tested commands containing a banned word | An allowlist: the fixed sed template whose script must parse under a small grammar (`s///` with flags g/I, optionally in one address block), or the fixed reload. Plan commands are never given to a shell: sed and swanctl run as argument lists. 30/30 structural attacks refused |
+| 4 dry run | Ran the commands on a scratch file in the same container, then `swanctl --load-all` on it | Returned OK on any exception and when no config existed (fail-open). Loading a file registers it with the running daemon, so it was not side-effect free. Checked only swanctl's exit code | Runs only the sed scripts on scratch copies, never loads anything, fails closed, and checks the real diff: must change something, only proposals/version lines, only inside the verified connection |
+| 7 regression guard | Any other rule FAIL after the change = regression | Counted failures that existed before the change, so a correct fix on a real capture with pre-existing failures was always rolled back. `verdict_before` was hardcoded "FAIL" | Baseline capture before the change; regression = a rule that was not failing before and is now. `verdict_before` is measured |
+| 6/8 snapshot + rollback | Snapshots of `/tmp` and `/etc/swanctl/conf.d` files; restore of `/tmp` only; 30 s watchdog | `/etc` edits were never restored; the 30 s watchdog could fire during a slow verification; its restore was never logged; after restoring files, the already-negotiated SA kept running on the bad settings (seen live: MODP_3072 after "rollback") | Manifest of exact files, restore of all of them, byte-for-byte check (snapshot kept if the check fails), 180 s watchdog, both sides checked intact before either is disarmed, watchdog restores logged via reconcile, and after every rollback the tunnel is re-negotiated and captured against the baseline |
+| Plan content | File-wide sed edits | The lab config holds 38 connections; the fixes rewrote all of them and renamed auth IDs containing "modp1024" (seen live); only t-tun is verified. The RFC8247-ENCR fix also rewrote esp_proposals and lowered modp4096 to modp3072. The lab-peer step changed nothing on the real config (its range ended inside `local {}`) | Every fix is scoped to the t-tun connection and mirrored on the other end of the lab tunnel; ENCR swaps only non-AES cipher tokens on the IKE line |
+| UI | "AI-Assisted" badge, "Rollback Guarantee", checkmarks on layers that had not run, a static example labelled as a preview of the real config | Claims the evidence did not support | Honest labels; a real dry-run preview is required before "Apply in lab" is enabled; the result shows the measured before/after, regressions, and whether the restore and the service were verified |
+
+**Live proof (Docker lab, 2026-09-24):** V-207193 on sih26-alice-pq with two pre-existing failures:
+confirmed fixed (FAIL -> PASS), one line changed on each end, no other connection touched, tunnel
+up on MODP_4096. A plausible-but-wrong command (lowers the DH group) for V-207223: not fixed and a
+new regression detected, both containers restored byte for byte, tunnel re-negotiated back to
+MODP_4096, post-rollback capture matches the baseline. The in-container watchdog, with the process
+gone, restored a changed file on its own, re-negotiated the tunnel, and its restore was logged.
+
+**Known limits.** Verification captures the initial handshake only: a problem that appears only
+at a later child-SA rekey is not seen. The connection scope relies on the lab generator's fixed
+indentation (the dry run's independent brace-matching check refuses anything outside the
+connection). The Python sed emulation in the tests is not GNU sed; GNU sed 4.9 behaviour is
+checked in the live lab only.
