@@ -169,7 +169,7 @@ export function RemediationControl({
                   The honest words are "approved" (a decision was recorded) and "not yet applied" (nothing happened to the tunnel).
                 */}
                 <span className="text-[12px] font-medium text-foreground/90">
-                  Approved — not yet applied. Execution is not built in this version.
+                  Approved — not yet applied. Select lab target below:
                 </span>
                 <button
                   type="button"
