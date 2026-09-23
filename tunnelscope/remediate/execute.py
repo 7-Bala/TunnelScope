@@ -207,12 +207,37 @@ def apply_remediation(
         if pcap_host_path.exists():
             pcap_host_path.unlink()
 
+        # Ensure lab IP aliases (Alice: 10.10.1.210-214, Bob: 10.10.2.210-214) are configured if running on lab
+        if target.startswith("sih26-"):
+            side_num = "1" if "alice" in target else ("2" if "bob" in target else "")
+            if side_num:
+                subprocess.run(
+                    ["docker", "exec", target, "sh", "-c",
+                     f"for j in 0 1 2 3 4; do "
+                     f"ip addr add 10.10.{side_num}.$((210+j))/32 dev eth0 2>/dev/null; done || true"],
+                    capture_output=True,
+                    check=False,
+                    timeout=5,
+                )
+            peer = "sih26-bob-pq" if "alice" in target else ("sih26-alice-pq" if "bob" in target else None)
+            if peer and is_container_running(peer):
+                peer_num = "2" if "bob" in peer else ("1" if "alice" in peer else "")
+                if peer_num:
+                    subprocess.run(
+                        ["docker", "exec", peer, "sh", "-c",
+                         f"for j in 0 1 2 3 4; do "
+                         f"ip addr add 10.10.{peer_num}.$((210+j))/32 dev eth0 2>/dev/null; done || true"],
+                        capture_output=True,
+                        check=False,
+                        timeout=5,
+                    )
+
         # Terminate any existing IKE SA to force a clean re-handshake
         subprocess.run(
-            ["docker", "exec", target, "swanctl", "--terminate", "--ike", "t-tun"],
+            ["docker", "exec", target, "swanctl", "--terminate", "--ike", "t-tun", "--timeout", "3"],
             capture_output=True,
             check=False,
-            timeout=5,
+            timeout=8,
         )
         time.sleep(1)
 
@@ -227,7 +252,7 @@ def apply_remediation(
 
         # Trigger traffic/re-initiation if swanctl is available
         subprocess.run(
-            ["docker", "exec", target, "swanctl", "--initiate", "--child", "t-tun"],
+            ["docker", "exec", target, "swanctl", "--initiate", "--child", "t-tun", "--timeout", "5"],
             capture_output=True,
             check=False,
             timeout=10,
