@@ -422,6 +422,19 @@ def test_apply_remediation_refuses_auto_applicable_false(monkeypatch):
         assert "auto_applicable: false" in res["error"]
 
 
+def test_apply_remediation_refuses_empty_exec_commands(monkeypatch):
+    """Rules with empty exec_commands (no safe automated fix yet) must REFUSE execution."""
+    monkeypatch.setattr(execute, "is_container_running", lambda target: True)
+
+    for rule_id in ("RFC8247-DH-OFFER", "DST-PQ-DOWNGRADE", "RFC4301-CONFIDENTIALITY"):
+        res = apply_remediation(rule_id=rule_id, target="sih26-alice-pq", confirm=True)
+        assert res["ok"] is False
+        assert res["stage"] == "validate"
+        assert res["decision"] == "refused"
+        assert "no safe automated fix exists for this rule yet" in res["error"]
+
+
+
 def test_apply_remediation_refuses_stopped_container(monkeypatch):
     """If target container is not currently in `docker ps`, execution REFUSES."""
     monkeypatch.setattr(execute, "is_container_running", lambda target: False)
@@ -512,7 +525,7 @@ def test_apply_remediation_mocked_success_and_fail(tmp_path, monkeypatch):
         assert res["confirmed_fixed"] is True
         assert res["verdict_after"] == "PASS"
         assert res["verdict_before"] == "FAIL"
-        assert res["commands_run"] == REMEDIATION["V-207193"]["commands"]
+        assert res["commands_run"] == REMEDIATION["V-207193"]["exec_commands"]
 
         # 2. Honest reporting: if re-analysis still yields FAIL, confirmed_fixed must be False
         fake_fail_analysis = {

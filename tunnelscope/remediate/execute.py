@@ -147,7 +147,7 @@ def apply_remediation(
         return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
 
     # 4. Lookup plan and check auto_applicable
-    plan = plan_for(rule_id)
+    plan = plan_for(rule_id, include_exec=True)
     if plan is None:
         err = f"Unknown rule_id {rule_id!r}"
         entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
@@ -160,11 +160,16 @@ def apply_remediation(
         record_audit(entry, history_dir)
         return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
 
-    commands = plan.get("commands", [])
+    exec_commands = plan.get("exec_commands", [])
+    if not exec_commands:
+        err = "no safe automated fix exists for this rule yet"
+        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
+        record_audit(entry, history_dir)
+        return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
 
     # 5. Execute commands via docker exec
     commands_run: list[str] = []
-    for cmd in commands:
+    for cmd in exec_commands:
         commands_run.append(cmd)
         try:
             # Run command inside container
@@ -202,6 +207,15 @@ def apply_remediation(
         if pcap_host_path.exists():
             pcap_host_path.unlink()
 
+        # Terminate any existing IKE SA to force a clean re-handshake
+        subprocess.run(
+            ["docker", "exec", target, "swanctl", "--terminate", "--ike", "t-tun"],
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+        time.sleep(1)
+
         # Start short tcpdump in capture container
         subprocess.run(
             ["docker", "exec", "-d", capture_target, "tcpdump", "-i", "any", "-w", pcap_container_path, "-c", "60"],
@@ -237,10 +251,13 @@ def apply_remediation(
                 for v in sa.get("verdicts", []):
                     v_id = getattr(v, "rule_id", None) or (v.get("rule_id") if isinstance(v, dict) else None)
                     if v_id == rule_id:
-                        v_val = getattr(v, "verdict", None) or (v.get("verdict") if isinstance(v, dict) else None)
-                        verdict_after = str(v_val).upper()
-                        break
-                if verdict_after != "UNKNOWN":
+                        v_val = str(getattr(v, "verdict", None) or (v.get("verdict") if isinstance(v, dict) else None)).upper()
+                        if v_val in ("PASS", "FAIL"):
+                            verdict_after = v_val
+                            break
+                        elif verdict_after == "UNKNOWN":
+                            verdict_after = v_val
+                if verdict_after in ("PASS", "FAIL"):
                     break
 
         confirmed_fixed = (verdict_after == "PASS")
@@ -248,6 +265,12 @@ def apply_remediation(
         # Re-capture/analysis exception does not erase the fact that commands ran
         verdict_after = f"UNKNOWN ({e})"
         confirmed_fixed = False
+    finally:
+        if pcap_host_path.exists():
+            try:
+                pcap_host_path.unlink()
+            except OSError:
+                pass
 
     result = {
         "ok": True,
