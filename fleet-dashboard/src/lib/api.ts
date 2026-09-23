@@ -225,3 +225,34 @@ export async function remediationPlan(ruleId: string, observed?: unknown): Promi
   }
 }
 
+export type RemediationApplyResult = {
+  ok: boolean
+  stage?: string
+  error?: string
+  rule_id?: string
+  target?: string
+  commands_run?: string[]
+  verdict_before?: string
+  verdict_after?: string
+  confirmed_fixed?: boolean
+}
+
+export async function applyRemediation(
+  ruleId: string,
+  target: string,
+  confirm: boolean = true,
+): Promise<RemediationApplyResult> {
+  try {
+    const res = await fetch("/api/remediate/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rule_id: ruleId, target, confirm }),
+    })
+    const data = await res.json()
+    return data as RemediationApplyResult
+  } catch (e) {
+    return { ok: false, error: String(e) }
+  }
+}
+
+
