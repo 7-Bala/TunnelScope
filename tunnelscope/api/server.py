@@ -228,6 +228,9 @@ class _Handler(BaseHTTPRequestHandler):
                 st = LIVE.status()
                 st["windows"] = st["windows"][:20]
                 self._json(200, {"ok": True, **st})
+        elif path == "/api/remediate/targets":
+            from ..remediate.execute import lab_targets
+            self._json(200, {"ok": True, "targets": lab_targets(), "recommended": "sih26-alice-pq"})
         elif path.startswith("/api/"):
             self._json(404, {"ok": False, "error": "not found"})
         elif path == "/basic" or not self._static(path):
@@ -255,7 +258,7 @@ class _Handler(BaseHTTPRequestHandler):
         if not isinstance(body, dict) or "rule_id" not in body:
             self._json(400, {"ok": False, "error": "missing rule_id"})
             return
-        plan = plan_for(body.get("rule_id"), observed=body.get("observed"))
+        plan = plan_for(body.get("rule_id"), observed=body.get("observed"), detailed=bool(body.get("detailed", False)))
         if plan is None:
             self._json(404, {"ok": False, "error": "unknown rule"})
             return
@@ -304,13 +307,37 @@ class _Handler(BaseHTTPRequestHandler):
                 caller=caller,
                 history_dir=HISTORY_DIR,
             )
-            if not res.get("ok"):
-                self._json(400, res)
-                return
-            self._json(200, res)
+            # A refusal is the caller's to fix (400). A change that ran and was rolled back
+            # is a real outcome, reported with 200 like a successful one.
+            self._json(400 if res.get("decision") == "refused" else 200, res)
         except Exception as e:
             sys.stderr.write(f"[tunnelscope serve] remediate apply error: {e}\n")
             self._json(500, {"ok": False, "stage": "execute", "error": "unexpected server error during remediation"})
+
+    def _remediate_preview(self) -> None:
+        """Dry run only: the real diff for a rule on a lab container, shown before approval."""
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length <= 0 or length > 1024 * 1024:
+            self._json(400 if length <= 0 else 413, {"ok": False, "stage": "validate", "error": "empty or oversized body"})
+            return
+        try:
+            body = json.loads(self.rfile.read(length).decode("utf-8"))
+        except Exception:
+            self._json(400, {"ok": False, "stage": "validate", "error": "invalid json"})
+            return
+        if not isinstance(body, dict) or not isinstance(body.get("rule_id"), str) or not isinstance(body.get("target"), str):
+            self._json(400, {"ok": False, "stage": "validate", "error": "rule_id and target are required strings"})
+            return
+        try:
+            from ..remediate.execute import preview_remediation
+            res = preview_remediation(body["rule_id"], body["target"], caller=self.address_string(), history_dir=HISTORY_DIR)
+            self._json(200 if res.get("ok") else 400, res)
+        except Exception as e:
+            sys.stderr.write(f"[tunnelscope serve] remediate preview error: {e}\n")
+            self._json(500, {"ok": False, "stage": "dry_run", "error": "unexpected server error during the dry run"})
 
     def do_POST(self):  # noqa: N802
         url = urlparse(self.path)
@@ -319,6 +346,9 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if url.path == "/api/remediate/apply":
             self._remediate_apply()
+            return
+        if url.path == "/api/remediate/preview":
+            self._remediate_preview()
             return
         if url.path not in ("/api/upload", "/api/analyze"):
             self._json(404, {"ok": False, "error": "not found"})
