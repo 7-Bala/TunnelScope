@@ -1,7 +1,8 @@
-"""Tests for remediation plan generator (Stage 1: read-only, no execution)."""
+import ast
 import inspect
 import json
 import pathlib
+import subprocess
 import threading
 import urllib.error
 import urllib.request
@@ -10,7 +11,13 @@ import pytest
 
 from tunnelscope.api import server
 from tunnelscope.assess.engine import load_baselines
-from tunnelscope.remediate import plan
+from tunnelscope.remediate import execute, plan
+from tunnelscope.remediate.execute import (
+    apply_remediation,
+    get_allowed_targets,
+    is_container_running,
+    record_audit,
+)
 from tunnelscope.remediate.plan import REMEDIATION, plan_for
 
 
@@ -129,7 +136,7 @@ def test_remediate_endpoint_is_provably_read_only():
     in the function or file implementing the endpoint.
     Mirrors test_no_outside_model_is_used."""
     remediate_dir = pathlib.Path(plan.__file__).parent
-    all_remediate_files = list(remediate_dir.rglob("*.py"))
+    all_remediate_files = [p for p in remediate_dir.rglob("*.py") if p.name != "execute.py"]
     all_remediate_src = "\n".join(p.read_text() for p in all_remediate_files).lower()
     endpoint_func_src = inspect.getsource(server._Handler._remediate_plan).lower()
     plan_func_src = inspect.getsource(plan.plan_for).lower()
@@ -301,3 +308,309 @@ def test_server_remediate_plan_e2e():
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+def test_execute_module_has_strict_safety_bounds():
+    """Static check: execute.py imports NO paramiko, NO fabric, NO socket,
+    does NO shell=True, and calls NO command other than docker exec and docker ps/inspect."""
+    execute_path = pathlib.Path(execute.__file__)
+    src = execute_path.read_text(encoding="utf-8")
+    src_lower = src.lower()
+
+    banned_imports = ("paramiko", "fabric", "socket", "telnetlib", "ftplib")
+    for bi in banned_imports:
+        assert bi not in src_lower, f"Banned import/token {bi!r} found in execute.py"
+
+    assert "shell=true" not in src_lower.replace(" ", ""), "shell=True found in execute.py"
+
+    # AST check: find all subprocess calls and verify args
+    tree = ast.parse(src, filename=str(execute_path))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func_name = ""
+            if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+                func_name = f"{node.func.value.id}.{node.func.attr}"
+            if func_name in ("subprocess.run", "subprocess.Popen", "subprocess.call", "subprocess.check_output"):
+                # First arg must be a list starting with 'docker'
+                first_arg = node.args[0] if node.args else None
+                assert isinstance(first_arg, ast.List), f"subprocess call must take a list of args: {ast.dump(node)}"
+                first_elem = first_arg.elts[0]
+                assert isinstance(first_elem, ast.Constant) and first_elem.value == "docker", (
+                    f"subprocess call must invoke 'docker', got {ast.dump(first_elem)}"
+                )
+
+
+def test_get_allowed_targets_runtime_parsing(tmp_path):
+    """get_allowed_targets dynamically reads testbed/docker-compose.yml and extracts container names."""
+    targets = get_allowed_targets()
+    assert isinstance(targets, set)
+    # Must include standard lab containers from testbed/docker-compose.yml
+    expected = {"sih26-alice-pq", "sih26-bob-pq", "sih26-router"}
+    assert expected.issubset(targets), f"Missing expected lab containers in {targets}"
+
+    # Custom compose file test
+    custom_compose = tmp_path / "custom-compose.yml"
+    custom_compose.write_text("""
+services:
+  alice:
+    container_name: custom-alice
+  bob:
+    image: test/bob
+""", encoding="utf-8")
+    custom_targets = get_allowed_targets(custom_compose)
+    assert custom_targets == {"custom-alice", "bob"}
+
+    # Nonexistent compose file returns empty set
+    assert get_allowed_targets(tmp_path / "nonexistent.yml") == set()
+
+
+def test_apply_remediation_refuses_invalid_target(monkeypatch):
+    """Calling apply_remediation with a target not in docker-compose.yml REFUSES
+    and does NOT call subprocess.run."""
+    called = []
+
+    def fake_run(*args, **kwargs):
+        called.append(args)
+        raise RuntimeError("subprocess.run must not be called for invalid target!")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    invalid_targets = [
+        "sih26-unknown",
+        "evil-container",
+        "localhost",
+        "127.0.0.1",
+        "; rm -rf /",
+        "",
+        None,
+        12345,
+    ]
+    for target in invalid_targets:
+        res = apply_remediation(rule_id="V-207193", target=target, confirm=True)
+        assert res["ok"] is False
+        assert res["stage"] == "validate"
+        assert res["decision"] == "refused"
+        assert "not an allowed lab container" in res["error"]
+
+    assert len(called) == 0
+
+
+def test_apply_remediation_refuses_unconfirmed(monkeypatch):
+    """Calling apply_remediation with confirm=False, None, or non-True REFUSES."""
+    called = []
+    monkeypatch.setattr(subprocess, "run", lambda *a, **kw: called.append(a))
+
+    for conf in (False, None, "yes", 1, [True]):
+        res = apply_remediation(rule_id="V-207193", target="sih26-alice-pq", confirm=conf)
+        assert res["ok"] is False
+        assert res["stage"] == "validate"
+        assert res["decision"] == "refused"
+        assert "Confirmation required" in res["error"]
+
+    assert len(called) == 0
+
+
+def test_apply_remediation_refuses_auto_applicable_false(monkeypatch):
+    """auto_applicable: false rules (CVEs, replay symptoms) must REFUSE execution."""
+    monkeypatch.setattr(execute, "is_container_running", lambda target: True)
+
+    for rule_id in ("CVE-2026-78135", "RFC4303-SEQ"):
+        res = apply_remediation(rule_id=rule_id, target="sih26-alice-pq", confirm=True)
+        assert res["ok"] is False
+        assert res["stage"] == "validate"
+        assert res["decision"] == "refused"
+        assert "auto_applicable: false" in res["error"]
+
+
+def test_apply_remediation_refuses_stopped_container(monkeypatch):
+    """If target container is not currently in `docker ps`, execution REFUSES."""
+    monkeypatch.setattr(execute, "is_container_running", lambda target: False)
+
+    res = apply_remediation(rule_id="V-207193", target="sih26-alice-pq", confirm=True)
+    assert res["ok"] is False
+    assert res["stage"] == "validate"
+    assert res["decision"] == "refused"
+    assert "not currently running" in res["error"]
+
+
+def test_apply_remediation_audit_log(tmp_path):
+    """Every remediation attempt (success, refusal, failure) writes an append-only JSON line
+    to remediate.jsonl with all required fields."""
+    history_dir = tmp_path / "history"
+    log_file = history_dir / "remediate.jsonl"
+
+    # Attempt 1: unconfirmed (refusal)
+    res1 = apply_remediation("V-207193", "sih26-alice-pq", confirm=False, caller="test-runner", history_dir=history_dir)
+    assert res1["ok"] is False
+
+    # Attempt 2: invalid target (refusal)
+    res2 = apply_remediation("V-207193", "evil-box", confirm=True, caller="test-runner", history_dir=history_dir)
+    assert res2["ok"] is False
+
+    assert log_file.is_file()
+    lines = [json.loads(line) for line in log_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert len(lines) == 2
+
+    # Verify required schema on every entry
+    required_keys = {
+        "timestamp", "at", "rule_id", "target", "decision",
+        "commands_run", "verdict_before", "verdict_after",
+        "confirmed_fixed", "caller", "ok",
+    }
+    for entry in lines:
+        assert required_keys.issubset(set(entry.keys()))
+        assert entry["decision"] == "refused"
+        assert entry["caller"] == "test-runner"
+        assert entry["confirmed_fixed"] is False
+
+
+def test_apply_remediation_mocked_success_and_fail(tmp_path, monkeypatch):
+    """Verify execution logic, frozen commands, and re-verification honesty."""
+    import time
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+    history_dir = tmp_path / "history"
+    monkeypatch.setattr(execute, "is_container_running", lambda target: True)
+
+    commands_executed = []
+    captures_dir = execute._repo_root() / "testbed" / "captures"
+    captures_dir.mkdir(parents=True, exist_ok=True)
+    verify_pcap = captures_dir / "remediate_verify.pcap"
+
+    def fake_subprocess_run(cmd, *args, **kwargs):
+        commands_executed.append(cmd)
+        # Simulate tcpdump creating the pcap
+        if "tcpdump" in cmd:
+            verify_pcap.write_bytes(b"dummy-pcap-bytes")
+
+        class DummyRes:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        return DummyRes()
+
+    monkeypatch.setattr(subprocess, "run", fake_subprocess_run)
+
+    # 1. Successful remediation where re-analysis reports PASS
+    fake_pass_analysis = {
+        "sas": [
+            {
+                "verdicts": [
+                    {"rule_id": "V-207193", "verdict": "PASS"}
+                ]
+            }
+        ]
+    }
+
+    import tunnelscope.report.report
+    monkeypatch.setattr(tunnelscope.report.report, "analyze", lambda path: fake_pass_analysis)
+
+    try:
+        res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="tester", history_dir=history_dir)
+        assert res["ok"] is True
+        assert res["decision"] == "applied"
+        assert res["confirmed_fixed"] is True
+        assert res["verdict_after"] == "PASS"
+        assert res["verdict_before"] == "FAIL"
+        assert res["commands_run"] == REMEDIATION["V-207193"]["commands"]
+
+        # 2. Honest reporting: if re-analysis still yields FAIL, confirmed_fixed must be False
+        fake_fail_analysis = {
+            "sas": [
+                {
+                    "verdicts": [
+                        {"rule_id": "V-207193", "verdict": "FAIL"}
+                    ]
+                }
+            ]
+        }
+        monkeypatch.setattr(tunnelscope.report.report, "analyze", lambda path: fake_fail_analysis)
+
+        res_fail = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="tester", history_dir=history_dir)
+        assert res_fail["ok"] is True
+        assert res_fail["decision"] == "applied"
+        assert res_fail["confirmed_fixed"] is False
+        assert res_fail["verdict_after"] == "FAIL"
+    finally:
+        if verify_pcap.exists():
+            verify_pcap.unlink()
+
+
+def test_server_remediate_apply_e2e():
+    """End-to-end test hitting POST /api/remediate/apply:
+    refuses missing confirm, refuses invalid target, handles malformed JSON, and calls apply_remediation."""
+    srv = server.make_server(0)
+    port = srv.server_address[1]
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    try:
+        base_url = f"http://127.0.0.1:{port}"
+
+        # 1. Missing confirm -> 400
+        req_unconf = urllib.request.Request(
+            f"{base_url}/api/remediate/apply",
+            data=json.dumps({"rule_id": "V-207193", "target": "sih26-alice-pq"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(req_unconf)
+        assert exc_info.value.code == 400
+        err_data = json.loads(exc_info.value.read().decode("utf-8"))
+        assert err_data["stage"] == "validate"
+        assert "confirm" in err_data["error"]
+
+        # 2. Invalid target -> 400
+        req_bad_target = urllib.request.Request(
+            f"{base_url}/api/remediate/apply",
+            data=json.dumps({"rule_id": "V-207193", "target": "invalid-box", "confirm": True}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(req_bad_target)
+        assert exc_info.value.code == 400
+        err_bad_target = json.loads(exc_info.value.read().decode("utf-8"))
+        assert err_bad_target["stage"] == "validate"
+        assert "not an allowed lab container" in err_bad_target["error"]
+
+        # 3. Missing rule_id -> 400
+        req_missing_rule = urllib.request.Request(
+            f"{base_url}/api/remediate/apply",
+            data=json.dumps({"target": "sih26-alice-pq", "confirm": True}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(req_missing_rule)
+        assert exc_info.value.code == 400
+
+        # 4. Oversized body (>1MB) -> 413
+        req_oversized = urllib.request.Request(
+            f"{base_url}/api/remediate/apply",
+            data=b"x" * 10,
+            headers={"Content-Type": "application/json", "Content-Length": str(2 * 1024 * 1024)},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(req_oversized)
+        assert exc_info.value.code == 413
+
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_lab_remediation_e2e():
+    """End-to-end against the real lab (skipped if Docker daemon / lab container is not running)."""
+    if not is_container_running("sih26-alice-pq"):
+        # Docker daemon or lab container sih26-alice-pq not running in this environment
+        return
+
+    # Real lab execution when docker is up
+    res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="pytest-lab-e2e")
+    assert res["ok"] is True
+    assert res["verdict_before"] == "FAIL"
+    assert res["verdict_after"] == "PASS"
+    assert res["confirmed_fixed"] is True
+

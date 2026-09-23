@@ -261,14 +261,69 @@ class _Handler(BaseHTTPRequestHandler):
             return
         self._json(200, plan)
 
+    def _remediate_apply(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length <= 0:
+            self._json(400, {"ok": False, "stage": "validate", "error": "empty body"})
+            return
+        if length > 1024 * 1024:
+            self._json(413, {"ok": False, "stage": "validate", "error": "payload too large"})
+            return
+        try:
+            data = self.rfile.read(length)
+            body = json.loads(data.decode("utf-8"))
+        except Exception:
+            self._json(400, {"ok": False, "stage": "validate", "error": "invalid json"})
+            return
+        if not isinstance(body, dict):
+            self._json(400, {"ok": False, "stage": "validate", "error": "body must be an object"})
+            return
+        rule_id = body.get("rule_id")
+        target = body.get("target")
+        confirm = body.get("confirm")
+        if not isinstance(rule_id, str) or not rule_id:
+            self._json(400, {"ok": False, "stage": "validate", "error": "missing or invalid rule_id"})
+            return
+        if not isinstance(target, str) or not target:
+            self._json(400, {"ok": False, "stage": "validate", "error": "missing or invalid target"})
+            return
+        if confirm is not True:
+            self._json(400, {"ok": False, "stage": "validate", "error": "confirm must be literally true"})
+            return
+
+        caller = self.address_string()
+        try:
+            from ..remediate.execute import apply_remediation
+            res = apply_remediation(
+                rule_id=rule_id,
+                target=target,
+                confirm=confirm,
+                caller=caller,
+                history_dir=HISTORY_DIR,
+            )
+            if not res.get("ok"):
+                self._json(400, res)
+                return
+            self._json(200, res)
+        except Exception as e:
+            sys.stderr.write(f"[tunnelscope serve] remediate apply error: {e}\n")
+            self._json(500, {"ok": False, "stage": "execute", "error": "unexpected server error during remediation"})
+
     def do_POST(self):  # noqa: N802
         url = urlparse(self.path)
         if url.path == "/api/remediate/plan":
             self._remediate_plan()
             return
+        if url.path == "/api/remediate/apply":
+            self._remediate_apply()
+            return
         if url.path not in ("/api/upload", "/api/analyze"):
             self._json(404, {"ok": False, "error": "not found"})
             return
+
         name = os.path.basename((parse_qs(url.query).get("name") or ["upload.pcap"])[0]) or "upload.pcap"
         try:
             length = int(self.headers.get("Content-Length", "0"))

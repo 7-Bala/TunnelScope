@@ -1,6 +1,15 @@
 import { useState } from "react"
-import { remediationPlan, type RemediationPlan } from "@/lib/api"
+import { remediationPlan, applyRemediation, type RemediationPlan, type RemediationApplyResult } from "@/lib/api"
 import { cn } from "@/lib/utils"
+
+const LAB_TARGETS = [
+  "sih26-alice-pq",
+  "sih26-bob-pq",
+  "sih26-alice",
+  "sih26-bob",
+  "sih26-lsw-a",
+  "sih26-lsw-b",
+]
 
 export function RemediationControl({
   ruleId,
@@ -14,6 +23,9 @@ export function RemediationControl({
   const [plan, setPlan] = useState<RemediationPlan | null>(null)
   const [hasFetched, setHasFetched] = useState(false)
   const [decision, setDecision] = useState<"none" | "approved" | "rejected">("none")
+  const [target, setTarget] = useState(LAB_TARGETS[0])
+  const [applying, setApplying] = useState(false)
+  const [applyResult, setApplyResult] = useState<RemediationApplyResult | null>(null)
 
   async function handleOpen() {
     if (hasFetched) {
@@ -31,9 +43,21 @@ export function RemediationControl({
     }
   }
 
+  async function handleApply() {
+    setApplying(true)
+    setApplyResult(null)
+    try {
+      const res = await applyRemediation(ruleId, target, true)
+      setApplyResult(res)
+    } finally {
+      setApplying(false)
+    }
+  }
+
   function handleDismiss() {
     setIsOpen(false)
   }
+
 
   if (!isOpen) {
     return (
@@ -133,30 +157,129 @@ export function RemediationControl({
           )}
 
           {decision === "approved" && (
-            <div className="flex flex-wrap items-center gap-2">
-              {/*
-                CRITICAL HONESTY DISCIPLINE (see DEC-031 / DEC-032 and build/09-REMEDIATION-ROADMAP.md Stage 2):
-                TunnelScope never claims more than the evidence shows.
-                Stage 3 (automated execution) is not built in this version.
-                Clicking "Approve" only records the operator's decision in memory; it does NOT execute commands,
-                alter the tunnel, or verify changes.
-                Therefore, words like "applied", "fixed", "patched", or "done" MUST NOT appear in connection
-                with the Approve action.
-                The honest words are "approved" (a decision was recorded) and "not yet applied" (nothing happened to the tunnel).
-              */}
-              <span className="text-[12px] font-medium text-foreground/90">
-                Approved — not yet applied. Execution is not built in this version.
-              </span>
-              <button
-                type="button"
-                onClick={() => setDecision("none")}
-                aria-label={`Change decision for ${ruleId}`}
-                className="text-[11px] text-faint underline hover:text-muted-foreground"
-              >
-                Change
-              </button>
+            <div className="space-y-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                {/*
+                  CRITICAL HONESTY DISCIPLINE (see DEC-031 / DEC-032 and build/09-REMEDIATION-ROADMAP.md Stage 2 & 3):
+                  TunnelScope never claims more than the evidence shows.
+                  Clicking "Approve" only records the operator's decision in memory; it does NOT execute commands,
+                  alter the tunnel, or verify changes.
+                  Therefore, words like "applied", "fixed", "patched", or "done" MUST NOT appear in connection
+                  with the Approve action.
+                  The honest words are "approved" (a decision was recorded) and "not yet applied" (nothing happened to the tunnel).
+                */}
+                <span className="text-[12px] font-medium text-foreground/90">
+                  Approved — not yet applied. Execution is not built in this version.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDecision("none")
+                    setApplyResult(null)
+                  }}
+                  aria-label={`Change decision for ${ruleId}`}
+                  className="text-[11px] text-faint underline hover:text-muted-foreground"
+                >
+                  Change
+                </button>
+              </div>
+
+              {/* Stage 3: Lab execution human gate */}
+              <div className="rounded border border-border/70 bg-secondary/30 p-2.5 space-y-2 text-[12px]">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-faint">
+                      Target:
+                    </span>
+                    <select
+                      value={target}
+                      onChange={(e) => setTarget(e.target.value)}
+                      disabled={applying}
+                      aria-label={`Select lab container target for ${ruleId}`}
+                      className="rounded border border-border bg-background px-2 py-0.5 font-mono text-[11.5px] text-foreground focus:outline-none"
+                    >
+                      {LAB_TARGETS.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleApply}
+                    disabled={applying}
+                    aria-label={`Apply remediation in lab for ${ruleId}`}
+                    className="rounded border border-violet/40 bg-violet px-2.5 py-1 text-[11.5px] font-semibold text-primary-foreground transition-colors hover:bg-violet/90 disabled:opacity-50"
+                  >
+                    {applying ? "Applying..." : "Apply in lab"}
+                  </button>
+                </div>
+
+                {applying && (
+                  <p className="text-[11.5px] text-muted-foreground animate-pulse">
+                    Executing commands in {target}, capturing verification traffic, and analyzing fresh capture...
+                  </p>
+                )}
+
+                {applyResult && (
+                  <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[12px]">
+                    {!applyResult.ok ? (
+                      <div className="text-warn text-[12px]">
+                        <span className="font-semibold">Refused: </span>
+                        {applyResult.error || "Execution failed."}
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-faint">Target:</span>
+                          <span className="font-mono text-[11.5px]">{applyResult.target}</span>
+                          <span className="text-faint">· Verdict:</span>
+                          <span className="font-semibold">{applyResult.verdict_before}</span>
+                          <span>→</span>
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              applyResult.confirmed_fixed ? "text-emerald-400" : "text-warn",
+                            )}
+                          >
+                            {applyResult.verdict_after}
+                          </span>
+                        </div>
+                        <div>
+                          {applyResult.confirmed_fixed ? (
+                            <span className="text-[12px] font-semibold text-emerald-400">
+                              Confirmed fixed — fresh capture verified verdict is PASS.
+                            </span>
+                          ) : (
+                            <span className="text-[12px] font-semibold text-warn">
+                              Commands executed, but verdict is {applyResult.verdict_after || "still failing"} (not fixed).
+                            </span>
+                          )}
+                        </div>
+                        {applyResult.commands_run && applyResult.commands_run.length > 0 && (
+                          <div className="mt-1">
+                            <span className="text-[11px] text-faint">Commands executed:</span>
+                            <ul className="mt-0.5 space-y-0.5">
+                              {applyResult.commands_run.map((c, idx) => (
+                                <li
+                                  key={idx}
+                                  className="rounded border border-border/50 bg-secondary/50 px-2 py-0.5 font-mono text-[11px] text-foreground/80 select-all"
+                                >
+                                  {c}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
+
 
           {decision === "rejected" && (
             <div className="flex items-center gap-2">
