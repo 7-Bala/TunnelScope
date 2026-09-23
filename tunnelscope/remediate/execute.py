@@ -1,156 +1,152 @@
 """Remediation execution engine (Stage 3: lab-only, confirm-gated, re-verified).
 
 SECURITY NOTICE:
-This module is the single permitted location in the entire codebase allowed to invoke
-`subprocess.run(["docker", "exec", ...])` for executing remediation commands against
-project Docker containers in the lab.
-Note that static checks for other modules (such as `plan.py` and `tunnelscope/rephrase/`)
-must NOT be weakened or broadened to cover this file.
+This module is the single permitted location in the codebase allowed to run
+`docker exec` against project lab containers. Static checks for other modules (such as
+`plan.py` and `tunnelscope/rephrase/`) must NOT be weakened or broadened to cover this file.
 
-Enforces:
-1. Target restriction: only containers defined in testbed/docker-compose.yml.
-2. Running check: target must be currently running in `docker ps`; never auto-start.
-3. Frozen commands: commands come solely from plan.py's REMEDIATION glossary, verbatim.
-4. Auto-applicable check: auto_applicable: false rules (e.g. CVE-2026-78135) cannot execute.
-5. Explicit confirmation: confirm=True is mandatory.
-6. Append-only audit logging: every attempt (success, refusal, error) is logged.
-7. Verification: re-captures traffic and analyzes with TunnelScope to verify if verdict is PASS.
+What happens on apply, in order. Every step that can refuse runs before anything changes.
+ 1. Validate: confirm is True, the target is a container named in testbed/docker-compose.yml
+    and currently running, the rule has an automated fix.
+ 2. Command check (plan.validate_command_safety): an allowlist. Plan commands are never given
+    to a shell: sed runs with an argument list, and the reload is swanctl with an argument list.
+ 3. Dry run: the sed scripts run on scratch copies of the real config files in the container,
+    and the actual resulting diff is checked (it must change something, and only proposals /
+    version settings). Nothing is loaded into the running daemon. Fails closed.
+ 4. Baseline: capture a handshake and record every rule's verdict BEFORE the change. The target
+    rule must be FAIL; otherwise nothing is applied (already fixed, or not observable).
+ 5. Snapshot every config file (target, and the lab peer if the peer step applies), then arm a
+    commit-confirmed watchdog inside the container that restores the snapshot by itself after
+    WATCHDOG_TIMEOUT_S unless disarmed.
+ 6. Apply the commands.
+ 7. Verify: capture again. Confirmed fixed only if the target rule is PASS, the tunnel
+    negotiated, and no rule that was not failing before is failing now.
+ 8. Otherwise roll back immediately and check the restored files byte for byte. The watchdog's
+    own restores are recorded in the audit log the next time this module runs (reconcile).
+Every attempt, refusal, rollback and watchdog restore is appended to remediate.jsonl.
 """
 from __future__ import annotations
 
+import difflib
 import json
-import os
+import re
 import subprocess
+import threading
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from .plan import REMEDIATION, plan_for, validate_command_safety
+from .plan import (
+    CONFIG_GLOBS,
+    LAB_CONNECTION,
+    LAB_PEERS,
+    PEER_PREP_TARGETS,
+    is_reload_command,
+    peer_commands_for,
+    plan_for,
+    sed_script_of,
+    validate_command_safety,
+)
 
 
 _DEFAULT_HISTORY_DIR = Path(".tunnelscope-history")
+SNAP_SUFFIX = ".ts_snapshot"
+MANIFEST = "/tmp/.tunnelscope_snapshot_manifest"
+WATCHDOG_MARKER = "/tmp/.tunnelscope_watchdog_fired"
+DRYRUN_DIR = "/tmp/.tunnelscope_dryrun"
+# Longer than the worst case of steps 6-8 (command timeouts plus the verification capture),
+# so the watchdog never races a verification that is still running.
+WATCHDOG_TIMEOUT_S = 180
+CAPTURE_PACKETS = "60"
+
+_ALLOWED_DIFF_LINE = re.compile(r"^\s*(proposals|esp_proposals|ah_proposals|version)\s*=")
+_BAD = ("FAIL", "CONTRADICTORY")
+# Strongest evidence wins when a rule is judged on several SAs of one capture.
+_RANK = {"FAIL": 3, "CONTRADICTORY": 2, "PASS": 1, "NOT_OBSERVABLE": 0, "UNKNOWN": 0}
+
+_LIST_CONFIGS_SCRIPT = f"ls -1 {CONFIG_GLOBS} 2>/dev/null"
+_WRITE_MANIFEST_SCRIPT = 'printf "%s\\n" "$@" > "$0"'
+# $1 = seconds, $2 = token. Restores only if the manifest still belongs to this apply.
+_WATCHDOG_SCRIPT = (
+    'sleep "$1"; m="' + MANIFEST + '"; '
+    '[ -f "$m" ] || exit 0; [ "$(head -n 1 "$m")" = "$2" ] || exit 0; '
+    'tail -n +2 "$m" | while IFS= read -r f; do [ -f "$f' + SNAP_SUFFIX + '" ] && cp -p "$f' + SNAP_SUFFIX + '" "$f"; done; '
+    'first=$(tail -n +2 "$m" | head -n 1); '
+    '{ [ -n "$first" ] && swanctl --load-all --file "$first"; } || swanctl --load-all; '
+    'swanctl --terminate --ike ' + LAB_CONNECTION + ' --timeout 3; swanctl --initiate --child ' + LAB_CONNECTION + ' --timeout 5; '
+    'tail -n +2 "$m" | while IFS= read -r f; do rm -f "$f' + SNAP_SUFFIX + '"; done; rm -f "$m"; '
+    'printf "%s %s\\n" "$2" "$(date +%s)" > "' + WATCHDOG_MARKER + '"'
+)
+_LAB_ALIAS_SCRIPT = 'for j in 0 1 2 3 4; do ip addr add "10.10.$1.$((210+j))/32" dev eth0 2>/dev/null; done; true'
+_LAB_SIDE = {"sih26-alice-pq": "1", "sih26-bob-pq": "2"}
+
+_APPLY_LOCK = threading.Lock()
 
 
-def perform_sandboxed_dry_run(target: str, commands: list[str]) -> tuple[bool, str | None]:
-    """Layer 4: Pre-flight dry-run testing syntax against an isolated test copy."""
-    try:
-        # Find active config and copy to dryrun test path
-        copy_res = subprocess.run(
-            ["docker", "exec", target, "sh", "-c",
-             "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); "
-             "[ -n \"$f\" ] && cp \"$f\" /tmp/dryrun_test.conf && echo \"$f\" || true"],
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=5,
-        )
-        if not copy_res.stdout.strip():
-            # No config found or mock test environment; proceed
-            return True, None
-
-        # Apply commands against /tmp/dryrun_test.conf
-        for cmd in commands:
-            if "sed " in cmd:
-                test_cmd = cmd.replace("/tmp/exp15-*.conf", "/tmp/dryrun_test.conf")
-                test_cmd = test_cmd.replace("/etc/swanctl/conf.d/*.conf", "/tmp/dryrun_test.conf")
-                test_cmd = test_cmd.replace("/tmp/*.conf", "/tmp/dryrun_test.conf")
-                subprocess.run(
-                    ["docker", "exec", target, "sh", "-c", test_cmd],
-                    capture_output=True,
-                    check=False,
-                    timeout=5,
-                )
-
-        # Test-load syntax with strongSwan
-        val_res = subprocess.run(
-            ["docker", "exec", target, "swanctl", "--load-all", "--file", "/tmp/dryrun_test.conf"],
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=5,
-        )
-
-        # Clean up test file
-        subprocess.run(
-            ["docker", "exec", target, "rm", "-f", "/tmp/dryrun_test.conf"],
-            capture_output=True,
-            check=False,
-            timeout=5,
-        )
-
-        combined_out = ((val_res.stderr or "") + " " + (val_res.stdout or "")).strip()
-        if val_res.returncode != 0:
-            if "syntax error" in combined_out.lower():
-                return False, f"syntax error: {combined_out}"
-            return False, f"syntax/config validation error (exit {val_res.returncode}): {combined_out}"
-
-        return True, None
-    except Exception:
-        return True, None
+class _Refusal(Exception):
+    def __init__(self, stage: str, error: str):
+        super().__init__(error)
+        self.stage = stage
+        self.error = error
 
 
-def arm_commit_confirmed_watchdog(target: str, timeout_s: int = 30) -> None:
-    """Layer 5: Snapshot config and arm an out-of-band background revert timer."""
-    try:
-        # 1. Take atomic snapshot
-        subprocess.run(
-            ["docker", "exec", target, "sh", "-c",
-             "for f in /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf; do "
-             "[ -f \"$f\" ] && cp -f \"$f\" \"${f}.ts_snapshot\"; done 2>/dev/null || true"],
-            capture_output=True,
-            check=False,
-            timeout=5,
-        )
+# ------------------------------------------------------------------ container access
 
-        # 2. Arm detached background sleep watchdog in container
-        subprocess.run(
-            ["docker", "exec", "-d", target, "sh", "-c",
-             f"(sleep {timeout_s} && if ls /tmp/*.ts_snapshot 1>/dev/null 2>&1; then "
-             f"for f in /tmp/*.ts_snapshot; do [ -f \"$f\" ] && orig=\"${{f%.ts_snapshot}}\" && cp -f \"$f\" \"$orig\"; done; "
-             f"f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); "
-             f"[ -n \"$f\" ] && swanctl --load-all --file \"$f\" 2>/dev/null || swanctl --load-all 2>/dev/null; "
-             f"rm -f /tmp/*.ts_snapshot 2>/dev/null; fi)"],
-            capture_output=True,
-            check=False,
-            timeout=5,
-        )
-    except Exception:
-        pass
+def _exec(target: str, argv: list[str], timeout: float = 10, detach: bool = False) -> subprocess.CompletedProcess:
+    """The one way this module touches a container: `docker exec` with an argument list."""
+    flags = ["-d"] if detach else []
+    return subprocess.run(
+        ["docker", "exec", *flags, target, *argv],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=timeout,
+    )
 
 
-def disarm_watchdog(target: str) -> None:
-    """Disarm watchdog upon confirmed fixed verification."""
-    try:
-        subprocess.run(
-            ["docker", "exec", target, "sh", "-c",
-             "rm -f /tmp/*.ts_snapshot 2>/dev/null || true"],
-            capture_output=True,
-            check=False,
-            timeout=5,
-        )
-    except Exception:
-        pass
+def list_config_files(target: str) -> list[str]:
+    """Config files present in the container, in `ls` order (the reload uses the first)."""
+    res = _exec(target, ["sh", "-c", _LIST_CONFIGS_SCRIPT], timeout=5)
+    seen: list[str] = []
+    for line in (res.stdout or "").splitlines():
+        line = line.strip()
+        if line and line not in seen:
+            seen.append(line)
+    return seen
 
 
-def rollback_snapshot(target: str) -> None:
-    """Trigger immediate atomic rollback from pre-patch snapshot."""
-    try:
-        subprocess.run(
-            ["docker", "exec", target, "sh", "-c",
-             "for f in /tmp/*.ts_snapshot; do "
-             "[ -f \"$f\" ] && orig=\"${f%.ts_snapshot}\" && cp -f \"$f\" \"$orig\"; done; "
-             "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); "
-             "[ -n \"$f\" ] && swanctl --load-all --file \"$f\" 2>/dev/null || swanctl --load-all 2>/dev/null; "
-             "rm -f /tmp/*.ts_snapshot 2>/dev/null || true"],
-            capture_output=True,
-            check=False,
-            timeout=8,
-        )
-    except Exception:
-        pass
+def read_file(target: str, path: str) -> str | None:
+    res = _exec(target, ["cat", path], timeout=5)
+    return res.stdout if res.returncode == 0 else None
 
+
+def _reload(target: str, files: list[str]) -> subprocess.CompletedProcess:
+    """plan.RELOAD_COMMAND, run without a shell."""
+    if files:
+        res = _exec(target, ["swanctl", "--load-all", "--file", files[0]], timeout=15)
+        if res.returncode == 0:
+            return res
+    return _exec(target, ["swanctl", "--load-all"], timeout=15)
+
+
+def _run_plan_command(target: str, cmd: str, files: list[str]) -> subprocess.CompletedProcess:
+    script = sed_script_of(cmd)
+    if script is not None:
+        return _exec(target, ["sed", "-i", "-E", script, *files], timeout=15)
+    if is_reload_command(cmd):
+        return _reload(target, files)
+    raise RuntimeError(f"no executor for command {cmd!r}")  # unreachable after validate_command_safety
+
+
+def _captures_dir() -> Path:
+    """Host side of the ./captures:/captures volume every lab container mounts."""
+    return _repo_root() / "testbed" / "captures"
+
+
+# ------------------------------------------------------------------ validation helpers
 
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -180,8 +176,7 @@ def get_allowed_targets(compose_path: Path | None = None) -> set[str]:
         return set()
 
 
-def is_container_running(target: str) -> bool:
-    """Return True if `target` is currently listed in `docker ps`."""
+def running_containers() -> set[str]:
     try:
         res = subprocess.run(
             ["docker", "ps", "--format", "{{.Names}}"],
@@ -191,27 +186,340 @@ def is_container_running(target: str) -> bool:
             timeout=5,
         )
         if res.returncode != 0:
-            return False
-        running = {line.strip() for line in res.stdout.splitlines() if line.strip()}
-        return target in running
+            return set()
+        return {line.strip() for line in res.stdout.splitlines() if line.strip()}
     except Exception:
-        return False
+        return set()
 
 
-def record_audit(
-    entry: dict[str, Any],
-    history_dir: str | Path | None = None,
-) -> None:
+def is_container_running(target: str) -> bool:
+    """Return True if `target` is currently listed in `docker ps`."""
+    return target in running_containers()
+
+
+def lab_targets(compose_path: Path | None = None) -> list[dict[str, Any]]:
+    """Allowed targets with their running state, for the dashboard's target picker."""
+    running = running_containers()
+    return [{"name": t, "running": t in running} for t in sorted(get_allowed_targets(compose_path))]
+
+
+def record_audit(entry: dict[str, Any], history_dir: str | Path | None = None) -> None:
     """Append a single record to .tunnelscope-history/remediate.jsonl."""
     hdir = Path(history_dir) if history_dir else (_repo_root() / _DEFAULT_HISTORY_DIR)
     try:
         hdir.mkdir(parents=True, exist_ok=True)
-        log_path = hdir / "remediate.jsonl"
-        with open(log_path, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry, sort_keys=True) + "\n")
+        with open(hdir / "remediate.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, sort_keys=True, default=str) + "\n")
     except Exception:
-        # Audit logging failure must not crash execution, but we try stderr
-        pass
+        pass  # logging must never stop a rollback
+
+
+def _peer_for(target: str) -> str | None:
+    return LAB_PEERS.get(target) if target in PEER_PREP_TARGETS else None
+
+
+def _validate(rule_id: Any, target: Any, compose_path: Path | None) -> tuple[dict, str | None]:
+    """Steps 1-2 (no container is touched). Returns (plan, peer) or raises _Refusal."""
+    allowed = get_allowed_targets(compose_path)
+    if not isinstance(target, str) or target not in allowed:
+        raise _Refusal("validate", f"Target {target!r} is not an allowed lab container ({sorted(allowed)})")
+    if not is_container_running(target):
+        raise _Refusal("validate", f"Container {target!r} is not currently running in Docker")
+    plan = plan_for(rule_id, include_exec=True)
+    if plan is None:
+        raise _Refusal("validate", f"Unknown rule_id {rule_id!r}")
+    if not plan.get("auto_applicable"):
+        raise _Refusal("validate", f"Rule {rule_id} is advisory-only (auto_applicable: false) and cannot be executed")
+    if not plan.get("exec_commands"):
+        raise _Refusal("validate", "no safe automated fix exists for this rule yet")
+    peer = _peer_for(target)
+    if peer and not is_container_running(peer):
+        raise _Refusal("validate", f"Lab peer {peer!r} must be running so the tunnel can be re-negotiated and verified")
+    for cmd in plan["exec_commands"] + (peer_commands_for(plan) if peer else []):
+        safe, reason = validate_command_safety(cmd)
+        if not safe:
+            raise _Refusal("lint", f"Command safety check failed: {reason}")
+    return plan, peer
+
+
+# ------------------------------------------------------------------ dry run (Layer 4)
+
+def _connection_span(lines: list[str], name: str = LAB_CONNECTION) -> tuple[int, int] | None:
+    """Line indices (first, last) of the top-level connection `name` in a swanctl.conf, found by
+    brace matching, independently of the sed range the plan uses."""
+    opener = re.compile(r"^\s*" + re.escape(name) + r"\s*\{\s*$")
+    depth, start = 0, None
+    for i, line in enumerate(lines):
+        code = line.split("#", 1)[0]
+        if start is None and depth == 1 and opener.match(code):
+            start = i
+        depth += code.count("{") - code.count("}")
+        if start is not None and depth == 1:
+            return start, i
+    return None
+
+
+def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change: bool = False) -> tuple[bool, str | None, dict[str, str]]:
+    """Run the plan's sed scripts on scratch copies of the container's real config files and
+    check the actual diff. Returns (ok, error, {file: unified diff}). Never loads anything
+    into the running daemon; fails closed on any error."""
+    try:
+        files = list_config_files(target)
+        if not files:
+            return False, "no swanctl configuration file was found in the container, so the change cannot be checked", {}
+        _exec(target, ["rm", "-rf", DRYRUN_DIR], timeout=5)
+        if _exec(target, ["mkdir", "-p", DRYRUN_DIR], timeout=5).returncode != 0:
+            return False, "could not create the dry-run scratch directory", {}
+        scratch = {}
+        for i, f in enumerate(files):
+            s = f"{DRYRUN_DIR}/{i}.conf"
+            if _exec(target, ["cp", "-p", f, s], timeout=5).returncode != 0:
+                return False, f"could not copy {f} for the dry run", {}
+            scratch[f] = s
+        for cmd in commands:
+            script = sed_script_of(cmd)
+            if script is None:
+                continue  # the reload would touch the live daemon; it is not dry-run
+            res = _exec(target, ["sed", "-i", "-E", script, *scratch.values()], timeout=15)
+            if res.returncode != 0:
+                return False, f"sed rejected the script: {(res.stderr or '').strip()}", {}
+        diffs: dict[str, str] = {}
+        problems: list[str] = []
+        for f, s in scratch.items():
+            before, after = read_file(target, f), read_file(target, s)
+            if before is None or after is None:
+                return False, f"could not read {f} back during the dry run", {}
+            if before == after:
+                continue
+            b, a = before.splitlines(), after.splitlines()
+            if len(b) != len(a):
+                problems.append(f"{f}: the change adds or removes lines")
+            span = _connection_span(b)
+            outside = [i + 1 for i, (bl, al) in enumerate(zip(b, a))
+                       if bl != al and (span is None or not span[0] <= i <= span[1])]
+            if outside:
+                problems.append(f"{f}: the change reaches outside the {LAB_CONNECTION} connection "
+                                f"(line {', '.join(map(str, outside[:5]))}), which would not be verified")
+            if before.count("{") != after.count("{") or before.count("}") != after.count("}"):
+                problems.append(f"{f}: the change alters the block structure")
+            for bl, al in zip(b, a):
+                if bl != al:
+                    for line in (bl, al):
+                        if not _ALLOWED_DIFF_LINE.match(line):
+                            problems.append(f"{f}: the change touches a line that is not a proposals/version setting: {line.strip()!r}")
+            diffs[f] = "".join(difflib.unified_diff(
+                before.splitlines(True), after.splitlines(True), fromfile=f, tofile=f + " (after)"))
+        if problems:
+            return False, "; ".join(problems[:5]), diffs
+        if not diffs and not allow_no_change:
+            return False, ("the commands would change nothing in this container's configuration "
+                           "(the setting may already be compliant, or the plan does not match this config)"), {}
+        return True, None, diffs
+    except Exception as e:
+        return False, f"the dry run could not complete: {e}", {}
+    finally:
+        try:
+            _exec(target, ["rm", "-rf", DRYRUN_DIR], timeout=5)
+        except Exception:
+            pass
+
+
+# ------------------------------------------------------------------ snapshot, watchdog, rollback
+
+def snapshot_configs(target: str, token: str) -> dict[str, str]:
+    """Copy every config file to <file>.ts_snapshot and write the manifest (token, files).
+    Returns {file: original content}. Raises if anything fails, before any change is made."""
+    if read_file(target, MANIFEST) is not None:
+        raise RuntimeError("a previous remediation on this container is still pending "
+                           "(snapshot manifest present, watchdog may be armed); resolve it before another change")
+    files = list_config_files(target)
+    if not files:
+        raise RuntimeError("no config files to snapshot")
+    originals: dict[str, str] = {}
+    for f in files:
+        content = read_file(target, f)
+        if content is None:
+            raise RuntimeError(f"could not read {f}")
+        originals[f] = content
+        if _exec(target, ["cp", "-p", f, f + SNAP_SUFFIX], timeout=5).returncode != 0:
+            raise RuntimeError(f"could not snapshot {f}")
+    if _exec(target, ["sh", "-c", _WRITE_MANIFEST_SCRIPT, MANIFEST, token, *files], timeout=5).returncode != 0:
+        raise RuntimeError("could not write the snapshot manifest")
+    manifest = read_file(target, MANIFEST)
+    if not manifest or manifest.splitlines()[0] != token:
+        raise RuntimeError("snapshot manifest did not read back correctly")
+    return originals
+
+
+def arm_commit_confirmed_watchdog(target: str, token: str, timeout_s: int = WATCHDOG_TIMEOUT_S) -> None:
+    """Detached timer inside the container: restores the snapshot unless disarmed first."""
+    _exec(target, ["sh", "-c", _WATCHDOG_SCRIPT, "tunnelscope-watchdog", str(int(timeout_s)), token], timeout=5, detach=True)
+
+
+def disarm_watchdog(target: str, token: str) -> bool:
+    """Accept the change: drop the manifest (the watchdog then does nothing) and the snapshots.
+    False if the manifest is gone or belongs to another apply (the watchdog already acted)."""
+    manifest = read_file(target, MANIFEST)
+    if not manifest or manifest.splitlines()[0] != token:
+        return False
+    _exec(target, ["rm", "-f", MANIFEST], timeout=5)
+    for f in [x for x in manifest.splitlines()[1:] if x]:
+        _exec(target, ["rm", "-f", f + SNAP_SUFFIX], timeout=5)
+    return True
+
+
+def _manifest_token(target: str) -> str | None:
+    manifest = read_file(target, MANIFEST)
+    return manifest.splitlines()[0] if manifest else None
+
+
+def watchdog_fired(target: str, token: str) -> bool:
+    marker = read_file(target, WATCHDOG_MARKER)
+    return bool(marker) and marker.split()[0] == token
+
+
+def rollback_snapshot(target: str, expected: dict[str, str] | None = None) -> dict[str, Any]:
+    """Restore every file in the manifest from its snapshot and reload. If `expected` is given,
+    read the files back and compare them byte for byte. Snapshots are deleted only when the
+    restore is verified (or cannot be checked); a failed restore keeps them for the watchdog."""
+    manifest = read_file(target, MANIFEST)
+    if not manifest:
+        return {"restored": False, "verified": False, "detail": "no snapshot manifest (nothing to restore)"}
+    files = [x for x in manifest.splitlines()[1:] if x]
+    copied = all(_exec(target, ["cp", "-p", f + SNAP_SUFFIX, f], timeout=5).returncode == 0 for f in files)
+    _reload(target, files)
+    verified = None
+    if expected is not None:
+        verified = copied and all(read_file(target, f) == expected.get(f) for f in files)
+    if verified is not False:
+        _exec(target, ["rm", "-f", MANIFEST], timeout=5)
+        for f in files:
+            _exec(target, ["rm", "-f", f + SNAP_SUFFIX], timeout=5)
+    return {"restored": copied, "verified": verified, "files": files,
+            "detail": "restored" if verified is not False else "restore could not be verified; snapshot kept for the watchdog"}
+
+
+def reconcile_watchdog_events(history_dir: str | Path | None = None, compose_path: Path | None = None) -> list[dict]:
+    """Record watchdog restores (which happen inside a container, outside this process) in the
+    audit log, then clear their markers."""
+    events = []
+    for t in sorted(get_allowed_targets(compose_path)):
+        if not is_container_running(t):
+            continue
+        marker = read_file(t, WATCHDOG_MARKER)
+        if not marker or not marker.strip():
+            continue
+        parts = marker.split()
+        now = time.time()
+        entry = {
+            "timestamp": now, "at": now, "ok": True, "decision": "watchdog_rollback", "stage": "watchdog",
+            "rule_id": "", "target": t, "token": parts[0], "fired_at": parts[1] if len(parts) > 1 else None,
+            "caller": "watchdog", "confirm": None, "commands_run": [], "verdict_before": None,
+            "verdict_after": None, "confirmed_fixed": False, "rolled_back": True,
+        }
+        record_audit(entry, history_dir)
+        _exec(t, ["rm", "-f", WATCHDOG_MARKER], timeout=5)
+        events.append(entry)
+    return events
+
+
+# ------------------------------------------------------------------ capture and verdicts
+
+def _verdicts_of(sas: list[Any]) -> dict[str, str]:
+    agg: dict[str, str] = {}
+    for sa in sas:
+        vs = sa.get("verdicts", []) if isinstance(sa, dict) else getattr(sa, "verdicts", [])
+        for v in vs:
+            rid = v.get("rule_id") if isinstance(v, dict) else getattr(v, "rule_id", None)
+            val = v.get("verdict") if isinstance(v, dict) else getattr(v, "verdict", None)
+            val = str(getattr(val, "value", val) or "UNKNOWN").upper()
+            if not rid:
+                continue
+            if rid not in agg or _RANK.get(val, 0) > _RANK.get(agg[rid], 0):
+                agg[rid] = val
+    return agg
+
+
+def _prepare_lab_network(target: str, peer: str | None) -> list[str]:
+    """Lab-only: the t-tun connection uses extra addresses that a container restart drops."""
+    done = []
+    for c in (target, peer):
+        if c in _LAB_SIDE:
+            _exec(c, ["sh", "-c", _LAB_ALIAS_SCRIPT, "lab-alias", _LAB_SIDE[c]], timeout=5)
+            done.append(f"{c}: ensured 10.10.{_LAB_SIDE[c]}.210-214 addresses")
+    return done
+
+
+def _capture_verdicts(target: str, phase: str) -> tuple[dict[str, str], int]:
+    """Re-negotiate the lab tunnel while capturing on the router, then analyse the capture.
+    Returns ({rule_id: verdict}, number of SAs)."""
+    host = _captures_dir() / f"remediate_{phase}.pcap"
+    inside = f"/captures/remediate_{phase}.pcap"
+    capture_on = "sih26-router" if is_container_running("sih26-router") else target
+    try:
+        if host.exists():
+            host.unlink()
+        _exec(target, ["swanctl", "--terminate", "--ike", LAB_CONNECTION, "--timeout", "3"], timeout=8)
+        time.sleep(1)
+        _exec(capture_on, ["tcpdump", "-i", "any", "-w", inside, "-c", CAPTURE_PACKETS], timeout=5, detach=True)
+        time.sleep(1)
+        _exec(target, ["swanctl", "--initiate", "--child", LAB_CONNECTION, "--timeout", "5"], timeout=10)
+        time.sleep(2)
+        _exec(capture_on, ["pkill", "tcpdump"], timeout=5)
+        time.sleep(1)
+        if not host.is_file() or host.stat().st_size == 0:
+            return {}, 0
+        from ..report import report as _report
+        sas = _report.analyze(str(host)).get("sas", [])
+        return _verdicts_of(sas), len(sas)
+    finally:
+        if host.exists():
+            try:
+                host.unlink()
+            except OSError:
+                pass
+
+
+def _check_service_restored(target: str, before: dict[str, str]) -> dict[str, Any]:
+    """Restoring the files and reloading is not enough: an SA negotiated with the bad settings
+    keeps them until it is re-negotiated. Re-negotiate now, capture, and compare with the
+    baseline: the tunnel must be up and no rule may be worse than before the change."""
+    try:
+        verdicts, n = _capture_verdicts(target, "post_rollback")
+    except Exception as e:
+        return {"tunnel_up": False, "matches_baseline": False, "detail": f"post-rollback capture failed: {e}"}
+    worse = sorted(r for r, v in verdicts.items() if v in _BAD and before.get(r) not in _BAD)
+    return {"tunnel_up": n > 0, "matches_baseline": n > 0 and not worse, "worse_than_baseline": worse}
+
+
+# ------------------------------------------------------------------ preview and apply
+
+def preview_remediation(rule_id: str, target: str, caller: str | None = None,
+                        compose_path: Path | None = None, history_dir: str | Path | None = None) -> dict[str, Any]:
+    """Validate and dry-run only: the real diff the operator sees before approving. No config
+    file, running daemon or tunnel is changed."""
+    now = time.time()
+    base = {"timestamp": now, "at": now, "rule_id": str(rule_id), "target": str(target),
+            "caller": caller or "unknown", "decision": "preview"}
+    try:
+        plan, peer = _validate(rule_id, target, compose_path)
+        ok, err, diffs = perform_sandboxed_dry_run(target, plan["exec_commands"])
+        if not ok:
+            raise _Refusal("dry_run", f"Dry run failed: {err}")
+        peer_info = None
+        if peer:
+            pok, perr, pdiffs = perform_sandboxed_dry_run(peer, peer_commands_for(plan), allow_no_change=True)
+            if not pok:
+                raise _Refusal("dry_run", f"Dry run failed on the lab peer {peer}: {perr}")
+            peer_info = {"container": peer, "diff": pdiffs,
+                         "why": "both ends of a tunnel must agree on a proposal, so the other end gets the same change"}
+        res = {"ok": True, "rule_id": rule_id, "target": target, "diff": diffs, "peer": peer_info}
+        record_audit({**base, "ok": True, "files_changed": sorted(diffs),
+                      "peer_files_changed": sorted(peer_info["diff"]) if peer_info else []}, history_dir)
+        return res
+    except _Refusal as r:
+        record_audit({**base, "ok": False, "stage": r.stage, "error": r.error}, history_dir)
+        return {"ok": False, "stage": r.stage, "error": r.error, "decision": "refused"}
 
 
 def apply_remediation(
@@ -221,278 +529,189 @@ def apply_remediation(
     caller: str | None = None,
     compose_path: Path | None = None,
     history_dir: str | Path | None = None,
+    watchdog_timeout_s: int = WATCHDOG_TIMEOUT_S,
 ) -> dict[str, Any]:
-    """Execute remediation commands in target lab container, re-capture, and re-verify.
+    """Execute a remediation in a lab container, then prove it or undo it (see module doc).
 
-    Returns:
-      dict with ok, rule_id, target, commands_run, verdict_before, verdict_after, confirmed_fixed
-      or on refusal:
-      dict with ok=False, stage="validate", error=<reason>
-    """
+    Returns ok/decision/rule_id/target/commands_run/verdict_before/verdict_after/confirmed_fixed/
+    rolled_back plus token, reason, regressions, dry_run_diff, peer, rollback_verified;
+    or on refusal {ok: False, stage, error, decision: "refused"}."""
+    token = uuid.uuid4().hex[:12]
     now = time.time()
     audit_base = {
         "timestamp": now,
         "at": now,
+        "token": token,
         "rule_id": str(rule_id) if rule_id is not None else "",
         "target": str(target) if target is not None else "",
         "caller": caller or "unknown",
         "confirm": confirm,
         "commands_run": [],
-        "verdict_before": "FAIL",
+        "verdict_before": None,
         "verdict_after": None,
         "confirmed_fixed": False,
     }
 
-    # 1. Validate confirmation
+    def refuse(stage: str, err: str, **extra: Any) -> dict[str, Any]:
+        record_audit({**audit_base, **extra, "ok": False, "decision": "refused", "stage": stage, "error": err}, history_dir)
+        return {"ok": False, "stage": stage, "error": err, "decision": "refused", **extra}
+
     if confirm is not True:
-        err = "Confirmation required (confirm must be True)"
-        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
-        record_audit(entry, history_dir)
-        return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
-
-    # 2. Validate target is in allowed docker-compose containers
-    allowed = get_allowed_targets(compose_path)
-    if not isinstance(target, str) or target not in allowed:
-        err = f"Target {target!r} is not an allowed lab container ({sorted(allowed)})"
-        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
-        record_audit(entry, history_dir)
-        return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
-
-    # 3. Validate target container is currently running
-    if not is_container_running(target):
-        err = f"Container {target!r} is not currently running in Docker"
-        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
-        record_audit(entry, history_dir)
-        return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
-
-    # 4. Lookup plan and check auto_applicable
-    plan = plan_for(rule_id, include_exec=True)
-    if plan is None:
-        err = f"Unknown rule_id {rule_id!r}"
-        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
-        record_audit(entry, history_dir)
-        return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
-
-    if not plan.get("auto_applicable"):
-        err = f"Rule {rule_id} is advisory-only (auto_applicable: false) and cannot be executed"
-        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
-        record_audit(entry, history_dir)
-        return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
-
-    exec_commands = plan.get("exec_commands", [])
-    if not exec_commands:
-        err = "no safe automated fix exists for this rule yet"
-        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "validate", "error": err}
-        record_audit(entry, history_dir)
-        return {"ok": False, "stage": "validate", "error": err, "decision": "refused"}
-
-    # Layer 3: Anti-hallucination static command linter check
-    for cmd in exec_commands:
-        safe, reason = validate_command_safety(cmd)
-        if not safe:
-            err = f"Command safety check failed: {reason}"
-            entry = {**audit_base, "ok": False, "decision": "refused", "stage": "lint", "error": err}
-            record_audit(entry, history_dir)
-            return {"ok": False, "stage": "lint", "error": err, "decision": "refused"}
-
-    # Layer 4: Sandboxed dry-run syntax check before touching active config
-    dry_ok, dry_err = perform_sandboxed_dry_run(target, exec_commands)
-    if not dry_ok:
-        err = f"Pre-flight sandbox dry-run validation failed: {dry_err}"
-        entry = {**audit_base, "ok": False, "decision": "refused", "stage": "dry_run", "error": err}
-        record_audit(entry, history_dir)
-        return {"ok": False, "stage": "dry_run", "error": err, "decision": "refused"}
-
-    # Layer 5: Snapshot config and arm commit-confirmed watchdog (auto-reverts in 30s if not disarmed)
-    arm_commit_confirmed_watchdog(target, timeout_s=30)
-
-    # 5. Execute commands via docker exec
-    commands_run: list[str] = []
-    for cmd in exec_commands:
-        commands_run.append(cmd)
-        try:
-            # Run command inside container
-            subprocess.run(
-                ["docker", "exec", target, "sh", "-c", cmd],
-                capture_output=True,
-                text=True,
-                check=False,
-                timeout=15,
-            )
-        except Exception as e:
-            rollback_snapshot(target)
-            err = f"Failed executing command in container {target}: {e}"
-            entry = {
-                **audit_base,
-                "ok": False,
-                "decision": "failed",
-                "stage": "execute",
-                "error": err,
-                "commands_run": commands_run,
-                "rolled_back": True,
-            }
-            record_audit(entry, history_dir)
-            return {"ok": False, "stage": "execute", "error": err, "decision": "failed", "commands_run": commands_run, "rolled_back": True}
-
-    # 6. Re-capture and re-verify
-    # Attempt capture on sih26-router or target container
-    pcap_host_path = _repo_root() / "testbed" / "captures" / "remediate_verify.pcap"
-    pcap_container_path = "/captures/remediate_verify.pcap"
-    capture_target = "sih26-router" if is_container_running("sih26-router") else target
-
-    verdict_after = "UNKNOWN"
-    confirmed_fixed = False
-
+        return refuse("validate", "Confirmation required (confirm must be True)")
     try:
-        # Clean up any stale verify capture
-        if pcap_host_path.exists():
-            pcap_host_path.unlink()
+        plan, peer = _validate(rule_id, target, compose_path)
+    except _Refusal as r:
+        return refuse(r.stage, r.error)
 
-        # Ensure lab IP aliases (Alice: 10.10.1.210-214, Bob: 10.10.2.210-214) are configured if running on lab
-        if target.startswith("sih26-"):
-            side_num = "1" if "alice" in target else ("2" if "bob" in target else "")
-            if side_num:
-                subprocess.run(
-                    ["docker", "exec", target, "sh", "-c",
-                     f"for j in 0 1 2 3 4; do "
-                     f"ip addr add 10.10.{side_num}.$((210+j))/32 dev eth0 2>/dev/null; done || true"],
-                    capture_output=True,
-                    check=False,
-                    timeout=5,
-                )
-            peer = "sih26-bob-pq" if "alice" in target else ("sih26-alice-pq" if "bob" in target else None)
-            if peer and is_container_running(peer):
-                peer_num = "2" if "bob" in peer else ("1" if "alice" in peer else "")
-                if peer_num:
-                    subprocess.run(
-                        ["docker", "exec", peer, "sh", "-c",
-                         f"for j in 0 1 2 3 4; do "
-                         f"ip addr add 10.10.{peer_num}.$((210+j))/32 dev eth0 2>/dev/null; done || true"],
-                        capture_output=True,
-                        check=False,
-                        timeout=5,
-                    )
-                # Ensure peer responder (Bob) accepts compliant suites so re-negotiation succeeds
-                if "bob" in peer:
-                    subprocess.run(
-                        ["docker", "exec", peer, "sh", "-c",
-                         "sed -i -E '/^[[:space:]]*t-tun[[:space:]]*\\{/,/^[[:space:]]*\\}/ { s/^([[:space:]]*proposals[[:space:]]*=[[:space:]]*).*/\\1aes256-sha384-modp4096, aes256-sha512-modp4096, aes256-sha256-modp4096, aes256-sha256-modp3072, aes256-sha256-modp2048, default/ }' /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null || true; "
-                         "f=$(ls /tmp/exp15-*.conf /tmp/*.conf /etc/swanctl/conf.d/*.conf 2>/dev/null | head -1); [ -n \"$f\" ] && swanctl --load-all --file \"$f\" 2>/dev/null || swanctl --load-all 2>/dev/null || true"],
-                        capture_output=True,
-                        check=False,
-                        timeout=5,
-                    )
-
-        # Terminate any existing IKE SA to force a clean re-handshake
-        subprocess.run(
-            ["docker", "exec", target, "swanctl", "--terminate", "--ike", "t-tun", "--timeout", "3"],
-            capture_output=True,
-            check=False,
-            timeout=8,
-        )
-        time.sleep(1)
-
-        # Start short tcpdump in capture container
-        subprocess.run(
-            ["docker", "exec", "-d", capture_target, "tcpdump", "-i", "any", "-w", pcap_container_path, "-c", "60"],
-            capture_output=True,
-            check=False,
-            timeout=5,
-        )
-        time.sleep(1)
-
-        # Trigger traffic/re-initiation if swanctl is available
-        subprocess.run(
-            ["docker", "exec", target, "swanctl", "--initiate", "--child", "t-tun", "--timeout", "5"],
-            capture_output=True,
-            check=False,
-            timeout=10,
-        )
-        time.sleep(2)
-
-        # Stop tcpdump
-        subprocess.run(
-            ["docker", "exec", capture_target, "pkill", "tcpdump"],
-            capture_output=True,
-            check=False,
-            timeout=5,
-        )
-        time.sleep(1)
-
-        # Run analysis on the fresh capture (Layer 5 & Global Regression Guard)
-        sas: list[dict[str, Any]] = []
-        if pcap_host_path.is_file() and pcap_host_path.stat().st_size > 0:
-            from ..report.report import analyze
-            analysis = analyze(str(pcap_host_path))
-            sas = analysis.get("sas", [])
-
-        if not sas:
-            # Global Regression Guard: Outage detected -- no SAs negotiated
-            verdict_after = "REGRESSION"
-            confirmed_fixed = False
-            rollback_snapshot(target)
-        else:
-            target_verdicts: list[str] = []
-            any_other_failed: bool = False
-            for sa in sas:
-                for v in sa.get("verdicts", []):
-                    v_id = getattr(v, "rule_id", None) or (v.get("rule_id") if isinstance(v, dict) else None)
-                    v_val = str(getattr(v, "verdict", None) or (v.get("verdict") if isinstance(v, dict) else None)).upper()
-                    if v_id == rule_id:
-                        target_verdicts.append(v_val)
-                    else:
-                        if v_val in ("FAIL", "CONTRADICTORY"):
-                            any_other_failed = True
-
-            # Order-independent target aggregation: any FAIL or CONTRADICTORY is an overall failure
-            if "FAIL" in target_verdicts:
-                target_verdict = "FAIL"
-            elif "CONTRADICTORY" in target_verdicts:
-                target_verdict = "CONTRADICTORY"
-            elif "PASS" in target_verdicts:
-                target_verdict = "PASS"
-            elif target_verdicts:
-                target_verdict = target_verdicts[0]
-            else:
-                target_verdict = None
-
-            if target_verdict == "PASS":
-                if any_other_failed:
-                    # Global Regression Guard: target passed but another rule broke!
-                    verdict_after = "REGRESSION"
-                    confirmed_fixed = False
-                    rollback_snapshot(target)
-                else:
-                    verdict_after = "PASS"
-                    confirmed_fixed = True
-                    disarm_watchdog(target)
-            else:
-                verdict_after = target_verdict or "FAIL"
-                confirmed_fixed = False
-                rollback_snapshot(target)
-    except Exception as e:
-        # Re-capture/analysis exception does not erase the fact that commands ran
-        verdict_after = f"UNKNOWN ({e})"
-        confirmed_fixed = False
-        rollback_snapshot(target)
+    if not _APPLY_LOCK.acquire(blocking=False):
+        return refuse("validate", "another remediation is already running; try again when it finishes")
+    try:
+        return _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
+                             history_dir, compose_path, watchdog_timeout_s)
     finally:
-        if pcap_host_path.exists():
-            try:
-                pcap_host_path.unlink()
-            except OSError:
-                pass
+        _APPLY_LOCK.release()
+
+
+def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
+                  history_dir, compose_path, watchdog_timeout_s) -> dict[str, Any]:
+    reconcile_watchdog_events(history_dir, compose_path)
+    exec_commands = plan["exec_commands"]
+    peer_commands = peer_commands_for(plan) if peer else []
+
+    # 3. Dry run on scratch copies of the real files
+    ok, err, dry_diff = perform_sandboxed_dry_run(target, exec_commands)
+    if not ok:
+        return refuse("dry_run", f"Pre-flight sandbox dry-run validation failed: {err}")
+    peer_dry_diff: dict[str, str] = {}
+    if peer:
+        ok, err, peer_dry_diff = perform_sandboxed_dry_run(peer, peer_commands, allow_no_change=True)
+        if not ok:
+            return refuse("dry_run", f"Pre-flight sandbox dry-run validation failed on the lab peer {peer}: {err}")
+
+    # 4. Baseline: what fails before anything changes
+    lab_prep = _prepare_lab_network(target, peer)
+    try:
+        before, n_before = _capture_verdicts(target, "baseline")
+    except Exception as e:
+        return refuse("baseline", f"Could not capture a baseline; nothing was changed: {e}")
+    if n_before == 0:
+        return refuse("baseline", f"No IKE SA was negotiated on {LAB_CONNECTION} before the change, so the fix "
+                                  "could not be verified afterwards; nothing was changed")
+    vb = before.get(rule_id)
+    if vb == "PASS":
+        return refuse("baseline", f"{rule_id} already passes on a fresh capture; nothing to fix", verdict_before=vb)
+    if vb != "FAIL":
+        return refuse("baseline", f"{rule_id} is {vb or 'not judged'} on a fresh capture (it must be FAIL), so a fix "
+                                  "could not be proven; nothing was changed", verdict_before=vb)
+
+    # 5. Snapshot and arm the watchdogs
+    try:
+        originals = snapshot_configs(target, token)
+    except Exception as e:
+        return refuse("snapshot", f"Could not take a pre-change snapshot; nothing was changed: {e}", verdict_before=vb)
+    peer_originals: dict[str, str] = {}
+    if peer:
+        try:
+            peer_originals = snapshot_configs(peer, token)
+        except Exception as e:
+            disarm_watchdog(target, token)
+            return refuse("snapshot", f"Could not snapshot the lab peer {peer}; nothing was changed: {e}", verdict_before=vb)
+    arm_commit_confirmed_watchdog(target, token, watchdog_timeout_s)
+    if peer:
+        arm_commit_confirmed_watchdog(peer, token, watchdog_timeout_s)
+
+    def undo() -> dict[str, Any]:
+        rb = {"target": rollback_snapshot(target, originals)}
+        if peer:
+            rb["peer"] = rollback_snapshot(peer, peer_originals)
+        rb["verified"] = all(x.get("verified") is True for x in rb.values() if isinstance(x, dict))
+        rb["service"] = _check_service_restored(target, before)
+        return rb
+
+    # 6. Apply
+    commands_run: list[str] = []
+    peer_commands_run: list[str] = []
+    try:
+        for cmd in peer_commands:
+            peer_commands_run.append(cmd)
+            res = _run_plan_command(peer, cmd, list(peer_originals))
+            if res.returncode != 0:
+                raise RuntimeError(f"peer command failed ({res.returncode}): {(res.stderr or '').strip()}")
+        for cmd in exec_commands:
+            commands_run.append(cmd)
+            res = _run_plan_command(target, cmd, list(originals))
+            if res.returncode != 0:
+                raise RuntimeError(f"command failed ({res.returncode}): {(res.stderr or '').strip()}")
+    except Exception as e:
+        rb = undo()
+        result = {"ok": False, "stage": "execute", "decision": "failed", "error": f"Failed executing in the lab: {e}",
+                  "commands_run": commands_run, "rolled_back": rb["target"]["restored"],
+                  "rollback_verified": rb["verified"], "service_restored": rb["service"], "verdict_before": vb}
+        record_audit({**audit_base, **result, "peer_commands_run": peer_commands_run, "rollback": rb}, history_dir)
+        return result
+
+    # 7. Verify against the baseline
+    verify_error = None
+    try:
+        after, n_after = _capture_verdicts(target, "verify")
+    except Exception as e:
+        after, n_after, verify_error = {}, 0, str(e)
+    va = after.get(rule_id)
+    regressions = sorted(r for r, v in after.items() if r != rule_id and v in _BAD and before.get(r) not in _BAD)
+
+    confirmed = False
+    rb: dict[str, Any] | None = None
+    if n_after == 0:
+        verdict_after = "REGRESSION"
+        reason = f"no IKE SA was negotiated after the change (tunnel outage){': ' + verify_error if verify_error else ''}"
+    elif va != "PASS":
+        verdict_after = va or "UNKNOWN"
+        reason = f"{rule_id} is {verdict_after} after the change, not PASS"
+    elif regressions:
+        verdict_after = "REGRESSION"
+        reason = f"{rule_id} passes, but these rules were not failing before and are now: {', '.join(regressions)}"
+    else:
+        verdict_after = "PASS"
+        reason = f"{rule_id} passes on a fresh capture and no other rule got worse"
+        # Check both snapshots are intact BEFORE disarming either: if one watchdog already
+        # restored its side, disarming the other would delete the snapshot we need to undo it.
+        intact = _manifest_token(target) == token and (not peer or _manifest_token(peer) == token)
+        if intact and disarm_watchdog(target, token) and (not peer or disarm_watchdog(peer, token)) \
+                and not watchdog_fired(target, token) and not (peer and watchdog_fired(peer, token)):
+            confirmed = True
+        else:
+            verdict_after = "REVERTED_BY_WATCHDOG"
+            reason = "the watchdog restored the snapshot before the change could be confirmed"
+
+    # 8. Roll back anything not confirmed
+    if not confirmed:
+        rb = undo()
+        if verdict_after == "REVERTED_BY_WATCHDOG":
+            rb["verified"] = (all(read_file(target, f) == c for f, c in originals.items())
+                              and all(read_file(peer, f) == c for f, c in peer_originals.items()))
+    reconcile_watchdog_events(history_dir, compose_path)
 
     result = {
         "ok": True,
         "decision": "applied",
         "rule_id": rule_id,
         "target": target,
+        "token": token,
         "commands_run": commands_run,
-        "verdict_before": "FAIL",
+        "verdict_before": vb,
         "verdict_after": verdict_after,
-        "confirmed_fixed": confirmed_fixed,
-        "rolled_back": not confirmed_fixed,
+        "confirmed_fixed": confirmed,
+        "reason": reason,
+        "regressions": regressions,
+        "rolled_back": not confirmed,
+        "rollback_verified": None if confirmed else bool(rb and rb.get("verified")),
+        # after a rollback: the tunnel re-negotiated on the restored settings and no rule is worse than the baseline
+        "service_restored": None if confirmed else (rb or {}).get("service"),
+        "dry_run_diff": dry_diff,
+        "peer": ({"container": peer, "commands_run": peer_commands_run, "dry_run_diff": peer_dry_diff}
+                 if peer else None),
+        "lab_prep": lab_prep,
+        "watchdog_timeout_s": watchdog_timeout_s,
     }
-
-    record_audit({**audit_base, **result}, history_dir)
+    record_audit({**audit_base, **result, "rollback": rb, "verdicts_before": before, "verdicts_after": after}, history_dir)
     return result
