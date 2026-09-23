@@ -202,3 +202,26 @@ export function formatValue(v: unknown): string {
   }
   return String(v)
 }
+
+export type RemediationPlan = {
+  rule_id: string
+  change: string
+  commands: string[]
+  auto_applicable: boolean
+  observed: unknown
+}
+
+export async function remediationPlan(ruleId: string, observed?: unknown): Promise<RemediationPlan | null> {
+  try {
+    const res = await fetch("/api/remediate/plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rule_id: ruleId, observed: observed ?? null }),
+    })
+    if (!res.ok) return null
+    return (await res.json()) as RemediationPlan
+  } catch {
+    return null
+  }
+}
+
