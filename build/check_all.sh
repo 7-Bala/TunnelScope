@@ -24,6 +24,22 @@ live() {  # live "name" check: build/live_checks.py exit 0 PASS, 3 SKIP (reason 
 
 run "guard: diff is in scope, no protected/test/secret problems" "$PY" build/guard_diff.py
 run "unit tests (pytest)" "$PY" -m pytest -q
+# pyproject says requires-python >= 3.11 and CI runs 3.11; the dev venv is newer, so syntax that only
+# newer Pythons accept (e.g. a backslash inside an f-string) passes locally and breaks CI and users.
+PY311=$(command -v python3.11 || true)
+if [ -n "$PY311" ]; then
+    run "python 3.11 syntax: every .py parses on the oldest supported Python" "$PY311" -c 'import ast, pathlib, sys
+bad = []
+for p in list(pathlib.Path("tunnelscope").rglob("*.py")) + list(pathlib.Path("tests").rglob("*.py")) + list(pathlib.Path("build").glob("*.py")) + list(pathlib.Path("testbed/scripts").glob("*.py")) + list(pathlib.Path("experiments").rglob("*.py")):
+    try:
+        ast.parse(p.read_text(), str(p))
+    except SyntaxError as e:
+        bad.append(f"{p}:{e.lineno}: {e.msg}")
+print("\n".join(bad) or "all files parse on " + sys.version.split()[0])
+sys.exit(1 if bad else 0)'
+else
+    skip "python 3.11 syntax" "python3.11 not installed"
+fi
 if [ -d fleet-dashboard/node_modules ]; then
     run "dashboard type-check (tsc)" bash -c 'cd fleet-dashboard && npx tsc -b'
     run "dashboard lint (errors only)" bash -c 'cd fleet-dashboard && npm run lint'
