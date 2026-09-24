@@ -79,3 +79,15 @@ def test_vocabulary_ships_with_the_installed_package():
     root = pathlib.Path(vocab.__file__).parents[2]
     data = tomllib.loads((root / "pyproject.toml").read_text())["tool"]["setuptools"]["package-data"]["tunnelscope"]
     assert "remediate/*.json" in data
+
+
+def test_a_tampered_vocabulary_cannot_smuggle_metacharacters():
+    """The keyword file is data on disk. Even if an entry with sed/shell metacharacters were added
+    to it, the shape check refuses the token before the vocabulary is consulted."""
+    import copy
+    v = copy.deepcopy(vocab.load_vocab())
+    good = v["keywords"]["modp4096"]
+    for bad in ("modp4096.*", "modp4096;reboot", "modp/4096", "modp4096&", "Modp4096", "modp 4096"):
+        v["keywords"][bad] = good
+        assert vocab.kind(bad, "ike", v) is None, bad
+    assert vocab.kind("modp4096", "ike", v) is not None

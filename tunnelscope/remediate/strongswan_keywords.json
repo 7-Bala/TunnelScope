@@ -1,6 +1,6 @@
 {
  "generated_by": "testbed/scripts/probe_keywords.py",
- "generated_at": "2026-09-24T03:58:24+00:00",
+ "generated_at": "2026-09-24T04:31:15+00:00",
  "strongswan_version": "strongSwan 6.1.0",
  "images": {
   "testbed-alice-pq": "sha256:03b1418be86fcafe302092556db6beb3041c01d6cece1b270f658502b31236fd",
@@ -6920,6 +6920,80 @@
       "HMAC-SHA2-384-192"
      ],
      "source": "testbed/captures/exp15/a-tun-sha384.pcap"
+    }
+   ]
+  },
+  "version": {
+   "2": [
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/a-tra-sha1.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/a-tra-sha256.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/a-tra-sha512.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/a-tun-sha256.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/a-tun-sha384.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-3des.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-ecp256.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-ecp384.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-mlkem.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-modp1024.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-modp1536.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-modp3072.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-modp4096.pcap"
+    },
+    {
+     "attribute": "ike_version",
+     "value": "IKEv2",
+     "source": "testbed/captures/exp15/s-x25519.pcap"
     }
    ]
   }

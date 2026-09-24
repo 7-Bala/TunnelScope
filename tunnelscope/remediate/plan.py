@@ -261,6 +261,21 @@ def peer_commands_for(plan: dict) -> list[str]:
     return list(plan.get("exec_commands", []))
 
 
+# DEC-034 D-D: the only rules a local-model draft may be asked for: those whose hand-written fix
+# changes one proposals/version line of the lab connection. For each, the line(s) a draft may
+# change and the edit operations allowed (T-102). The 5 advisory rules are deliberately absent.
+GENERATABLE_RULES = {
+    "V-207205": {"attribute": "ike_version", "line_keys": ("version",), "ops": ("replace",)},
+    "V-207193": {"attribute": "ike_dh_group", "line_keys": ("proposals",), "ops": ("replace",)},
+    "V-207223": {"attribute": "ike_integ", "line_keys": ("proposals",), "ops": ("replace",)},
+    "RFC8247-DH-MUST": {"attribute": "ike_dh_group", "line_keys": ("proposals",), "ops": ("replace",)},
+    "RFC8247-ENCR": {"attribute": "ike_encr", "line_keys": ("proposals",), "ops": ("replace",)},
+    "DST-PQ-KE": {"attribute": "pq_key_exchange", "line_keys": ("proposals",), "ops": ("append",)},
+    "RFC8221-AH-INTEG": {"attribute": "ah_integrity", "line_keys": ("ah_proposals",), "ops": ("set",)},
+    "RFC8221-AH-LEGACY": {"attribute": "ah_integrity", "line_keys": ("ah_proposals",), "ops": ("set",)},
+    "RFC8221-ESP-3DES": {"attribute": "esp_cipher_family", "line_keys": ("esp_proposals",), "ops": ("set",)},
+}
+
 _ROLLBACK_TEXT = (
     "Snapshot of every swanctl config file first (and of the lab peer's, if it is touched), "
     "plus a Commit-Confirmed Watchdog inside the container that restores the snapshot on its own "
