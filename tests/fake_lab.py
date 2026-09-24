@@ -212,6 +212,11 @@ class FakeLab:
         self.clone_runs: list[list[str]] = []   # argv of every clone started
         self.clones_left: list[str] = []        # clone names `docker ps -a` still reports
         self.removed: list[str] = []            # names passed to `docker rm -f`
+        # what `swanctl --list-sas --raw` reports; "down" makes the SA vanish after a forced rekey
+        self.rekey_outcome = "up"
+        self.ike_spi = 1
+        self.sa_fields = "version=2 state=ESTABLISHED encr-alg=AES_CBC encr-keysize=256 integ-alg=HMAC_SHA2_256_128 prf-alg=PRF_HMAC_SHA2_256 dh-group=MODP_4096"
+        self.rekeys: list[str] = []
         ids = vocab.load_vocab()["images"]
         self.images = {"sih26-alice-pq": ids["testbed-alice-pq"], "sih26-bob-pq": ids["testbed-bob-pq"]}
 
@@ -335,6 +340,17 @@ class FakeLab:
                 fs[p] = run_sed(argv[3], fs[p])
             return _Res()
         if prog == "swanctl":
+            if "--rekey" in argv:
+                self.rekeys.append(argv[argv.index("--rekey") + 1])
+                if "--ike" in argv and self.rekey_outcome == "up":
+                    self.ike_spi += 1
+                return _Res()
+            if "--list-sas" in argv:
+                if self.rekeys and self.rekey_outcome == "down":
+                    return _Res(0, "list-sas reply {}\n")
+                return _Res(0, "list-sa event {t-tun {uniqueid=1 " + self.sa_fields +
+                            f" initiator-spi={self.ike_spi:016x} responder-spi={self.ike_spi + 7:016x}"
+                            " child-sas {t-tun-1 {name=t-tun state=INSTALLED mode=TUNNEL protocol=ESP}}}}\nlist-sas reply {}\n")
             return _Res()
         if prog == "tcpdump":
             if not self.fail.get("no_capture"):
