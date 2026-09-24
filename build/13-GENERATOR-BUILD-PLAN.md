@@ -1043,3 +1043,13 @@ the remediation loop's handshake-only capture cannot judge ESP/AH rules, so ESP/
 verifiable by the loop, hand-written ones included (an open limit for a later task). Incidents: a
 harness crash on the first dev run (its two records deleted by mistake, log kept, re-run identically),
 and Docker Desktop stopping mid-run (one run excluded as infrastructure, disclosed).
+
+**T-107 (2026-09-24).** Built as planned. After a fix is confirmed on the verify capture, the target
+is forced through an IKE and a CHILD rekey (fixed argument lists). If the daemon no longer reports the
+lab SA as established with an installed child (or its report cannot be read), the change is not
+confirmed and is rolled back. What the rekey negotiated is encrypted on the wire, so the passive
+result is `NOT_OBSERVABLE`; the daemon's algorithms are shown as endpoint-reported with the rule's
+predicate applied to them, for information only (a test proves a weak endpoint report does not change
+the verdict). Evidence: 7 tests, 6/6 reintroduced bugs caught; live: V-207193 confirmed FAIL -> PASS
+in 16.3 s, the rekey produced a new IKE SA (new SPI), still established on MODP_4096, endpoint-reported
+verdict PASS. Not built: showing the rekey result in the dashboard (the API returns it).
