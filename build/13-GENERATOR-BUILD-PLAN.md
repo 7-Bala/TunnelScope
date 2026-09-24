@@ -1014,3 +1014,24 @@ Before merging any task, the reviewer (Claude, in a fresh session if possible) d
 - Live (real lab): preview -> apply with the digest confirmed V-207193 FAIL -> PASS, no
   regressions, 14.2 s; preview, then a harmless comment added inside t-tun, then apply with the
   old digest -> `stale_preview`, config byte-identical to before the attempt.
+
+**T-105 (2026-09-24).** Built as planned (D-B: `@playwright/test` dev-only). Differences and findings:
+- Capabilities come from `GET /api/remediate/capabilities` (T-104), not `/health`.
+- B1 (mocked engine, CI): 13 cases x 1440/375 px x light/dark = 52 runs, fixtures typed with
+  `src/lib/api.ts` through `tsconfig.e2e.json` (part of `tsc -b`). Every case also checks: no
+  page-level horizontal scroll, no forbidden wording in the pane, every control named, no
+  unexpected console error. Mutation check: 10/10 reintroduced UI bugs caught, after fixing two
+  weak tests (a `dblclick` never exercised the double-submit guard; the concern-gate test asserted
+  "disabled" before the preview had arrived).
+- B2 (live, `build/live_checks.py browser`, a `check_all` row): starts its own engine with drafts
+  switched on for the test, uploads a real lab capture, drafts with the real model (it was refused
+  by V6 and shown as such), previews and applies the hand-written fix through the UI (confirmed,
+  audit line with digest), and a config edited after the preview is refused as stale in the UI
+  with the config byte-identical.
+- B3 (in-app browser, by hand): desktop and 375 px; found and fixed that at 375 px the pane was
+  wider than the verdict table's scroll box (pane now `max-w: min(560px, 100vw - 5rem)`) and the
+  lab-target select overflowed the pane. The verdict table itself keeps its 560 px minimum
+  (`FleetRegister.tsx`, out of scope): at 375 px the user scrolls the table once to reach the pane.
+- A failed check is now shown as "Failed check V6 (name). Reason: ...": printing the check's name
+  (phrased as a property) next to the reason read like a pass.
+- Evidence screenshots are in `handoff/reviews/T-105-browser/`, which the repo ignores by design.

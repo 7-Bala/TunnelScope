@@ -37,6 +37,7 @@ if [ "$FAST" -eq 0 ]; then
     run "findings differential: only intended changes" "$PY" build/findings_diff.py --base "${BASE:-main}"
     live "live: local model loads offline and answers (Apple Silicon only)" model
     live "live: generator smoke, real model on the real lab config (not the evaluation)" generator
+    live "live: dashboard in a real browser against the real engine, model and lab (Playwright)" browser
     if curl -sI --max-time 5 https://wiki.wireshark.org >/dev/null 2>&1; then
         run "third-party captures (Wireshark wiki)" "$PY" build/validate_external.py
     else
