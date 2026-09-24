@@ -302,7 +302,7 @@ generated), `testbed/scripts/probe_keywords.sh` (new), `tunnelscope/remediate/cl
      like `_WATCHDOG_SCRIPT`;
    - loads the **before** set and the **after** set separately, parses both outputs, and requires:
      `after.loaded >= before.loaded`, `after.failed <= before.failed`, and the lab connection
-     (`LAB_CONNECTION`) is among the loaded names after. **Baseline the before set**: the 38-arm
+     (`LAB_CONNECTION`) is among the loaded names after. **Baseline the before set**: the 19-connection
      lab file may contain connections that already fail to load in isolation (e.g. missing
      secrets); comparing to zero would refuse everything;
    - all argv lists, no shell except the fixed script; timeout 20 s; on timeout/any error:
@@ -935,3 +935,28 @@ Before merging any task, the reviewer (Claude, in a fresh session if possible) d
   proves the net catches the rest (EXP-18).
 - It does not build the `docker commit` snapshot unless the owner overrides D-F.
 - It does not touch real (non-lab) VPNs. Everything here is lab-only, as T-096 to T-099 were.
+
+---
+
+## 11. Build log (what was built, and where it differs from the plan)
+
+**T-100 (2026-09-24).** Built as planned, with these differences:
+- The clone check lives in `tunnelscope/remediate/execute.py` (`clone_load_check`, `image_of`,
+  `sweep_clones`), not a new `clone_check.py`: the existing test
+  `test_remediate_endpoint_is_provably_read_only` forbids `docker`/`subprocess` in every
+  remediate module except `execute.py`, which is the stricter rule and was kept.
+- The probe is `testbed/scripts/probe_keywords.py` (driven by `probe_keywords.sh`). No proposal
+  keyword list ships in the image as a file, so candidates are the strings compiled into the
+  image's `libstrongswan`, the EXP-15 arm configs and the hand-written fixes; strongSwan accepts
+  or rejects each one. Both lab images are probed and must agree. Result: 192 candidates, 203
+  accepted keywords (with the `ke1_`/`ke2_` pass), 45 rejected, strongSwan 6.1.0.
+- Keyword kinds come from `swanctl --list-conns --raw` in the clone (for example `ke=[MODP_3072]`,
+  `ake1=[ML_KEM_768]`, `sha384` = integ + prf), not from their position in a proposal (strongSwan
+  does not care about order).
+- Evidence values: IKE per algorithm (20 algorithms observed on the EXP-15 captures); ESP and AH per
+  whole configured value (9 and 4 values), because those rules judge wire-inferred candidate lists,
+  not single algorithms.
+- The dry run keeps its `(ok, error, diffs)` return shape (an existing test replaces it with that
+  shape); the clone result reaches preview and apply through a per-thread record.
+- Correction found while building: the lab config has **19** connections, not 38 as the T-099
+  review said (38 counted the secrets entries too). Corrected in build/12 and the test docstring.

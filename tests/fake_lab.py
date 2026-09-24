@@ -8,16 +8,23 @@ a file (changed, restored byte for byte, untouched) rather than only which comma
 Two things it deliberately refuses: any `sh -c` script other than the four fixed helper scripts
 in execute.py (so a plan command reaching a shell fails the test), and any program it does not
 know. The sed emulation is not GNU sed: real sed behaviour is checked only in the live lab.
+
+It also plays the throwaway clone of T-100 (`docker run ... _CLONE_SCRIPT`): it unpacks the tar
+the engine sends and "loads" each file the way strongSwan would for the one thing the check is
+about, a proposal keyword strongSwan does not know. Known keywords come from the generated
+strongswan_keywords.json, so the fake and the product agree on what exists.
 """
 from __future__ import annotations
 
 import fnmatch
+import io
 import posixpath
+import tarfile
 import re
 import subprocess
 from pathlib import Path
 
-from tunnelscope.remediate import execute, plan
+from tunnelscope.remediate import execute, plan, vocab
 
 
 class _Res:
@@ -137,6 +144,58 @@ BOB_CONF = (ALICE_CONF.replace("10.10.1.", "Y").replace("10.10.2.", "10.10.1.").
             .replace("id = a-", "id = X-").replace("id = b-", "id = a-").replace("id = X-", "id = b-"))
 
 
+_PROPOSAL_LINE = re.compile(r"^\s*(proposals|esp_proposals|ah_proposals)\s*=\s*(.*)$")
+_TOP_CONN = re.compile(r"^    ([^\s{}#]+) \{\s*$")
+
+
+def fake_load(conf: str) -> tuple[list[str], list[str], list[str]]:
+    """(loaded, failed, unknown keywords) for one swanctl.conf, judged only on proposal keywords."""
+    known = vocab.load_vocab()["keywords"]
+    loaded, failed, unknown, current, bad = [], [], [], None, False
+    in_conns = False
+    for line in conf.splitlines():
+        code = line.split("#", 1)[0]
+        if code.startswith("connections {"):
+            in_conns = True
+            continue
+        if in_conns and code.startswith("}"):
+            in_conns = False
+        if not in_conns:
+            continue
+        m = _TOP_CONN.match(code)
+        if m:
+            if current is not None:
+                (failed if bad else loaded).append(current)
+            current, bad = m.group(1), False
+            continue
+        p = _PROPOSAL_LINE.match(code)
+        if p and current is not None:
+            for tok in re.split(r"[-,\s]+", p.group(2).strip()):
+                if tok and tok not in known:
+                    bad = True
+                    unknown.append(tok)
+    if current is not None:
+        (failed if bad else loaded).append(current)
+    return loaded, failed, unknown
+
+
+def fake_clone_output(tar_bytes: bytes) -> str:
+    out, log = [], []
+    with tarfile.open(fileobj=io.BytesIO(tar_bytes)) as tar:
+        members = sorted((m for m in tar.getmembers() if m.name.startswith("c/")), key=lambda m: m.name)
+        for m in members:
+            text = tar.extractfile(m).read().decode()
+            loaded, failed, unknown = fake_load(text)
+            out.append(f"TS_FILE {m.name[2:]}")
+            out += [f"loaded connection '{n}'" for n in loaded]
+            out += [f"loading connection '{n}' failed: invalid value for: proposals, config discarded" for n in failed]
+            out.append(f"successfully loaded {len(loaded)} connections, 0 unloaded" if not failed else
+                       f"loaded {len(loaded)} of {len(loaded) + len(failed)} connections, {len(failed)} failed to load, 0 unloaded")
+            out.append("TS_END")
+            log += [f"07[CFG] algorithm '{t}' not recognized" for t in unknown]
+    return "\n".join(out + ["TS_LOG"] + log + ["TS_DONE"]) + "\n"
+
+
 class FakeLab:
     def __init__(self, files=None, baseline=None, verify=None, running=None):
         self.fs = {c: dict(f) for c, f in (files or {
@@ -150,6 +209,11 @@ class FakeLab:
         self.fail: dict[str, object] = {}
         self.captures_dir: Path | None = None
         self.before_verify = None  # hook run when the verify capture is analysed
+        self.clone_runs: list[list[str]] = []   # argv of every clone started
+        self.clones_left: list[str] = []        # clone names `docker ps -a` still reports
+        self.removed: list[str] = []            # names passed to `docker rm -f`
+        ids = vocab.load_vocab()["images"]
+        self.images = {"sih26-alice-pq": ids["testbed-alice-pq"], "sih26-bob-pq": ids["testbed-bob-pq"]}
 
     def install(self, monkeypatch, tmp_path):
         monkeypatch.setattr(subprocess, "run", self.run)
@@ -196,8 +260,30 @@ class FakeLab:
 
     def run(self, cmd, *args, **kwargs):
         assert cmd[0] == "docker", cmd
+        if cmd[1] == "ps" and "--filter" in cmd:
+            return _Res(0, "".join(n + "\n" for n in self.clones_left).encode())
         if cmd[1] == "ps":
             return _Res(0, "".join(n + "\n" for n in sorted(self.running)))
+        if cmd[1] == "inspect":
+            c = cmd[-1]
+            if self.fail.get("inspect") or c not in self.running or c not in self.images:
+                return _Res(1, b"", b"Error: No such object")
+            return _Res(0, (self.images[c] + "\n").encode())
+        if cmd[1] == "rm":
+            self.removed.append(cmd[-1])
+            self.clones_left = [n for n in self.clones_left if n != cmd[-1]]
+            return _Res(0, b"")
+        if cmd[1] == "run":
+            self.clone_runs.append(list(cmd))
+            assert cmd[cmd.index("-c") + 1] == execute._CLONE_SCRIPT, "only the fixed clone script may run in a clone"
+            mode = self.fail.get("clone")
+            if mode == "timeout":
+                raise subprocess.TimeoutExpired(cmd, kwargs.get("timeout"))
+            if mode == "charon":
+                return _Res(0, b"TS_ERR charon\n")
+            if mode == "truncated":
+                return _Res(0, fake_clone_output(kwargs["input"]).split("TS_LOG")[0].encode())
+            return _Res(0, fake_clone_output(kwargs["input"]).encode())
         assert cmd[1] == "exec", cmd
         rest, detach = list(cmd[2:]), False
         if rest[0] == "-d":
