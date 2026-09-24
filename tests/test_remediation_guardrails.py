@@ -565,7 +565,7 @@ def test_rfc8247_encr_fix_is_scoped_to_the_ike_line():
 
 def test_fixes_never_touch_other_connections():
     """Regression test for the live-lab finding (2026-09-23): the fixes were file-wide, so on the
-    generated lab config (38 connections) they rewrote every experiment arm and renamed auth IDs
+    generated lab config (19 connections) they rewrote every experiment arm and renamed auth IDs
     such as "a-s-modp1024". Each fix must change the t-tun connection only."""
     from fake_lab import ALICE_CONF
     other = ALICE_CONF[ALICE_CONF.index("    # suite: deliberately weak arm"):]

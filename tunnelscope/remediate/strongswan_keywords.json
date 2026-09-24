@@ -1,0 +1,6927 @@
+{
+ "generated_by": "testbed/scripts/probe_keywords.py",
+ "generated_at": "2026-09-24T03:58:24+00:00",
+ "strongswan_version": "strongSwan 6.1.0",
+ "images": {
+  "testbed-alice-pq": "sha256:03b1418be86fcafe302092556db6beb3041c01d6cece1b270f658502b31236fd",
+  "testbed-bob-pq": "sha256:97ca86cf9d0237a139a8bcf7b70f64763f12b601af7f3083a81058c96f4ed0b8"
+ },
+ "candidate_sources": [
+  "strings in /usr/lib/ipsec/libstrongswan.so.0 of the lab images",
+  "testbed/configs/exp15/arms.json",
+  "hand-written exec_commands in plan.py",
+  "ke1_/ke2_ prefixes of accepted key-exchange keywords"
+ ],
+ "keywords": {
+  "3des": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "3DES_CBC"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "3DES_CBC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes128ccm": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128ccm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128ccm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128ccm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128ccm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128ccm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128ccm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128ctr": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CTR_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CTR_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes128gcm": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128gcm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128gcm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128gcm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128gcm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128gcm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128gcm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes128gmac": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL_AES_GMAC_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL_AES_GMAC_128"
+      ]
+     },
+     "aead": true
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "AES_128_GMAC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CBC_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CBC_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes192ccm": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192ccm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192ccm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192ccm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192ccm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192ccm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192ccm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192ctr": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CTR_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CTR_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes192gcm": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192gcm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192gcm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192gcm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192gcm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192gcm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192gcm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes192gmac": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL_AES_GMAC_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL_AES_GMAC_192"
+      ]
+     },
+     "aead": true
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "AES_192_GMAC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CBC_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CBC_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes256ccm": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256ccm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256ccm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256ccm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256ccm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256ccm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_8_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256ccm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CCM_12_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256ctr": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CTR_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_CTR_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aes256gcm": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256gcm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256gcm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256gcm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256gcm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256gcm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_8_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256gcm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "AES_GCM_12_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "aes256gmac": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL_AES_GMAC_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL_AES_GMAC_256"
+      ]
+     },
+     "aead": true
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "AES_256_GMAC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aescmac": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "AES_CMAC_96"
+      ],
+      "prf": [
+       "PRF_AES128_CMAC"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "AES_CMAC_96"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "AES_CMAC_96"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "aesxcbc": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "AES_XCBC_96"
+      ],
+      "prf": [
+       "PRF_AES128_XCBC"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "AES_XCBC_96"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "AES_XCBC_96"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "blowfish": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "blowfish128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "blowfish192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "blowfish256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "BLOWFISH_CBC_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camellia": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camellia128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camellia128ccm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia128ccm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia128ccm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia128ccm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia128ccm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia128ccm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_128"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_128"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia128ctr": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CTR_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CTR_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camellia192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camellia192ccm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia192ccm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia192ccm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia192ccm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia192ccm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia192ccm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_192"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_192"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia192ctr": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CTR_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CTR_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camellia256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CBC_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camellia256ccm12": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia256ccm128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia256ccm16": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_16_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia256ccm64": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia256ccm8": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_8_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia256ccm96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CCM_12_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "camellia256ctr": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CTR_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAMELLIA_CTR_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "camelliaxcbc": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "CAMELLIA_XCBC_96"
+      ],
+      "prf": [
+       "PRF_CAMELLIA128_XCBC"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "CAMELLIA_XCBC_96"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "CAMELLIA_XCBC_96"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "cast128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAST_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CAST_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "chacha20poly1305": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CHACHA20_POLY1305"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CHACHA20_POLY1305"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "chacha20poly1305compat": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CHACHA20_POLY1305_256"
+      ]
+     },
+     "aead": true
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "CHACHA20_POLY1305_256"
+      ]
+     },
+     "aead": true
+    }
+   }
+  },
+  "curve25519": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "curve448": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "des": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "DES_CBC"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "DES_CBC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp224": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp224bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp256bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp384": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp384bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp512bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ecp521": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_curve25519": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_curve448": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp224": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp224bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp256bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp384": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp384bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp512bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_ecp521": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_mlkem1024": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_mlkem512": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_mlkem768": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp1024": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp1024s160": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp1536": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp2048": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp2048s224": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp2048s256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp3072": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp4096": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp6144": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp768": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modp8192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_modpnull": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_x25519": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke1_x448": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake1"
+     ],
+     "names": {
+      "ake1": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_curve25519": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_curve448": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp224": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_224"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp224bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_224_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp256bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_256_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp384": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_384"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp384bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_384_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp512bp": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_512_BP"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_ecp521": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ECP_521"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_mlkem1024": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_mlkem512": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_mlkem768": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp1024": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp1024s160": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp1536": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp2048": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp2048s224": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp2048s256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp3072": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp4096": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp6144": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp768": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modp8192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_modpnull": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_x25519": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "ke2_x448": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ake2"
+     ],
+     "names": {
+      "ake2": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "md5": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_MD5_96"
+      ],
+      "prf": [
+       "PRF_HMAC_MD5"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_MD5_96"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_MD5_96"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "md5_128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_MD5_128"
+      ],
+      "prf": [
+       "PRF_HMAC_MD5"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_MD5_128"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_MD5_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "mlkem1024": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_1024"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "mlkem512": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_512"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "mlkem768": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "ML_KEM_768"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp1024": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1024"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp1024s160": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1024_160"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp1536": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_1536"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp2048": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp2048s224": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048_224"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp2048s256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_2048_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp3072": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_3072"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp4096": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_4096"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp6144": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_6144"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp768": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_768"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modp8192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_8192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modpnone": {
+   "accepted": true,
+   "contexts": {
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "KE_NONE"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "KE_NONE"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "modpnull": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "MODP_NULL"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "noesn": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "sn"
+     ],
+     "names": {
+      "sn": [
+       "NO_EXT_SEQ"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "null": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "NULL"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfaescmac": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_AES128_CMAC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfaesxcbc": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_AES128_XCBC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfcamelliaxcbc": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_CAMELLIA128_XCBC"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfmd5": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_HMAC_MD5"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfsha1": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_HMAC_SHA1"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfsha256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_HMAC_SHA2_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfsha384": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_HMAC_SHA2_384"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "prfsha512": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "prf"
+     ],
+     "names": {
+      "prf": [
+       "PRF_HMAC_SHA2_512"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "serpent": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "serpent128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "serpent192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "serpent256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "SERPENT_CBC_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha1": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA1_96"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA1"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA1_96"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA1_96"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha1_160": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA1_160"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA1"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA1_160"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA1_160"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_128"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA2_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_128"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha256_96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_96"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_96"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_96"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha2_256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_128"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA2_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_128"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha2_256_96": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_96"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_96"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_256_96"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha2_384": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_384_192"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA2_384"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_384_192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_384_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha2_512": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_512_256"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA2_512"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_512_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_512_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha384": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_384_192"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA2_384"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_384_192"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_384_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "sha512": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "integ",
+      "prf"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_512_256"
+      ],
+      "prf": [
+       "PRF_HMAC_SHA2_512"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_512_256"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "integ"
+     ],
+     "names": {
+      "integ": [
+       "HMAC_SHA2_512_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "twofish": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "twofish128": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_128"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "twofish192": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_192"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_192"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "twofish256": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_256"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "encr"
+     ],
+     "names": {
+      "encr": [
+       "TWOFISH_CBC_256"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "x25519": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_25519"
+      ]
+     },
+     "aead": false
+    }
+   }
+  },
+  "x448": {
+   "accepted": true,
+   "contexts": {
+    "ike": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "esp": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    },
+    "ah": {
+     "types": [
+      "ke"
+     ],
+     "names": {
+      "ke": [
+       "CURVE_448"
+      ]
+     },
+     "aead": false
+    }
+   }
+  }
+ },
+ "rejected": [
+  "cast",
+  "curve",
+  "desired_threads",
+  "dest",
+  "destroy_async_data",
+  "destroy_cdp_data",
+  "destroy_cert_data",
+  "destroy_cleaner",
+  "destroy_clear",
+  "destroy_dir_enum",
+  "destroy_entry",
+  "destroy_entry_value",
+  "destroy_filter",
+  "destroy_glob_enum",
+  "destroy_internal",
+  "destroy_nested",
+  "destroy_private_data",
+  "destroy_service",
+  "destroy_settings",
+  "destroy_shared_data",
+  "destroy_single",
+  "destroy_token_enum",
+  "destructor",
+  "modp",
+  "modpcustom",
+  "prf",
+  "prf_alg",
+  "prf_constructor_t",
+  "prf_test_vector_t",
+  "prfs",
+  "sha224",
+  "sha3_224",
+  "sha3_256",
+  "sha3_384",
+  "sha3_512",
+  "shared_data_t",
+  "shared_destroy",
+  "shared_entry_destroy",
+  "shared_entry_equals",
+  "shared_entry_t",
+  "shared_enumerate",
+  "shared_enumerator_t",
+  "shared_key_create",
+  "shared_key_type_names",
+  "shared_key_type_t"
+ ],
+ "evidence": {
+  "ike": {
+   "3DES_CBC": {
+    "attribute": "ike_encr",
+    "value": "3DES",
+    "source": "testbed/captures/exp15/s-3des.pcap"
+   },
+   "AES_CBC_128": {
+    "attribute": "ike_encr",
+    "value": "AES-CBC-128",
+    "source": "testbed/captures/exp15/s-modp1536.pcap"
+   },
+   "AES_CBC_256": {
+    "attribute": "ike_encr",
+    "value": "AES-CBC-256",
+    "source": "testbed/captures/exp15/s-x25519.pcap"
+   },
+   "AES_GCM_16_128": {
+    "attribute": "ike_encr",
+    "value": "AES-GCM-16-128",
+    "source": "testbed/captures/exp15/s-ecp256.pcap"
+   },
+   "AES_GCM_16_256": {
+    "attribute": "ike_encr",
+    "value": "AES-GCM-16-256",
+    "source": "testbed/captures/exp15/s-ecp384.pcap"
+   },
+   "CURVE_25519": {
+    "attribute": "ike_dh_group",
+    "value": "Curve25519",
+    "source": "testbed/captures/exp15/s-x25519.pcap"
+   },
+   "ECP_256": {
+    "attribute": "ike_dh_group",
+    "value": "ECP-256",
+    "source": "testbed/captures/exp15/s-ecp256.pcap"
+   },
+   "ECP_384": {
+    "attribute": "ike_dh_group",
+    "value": "ECP-384",
+    "source": "testbed/captures/exp15/s-ecp384.pcap"
+   },
+   "HMAC_SHA1_96": {
+    "attribute": "ike_integ",
+    "value": "HMAC-SHA1-96",
+    "source": "testbed/captures/exp15/s-modp1024.pcap"
+   },
+   "HMAC_SHA2_256_128": {
+    "attribute": "ike_integ",
+    "value": "HMAC-SHA2-256-128",
+    "source": "testbed/captures/exp15/s-x25519.pcap"
+   },
+   "HMAC_SHA2_384_192": {
+    "attribute": "ike_integ",
+    "value": "HMAC-SHA2-384-192",
+    "source": "testbed/captures/exp15/s-modp4096.pcap"
+   },
+   "KE1_ML_KEM_768": {
+    "attribute": "pq_key_exchange",
+    "value": [
+     "ML-KEM-768"
+    ],
+    "source": "testbed/captures/exp15/s-mlkem.pcap"
+   },
+   "MODP_1024": {
+    "attribute": "ike_dh_group",
+    "value": "MODP-1024",
+    "source": "testbed/captures/exp15/s-modp1024.pcap"
+   },
+   "MODP_1536": {
+    "attribute": "ike_dh_group",
+    "value": "MODP-1536",
+    "source": "testbed/captures/exp15/s-modp1536.pcap"
+   },
+   "MODP_2048": {
+    "attribute": "ike_dh_group",
+    "value": "MODP-2048",
+    "source": "testbed/captures/exp15/a-tun-sha384.pcap"
+   },
+   "MODP_3072": {
+    "attribute": "ike_dh_group",
+    "value": "MODP-3072",
+    "source": "testbed/captures/exp15/s-modp3072.pcap"
+   },
+   "MODP_4096": {
+    "attribute": "ike_dh_group",
+    "value": "MODP-4096",
+    "source": "testbed/captures/exp15/s-modp4096.pcap"
+   },
+   "PRF_HMAC_SHA1": {
+    "attribute": "ike_prf",
+    "value": "PRF-HMAC-SHA1",
+    "source": "testbed/captures/exp15/s-modp1024.pcap"
+   },
+   "PRF_HMAC_SHA2_256": {
+    "attribute": "ike_prf",
+    "value": "PRF-HMAC-SHA2-256",
+    "source": "testbed/captures/exp15/s-x25519.pcap"
+   },
+   "PRF_HMAC_SHA2_384": {
+    "attribute": "ike_prf",
+    "value": "PRF-HMAC-SHA2-384",
+    "source": "testbed/captures/exp15/s-modp4096.pcap"
+   }
+  },
+  "esp_proposals": {
+   "3des-sha1": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-3des.pcap"
+    }
+   ],
+   "aes128gcm16": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-ecp256.pcap"
+    }
+   ],
+   "aes256gcm16-ecp384": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-ecp384.pcap"
+    }
+   ],
+   "aes256gcm16": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-mlkem.pcap"
+    }
+   ],
+   "aes128-sha1": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "Twofish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-modp1024.pcap"
+    }
+   ],
+   "aes128-sha256": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-modp1536.pcap"
+    }
+   ],
+   "aes256-sha256-modp3072": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-modp3072.pcap"
+    }
+   ],
+   "aes256gcm16-modp4096": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-modp4096.pcap"
+    }
+   ],
+   "chacha20poly1305": [
+    {
+     "attribute": "esp_cipher_family",
+     "value": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "source": "testbed/captures/exp15/s-x25519.pcap"
+    }
+   ]
+  },
+  "ah_proposals": {
+   "sha1": [
+    {
+     "attribute": "ah_integrity",
+     "value": [
+      "HMAC-MD5-96",
+      "HMAC-SHA1-96",
+      "AES-XCBC-96"
+     ],
+     "source": "testbed/captures/exp15/a-tra-sha1.pcap"
+    }
+   ],
+   "sha256": [
+    {
+     "attribute": "ah_integrity",
+     "value": [
+      "HMAC-SHA2-256-128",
+      "AES-128-GMAC"
+     ],
+     "source": "testbed/captures/exp15/a-tra-sha256.pcap"
+    },
+    {
+     "attribute": "ah_integrity",
+     "value": [
+      "HMAC-SHA2-256-128",
+      "AES-128-GMAC"
+     ],
+     "source": "testbed/captures/exp15/a-tun-sha256.pcap"
+    }
+   ],
+   "sha512": [
+    {
+     "attribute": "ah_integrity",
+     "value": [
+      "HMAC-SHA2-512-256",
+      "AES-256-GMAC"
+     ],
+     "source": "testbed/captures/exp15/a-tra-sha512.pcap"
+    }
+   ],
+   "sha384": [
+    {
+     "attribute": "ah_integrity",
+     "value": [
+      "HMAC-SHA2-384-192"
+     ],
+     "source": "testbed/captures/exp15/a-tun-sha384.pcap"
+    }
+   ]
+  }
+ }
+}
