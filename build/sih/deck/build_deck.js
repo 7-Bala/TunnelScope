@@ -156,7 +156,7 @@ async function rounded(file, w = 1700, r = 30) {
 
   // ============ 5  One rule, one pipeline
   { const s = pres.addSlide(); base(s, 5, "The solution", "One rule and one pipeline");
-    const st = [["Capture", "pcap file or live stream", "tcpdump, dumpcap"], ["Read", "tshark reads IKE, ESP and AH headers", "tshark"], ["Evidence", "labelled findings, each with its packet", "Python"], ["Judge", "5 written baselines, cited verdicts", "YAML rules"], ["Score", "12 threats, risk score, confidence", "scikit-learn"], ["Deliver", "dashboard, reports, CBOM", "React, TypeScript"]];
+    const st = [["Capture", "pcap file or live stream", "tcpdump, dumpcap"], ["Read", "tshark reads IKE, ESP and AH headers", "tshark"], ["Evidence", "labelled findings, each with its packet", "Python"], ["Judge", "5 written baselines, cited verdicts", "YAML rules"], ["Score", "12 threats, risk score, confidence", "scikit-learn"], ["Deliver", "dashboard, reports, CBOM, lab fixes", "React, TypeScript"]];
     const bw = 1.72, gap = (CW - 6 * bw) / 5;
     st.forEach((b, i) => { const x = M + i * (bw + gap); const hi = i === 2 || i === 4;
       panel(s, x, 1.75, bw, 1.8, { fill: hi ? C.VIOLET : C.SURF, ft: hi ? 90 : 0, line: hi ? C.VIOLET : C.HAIR });
@@ -195,8 +195,8 @@ async function rounded(file, w = 1700, r = 30) {
       chip(s, c[1].toUpperCase(), x + 0.2, y + 0.62, 1.55, "silver", 0.25, 8.5);
       text(s, c[2], { x: x + 0.2, y: y + 1.0, w: mw - 0.4, h: 1.0, fontSize: 11, color: C.MUTED, lineSpacingMultiple: 1.06 }); });
     panel(s, M, 6.3, CW, 0.55, { fill: C.VIOLET, ft: 90, line: C.VIOLET });
-    text(s, [{ text: "All four trained by us on our own captures. ", options: { bold: true } }, { text: "No outside AI model, and a test fails if one is ever added. Plaintext is parsed exactly, not predicted.", options: { color: C.MUTED } }], { x: M + 0.3, y: 6.3, w: CW - 0.6, h: 0.55, fontSize: 12.5, valign: "middle" });
-    s.addNotes("About 60 seconds. Left: the five written baselines behind every verdict, and the Indian regulations shown as context only, because they require encryption without naming algorithms, so a capture can support an audit but never prove compliance. Right: the four models. Be direct about where the AI is: fields in the plaintext handshake are read exactly, because guessing them would be worse. AI is used where the wire is silent: what kind of traffic is inside, whether several kinds are mixed, which mode, and whether the tunnel changed. All four are standard Random Forest or Isolation Forest models trained by us on our own captures, with no pretrained or third-party model.");
+    text(s, [{ text: "All four trained by us, on our own captures. ", options: { bold: true } }, { text: "No outside model decides a verdict; an optional offline one only rewords text. Plaintext is read exactly.", options: { color: C.MUTED } }], { x: M + 0.3, y: 6.3, w: CW - 0.6, h: 0.55, fontSize: 12, valign: "middle" });
+    s.addNotes("About 60 seconds. Left: the five written baselines behind every verdict, and the Indian regulations shown as context only, because they require encryption without naming algorithms, so a capture can support an audit but never prove compliance. Right: the four models. Be direct about where the AI is: fields in the plaintext handshake are read exactly, because guessing them would be worse. AI is used where the wire is silent: what kind of traffic is inside, whether several kinds are mixed, which mode, and whether the tunnel changed. All four are standard Random Forest or Isolation Forest models trained by us on our own captures. No pretrained or third-party model decides anything. An optional language model that runs offline on the laptop may reword the explanations; we also tested it for drafting fixes, it failed our pre-registered test, so that stays switched off.");
   }
 
   // ============ 7  Encryption hides content, not shape (chart)
@@ -220,32 +220,44 @@ async function rounded(file, w = 1700, r = 30) {
 
   // ============ 8  The product
   { const s = pres.addSlide(); base(s, 8, "The product", "A dashboard an analyst can act on");
-    const w = 5.95; const h1 = frame(s, shots.fleet, M, 1.75, w); frame(s, shots.traffic, M + w + 0.25, 1.75, w);
+    const w = 5.95; const h1 = frame(s, shots.fleet, M, 1.75, w);
+    const fx = M + w + 0.25;
+    panel(s, fx - 0.05, 1.7, w + 0.1, h1 + 0.1, { fill: C.SURF, r: 0.16 });
+    const steps = [["Propose", "a written fix for the rule that failed"], ["Preview", "the real diff on copies; strongSwan loads it in a throwaway container"],
+      ["Approve", "a person approves that exact diff"], ["Apply", "only what was previewed, lab only"],
+      ["Verify", "fresh capture: rule passes, nothing new fails, survives a rekey"], ["Undo", "if not, restored byte for byte, automatically"]];
+    const rh = (h1 - 0.3) / steps.length;
+    steps.forEach((st, i) => { const ry = 1.9 + i * rh; const undo = i === 5;
+      s.addShape(pres.shapes.OVAL, { x: fx + 0.2, y: ry + (rh - 0.38) / 2, w: 0.38, h: 0.38, fill: { color: undo ? C.WARN : C.VIOLET, transparency: 84 }, line: { color: undo ? C.WARN : C.VIOLET, width: 0.75, transparency: 40 } });
+      text(s, String(i + 1), { x: fx + 0.2, y: ry + (rh - 0.38) / 2, w: 0.38, h: 0.38, fontFace: MONO, fontSize: 11, bold: true, color: undo ? C.WARN : C.VIOLET, align: "center", valign: "middle" });
+      text(s, st[0], { x: fx + 0.72, y: ry, w: 1.15, h: rh, fontSize: 14, bold: true, valign: "middle" });
+      text(s, st[1], { x: fx + 1.9, y: ry, w: w - 2.05, h: rh, fontSize: 11.5, color: C.MUTED, valign: "middle", lineSpacingMultiple: 1.02 });
+      if (i < steps.length - 1) arrow(s, fx + 0.39, ry + (rh + 0.38) / 2 + 0.02, fx + 0.39, ry + rh + (rh - 0.38) / 2 - 0.02, C.FAINT); });
     const y = 1.75 + h1 + 0.22;
     text(s, "Risk at a glance", { x: M, y, w, h: 0.3, fontSize: 14.5, bold: true }); text(s, "A 0-100 risk score with what drives it, and a threat matrix of 12 threats by likelihood and impact.", { x: M, y: y + 0.32, w, h: 0.5, fontSize: 11.5, color: C.MUTED, lineSpacingMultiple: 1.04 });
-    text(s, "Traffic inside the tunnel", { x: M + w + 0.25, y, w, h: 0.3, fontSize: 14.5, bold: true }); text(s, "Predicted type with its confidence and runners-up, or \"uncertain\". Here: messaging, 98%.", { x: M + w + 0.25, y: y + 0.32, w, h: 0.5, fontSize: 11.5, color: C.MUTED, lineSpacingMultiple: 1.04 });
+    text(s, "Fix it in the lab, safely", { x: fx, y, w, h: 0.3, fontSize: 14.5, bold: true }); text(s, "Only a proven fix is kept. A local AI model can draft fixes too; it failed our test (0 of 16), so it stays off.", { x: fx, y: y + 0.32, w, h: 0.5, fontSize: 11.5, color: C.MUTED, lineSpacingMultiple: 1.04 });
     const tabs = ["Explained", "Threats", "Traffic & exposure", "Changes", "Verdicts", "Evidence", "Not visible from here", "Live"]; let x = M;
     tabs.forEach((t) => { const tw = 0.3 + t.length * 0.078; chip(s, t, x, 6.62, tw, t === "Not visible from here" ? "violet" : "silver", 0.28, 9); x += tw + 0.1; });
-    s.addNotes("About 2 minutes, and this is where you demo live using the demo kit: drop in 01-weak-cipher, then 02-pq-downgrade, then 04-ah-no-encryption, then 06-traffic-messaging, then run the live demo (play_live.sh). Kit guide: DEMO-GUIDE.pdf. Real dashboard, real captures. Steps: run ./start.sh, drop in a weak-cipher capture, and show the risk score and threat matrix. Open a tunnel and read the plain-English explanation of every failed check. Open the Traffic tab: predicted type, confidence, runners-up. Then the Live tab: a tunnel that re-negotiates with weaker settings is flagged as changed, with the downgrades named. Always end on Not visible from here, the list of what the capture cannot show.");
+    s.addNotes("About 2 minutes, and this is where you demo live using the demo kit: drop in 01-weak-cipher, then 02-pq-downgrade, then 04-ah-no-encryption, then 06-traffic-messaging, then run the live demo (play_live.sh). Kit guide: DEMO-GUIDE.pdf. Real dashboard, real captures. Steps: run ./start.sh, drop in a weak-cipher capture, and show the risk score and threat matrix. Open a tunnel and read the plain-English explanation of every failed check. Open the Traffic tab: predicted type, confidence, runners-up. Then the Live tab: a tunnel that re-negotiates with weaker settings is flagged as changed, with the downgrades named. Then the fix loop on the right (needs the Docker lab running): on a failed rule press Propose fix, Approve, Preview change to show the real diff, then Apply in lab; the tool captures again and says Confirmed fixed only if the rule now passes, nothing else got worse and the tunnel survives a rekey, otherwise it undoes the change by itself. It only ever touches the lab, never a real VPN. Always end on Not visible from here, the list of what the capture cannot show.");
   }
 
   // ============ 9  Measured, not claimed
   { const s = pres.addSlide(); base(s, 9, "Evidence", "Measured, not claimed");
-    const stats = [["176", "unit tests pass"], ["85 / 85", "captures match the VPN endpoints"], ["0.986", "accuracy on runs it never saw"], ["1.000", "on a second IPsec software"]];
+    const stats = [["392", "unit tests pass, plus 60 browser checks"], ["85 / 85", "captures match the VPN endpoints"], ["0.986", "accuracy on runs it never saw (clean lab)"], ["1.000", "on a second IPsec software"]];
     stats.forEach((st, i) => { const x = M + (i % 2) * 2.95, y = 1.75 + Math.floor(i / 2) * 1.85; panel(s, x, y, 2.8, 1.7);
       text(s, st[0], { x: x + 0.2, y: y + 0.15, w: 2.4, h: 0.75, fontFace: MONO, fontSize: i === 1 ? 28 : 36, bold: true, color: C.VIOLET, valign: "middle" }); text(s, st[1], { x: x + 0.2, y: y + 0.98, w: 2.4, h: 0.65, fontSize: 12, color: C.MUTED, lineSpacingMultiple: 1.05 }); });
     panel(s, 6.85, 1.75, 5.88, 3.55);
     text(s, "Accuracy by test (macro-F1, 1.0 is perfect)", { x: 7.1, y: 1.88, w: 5.4, h: 0.3, fontSize: 12.5, bold: true });
-    s.addChart(pres.charts.BAR, [{ name: "macro-F1", labels: ["Held-out runs", "Other IPsec software", "Real apps, held out", "Synthetic only, real apps"], values: [0.986, 1.0, 0.995, 0.461] }],
-      { x: 6.95, y: 2.2, w: 5.7, h: 3.05, barDir: "col", barGapWidthPct: 55, chartColors: [C.VIOLET, C.VIOLET, C.VIOLET, C.NEG], valAxisHidden: true, valAxisMaxVal: 1.2, valAxisMinVal: 0,
-        valGridLine: { style: "none" }, catGridLine: { style: "none" }, catAxisLabelColor: C.MUTED, catAxisLabelFontFace: HEAD, catAxisLabelFontSize: 10.5, showValue: true, dataLabelColor: C.INK,
-        dataLabelFontFace: MONO, dataLabelFontSize: 13, dataLabelFormatCode: "0.000", dataLabelPosition: "outEnd", showLegend: false, plotArea: { fill: { color: C.SURF } }, chartArea: { fill: { color: C.SURF } } });
-    const fx = [["Synthetic-only training scored 0.461 on real apps", "Retrained on real traffic: 0.995"], ["Other people's captures exposed a parser bug", "Fixed, now a standing check"], ["Video plus SSH misread as web, 8 of 8", "Mixed-traffic detector catches 92.9%"]];
+    s.addChart(pres.charts.BAR, [{ name: "macro-F1", labels: ["Held-out runs", "Other IPsec software", "Real apps, held out", "Delayed network", "Lossy network", "Synthetic only, real apps"], values: [0.986, 1.0, 0.995, 0.984, 0.914, 0.461] }],
+      { x: 6.95, y: 2.2, w: 5.7, h: 3.05, barDir: "col", barGapWidthPct: 45, chartColors: [C.VIOLET, C.VIOLET, C.VIOLET, C.VIOLET, C.VIOLET, C.NEG], valAxisHidden: true, valAxisMaxVal: 1.2, valAxisMinVal: 0,
+        valGridLine: { style: "none" }, catGridLine: { style: "none" }, catAxisLabelColor: C.MUTED, catAxisLabelFontFace: HEAD, catAxisLabelFontSize: 9.5, showValue: true, dataLabelColor: C.INK,
+        dataLabelFontFace: MONO, dataLabelFontSize: 11.5, dataLabelFormatCode: "0.000", dataLabelPosition: "outEnd", showLegend: false, plotArea: { fill: { color: C.SURF } }, chartArea: { fill: { color: C.SURF } } });
+    const fx = [["Synthetic-only training scored 0.461 on real apps", "Retrained on real traffic: 0.995"], ["A local AI model drafting fixes passed 0 of 16", "Kept off; our checks stopped all 32 bad drafts"], ["Video plus SSH misread as web, 8 of 8", "Mixed-traffic detector catches 92.9%"]];
     const fw = (CW - 2 * 0.2) / 3;
     fx.forEach((f, i) => { const x = M + i * (fw + 0.2); panel(s, x, 5.55, fw, 1.25);
       chip(s, "PROBLEM", x + 0.18, 5.67, 0.95, "neg", 0.24, 8.5); text(s, f[0], { x: x + 1.2, y: 5.65, w: fw - 1.35, h: 0.5, fontSize: 11, valign: "middle", lineSpacingMultiple: 1.0 });
       chip(s, "FIX", x + 0.18, 6.3, 0.95, "pos", 0.24, 8.5); text(s, f[1], { x: x + 1.2, y: 6.22, w: fw - 1.35, h: 0.5, fontSize: 11, valign: "middle", lineSpacingMultiple: 1.0 }); });
-    s.addNotes("About 60 seconds. Numbers that can be checked. 176 unit tests; every capture in our ground-truth check matches what the VPN endpoints themselves reported; the classifier scores 0.986 on runs it never trained on and 1.000 on a different IPsec implementation. The red bar matters most: a model trained only on synthetic traffic scored 0.461 on real applications, so we retrained on real traffic. Below, three things that went wrong and how we fixed each. We wrote our predictions down before every experiment, and where they failed we kept the failure on the record. Tested by leaving whole recording runs out, so the model is never scored on data it trained on.");
+    s.addNotes("About 60 seconds. Numbers that can be checked. 392 unit tests and 60 browser checks; every capture in our ground-truth check matches what the VPN endpoints themselves reported; the classifier scored 0.986 on runs it never trained on in the clean lab and 1.000 on a different IPsec implementation, and after retraining with delayed and lossy links it holds 0.984 and 0.914 on held-out runs under those conditions. The red bar matters most: a model trained only on synthetic traffic scored 0.461 on real applications, so we retrained on real traffic. Below, three things that went wrong and what we did. The middle one: we let a small local AI model draft fixes and tested it before switching it on. It got 0 of 16 right, so it stays off, and the checks stopped every one of 32 deliberately bad drafts. We wrote our predictions down before every experiment, and where they failed we kept the failure on the record. Tested by leaving whole recording runs out, so the model is never scored on data it trained on.");
   }
 
   // ============ 10  Where we stand
@@ -261,13 +273,13 @@ async function rounded(file, w = 1700, r = 30) {
       text(s, t, { x: 5.9, y: 2.36 + i * 0.6, w: 3.25, h: 0.5, fontSize: 12, color: C.INK, valign: "middle", lineSpacingMultiple: 1.0 }); });
     panel(s, 9.5, 1.75, 3.23, 3.85);
     text(s, "WHAT COMES NEXT", { x: 9.75, y: 1.9, w: 3, h: 0.25, fontFace: MONO, fontSize: 10, color: C.VIOLET, charSpacing: 3 });
-    [["Delay and packet loss", "pre-registered, ready to run"], ["Vendor gear, real cloud tunnel", "Cisco, Palo Alto, AWS"], ["Learn on site", "train on the customer's network"]].forEach((t, i) => { const y = 2.35 + i * 1.0;
+    [["Vendor gear, real cloud tunnel", "Cisco, Palo Alto, AWS"], ["Learn on site", "train on the customer's network"], ["A stronger model for fixes", "only if it passes the same test"]].forEach((t, i) => { const y = 2.35 + i * 1.0;
       text(s, t[0], { x: 9.75, y, w: 2.85, h: 0.32, fontSize: 13, bold: true }); text(s, t[1], { x: 9.75, y: y + 0.36, w: 2.85, h: 0.5, fontSize: 11, color: C.MUTED }); });
     panel(s, M, 5.85, CW, 0.95, { fill: C.VIOLET, ft: 90, line: C.VIOLET, lw: 1.25 });
     text(s, "Team Think2Thrive", { x: M + 0.3, y: 5.95, w: 4, h: 0.3, fontFace: MONO, fontSize: 10.5, color: C.VIOLET, charSpacing: 2 });
     text(s, "Kishore K (lead)  ·  Balachandran R  ·  Ajay R  ·  Akilan M  ·  Agalya R  ·  Jayavanadhi V", { x: M + 0.3, y: 6.28, w: 7.6, h: 0.35, fontSize: 13, bold: true });
     text(s, "Evidence for every answer.", { x: 8.6, y: 5.95, w: 3.9, h: 0.75, fontSize: 18, bold: true, align: "right", valign: "middle" });
-    s.addNotes("About 60 seconds. Say the limits before anyone asks. Lab, capture and reporting are built; identify and assess are built but partly limited by physics, not effort: the data cipher can only be narrowed, mode is sometimes provable, key lifetime needs rekeys in the capture. The middle card lists what cannot be seen from outside at all, and the last item is about our own evidence: one lab, two IPsec stacks, no real internet delay yet. Next: the pre-registered delay and packet-loss experiment, vendor equipment and a real cloud tunnel, and learning on the customer's own network, which our results show is where accuracy comes from. Close on the line: it tells you how an IPsec tunnel is configured, how secure that is, and what it cannot know, with evidence for every answer. UPDATE before presenting: change the Video status once the demo video is recorded.");
+    s.addNotes("About 60 seconds. Say the limits before anyone asks. Lab, capture and reporting are built; identify and assess are built but partly limited by physics, not effort: the data cipher can only be narrowed, mode is sometimes provable, key lifetime needs rekeys in the capture. The middle card lists what cannot be seen from outside at all, and the last item is about our own evidence: one lab, two IPsec stacks, with delay and packet loss simulated rather than a real internet link. Next: vendor equipment and a real cloud tunnel, learning on the customer's own network, which our results show is where accuracy comes from, and a stronger local model for drafting fixes, switched on only if it passes the same pre-registered test the current one failed. Close on the line: it tells you how an IPsec tunnel is configured, how secure that is, and what it cannot know, with evidence for every answer. UPDATE before presenting: change the Video status once the demo video is recorded.");
   }
 
   await pres.writeFile({ fileName: OUT });
