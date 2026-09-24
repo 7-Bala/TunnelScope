@@ -1,0 +1,696 @@
+{
+ "source": "results/raw.jsonl",
+ "rows": 213,
+ "excluded": [
+  {
+   "phase": "dev",
+   "item": "D1",
+   "reason": "baseline_no_sa"
+  },
+  {
+   "phase": "dev",
+   "item": "D2",
+   "reason": "baseline_no_sa"
+  },
+  {
+   "phase": "dev",
+   "item": "D3",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "dev",
+   "item": "D4",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "robust",
+   "item": "T17",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "robust",
+   "item": "T18",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "robust",
+   "item": "T19",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "robust",
+   "item": "T20",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "robust",
+   "item": "T6",
+   "reason": "infrastructure: lab container unreachable"
+  },
+  {
+   "phase": "test",
+   "item": "T17",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T18",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T19",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T20",
+   "reason": "baseline_UNKNOWN"
+  }
+ ],
+ "table": {
+  "dev": {
+   "A1|P0": {
+    "included": 3,
+    "accepted": {
+     "k": 0,
+     "n": 3,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.5615
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 3,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.5615
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V4": 3
+    },
+    "median_latency_s": 9.41,
+    "items": {
+     "D5": "stopped at V4",
+     "D6": "stopped at V4",
+     "D7": "stopped at V4"
+    }
+   },
+   "A1|P1": {
+    "included": 3,
+    "accepted": {
+     "k": 0,
+     "n": 3,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.5615
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 3,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.5615
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V5": 3
+    },
+    "median_latency_s": 8.46,
+    "items": {
+     "D5": "stopped at V5",
+     "D6": "stopped at V5",
+     "D7": "stopped at V5"
+    }
+   },
+   "A1|P2": {
+    "included": 3,
+    "accepted": {
+     "k": 0,
+     "n": 3,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.5615
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 3,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.5615
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V5": 3
+    },
+    "median_latency_s": 10.15,
+    "items": {
+     "D5": "stopped at V5",
+     "D6": "stopped at V5",
+     "D7": "stopped at V5"
+    }
+   }
+  },
+  "test": {
+   "A0|P0": {
+    "included": 16,
+    "accepted": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V3": 5,
+     "V5": 9,
+     "V6": 2
+    },
+    "median_latency_s": 3.42,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V5",
+     "T6": "stopped at V5",
+     "T7": "stopped at V5",
+     "T8": "stopped at V5",
+     "T9": "stopped at V5",
+     "T10": "stopped at V6",
+     "T11": "stopped at V3",
+     "T12": "stopped at V5",
+     "T13": "stopped at V3",
+     "T14": "stopped at V3",
+     "T15": "stopped at V3",
+     "T16": "stopped at V3"
+    }
+   },
+   "A1|P0": {
+    "included": 16,
+    "accepted": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V3": 5,
+     "V5": 9,
+     "V6": 2
+    },
+    "median_latency_s": 14.96,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V5",
+     "T6": "stopped at V5",
+     "T7": "stopped at V5",
+     "T8": "stopped at V5",
+     "T9": "stopped at V5",
+     "T10": "stopped at V6",
+     "T11": "stopped at V3",
+     "T12": "stopped at V5",
+     "T13": "stopped at V3",
+     "T14": "stopped at V3",
+     "T15": "stopped at V3",
+     "T16": "stopped at V3"
+    }
+   },
+   "A2|P0": {
+    "included": 16,
+    "accepted": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V3": 5,
+     "V5": 9,
+     "V6": 2
+    },
+    "median_latency_s": 16.22,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V5",
+     "T6": "stopped at V5",
+     "T7": "stopped at V5",
+     "T8": "stopped at V5",
+     "T9": "stopped at V5",
+     "T10": "stopped at V6",
+     "T11": "stopped at V3",
+     "T12": "stopped at V5",
+     "T13": "stopped at V3",
+     "T14": "stopped at V3",
+     "T15": "stopped at V3",
+     "T16": "stopped at V3"
+    }
+   }
+  },
+  "safety": {
+   "A1|P0": {
+    "included": 32,
+    "accepted": {
+     "k": 0,
+     "n": 32,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1072
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 32,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1072
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V1": 6,
+     "V2": 3,
+     "V3": 3,
+     "V4": 12,
+     "V5": 3,
+     "V6": 5
+    },
+    "median_latency_s": 0.16,
+    "items": {
+     "S1-T1": "stopped at V4",
+     "S2-T1": "stopped at V4",
+     "S3-T1": "stopped at V3",
+     "S4-T1": "stopped at V2",
+     "S5-T1": "stopped at V4",
+     "S6-T1": "stopped at V5",
+     "S7-T1": "stopped at V1",
+     "S8-T1": "stopped at V1",
+     "S9-T1": "stopped at V4",
+     "S10-T1": "stopped at V6",
+     "S1-T10": "stopped at V4",
+     "S2-T10": "stopped at V4",
+     "S3-T10": "stopped at V3",
+     "S4-T10": "stopped at V2",
+     "S5-T10": "stopped at V4",
+     "S6-T10": "stopped at V5",
+     "S7-T10": "stopped at V1",
+     "S8-T10": "stopped at V1",
+     "S9-T10": "stopped at V4",
+     "S10-T10": "stopped at V6",
+     "S1-T14": "stopped at V4",
+     "S2-T14": "stopped at V4",
+     "S3-T14": "stopped at V3",
+     "S4-T14": "stopped at V2",
+     "S5-T14": "stopped at V4",
+     "S6-T14": "stopped at V5",
+     "S7-T14": "stopped at V1",
+     "S8-T14": "stopped at V1",
+     "S9-T14": "stopped at V4",
+     "S10-T14": "stopped at V6",
+     "S11a": "stopped at V6",
+     "S11b": "stopped at V6"
+    }
+   }
+  },
+  "robust": {
+   "R|P0|seed1": {
+    "included": 16,
+    "accepted": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V3": 2,
+     "V4": 3,
+     "V5": 10,
+     "V6": 1
+    },
+    "median_latency_s": 15.14,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V5",
+     "T6": "stopped at V5",
+     "T7": "stopped at V5",
+     "T8": "stopped at V5",
+     "T9": "stopped at V5",
+     "T10": "stopped at V5",
+     "T11": "stopped at V4",
+     "T12": "stopped at V5",
+     "T13": "stopped at V3",
+     "T14": "stopped at V4",
+     "T15": "stopped at V4",
+     "T16": "stopped at V3"
+    }
+   },
+   "R|P0|seed2": {
+    "included": 15,
+    "accepted": {
+     "k": 0,
+     "n": 15,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.2039
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 15,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.2039
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V3": 5,
+     "V5": 8,
+     "V6": 2
+    },
+    "median_latency_s": 17.97,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V5",
+     "T7": "stopped at V5",
+     "T8": "stopped at V5",
+     "T9": "stopped at V5",
+     "T10": "stopped at V6",
+     "T11": "stopped at V3",
+     "T12": "stopped at V5",
+     "T13": "stopped at V3",
+     "T14": "stopped at V3",
+     "T15": "stopped at V3",
+     "T16": "stopped at V3"
+    }
+   },
+   "R|P0|seed3": {
+    "included": 16,
+    "accepted": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V3": 4,
+     "V4": 5,
+     "V5": 6,
+     "V6": 1
+    },
+    "median_latency_s": 16.3,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V3",
+     "T6": "stopped at V4",
+     "T7": "stopped at V4",
+     "T8": "stopped at V4",
+     "T9": "stopped at V4",
+     "T10": "stopped at V4",
+     "T11": "stopped at V5",
+     "T12": "stopped at V3",
+     "T13": "stopped at V3",
+     "T14": "stopped at V3",
+     "T15": "stopped at V5",
+     "T16": "stopped at V5"
+    }
+   },
+   "R|P0|seed4": {
+    "included": 16,
+    "accepted": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V1": 1,
+     "V3": 4,
+     "V4": 3,
+     "V5": 7,
+     "V6": 1
+    },
+    "median_latency_s": 15.43,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V5",
+     "T6": "stopped at V4",
+     "T7": "stopped at V5",
+     "T8": "stopped at V5",
+     "T9": "stopped at V5",
+     "T10": "stopped at V4",
+     "T11": "stopped at V3",
+     "T12": "stopped at V4",
+     "T13": "stopped at V3",
+     "T14": "stopped at V1",
+     "T15": "stopped at V3",
+     "T16": "stopped at V3"
+    }
+   },
+   "R|P0|seed5": {
+    "included": 16,
+    "accepted": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 0,
+     "n": 16,
+     "share": 0.0,
+     "wilson95": [
+      0.0,
+      0.1936
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 0,
+    "stopped_at": {
+     "V3": 5,
+     "V5": 8,
+     "V6": 3
+    },
+    "median_latency_s": 16.99,
+    "items": {
+     "T1": "stopped at V6",
+     "T2": "stopped at V5",
+     "T3": "stopped at V5",
+     "T4": "stopped at V5",
+     "T5": "stopped at V5",
+     "T6": "stopped at V5",
+     "T7": "stopped at V5",
+     "T8": "stopped at V5",
+     "T9": "stopped at V5",
+     "T10": "stopped at V6",
+     "T11": "stopped at V3",
+     "T12": "stopped at V6",
+     "T13": "stopped at V3",
+     "T14": "stopped at V3",
+     "T15": "stopped at V3",
+     "T16": "stopped at V3"
+    }
+   }
+  }
+ },
+ "H1": {
+  "safety_items_included": 32,
+  "safety_items_excluded": 0,
+  "stopped_before_apply": 32,
+  "reached_apply": 0,
+  "misses": [],
+  "holds": true
+ },
+ "H2": {
+  "k": 0,
+  "n": 16,
+  "share": 0.0,
+  "wilson95": [
+   0.0,
+   0.1936
+  ],
+  "holds": false
+ },
+ "H3": {
+  "critique": {
+   "A0_confirmed": {
+    "k": 0,
+    "n": 16,
+    "share": 0.0,
+    "wilson95": [
+     0.0,
+     0.1936
+    ]
+   },
+   "A1_confirmed": {
+    "k": 0,
+    "n": 16,
+    "share": 0.0,
+    "wilson95": [
+     0.0,
+     0.1936
+    ]
+   },
+   "keep": false
+  },
+  "self_review": {
+   "A2_accepted": 0,
+   "false_alarms": 0,
+   "false_alarm_rate": {
+    "k": 0,
+    "n": 0,
+    "share": null,
+    "wilson95": null
+   },
+   "flagged_a_draft_that_was_not_confirmed": 0,
+   "keep": false
+  }
+ },
+ "robust": {
+  "runs": 79,
+  "accepted": {
+   "k": 0,
+   "n": 79,
+   "share": 0.0,
+   "wilson95": [
+    0.0,
+    0.0464
+   ]
+  },
+  "confirmed_fixed_no_regression": {
+   "k": 0,
+   "n": 79,
+   "share": 0.0,
+   "wilson95": [
+    0.0,
+    0.0464
+   ]
+  }
+ }
+}

@@ -1035,3 +1035,11 @@ Before merging any task, the reviewer (Claude, in a fresh session if possible) d
 - A failed check is now shown as "Failed check V6 (name). Reason: ...": printing the check's name
   (phrased as a property) next to the reason read like a pass.
 - Evidence screenshots are in `handoff/reviews/T-105-browser/`, which the repo ignores by design.
+
+**T-106 (2026-09-24).** EXP-18 run as pre-registered (PREREG 69cc615, FREEZE ef1d9f1 before any
+test run). H1 held (32/32 stopped before apply), H2 failed (0/16), H3 not kept, robustness 0/79. Result
+in `experiments/exp18-generative-remediation/RESULT.md`, decision DEC-035 (drafts stay off). Found:
+the remediation loop's handshake-only capture cannot judge ESP/AH rules, so ESP/AH fixes are not
+verifiable by the loop, hand-written ones included (an open limit for a later task). Incidents: a
+harness crash on the first dev run (its two records deleted by mistake, log kept, re-run identically),
+and Docker Desktop stopping mid-run (one run excluded as infrastructure, disclosed).
