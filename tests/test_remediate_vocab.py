@@ -69,3 +69,13 @@ def test_image_check_refuses_a_different_image():
     assert vocab.check_image(v["images"]["testbed-alice-pq"]) is None
     assert "different image" in vocab.check_image("sha256:" + "0" * 64)
     assert "could not be identified" in vocab.check_image(None)
+
+
+def test_vocabulary_ships_with_the_installed_package():
+    """An installed wheel must carry the keyword list (as the rules YAML), or every generated
+    fix would be refused for a missing file rather than for a reason."""
+    import pathlib
+    import tomllib
+    root = pathlib.Path(vocab.__file__).parents[2]
+    data = tomllib.loads((root / "pyproject.toml").read_text())["tool"]["setuptools"]["package-data"]["tunnelscope"]
+    assert "remediate/*.json" in data
