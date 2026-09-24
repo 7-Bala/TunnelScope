@@ -246,3 +246,14 @@ def test_traffic_type_note_reads_as_one_sentence():
     at.extract_attacker(rec)
     note = rec.findings["traffic_type"].note
     assert "Classes are traffic classes" not in note and "classes are learned from our lab traffic" in note
+
+
+def test_mixed_note_quotes_only_the_measured_exp16_numbers():
+    """The note shown with every traffic-type answer must carry EXP-16's measured detector numbers
+    (P16-5: 92.9% caught, 8.3% wrongly flagged), not an unsourced figure (it once said 96%)."""
+    from pathlib import Path
+    from tunnelscope.leakage.attacker import MIXED_NOTE
+    result = (Path(__file__).resolve().parents[1] / "experiments/exp16-real-apps-cross-impl/RESULT.md").read_text()
+    assert "92.9% caught, 8.3% wrongly flagged" in result
+    assert "92.9%" in MIXED_NOTE and "8.3%" in MIXED_NOTE
+    assert "96%" not in MIXED_NOTE

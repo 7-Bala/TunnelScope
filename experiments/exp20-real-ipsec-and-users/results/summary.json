@@ -1,0 +1,627 @@
+{
+ "sources": {
+  "lab": {
+   "windows": 4667,
+   "groups": 472,
+   "per_class": {
+    "bulk": 888,
+    "email": 365,
+    "icmp": 486,
+    "interactive": 671,
+    "messaging": 472,
+    "video": 606,
+    "voip": 595,
+    "web": 584
+   }
+  },
+  "vnat": {
+   "windows": 4702,
+   "groups": 82,
+   "per_class": {
+    "bulk": 358,
+    "interactive": 444,
+    "messaging": 3420,
+    "video": 300,
+    "voip": 180
+   }
+  },
+  "usbvpn": {
+   "windows": 6069,
+   "groups": 994,
+   "per_class": {
+    "email": 33,
+    "video": 1425,
+    "voip": 101,
+    "web": 4510
+   }
+  },
+  "wg": {
+   "windows": 11450,
+   "groups": 1186,
+   "per_class": {
+    "bulk": 319,
+    "email": 59,
+    "messaging": 2010,
+    "voip": 2728,
+    "web": 6334
+   }
+  }
+ },
+ "recipes": {
+  "R0 shipped: lab + VNAT": {
+   "recipe": "R0 shipped: lab + VNAT",
+   "learns_from": [
+    "lab",
+    "vnat"
+   ],
+   "A_real_ipsec": {
+    "macro_f1": 0.1742,
+    "ci95": [
+     0.1492,
+     0.1891
+    ],
+    "per_class": {
+     "email": 0.0,
+     "video": 0.2568,
+     "voip": 0.0843,
+     "web": 0.3557
+    },
+    "captures_per_class": {
+     "email": 5,
+     "video": 93,
+     "voip": 2,
+     "web": 894
+    },
+    "selective": {
+     "captures": 994,
+     "coverage": 0.0,
+     "accuracy_when_answering": null
+    }
+   },
+   "B_real_users_wireguard": {
+    "without_web": {
+     "macro_f1": 0.2344,
+     "ci95": [
+      0.1973,
+      0.2699
+     ],
+     "per_class": {
+      "bulk": 0.0505,
+      "email": 0.0,
+      "messaging": 0.57,
+      "voip": 0.3173
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116
+     },
+     "selective": {
+      "captures": 294,
+      "coverage": 0.2687,
+      "accuracy_when_answering": 0.6329
+     }
+    },
+    "with_web": {
+     "macro_f1": 0.1605,
+     "ci95": [
+      0.1328,
+      0.1851
+     ],
+     "per_class": {
+      "bulk": 0.0269,
+      "email": 0.0,
+      "messaging": 0.4508,
+      "voip": 0.3171,
+      "web": 0.0075
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116,
+      "web": 298
+     },
+     "selective": {
+      "captures": 592,
+      "coverage": 0.1858,
+      "accuracy_when_answering": 0.4545
+     }
+    }
+   },
+   "C_real_openvpn_vnat": {
+    "macro_f1": 0.8793,
+    "ci95": [
+     0.7057,
+     0.9374
+    ],
+    "per_class": {
+     "bulk": 0.856,
+     "interactive": 0.8339,
+     "messaging": 0.993,
+     "video": 0.8537,
+     "voip": 0.8598
+    }
+   },
+   "D_lab_real_apps_loro": {
+    "folds": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mean": 1.0
+   },
+   "startup_fit_s": 1.46,
+   "train_windows": 9369
+  },
+  "R1 + real IPsec (USBVPN)": {
+   "recipe": "R1 + real IPsec (USBVPN)",
+   "learns_from": [
+    "lab",
+    "vnat",
+    "usbvpn"
+   ],
+   "A_real_ipsec": {
+    "macro_f1": 0.608,
+    "ci95": [
+     0.4712,
+     0.6616
+    ],
+    "per_class": {
+     "email": 0.7059,
+     "video": 0.794,
+     "voip": 0.0,
+     "web": 0.9321
+    },
+    "captures_per_class": {
+     "email": 5,
+     "video": 93,
+     "voip": 2,
+     "web": 894
+    },
+    "selective": {
+     "captures": 994,
+     "coverage": 0.9366,
+     "accuracy_when_answering": 0.9968
+    }
+   },
+   "B_real_users_wireguard": {
+    "without_web": {
+     "macro_f1": 0.242,
+     "ci95": [
+      0.2077,
+      0.2754
+     ],
+     "per_class": {
+      "bulk": 0.0206,
+      "email": 0.0,
+      "messaging": 0.5952,
+      "voip": 0.3521
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116
+     },
+     "selective": {
+      "captures": 294,
+      "coverage": 0.1973,
+      "accuracy_when_answering": 0.6034
+     }
+    },
+    "with_web": {
+     "macro_f1": 0.193,
+     "ci95": [
+      0.1671,
+      0.218
+     ],
+     "per_class": {
+      "bulk": 0.0201,
+      "email": 0.0,
+      "messaging": 0.4823,
+      "voip": 0.3513,
+      "web": 0.1114
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116,
+      "web": 298
+     },
+     "selective": {
+      "captures": 592,
+      "coverage": 0.1672,
+      "accuracy_when_answering": 0.3535
+     }
+    }
+   },
+   "C_real_openvpn_vnat": {
+    "macro_f1": 0.8833,
+    "ci95": [
+     0.7112,
+     0.9335
+    ],
+    "per_class": {
+     "bulk": 0.9235,
+     "interactive": 0.8227,
+     "messaging": 0.9952,
+     "video": 0.8412,
+     "voip": 0.8339
+    }
+   },
+   "D_lab_real_apps_loro": {
+    "folds": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mean": 1.0
+   },
+   "startup_fit_s": 3.71,
+   "train_windows": 15438
+  },
+  "R2 + real people (WireGuard, no web)": {
+   "recipe": "R2 + real people (WireGuard, no web)",
+   "learns_from": [
+    "lab",
+    "vnat",
+    "wg"
+   ],
+   "A_real_ipsec": {
+    "macro_f1": 0.0853,
+    "ci95": [
+     0.0446,
+     0.1296
+    ],
+    "per_class": {
+     "email": 0.0,
+     "video": 0.0317,
+     "voip": 0.1535,
+     "web": 0.1561
+    },
+    "captures_per_class": {
+     "email": 5,
+     "video": 93,
+     "voip": 2,
+     "web": 894
+    },
+    "selective": {
+     "captures": 994,
+     "coverage": 0.0,
+     "accuracy_when_answering": null
+    }
+   },
+   "B_real_users_wireguard": {
+    "without_web": {
+     "macro_f1": 0.6605,
+     "ci95": [
+      0.5765,
+      0.7519
+     ],
+     "per_class": {
+      "bulk": 0.5665,
+      "email": 0.2273,
+      "messaging": 0.8898,
+      "voip": 0.9584
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116
+     },
+     "selective": {
+      "captures": 294,
+      "coverage": 0.6633,
+      "accuracy_when_answering": 0.9949
+     }
+    },
+    "with_web": {
+     "macro_f1": 0.3747,
+     "ci95": [
+      0.3394,
+      0.4121
+     ],
+     "per_class": {
+      "bulk": 0.3405,
+      "email": 0.0862,
+      "messaging": 0.6172,
+      "voip": 0.8206,
+      "web": 0.009
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116,
+      "web": 298
+     },
+     "selective": {
+      "captures": 592,
+      "coverage": 0.3716,
+      "accuracy_when_answering": 0.8818
+     }
+    }
+   },
+   "C_real_openvpn_vnat": {
+    "macro_f1": 0.8729,
+    "ci95": [
+     0.6937,
+     0.9192
+    ],
+    "per_class": {
+     "bulk": 0.897,
+     "interactive": 0.7917,
+     "messaging": 0.9868,
+     "video": 0.8197,
+     "voip": 0.8696
+    }
+   },
+   "D_lab_real_apps_loro": {
+    "folds": [
+     0.9844,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mean": 0.9961
+   },
+   "startup_fit_s": 2.63,
+   "train_windows": 14485
+  },
+  "R3 + USBVPN + WireGuard (no web): candidate": {
+   "recipe": "R3 + USBVPN + WireGuard (no web): candidate",
+   "learns_from": [
+    "lab",
+    "vnat",
+    "usbvpn",
+    "wg"
+   ],
+   "A_real_ipsec": {
+    "macro_f1": 0.7565,
+    "ci95": [
+     0.5544,
+     0.8287
+    ],
+    "per_class": {
+     "email": 0.7059,
+     "video": 0.8044,
+     "voip": 0.5792,
+     "web": 0.9364
+    },
+    "captures_per_class": {
+     "email": 5,
+     "video": 93,
+     "voip": 2,
+     "web": 894
+    },
+    "selective": {
+     "captures": 994,
+     "coverage": 0.9356,
+     "accuracy_when_answering": 0.9978
+    }
+   },
+   "B_real_users_wireguard": {
+    "without_web": {
+     "macro_f1": 0.6762,
+     "ci95": [
+      0.5707,
+      0.7281
+     ],
+     "per_class": {
+      "bulk": 0.5261,
+      "email": 0.3478,
+      "messaging": 0.9007,
+      "voip": 0.9301
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116
+     },
+     "selective": {
+      "captures": 294,
+      "coverage": 0.551,
+      "accuracy_when_answering": 0.9938
+     }
+    },
+    "with_web": {
+     "macro_f1": 0.4641,
+     "ci95": [
+      0.414,
+      0.5007
+     ],
+     "per_class": {
+      "bulk": 0.5022,
+      "email": 0.1649,
+      "messaging": 0.6954,
+      "voip": 0.8417,
+      "web": 0.1162
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116,
+      "web": 298
+     },
+     "selective": {
+      "captures": 592,
+      "coverage": 0.3091,
+      "accuracy_when_answering": 0.8798
+     }
+    }
+   },
+   "C_real_openvpn_vnat": {
+    "macro_f1": 0.879,
+    "ci95": [
+     0.6983,
+     0.9241
+    ],
+    "per_class": {
+     "bulk": 0.8952,
+     "interactive": 0.7935,
+     "messaging": 0.9875,
+     "video": 0.8402,
+     "voip": 0.8784
+    }
+   },
+   "D_lab_real_apps_loro": {
+    "folds": [
+     0.9844,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mean": 0.9961
+   },
+   "startup_fit_s": 5.0,
+   "train_windows": 20554
+  },
+  "R4 = R3 + WireGuard web (Q5)": {
+   "recipe": "R4 = R3 + WireGuard web (Q5)",
+   "learns_from": [
+    "lab",
+    "vnat",
+    "usbvpn",
+    "wg"
+   ],
+   "A_real_ipsec": {
+    "macro_f1": 0.6653,
+    "ci95": [
+     0.5176,
+     0.7707
+    ],
+    "per_class": {
+     "email": 0.7059,
+     "video": 0.7988,
+     "voip": 0.2222,
+     "web": 0.9345
+    },
+    "captures_per_class": {
+     "email": 5,
+     "video": 93,
+     "voip": 2,
+     "web": 894
+    },
+    "selective": {
+     "captures": 994,
+     "coverage": 0.9406,
+     "accuracy_when_answering": 0.9957
+    }
+   },
+   "B_real_users_wireguard": {
+    "without_web": {
+     "macro_f1": 0.612,
+     "ci95": [
+      0.54,
+      0.6805
+     ],
+     "per_class": {
+      "bulk": 0.7101,
+      "email": 0.1579,
+      "messaging": 0.6522,
+      "voip": 0.928
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116
+     },
+     "selective": {
+      "captures": 294,
+      "coverage": 0.4762,
+      "accuracy_when_answering": 0.9357
+     }
+    },
+    "with_web": {
+     "macro_f1": 0.6567,
+     "ci95": [
+      0.6005,
+      0.7129
+     ],
+     "per_class": {
+      "bulk": 0.7101,
+      "email": 0.1579,
+      "messaging": 0.6407,
+      "voip": 0.9231,
+      "web": 0.8515
+     },
+     "captures_per_class": {
+      "bulk": 33,
+      "email": 5,
+      "messaging": 140,
+      "voip": 116,
+      "web": 298
+     },
+     "selective": {
+      "captures": 592,
+      "coverage": 0.6959,
+      "accuracy_when_answering": 0.9757
+     }
+    }
+   },
+   "C_real_openvpn_vnat": {
+    "macro_f1": 0.8847,
+    "ci95": [
+     0.6973,
+     0.9269
+    ],
+    "per_class": {
+     "bulk": 0.8947,
+     "interactive": 0.8111,
+     "messaging": 0.9938,
+     "video": 0.809,
+     "voip": 0.9147
+    }
+   },
+   "D_lab_real_apps_loro": {
+    "folds": [
+     0.9844,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mean": 0.9961
+   },
+   "startup_fit_s": 7.08,
+   "train_windows": 26888
+  }
+ },
+ "window_file_bytes": {
+  "usbvpn_windows.npz": 535473,
+  "wg_windows.npz": 613037
+ },
+ "ship_bar_R3": {
+  "A_up_by_0_05": true,
+  "D_not_down_0_02": true,
+  "C_not_down_0_02": true,
+  "B_not_down_0_02": true,
+  "A_abstain_accuracy_not_down": true,
+  "files_under_5_mb": true,
+  "startup_fit_under_5_s": false
+ },
+ "ship_bar_R4": {
+  "A_up_by_0_05": true,
+  "D_not_down_0_02": true,
+  "C_not_down_0_02": true,
+  "B_not_down_0_02": true,
+  "A_abstain_accuracy_not_down": true,
+  "files_under_5_mb": true,
+  "startup_fit_under_5_s": false
+ },
+ "Q5_R4_replaces_R3": {
+  "A_macro_not_lower": false,
+  "A_video_f1_not_down_0_02": true,
+  "C_not_down_0_02": true
+ },
+ "Q5_pass": false,
+ "ship": null
+}

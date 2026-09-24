@@ -1,0 +1,47 @@
+{
+ "source": "Zenodo 18945858 VPN-nonVPN-Dataset v3.0.0",
+ "sha256": {
+  "session1_flows.parquet": "9d9420befaa47016cdf5867bf99bd28263af7fa1ccba4eb0228b5c388ed6758b",
+  "session1_packet_matches.parquet": "ea97a81acb4cc308164cc6ba16f2cee47f5b18a6e9f00fc4b95d0621a6ac3512",
+  "session2_flows.parquet": "457c462e1caf0e62deab35438280e39a33f91e0648796de8e486ec19f7f1edd9",
+  "session2_packet_matches.parquet": "dc6d9712f465a700e7cff9dc40e36608e5134bb2191e945f131b1474ceb37667"
+ },
+ "label_map": {
+  "VoIP": "voip",
+  "Chat": "messaging",
+  "Email": "email",
+  "Download": "bulk",
+  "Web": "web"
+ },
+ "rules": {
+  "guessed_labels": "excluded",
+  "min_matched_packets": 20,
+  "min_outer_duration_s": 6
+ },
+ "size_unit": "outer: UDP length + 20 (IP length); inner: inner IP length",
+ "out_direction": "direction of the flow's first packet",
+ "per_session": {
+  "session1": {
+   "flows_labelled_kept": 26685,
+   "flows_without_packets": 0,
+   "packets": 24382014,
+   "count_within_5pct_of_dataset_matched_packets": 26683,
+   "flows_converted": 26685
+  },
+  "session2": {
+   "flows_labelled_kept": 20593,
+   "flows_without_packets": 0,
+   "packets": 28461726,
+   "count_within_5pct_of_dataset_matched_packets": 20592,
+   "flows_converted": 20593
+  }
+ },
+ "flows_per_class": {
+  "bulk": 263,
+  "email": 79,
+  "messaging": 476,
+  "voip": 449,
+  "web": 46011
+ },
+ "output": "/Users/bala/Datasets/wg-matched/converted/wg_flows_packets.npz"
+}
