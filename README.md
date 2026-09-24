@@ -34,7 +34,7 @@ it's judged against and admits what it couldn't see.
 
 ## Status
 
-The tool is built and operating as a passive IPsec analysis and posture assessment framework, checked by 176 unit tests and a dataset of 103 hash-verified captures. Current task tracking and the active roadmap are maintained in [`TODO.md`](TODO.md).
+The tool is built and operating as a passive IPsec analysis and posture assessment framework, checked by 392 unit tests, 60 browser checks and a dataset of 103 hash-verified captures. Current task tracking and the active roadmap are maintained in [`TODO.md`](TODO.md).
 
 Core capabilities:
 - Ingests IKE key-exchange handshakes and ESP/AH packets from pcap files or live network streams via tshark.
