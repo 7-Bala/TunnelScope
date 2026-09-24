@@ -673,3 +673,26 @@ def generate_plan(rule_id: str, target: str, observed: Any = None, *, compare_wi
         return {**base, "ok": True, "plan": plan}
     except Exception as e:   # never raises; a bug here is a refusal, not a crash
         return {**base, "ok": False, "stage": "internal", "reason": f"the draft could not be checked: {type(e).__name__}: {e}"}
+
+
+def recheck(record: dict[str, Any], target: str) -> str | None:
+    """Re-run every code check on a stored draft against the target's config as it is NOW (T-104).
+    The stored `checks` are never trusted. None if it still passes; otherwise why not."""
+    try:
+        rule_id = record.get("rule_id")
+        if rule_id not in GENERATABLE_RULES:
+            return "outside the generator's scope"
+        bad_image = vocab.check_image(execute.image_of(target))
+        if bad_image:
+            return bad_image
+        lines = connection_lines(target)
+        ans = parse_answer(record.get("raw_output"))
+        key, _new = check_meaning(rule_id, ans, lines)
+        cmds = compile_edits(key, ans["edits"])
+    except _Stop as s:
+        return f"{s.check} ({CHECK_NAMES[s.check]}): {s.reason}"
+    except Exception as e:
+        return f"the draft could not be re-checked: {type(e).__name__}"
+    if cmds != record.get("exec_commands"):
+        return "the stored commands differ from what the stored draft compiles to"
+    return None

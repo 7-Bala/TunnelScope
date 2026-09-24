@@ -31,8 +31,10 @@ Every attempt, refusal, rollback and watchdog restore is appended to remediate.j
 from __future__ import annotations
 
 import difflib
+import hashlib
 import io
 import json
+import os
 import re
 import subprocess
 import tarfile
@@ -232,14 +234,17 @@ def _peer_for(target: str) -> str | None:
     return LAB_PEERS.get(target) if target in PEER_PREP_TARGETS else None
 
 
-def _validate(rule_id: Any, target: Any, compose_path: Path | None) -> tuple[dict, str | None]:
-    """Steps 1-2 (no container is touched). Returns (plan, peer) or raises _Refusal."""
+def _validate(rule_id: Any, target: Any, compose_path: Path | None,
+              plan: dict[str, Any] | None = None) -> tuple[dict, str | None]:
+    """Steps 1-2 (no container is touched). Returns (plan, peer) or raises _Refusal. `plan` is a
+    stored generated plan (T-104); otherwise the hand-written plan for the rule is used."""
     allowed = get_allowed_targets(compose_path)
     if not isinstance(target, str) or target not in allowed:
         raise _Refusal("validate", f"Target {target!r} is not an allowed lab container ({sorted(allowed)})")
     if not is_container_running(target):
         raise _Refusal("validate", f"Container {target!r} is not currently running in Docker")
-    plan = plan_for(rule_id, include_exec=True)
+    if plan is None:
+        plan = plan_for(rule_id, include_exec=True)
     if plan is None:
         raise _Refusal("validate", f"Unknown rule_id {rule_id!r}")
     if not plan.get("auto_applicable"):
@@ -349,6 +354,80 @@ def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change:
             _exec(target, ["rm", "-rf", DRYRUN_DIR], timeout=5)
         except Exception:
             pass
+
+
+# ------------------------------------------------------------------ generated plans and the preview digest (T-104)
+
+PLAN_STORE = "generated_plans"
+_PLAN_ID = re.compile(r"^[0-9a-f]{64}$")
+_PLAN_ID_FIELDS = ("rule_id", "target", "exec_commands", "model_revision", "prompt_sha256", "raw_output")
+
+
+def _history_dir(history_dir: str | Path | None) -> Path:
+    return Path(history_dir) if history_dir else (_repo_root() / _DEFAULT_HISTORY_DIR)
+
+
+def plan_id_of(record: dict[str, Any]) -> str:
+    """Content address of a generated plan: what it will run, where, and which model draft it
+    came from. Any change to these gives a different id."""
+    core = {k: record.get(k) for k in _PLAN_ID_FIELDS}
+    return hashlib.sha256(json.dumps(core, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def store_generated_plan(plan: dict[str, Any], target: str, history_dir: str | Path | None = None) -> str:
+    """Save a checked generated plan, write-once, under its content address. Returns the id."""
+    record = {**plan, "target": target}
+    pid = plan_id_of(record)
+    d = _history_dir(history_dir) / PLAN_STORE
+    d.mkdir(parents=True, exist_ok=True)
+    path = d / f"{pid}.json"
+    if path.exists():
+        return pid                     # write-once: the same id is the same plan
+    tmp = d / f".{pid}.{uuid.uuid4().hex[:8]}.tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump({**record, "plan_id": pid, "stored_at": time.time()}, fh, sort_keys=True, default=str)
+    os.replace(tmp, path)
+    return pid
+
+
+def load_generated_plan(plan_id: Any, history_dir: str | Path | None = None) -> dict[str, Any]:
+    """Read a stored plan and re-check its content address. Raises _Refusal."""
+    if not isinstance(plan_id, str) or not _PLAN_ID.match(plan_id):
+        raise _Refusal("validate", "plan_id is not a generated plan id")
+    path = _history_dir(history_dir) / PLAN_STORE / f"{plan_id}.json"
+    try:
+        with open(path, encoding="utf-8") as fh:
+            record = json.load(fh)
+    except FileNotFoundError:
+        raise _Refusal("validate", "no generated plan with this id")
+    except Exception:
+        raise _Refusal("plan_integrity", "the stored plan could not be read")
+    if not isinstance(record, dict) or plan_id_of(record) != plan_id:
+        raise _Refusal("plan_integrity", "the plan file was changed after it was generated; draft it again")
+    return record
+
+
+def preview_digest(ident: str, target: str, diff: dict[str, str], peer_diff: dict[str, str] | None,
+                   clone: dict[str, Any] | None, peer_clone: dict[str, Any] | None) -> str:
+    """What the human approved: which plan, where, and the exact dry-run result on both ends.
+    Apply recomputes it from a fresh dry run and refuses if anything differs."""
+    doc = {"plan": ident, "target": target, "diff": diff, "peer_diff": peer_diff or {},
+           "clone": (clone or {}).get("files"), "peer_clone": (peer_clone or {}).get("files")}
+    return hashlib.sha256(json.dumps(doc, sort_keys=True).encode()).hexdigest()
+
+
+def _load_generated_for(rule_id: Any, target: Any, plan_id: Any, history_dir) -> dict[str, Any]:
+    """A stored generated plan, re-checked against the target's current config. Raises _Refusal."""
+    record = load_generated_plan(plan_id, history_dir)
+    if record.get("rule_id") != rule_id:
+        raise _Refusal("validate", "this plan was drafted for a different rule")
+    if record.get("target") != target:
+        raise _Refusal("validate", "this plan was drafted for a different container")
+    from .generate import recheck           # imported here: generate imports this module
+    why = recheck(record, target)
+    if why:
+        raise _Refusal("recheck", f"the stored draft no longer passes its checks: {why}")
+    return record
 
 
 # ------------------------------------------------------------------ clone load check (Layer 4, T-100)
@@ -665,14 +744,18 @@ def _check_service_restored(target: str, before: dict[str, str]) -> dict[str, An
 # ------------------------------------------------------------------ preview and apply
 
 def preview_remediation(rule_id: str, target: str, caller: str | None = None,
-                        compose_path: Path | None = None, history_dir: str | Path | None = None) -> dict[str, Any]:
-    """Validate and dry-run only: the real diff the operator sees before approving. No config
-    file, running daemon or tunnel is changed."""
+                        compose_path: Path | None = None, history_dir: str | Path | None = None,
+                        plan_id: str | None = None) -> dict[str, Any]:
+    """Validate and dry-run only: the real diff the operator sees before approving, and its
+    digest (T-104), which Apply must send back. No config file, running daemon or tunnel is
+    changed. `plan_id` previews a stored generated plan instead of the hand-written one."""
     now = time.time()
     base = {"timestamp": now, "at": now, "rule_id": str(rule_id), "target": str(target),
-            "caller": caller or "unknown", "decision": "preview"}
+            "caller": caller or "unknown", "decision": "preview",
+            "source": "generated" if plan_id else "hand-written", "plan_id": plan_id}
     try:
-        plan, peer = _validate(rule_id, target, compose_path)
+        stored = _load_generated_for(rule_id, target, plan_id, history_dir) if plan_id is not None else None
+        plan, peer = _validate(rule_id, target, compose_path, plan=stored)
         _take_dry_run_report()
         ok, err, diffs = perform_sandboxed_dry_run(target, plan["exec_commands"])
         report = _take_dry_run_report()
@@ -686,9 +769,12 @@ def preview_remediation(rule_id: str, target: str, caller: str | None = None,
                 raise _Refusal("dry_run", f"Dry run failed on the lab peer {peer}: {perr}")
             peer_info = {"container": peer, "diff": pdiffs, "clone_check": preport.get("clone_check"),
                          "why": "both ends of a tunnel must agree on a proposal, so the other end gets the same change"}
+        digest = preview_digest(plan_id or str(rule_id), target, diffs, peer_info["diff"] if peer_info else None,
+                                report.get("clone_check"), peer_info["clone_check"] if peer_info else None)
         res = {"ok": True, "rule_id": rule_id, "target": target, "diff": diffs, "peer": peer_info,
-               "clone_check": report.get("clone_check")}
-        record_audit({**base, "ok": True, "files_changed": sorted(diffs),
+               "clone_check": report.get("clone_check"), "digest": digest,
+               "source": base["source"], "plan_id": plan_id}
+        record_audit({**base, "ok": True, "digest": digest, "files_changed": sorted(diffs),
                       "peer_files_changed": sorted(peer_info["diff"]) if peer_info else []}, history_dir)
         return res
     except _Refusal as r:
@@ -704,6 +790,9 @@ def apply_remediation(
     compose_path: Path | None = None,
     history_dir: str | Path | None = None,
     watchdog_timeout_s: int = WATCHDOG_TIMEOUT_S,
+    plan_id: str | None = None,
+    digest: str | None = None,
+    require_digest: bool = False,
 ) -> dict[str, Any]:
     """Execute a remediation in a lab container, then prove it or undo it (see module doc).
 
@@ -724,6 +813,9 @@ def apply_remediation(
         "verdict_before": None,
         "verdict_after": None,
         "confirmed_fixed": False,
+        "source": "generated" if plan_id else "hand-written",
+        "plan_id": plan_id,
+        "digest": digest,
     }
 
     def refuse(stage: str, err: str, **extra: Any) -> dict[str, Any]:
@@ -733,21 +825,27 @@ def apply_remediation(
     if confirm is not True:
         return refuse("validate", "Confirmation required (confirm must be True)")
     try:
-        plan, peer = _validate(rule_id, target, compose_path)
+        stored = _load_generated_for(rule_id, target, plan_id, history_dir) if plan_id is not None else None
+        plan, peer = _validate(rule_id, target, compose_path, plan=stored)
     except _Refusal as r:
         return refuse(r.stage, r.error)
+    if stored is not None:
+        audit_base.update(model_revision=stored.get("model_revision"), prompt_sha256=stored.get("prompt_sha256"))
+    if require_digest and not digest:
+        return refuse("validate", "preview the change first: Apply must carry the digest of the preview you approved")
 
     if not _APPLY_LOCK.acquire(blocking=False):
         return refuse("validate", "another remediation is already running; try again when it finishes")
     try:
         return _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
-                             history_dir, compose_path, watchdog_timeout_s)
+                             history_dir, compose_path, watchdog_timeout_s,
+                             digest=digest, ident=plan_id or str(rule_id))
     finally:
         _APPLY_LOCK.release()
 
 
 def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
-                  history_dir, compose_path, watchdog_timeout_s) -> dict[str, Any]:
+                  history_dir, compose_path, watchdog_timeout_s, digest=None, ident=None) -> dict[str, Any]:
     reconcile_watchdog_events(history_dir, compose_path)
     exec_commands = plan["exec_commands"]
     peer_commands = peer_commands_for(plan) if peer else []
@@ -764,6 +862,13 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
         dry_report["peer"] = _take_dry_run_report()
         if not ok:
             return refuse("dry_run", f"Pre-flight sandbox dry-run validation failed on the lab peer {peer}: {err}")
+    # 3b. The change about to run must be the one the human previewed and approved
+    if digest is not None:
+        now_digest = preview_digest(ident or str(rule_id), target, dry_diff, peer_dry_diff if peer else None,
+                                    dry_report.get("clone_check"), (dry_report.get("peer") or {}).get("clone_check"))
+        if now_digest != digest:
+            return refuse("stale_preview", "the configuration (or the change) is not what you previewed; preview "
+                                           "again before applying. Nothing was changed.")
 
     # 4. Baseline: what fails before anything changes
     lab_prep = _prepare_lab_network(target, peer)
@@ -891,6 +996,8 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
                  if peer else None),
         "lab_prep": lab_prep,
         "watchdog_timeout_s": watchdog_timeout_s,
+        "source": audit_base.get("source"),
+        "plan_id": audit_base.get("plan_id"),
     }
     record_audit({**audit_base, **result, "rollback": rb, "verdicts_before": before, "verdicts_after": after}, history_dir)
     return result

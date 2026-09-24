@@ -114,7 +114,7 @@ export function RemediationControl({
     setApplying(true)
     setApplyResult(null)
     try {
-      setApplyResult(await applyRemediation(ruleId, target, true))
+      setApplyResult(await applyRemediation(ruleId, target, true, { digest: preview?.digest }))
     } finally {
       setApplying(false)
     }
