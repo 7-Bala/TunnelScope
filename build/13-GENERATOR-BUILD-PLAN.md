@@ -970,3 +970,19 @@ Before merging any task, the reviewer (Claude, in a fresh session if possible) d
 - Live checks: `build/live_checks.py` (exit 0/1/3) + `build/check_live.sh`; `check_all.sh` gets a
   `live()` helper and one row in full mode. Also fixed a T-100 gap: `remediate/*.json` is now
   package data (an installed wheel would otherwise lack the keyword list), with a test.
+
+**T-102 (2026-09-24).** Built as planned, with these differences and findings:
+- Found by the live smoke and fixed: a draft that changes something the rule does not judge was
+  accepted when the rule did not fail on the line to begin with (RFC8247-DH-MUST, the model copied
+  the integrity example). Two checks were added: a **precondition** (the rule's line exists and
+  the rule does not already pass on it; otherwise the model is never asked) and, inside V6, **at
+  least one edit must change an algorithm the rule judges**.
+- The target must be one end of the lab tunnel (`LAB_PEERS`), not just any lab container (the
+  router is a lab container but has no tunnel config).
+- V6 checks only the algorithms the rule judges (by strongSwan transform type); an unrelated
+  algorithm on the same line never needs wire evidence.
+- Version evidence (`version = 2` -> IKEv2) is derived by the probe from the 14 EXP-15 captures.
+- Smoke result (real model, real lab, generated config, no critique yet): the three rules that
+  fail on the lab were drafted and all three drafts were refused (V4 once, V6 twice): the 2B model
+  copied a few-shot example instead of answering the rule asked. The other six were refused by the
+  precondition without a model call. This is a smoke, not a measurement; EXP-18 measures.

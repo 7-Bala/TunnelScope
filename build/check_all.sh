@@ -36,6 +36,7 @@ if [ "$FAST" -eq 0 ]; then
     run "dataset: hashes, provenance, splits" "$PY" dataset/validate.py
     run "findings differential: only intended changes" "$PY" build/findings_diff.py --base "${BASE:-main}"
     live "live: local model loads offline and answers (Apple Silicon only)" model
+    live "live: generator smoke, real model on the real lab config (not the evaluation)" generator
     if curl -sI --max-time 5 https://wiki.wireshark.org >/dev/null 2>&1; then
         run "third-party captures (Wireshark wiki)" "$PY" build/validate_external.py
     else
