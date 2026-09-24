@@ -596,6 +596,7 @@ function ApplyOutcome({ result }: { result: RemediationApplyResult }) {
           )}
         </div>
       )}
+      {result.rekey && <RekeyLine rekey={result.rekey} ruleId={result.rule_id ?? ""} />}
       {result.commands_run && result.commands_run.length > 0 && (
         <div className="mt-1">
           <span className="text-[11px] text-faint">Commands run on {result.target}:</span>
@@ -803,5 +804,33 @@ function DraftRefused({ draft }: { draft: Extract<GenerateResult, { ok: false }>
       )}
       <p className="text-faint">Nothing was changed. The hand-written fix is still available above.</p>
     </div>
+  )
+}
+
+function RekeyLine({ rekey, ruleId }: { rekey: NonNullable<RemediationApplyResult["rekey"]>; ruleId: string }) {
+  if (rekey.tunnel_after_rekey === false) {
+    return (
+      <p className="text-[11.5px] text-warn">
+        After a forced rekey the endpoint no longer reported the tunnel as up, so the change was not kept.
+      </p>
+    )
+  }
+  if (rekey.tunnel_after_rekey !== true) {
+    return <p className="text-[11px] text-faint">The forced rekey could not be checked{rekey.error ? `: ${rekey.error}` : "."}</p>
+  }
+  const ep = rekey.endpoint_reported
+  return (
+    <p className="text-[11px] leading-relaxed text-muted-foreground">
+      The tunnel stayed up after a forced rekey. What the rekey negotiated is encrypted, so it is not visible on the
+      wire (not observable passively).
+      {ep && ep.algorithms.length > 0 && (
+        <>
+          {" "}
+          The endpoint itself reports {ep.algorithms.join(", ")}
+          {ep.rule_verdict !== "UNKNOWN" ? ` (${ruleId} would be ${ep.rule_verdict} on those)` : ""}; this is the
+          endpoint's own report, not evidence.
+        </>
+      )}
+    </p>
   )
 }
