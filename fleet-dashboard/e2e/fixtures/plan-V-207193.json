@@ -1,0 +1,20 @@
+{
+ "rule_id": "V-207193",
+ "change": "Raise the DH group",
+ "commands": [
+  "set `proposals` to include ecp384 or modp4096, remove the weak group",
+  "swanctl --load-all"
+ ],
+ "auto_applicable": true,
+ "observed": "MODP-1024",
+ "problem_analysis": "Diffie-Hellman group negotiated is Group 14 (MODP-2048) or lower. DISA SRG mandates Group 16 (MODP-4096) or ECP-384.",
+ "cryptographic_risk": "MODP-2048 provides only ~112 bits of classical security margin and is acutely vulnerable to nation-state Harvest-Now-Decrypt-Later (HNDL) attacks.",
+ "proposed_strategy": "Replace modp1024/1536/2048 proposals with modp4096, preserving encryption and integrity algorithms.",
+ "config_diff": "- proposals = aes256-sha256-modp2048\n+ proposals = aes256-sha256-modp4096",
+ "rollback_strategy": "Snapshot of every swanctl config file first (and of the lab peer's, if it is touched), plus a Commit-Confirmed Watchdog inside the container that restores the snapshot on its own if the change is not verified within 180 s. A failed or regressing verification restores immediately, and the restored files are checked byte for byte against the originals.",
+ "is_software_patch": false,
+ "runbook": [],
+ "config_diff_is_example": true,
+ "scope": "Only the t-tun connection is changed, on the chosen lab container and on the other end of the lab tunnel, because that is the tunnel captured and verified.",
+ "automated_fix_available": true
+}
