@@ -195,8 +195,8 @@ async function rounded(file, w = 1700, r = 30) {
       chip(s, c[1].toUpperCase(), x + 0.2, y + 0.62, 1.55, "silver", 0.25, 8.5);
       text(s, c[2], { x: x + 0.2, y: y + 1.0, w: mw - 0.4, h: 1.0, fontSize: 11, color: C.MUTED, lineSpacingMultiple: 1.06 }); });
     panel(s, M, 6.3, CW, 0.55, { fill: C.VIOLET, ft: 90, line: C.VIOLET });
-    text(s, [{ text: "All four trained by us, on our own captures. ", options: { bold: true } }, { text: "No outside model decides a verdict; an optional offline one only rewords text. Plaintext is read exactly.", options: { color: C.MUTED } }], { x: M + 0.3, y: 6.3, w: CW - 0.6, h: 0.55, fontSize: 12, valign: "middle" });
-    s.addNotes("About 60 seconds. Left: the five written baselines behind every verdict, and the Indian regulations shown as context only, because they require encryption without naming algorithms, so a capture can support an audit but never prove compliance. Right: the four models. Be direct about where the AI is: fields in the plaintext handshake are read exactly, because guessing them would be worse. AI is used where the wire is silent: what kind of traffic is inside, whether several kinds are mixed, which mode, and whether the tunnel changed. All four are standard Random Forest or Isolation Forest models trained by us on our own captures. No pretrained or third-party model decides anything. An optional language model that runs offline on the laptop may reword the explanations; we also tested it for drafting fixes, it failed our pre-registered test, so that stays switched off.");
+    text(s, [{ text: "All four trained by us; the traffic model also on real VPN traffic (MIT). ", options: { bold: true } }, { text: "No outside model decides a verdict; an offline one only rewords.", options: { color: C.MUTED } }], { x: M + 0.3, y: 6.3, w: CW - 0.6, h: 0.55, fontSize: 11.5, valign: "middle" });
+    s.addNotes("About 60 seconds. Left: the five written baselines behind every verdict, and the Indian regulations shown as context only, because they require encryption without naming algorithms, so a capture can support an audit but never prove compliance. Right: the four models. Be direct about where the AI is: fields in the plaintext handshake are read exactly, because guessing them would be worse. AI is used where the wire is silent: what kind of traffic is inside, whether several kinds are mixed, which mode, and whether the tunnel changed. All four are standard Random Forest or Isolation Forest models trained by us on our own captures; the traffic-type model is also trained on real VPN traffic recorded by MIT Lincoln Laboratory (the public VNAT dataset: video, VoIP, chat, SSH and file transfer inside real OpenVPN tunnels). No pretrained or third-party model decides anything. An optional language model that runs offline on the laptop may reword the explanations; we also tested it for drafting fixes, it failed our pre-registered test, so that stays switched off.");
   }
 
   // ============ 7  Encryption hides content, not shape (chart)
@@ -214,7 +214,7 @@ async function rounded(file, w = 1700, r = 30) {
       ["Every 2 seconds becomes 31 numbers of shape.", "How many packets, how big, how evenly spaced, and in which direction."], ["The model turns them into a type and a confidence.", "Or says uncertain, when the numbers fit nothing it knows."]];
     pts.forEach((p, i) => { const y = 1.8 + i * 1.6; text(s, p[0], { x: 8.6, y, w: 4.13, h: 0.65, fontSize: 15, bold: true, lineSpacingMultiple: 1.0 });
       text(s, p[1], { x: 8.6, y: y + 0.68, w: 4.13, h: 0.85, fontSize: 12.5, color: C.MUTED, lineSpacingMultiple: 1.08 }); });
-    text(s, "Data: 469 two-second windows from our clean AES-GCM tunnel sessions, a subset of the 1,964 training windows.", { x: 8.6, y: 6.4, w: 4.13, h: 0.45, fontSize: 10, color: C.FAINT, lineSpacingMultiple: 1.05 });
+    text(s, "Data: 469 windows from our clean AES-GCM sessions. Trained on 9,369 windows, 4,702 of them real VPN traffic (MIT).", { x: 8.6, y: 6.4, w: 4.13, h: 0.45, fontSize: 10, color: C.FAINT, lineSpacingMultiple: 1.05 });
     s.addNotes("About 60 seconds. This chart is real data from our training set, not an illustration. Each bar is one traffic type and the colours are packet-size bands. A VoIP call sits entirely in one band, ping in another, an SSH session is mostly tiny packets, and web, video and file transfer mix small acknowledgements with full-size packets and are told apart by timing and direction. That is why an encrypted tunnel still leaks what kind of traffic is inside, and why the model can predict it. Every 2-second slice becomes 31 numbers; the model returns a type with a confidence, or says uncertain.");
   }
 
@@ -248,38 +248,61 @@ async function rounded(file, w = 1700, r = 30) {
       text(s, st[0], { x: x + 0.2, y: y + 0.15, w: 2.4, h: 0.75, fontFace: MONO, fontSize: i === 1 ? 28 : 36, bold: true, color: C.VIOLET, valign: "middle" }); text(s, st[1], { x: x + 0.2, y: y + 0.98, w: 2.4, h: 0.65, fontSize: 12, color: C.MUTED, lineSpacingMultiple: 1.05 }); });
     panel(s, 6.85, 1.75, 5.88, 3.55);
     text(s, "Accuracy by test (macro-F1, 1.0 is perfect)", { x: 7.1, y: 1.88, w: 5.4, h: 0.3, fontSize: 12.5, bold: true });
-    s.addChart(pres.charts.BAR, [{ name: "macro-F1", labels: ["Held-out runs", "Other IPsec software", "Real apps, held out", "Delayed network", "Lossy network", "Synthetic only, real apps"], values: [0.986, 1.0, 0.995, 0.984, 0.914, 0.461] }],
-      { x: 6.95, y: 2.2, w: 5.7, h: 3.05, barDir: "col", barGapWidthPct: 45, chartColors: [C.VIOLET, C.VIOLET, C.VIOLET, C.VIOLET, C.VIOLET, C.NEG], valAxisHidden: true, valAxisMaxVal: 1.2, valAxisMinVal: 0,
-        valGridLine: { style: "none" }, catGridLine: { style: "none" }, catAxisLabelColor: C.MUTED, catAxisLabelFontFace: HEAD, catAxisLabelFontSize: 9.5, showValue: true, dataLabelColor: C.INK,
-        dataLabelFontFace: MONO, dataLabelFontSize: 11.5, dataLabelFormatCode: "0.000", dataLabelPosition: "outEnd", showLegend: false, plotArea: { fill: { color: C.SURF } }, chartArea: { fill: { color: C.SURF } } });
-    const fx = [["Synthetic-only training scored 0.461 on real apps", "Retrained on real traffic: 0.995"], ["A local AI model drafting fixes passed 0 of 16", "Kept off; our checks stopped all 32 bad drafts"], ["Video plus SSH misread as web, 8 of 8", "Mixed-traffic detector catches 92.9%"]];
+    s.addChart(pres.charts.BAR, [{ name: "macro-F1", labels: ["Held-out runs", "Other IPsec software", "Real apps", "Delayed network", "Lossy network", "Real VPN traffic (MIT)", "Synthetic only, real apps", "Lab only, real VPN (MIT)"], values: [0.986, 1.0, 0.995, 0.984, 0.914, 0.741, 0.461, 0.472] }],
+      { x: 6.95, y: 2.2, w: 5.7, h: 3.05, barDir: "col", barGapWidthPct: 35, chartColors: [C.VIOLET, C.VIOLET, C.VIOLET, C.VIOLET, C.VIOLET, C.WARN, C.NEG, C.NEG], valAxisHidden: true, valAxisMaxVal: 1.2, valAxisMinVal: 0,
+        valGridLine: { style: "none" }, catGridLine: { style: "none" }, catAxisLabelColor: C.MUTED, catAxisLabelFontFace: HEAD, catAxisLabelFontSize: 8.5, showValue: true, dataLabelColor: C.INK,
+        dataLabelFontFace: MONO, dataLabelFontSize: 10, dataLabelFormatCode: "0.000", dataLabelPosition: "outEnd", showLegend: false, plotArea: { fill: { color: C.SURF } }, chartArea: { fill: { color: C.SURF } } });
+    const fx = [["Lab-trained model scored 0.472 on real VPN traffic (MIT)", "Added 4,702 real windows: 0.741, below our 0.80 bar"], ["A local AI model drafting fixes passed 0 of 16", "Kept off; our checks stopped all 32 bad drafts"], ["Video plus SSH misread as web, 8 of 8", "Mixed-traffic detector catches 92.9%"]];
     const fw = (CW - 2 * 0.2) / 3;
     fx.forEach((f, i) => { const x = M + i * (fw + 0.2); panel(s, x, 5.55, fw, 1.25);
       chip(s, "PROBLEM", x + 0.18, 5.67, 0.95, "neg", 0.24, 8.5); text(s, f[0], { x: x + 1.2, y: 5.65, w: fw - 1.35, h: 0.5, fontSize: 11, valign: "middle", lineSpacingMultiple: 1.0 });
       chip(s, "FIX", x + 0.18, 6.3, 0.95, "pos", 0.24, 8.5); text(s, f[1], { x: x + 1.2, y: 6.22, w: fw - 1.35, h: 0.5, fontSize: 11, valign: "middle", lineSpacingMultiple: 1.0 }); });
-    s.addNotes("About 60 seconds. Numbers that can be checked. 392 unit tests and 60 browser checks; every capture in our ground-truth check matches what the VPN endpoints themselves reported; the classifier scored 0.986 on runs it never trained on in the clean lab and 1.000 on a different IPsec implementation, and after retraining with delayed and lossy links it holds 0.984 and 0.914 on held-out runs under those conditions. The red bar matters most: a model trained only on synthetic traffic scored 0.461 on real applications, so we retrained on real traffic. Below, three things that went wrong and what we did. The middle one: we let a small local AI model draft fixes and tested it before switching it on. It got 0 of 16 right, so it stays off, and the checks stopped every one of 32 deliberately bad drafts. We wrote our predictions down before every experiment, and where they failed we kept the failure on the record. Tested by leaving whole recording runs out, so the model is never scored on data it trained on.");
+    s.addNotes("About 60 seconds. Numbers that can be checked. 392 unit tests and 60 browser checks; every capture in our ground-truth check matches what the VPN endpoints themselves reported; the classifier scored 0.986 on runs it never trained on in the clean lab and 1.000 on a different IPsec implementation, and after retraining with delayed and lossy links it holds 0.984 and 0.914 on held-out runs under those conditions. The red bars matter most. A model trained only on synthetic traffic scored 0.461 on real applications, so we retrained on real applications in our lab (0.995). Then we tested on traffic we did not make: real VPN traffic recorded by MIT Lincoln Laboratory (the public VNAT dataset). Our lab-trained model scored only 0.472 there. Adding 4,702 real windows raised it to 0.741 on real capture files it never saw, without hurting our lab results; that is still below the 0.80 we wrote down in advance, and we say so. Also honest: that real traffic is OpenVPN, not IPsec, and on its own it does not teach IPsec (0.378). Below, three things that went wrong and what we did. The middle one: we let a small local AI model draft fixes and tested it before switching it on. It got 0 of 16 right, so it stays off, and the checks stopped every one of 32 deliberately bad drafts. We wrote our predictions down before every experiment, and where they failed we kept the failure on the record. Tested by leaving whole recording runs out, so the model is never scored on data it trained on.");
   }
 
-  // ============ 10  Where we stand
-  { const s = pres.addSlide(); base(s, 10, "Status and next", "Where we stand, honestly");
-    panel(s, M, 1.75, 4.6, 3.85);
-    text(s, "AGAINST THE BRIEF", { x: M + 0.25, y: 1.9, w: 4, h: 0.25, fontFace: MONO, fontSize: 10, color: C.VIOLET, charSpacing: 3 });
-    const rq = [["a", "Lab", "BUILT", "pos"], ["b", "Capture", "BUILT", "pos"], ["c", "Identify", "PARTLY", "warn"], ["d", "Assess", "PARTLY", "warn"], ["e", "Report", "BUILT", "pos"], ["+", "Video", "RECORDING", "warn"]];
-    rq.forEach((r, i) => { const y = 2.3 + i * 0.5; text(s, r[0], { x: M + 0.25, y, w: 0.35, h: 0.36, fontFace: MONO, fontSize: 14, bold: true, color: C.VIOLET, valign: "middle" });
-      text(s, r[1], { x: M + 0.7, y, w: 1.8, h: 0.36, fontSize: 13, bold: true, valign: "middle" }); chip(s, r[2], M + 3.0, y + 0.04, 1.35, r[3], 0.28, 9.5); });
-    panel(s, 5.4, 1.75, 3.9, 3.85);
-    text(s, "WHAT WE CANNOT SEE", { x: 5.65, y: 1.9, w: 3.5, h: 0.25, fontFace: MONO, fontSize: 10, color: C.VIOLET, charSpacing: 3 });
-    ["ESP key length: AES-128 and 256 look identical", "How the peers authenticated", "Whether a receiver drops replays", "Mode, only sometimes", "Field accuracy: one lab, two IPsec stacks"].forEach((t, i) => { dot(s, 5.65, 2.5 + i * 0.6, 0.13);
-      text(s, t, { x: 5.9, y: 2.36 + i * 0.6, w: 3.25, h: 0.5, fontSize: 12, color: C.INK, valign: "middle", lineSpacingMultiple: 1.0 }); });
-    panel(s, 9.5, 1.75, 3.23, 3.85);
-    text(s, "WHAT COMES NEXT", { x: 9.75, y: 1.9, w: 3, h: 0.25, fontFace: MONO, fontSize: 10, color: C.VIOLET, charSpacing: 3 });
-    [["Vendor gear, real cloud tunnel", "Cisco, Palo Alto, AWS"], ["Learn on site", "train on the customer's network"], ["A stronger model for fixes", "only if it passes the same test"]].forEach((t, i) => { const y = 2.35 + i * 1.0;
-      text(s, t[0], { x: 9.75, y, w: 2.85, h: 0.32, fontSize: 13, bold: true }); text(s, t[1], { x: 9.75, y: y + 0.36, w: 2.85, h: 0.5, fontSize: 11, color: C.MUTED }); });
-    panel(s, M, 5.85, CW, 0.95, { fill: C.VIOLET, ft: 90, line: C.VIOLET, lw: 1.25 });
-    text(s, "Team Think2Thrive", { x: M + 0.3, y: 5.95, w: 4, h: 0.3, fontFace: MONO, fontSize: 10.5, color: C.VIOLET, charSpacing: 2 });
-    text(s, "Kishore K (lead)  ·  Balachandran R  ·  Ajay R  ·  Akilan M  ·  Agalya R  ·  Jayavanadhi V", { x: M + 0.3, y: 6.28, w: 7.6, h: 0.35, fontSize: 13, bold: true });
-    text(s, "Evidence for every answer.", { x: 8.6, y: 5.95, w: 3.9, h: 0.75, fontSize: 18, bold: true, align: "right", valign: "middle" });
-    s.addNotes("About 60 seconds. Say the limits before anyone asks. Lab, capture and reporting are built; identify and assess are built but partly limited by physics, not effort: the data cipher can only be narrowed, mode is sometimes provable, key lifetime needs rekeys in the capture. The middle card lists what cannot be seen from outside at all, and the last item is about our own evidence: one lab, two IPsec stacks, with delay and packet loss simulated rather than a real internet link. Next: vendor equipment and a real cloud tunnel, learning on the customer's own network, which our results show is where accuracy comes from, and a stronger local model for drafting fixes, switched on only if it passes the same pre-registered test the current one failed. Close on the line: it tells you how an IPsec tunnel is configured, how secure that is, and what it cannot know, with evidence for every answer. UPDATE before presenting: change the Video status once the demo video is recorded.");
+  // ============ 10  How it all works: the end-to-end flow
+  { const s = pres.addSlide(); base(s, 10, "How it works, end to end", "From a capture to a verified fix");
+    const box = (x, y, w, h, title, sub, tag, hi = false) => {
+      panel(s, x, y, w, h, { fill: hi ? C.VIOLET : C.SURF, ft: hi ? 88 : 0, line: hi ? C.VIOLET : C.HAIR });
+      text(s, title, { x: x + 0.14, y: y + 0.1, w: w - 0.28, h: 0.3, fontSize: 13.5, bold: true });
+      text(s, sub, { x: x + 0.14, y: y + 0.42, w: w - 0.28, h: h - 0.72, fontSize: 10, color: C.MUTED, lineSpacingMultiple: 1.04 });
+      if (tag) text(s, tag, { x: x + 0.14, y: y + h - 0.28, w: w - 0.28, h: 0.2, fontFace: MONO, fontSize: 8.5, color: C.VIOLET });
+    };
+    // row 1: the analysis pipeline
+    const top = 1.62, bh = 1.28, bw = 1.92, gx = (CW - 6 * bw) / 5;
+    const row = [["1  Capture", "a pcap file, or a live stream from a span port", "tcpdump"],
+      ["2  Read", "IKE, ESP and AH headers only; nothing is decrypted", "tshark"],
+      ["3  Evidence", "every fact labelled, from observed to not observable", "Python"],
+      ["4  Judge", "against 5 written standards; every verdict cites its rule", "YAML rules"],
+      ["5  Score", "12-threat matrix, 0-100 risk score, evidence confidence", "scikit-learn"],
+      ["6  Show", "dashboard, plain-English reports, CBOM, live mode", "React"]];
+    row.forEach((r, i) => { const x = M + i * (bw + gx); box(x, top, bw, bh, r[0], r[1], r[2], i === 2 || i === 3);
+      if (i < 5) arrow(s, x + bw + 0.02, top + bh / 2, x + bw + gx - 0.02, top + bh / 2, C.FAINT); });
+    // row 2: what feeds the middle of the pipeline
+    const r2 = top + bh + 0.45, h2 = 1.22;
+    const xE = M + 2 * (bw + gx), xJ = M + 3 * (bw + gx);
+    box(M, r2, xE + bw - M, h2, "4 models we trained", "traffic type, mixed traffic, tunnel or transport (Random Forests), and change detection (Isolation Forest), all from packet sizes and timing", "our captures + real VPN traffic (MIT)");
+    arrow(s, xE + bw / 2, r2 - 0.02, xE + bw / 2, top + bh + 0.04, C.VIOLET);
+    box(xJ, r2, 2 * bw + gx, h2, "5 written standards", "DISA VPN SRG, RFC 8247 (IKEv2), RFC 8221/4303 (ESP, AH), DST post-quantum, CVE-2026-78135", "an unknown is never scored as a pass");
+    arrow(s, xJ + bw / 2, r2 - 0.02, xJ + bw / 2, top + bh + 0.04, C.VIOLET);
+    box(M + 5 * (bw + gx), r2, bw, h2, "Not visible", "each capture lists what it cannot show", "honest by design");
+    arrow(s, M + 5 * (bw + gx) + bw / 2, top + bh + 0.04, M + 5 * (bw + gx) + bw / 2, r2 - 0.02, C.FAINT);
+    // row 3: the lab fix loop, from a failed verdict
+    const r3 = r2 + h2 + 0.5, h3 = 1.08;
+    text(s, "7  FIX, IN THE LAB (A PERSON APPROVES EVERY CHANGE)", { x: M, y: r3 - 0.3, w: 8, h: 0.24, fontFace: MONO, fontSize: 9.5, color: C.VIOLET, charSpacing: 2 });
+    const fix = [["Propose", "a written fix for the failed rule"], ["Preview", "real diff; strongSwan loads it in a throwaway copy"], ["Approve", "a person approves that exact diff"],
+      ["Apply", "only what was previewed"], ["Verify", "capture again with traffic, then force a rekey"], ["Keep or undo", "kept only if proven; else restored byte for byte"]];
+    const fw = (CW - 5 * 0.22) / 6;
+    fix.forEach((f, i) => { const x = M + i * (fw + 0.22); const last = i === 5;
+      panel(s, x, r3, fw, h3, { fill: last ? C.WARN : C.SURF, ft: last ? 90 : 0, line: last ? C.WARN : C.HAIR });
+      text(s, f[0], { x: x + 0.12, y: r3 + 0.08, w: fw - 0.24, h: 0.28, fontSize: 12.5, bold: true, color: last ? C.WARN : C.INK });
+      text(s, f[1], { x: x + 0.12, y: r3 + 0.38, w: fw - 0.24, h: h3 - 0.45, fontSize: 9.5, color: C.MUTED, lineSpacingMultiple: 1.02 });
+      if (i < 5) arrow(s, x + fw + 0.01, r3 + h3 / 2, x + fw + 0.21, r3 + h3 / 2, C.FAINT); });
+    // the team, kept from the old closing slide
+    text(s, [{ text: "Team Think2Thrive:  ", options: { fontFace: MONO, color: C.VIOLET } }, { text: "Kishore K (lead)  ·  Balachandran R  ·  Ajay R  ·  Akilan M  ·  Agalya R  ·  Jayavanadhi V", options: { bold: true } }],
+      { x: M, y: 6.72, w: CW - 3.2, h: 0.28, fontSize: 11 });
+    text(s, "Evidence for every answer.", { x: W - M - 3.2, y: 6.68, w: 3.2, h: 0.34, fontSize: 14, bold: true, align: "right" });
+    s.addNotes("About 90 seconds. This is the whole system on one page; walk it left to right, top to bottom. 1 A capture goes in, from a file or live. 2 tshark reads only the headers; nothing is decrypted. 3 Every packet fact becomes a labelled finding. The four models we trained feed in here (the traffic model on our captures plus real VPN traffic from MIT's public VNAT dataset): they read packet sizes and timing to say what kind of traffic is inside, whether it is mixed, which mode, and whether the tunnel changed. 4 The findings are judged against five written standards, and an unknown is never scored as a pass. 5 The verdicts become a threat matrix, a risk score and a confidence. 6 The analyst sees it in the dashboard, reports and live mode, always ending with what the capture cannot show. 7 For a failed rule, the lab fix loop: propose a written fix, preview the real change in a throwaway copy, a person approves it, apply only what was previewed, verify with a fresh capture and a forced rekey, and keep it only if it is proven; otherwise it is undone automatically. Close: evidence for every answer.");
   }
 
   await pres.writeFile({ fileName: OUT });
