@@ -376,3 +376,12 @@ P17-3 FAILED: leave-one-repetition-out retraining over the three impaired repeti
 P17-4 Held: the ACK-size mode model answered zero tunnel-mode sessions as transport across all 96 sessions in both profiles (wan: 8 tunnel, 40 abstained; lossy: 12 tunnel, 36 abstained).
 P17-5 FAILED: the mixed-traffic detector wrongly flagged 33.33% of wan single-class sessions (16/48) and 20.83% of lossy single-class sessions (10/48), exceeding the 15% threshold on both profiles.
 P17-6 Held: on 100% of established IKE bring-ups under impairment (5 wan, 5 lossy), IKE encryption, DH group and integrity matched swanctl ground truth with zero mismatches, and the CVE-2026-78135 detector produced zero FAIL verdicts (10 PASS).
+
+## EXP-18 — Generative remediation: is the local model's draft right, and does the safety net catch 100%? — PRE-REGISTRATION (2026-09-24)
+Pre-registered in `experiments/exp18-generative-remediation/PREREG.md` before any run (DEC-033,
+DEC-034, build/13 T-106). H1: every code-built bad draft (30) and 2 prompt-injection configs are
+stopped before apply, or confirmed fixed, or rolled back and verified; one miss fails it. H2 (ship
+bar for local-model drafts in the dashboard): A1 draft confirmed fixed live with no regression on
+>= 0.80 of included test items, Wilson 95% lower bound >= 0.60. H3: critique and self-review are
+kept only if they help. Dev set (V-207205, RFC8221-AH-LEGACY, DST-PQ-KE) is the only place the
+prompt may be tuned; the chosen prompt is frozen in FREEZE.md before the test set runs.
