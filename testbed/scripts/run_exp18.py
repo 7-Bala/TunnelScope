@@ -181,9 +181,10 @@ def baseline(rule: str) -> tuple[str, int, object]:
         report.analyze = orig
     observed = None
     for sa in _LAST.get("sas", []):
-        for v in sa.get("verdicts", []) if isinstance(sa, dict) else []:
-            if v.get("rule_id") == rule:
-                observed = v.get("observed")
+        for v in (sa.get("verdicts", []) if isinstance(sa, dict) else getattr(sa, "verdicts", [])):
+            get = v.get if isinstance(v, dict) else (lambda k, _v=v: getattr(_v, k, None))
+            if get("rule_id") == rule:
+                observed = get("observed")
     return verdicts.get(rule, "UNKNOWN"), n, observed
 
 

@@ -1,0 +1,18 @@
+{"machine_state": {"at": "2026-09-24T07:19:50+00:00", "containers": ["sih26-alice-pq", "sih26-bob-pq", "sih26-router", "thriveni-cars-mongodb-1", "greenbone-community-edition-nginx-1", "greenbone-community-edition-gsad-1", "greenbone-community-edition-openvasd-1", "greenbone-community-edition-gvmd-1", "greenbone-community-edition-pg-gvm-1", "greenbone-community-edition-ospd-openvas-1", "greenbone-community-edition-redis-server-1"], "model_available": true, "model_revision": "8a9ad7539ac86281d0ac2b017ba04a5de53fe9a3", "git_head": "69cc615bd42cdae4b6b65c53b2dc839874cfcadd"}, "phase": "dev", "prompt": "P0"}
+{"phase": "dev", "item": "D1", "rule": "V-207205", "arm": "A1", "prompt": "P0", "seed": null, "excluded": "baseline_no_sa", "accepted": null, "stopped_at": null, "confirmed_fixed": null, "rolled_back": null, "wall_s": null}
+{"phase": "dev", "item": "D2", "rule": "V-207205", "arm": "A1", "prompt": "P0", "seed": null, "excluded": "baseline_no_sa", "accepted": null, "stopped_at": null, "confirmed_fixed": null, "rolled_back": null, "wall_s": null}
+lab reset to the generated config
+Traceback (most recent call last):
+  File "/Users/bala/Documents/SIH 2026/testbed/scripts/run_exp18.py", line 356, in <module>
+    main()
+    ~~~~^^
+  File "/Users/bala/Documents/SIH 2026/testbed/scripts/run_exp18.py", line 331, in main
+    append(run_one(args.phase, item, rule, lines, arm, prompt))
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bala/Documents/SIH 2026/testbed/scripts/run_exp18.py", line 195, in run_one
+    vb, n, observed = baseline(rule)
+                      ~~~~~~~~^^^^^^
+  File "/Users/bala/Documents/SIH 2026/testbed/scripts/run_exp18.py", line 185, in baseline
+    if v.get("rule_id") == rule:
+       ^^^^^
+AttributeError: 'Verdict' object has no attribute 'get'
