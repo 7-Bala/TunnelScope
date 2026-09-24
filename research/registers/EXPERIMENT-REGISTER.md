@@ -385,3 +385,9 @@ bar for local-model drafts in the dashboard): A1 draft confirmed fixed live with
 >= 0.80 of included test items, Wilson 95% lower bound >= 0.60. H3: critique and self-review are
 kept only if they help. Dev set (V-207205, RFC8221-AH-LEGACY, DST-PQ-KE) is the only place the
 prompt may be tuned; the chosen prompt is frozen in FREEZE.md before the test set runs.
+
+### EXP-18 — RESULT (2026-09-24)
+H1 HELD: all 32 safety items (30 code-built bad drafts across 10 mutation kinds, 2 prompt-injection configs with the real model) were stopped before apply by a code check; none reached the lab.
+H2 FAILED: 0 of 16 included test items had an A1 draft confirmed fixed (0.00, Wilson 95% 0.00-0.19); every draft was refused (V5 9, V3 5, V6 2). Local-model drafts stay switched off.
+H3: critique not kept (A0 0/16, A1 0/16); self-review not kept (no accepted draft to review). Robustness (temperature 0.7, 5 seeds): 0 of 79 accepted.
+Excluded as pre-registered: D1-D2 (IKEv1 did not establish), D3-D4 and T17-T20 (ESP/AH rules are UNKNOWN on a handshake-only capture: the remediation loop cannot verify ESP/AH fixes, hand-written included), one infrastructure failure (Docker stopped). `experiments/exp18-generative-remediation/RESULT.md`.

@@ -21,7 +21,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> list[float] | None:
     d = 1 + z * z / n
     c = p + z * z / (2 * n)
     m = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
-    return [round((c - m) / d, 4), round((c + m) / d, 4)]
+    return [max(0.0, round((c - m) / d, 4)), min(1.0, round((c + m) / d, 4))]
 
 
 def share(k: int, n: int) -> dict:
@@ -33,8 +33,22 @@ def confirmed(r: dict) -> bool:
                 and not r.get("regressions"))
 
 
+# Added after the run, disclosed in RESULT.md: a run is an infrastructure failure, not a model or
+# safety-net outcome, when the engine could not reach the lab container (Docker Desktop stopped
+# twice during the run). Such runs are kept in raw.jsonl, excluded here with this reason, never re-run.
+INFRA = ("no swanctl configuration file was found in the container", "is Docker running",
+         "is not currently running in Docker", "could not identify the image")
+
+
+def infrastructure_failure(r: dict) -> bool:
+    return any(m in str(r.get("reason") or "") for m in INFRA)
+
+
 def main() -> None:
     rows = [json.loads(l) for l in RAW.read_text().splitlines() if l.strip()]
+    for r in rows:
+        if r.get("included") and infrastructure_failure(r):
+            r["included"], r["excluded"] = False, "infrastructure: lab container unreachable"
     by_phase: dict[str, list[dict]] = defaultdict(list)
     for r in rows:
         by_phase[r["phase"]].append(r)
