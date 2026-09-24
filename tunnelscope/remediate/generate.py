@@ -248,7 +248,8 @@ def _norm_line(line_key: str, s: str) -> str:
     if not re.match(re.escape(line_key) + r"\s*=", s):
         s = f"{line_key} = {s}"
     k, _, v = s.partition("=")
-    return f"{k.strip()} = {re.sub(r'\s*,\s*', ', ', v.strip())}"
+    value = re.sub(r"\s*,\s*", ", ", v.strip())   # no backslash inside the f-string: Python 3.11 is supported
+    return f"{k.strip()} = {value}"
 
 
 def check_meaning(rule_id: str, ans: dict[str, Any], lines: dict[str, str]) -> tuple[str, str]:
