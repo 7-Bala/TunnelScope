@@ -997,3 +997,20 @@ Before merging any task, the reviewer (Claude, in a fresh session if possible) d
   few-shot example word for word in all three rounds (sha256 -> sha384), ignoring the feedback
   that listed modp4096 etc.; V-207223 and DST-PQ-KE behaved the same way. All refused by V4/V6,
   about 9 s per rule. The loop works; this 2B model does not use the feedback. EXP-18 measures it.
+
+**T-104 (2026-09-24).** Built as planned, with these differences:
+- The plan store is in `execute.py` (the remediate package's write-free test forbids file writes
+  elsewhere); `recheck` (re-run V1-V8 from the stored raw draft) is in `generate.py`.
+- The digest is required by the **server** for every apply (`require_digest=True`), which is the
+  dashboard's path, and verified whenever it is given. The Python function keeps it optional so
+  the existing tests and the EXP-18 harness call it unchanged; that path is the lab's own code,
+  not a user-facing one. `RemediationPane.tsx` got the one-line change to send the digest now,
+  so `main` never has an Apply button that the server refuses.
+- The digest covers which plan (hand-written rule id or generated plan id), the target, both
+  dry-run diffs and both clone results: a generated draft identical in effect to the hand-written
+  fix still has a different digest (a test proves a hand-written approval cannot apply a draft).
+- `/api/remediate/generate` answers 403 unless `TUNNELSCOPE_GENERATOR=1` (DEC-034 D-E);
+  `GET /api/remediate/capabilities` reports `local_model` and `generator_enabled` (not `/health`: an existing test pins `/health`'s exact shape).
+- Live (real lab): preview -> apply with the digest confirmed V-207193 FAIL -> PASS, no
+  regressions, 14.2 s; preview, then a harmless comment added inside t-tun, then apply with the
+  old digest -> `stale_preview`, config byte-identical to before the attempt.

@@ -262,8 +262,20 @@ export type RemediationApplyResult = {
   /** after a rollback: tunnel re-negotiated on the restored settings, and no rule worse than the baseline */
   service_restored?: { tunnel_up: boolean; matches_baseline: boolean; worse_than_baseline?: string[]; detail?: string } | null
   dry_run_diff?: Record<string, string>
-  peer?: { container: string; commands_run: string[]; dry_run_diff: Record<string, string> } | null
+  clone_check?: CloneCheck | null
+  peer?: { container: string; commands_run: string[]; dry_run_diff: Record<string, string>; clone_check?: CloneCheck | null } | null
   watchdog_timeout_s?: number
+  source?: "hand-written" | "generated"
+  plan_id?: string | null
+}
+
+export type CloneCheck = {
+  ok: boolean
+  reason?: string | null
+  files?: Record<string, { before: { loaded: number; failed: number }; after: { loaded: number; failed: number } }>
+  rejected_keywords?: string[]
+  seconds?: number
+  note?: string
 }
 
 export type RemediationPreview = {
@@ -272,7 +284,66 @@ export type RemediationPreview = {
   error?: string
   /** real unified diff per config file, from a dry run on copies inside the container */
   diff?: Record<string, string>
-  peer?: { container: string; diff: Record<string, string>; why: string } | null
+  peer?: { container: string; diff: Record<string, string>; why: string; clone_check?: CloneCheck | null } | null
+  /** strongSwan loaded the changed config in a throwaway, network-less clone (T-100) */
+  clone_check?: CloneCheck | null
+  /** what was previewed; Apply must send it back, and is refused if the dry run now differs (T-104) */
+  digest?: string
+  source?: "hand-written" | "generated"
+  plan_id?: string | null
+}
+
+export type RemediationCapabilities = {
+  /** the pinned local model can run on this machine (Apple Silicon, model on disk) */
+  local_model: boolean
+  /** local-model drafts are switched on (off until EXP-18 passes, DEC-034) */
+  generator_enabled: boolean
+}
+
+export async function remediationCapabilities(): Promise<RemediationCapabilities> {
+  try {
+    const res = await fetch("/api/remediate/capabilities", { cache: "no-store" })
+    if (!res.ok) return { local_model: false, generator_enabled: false }
+    const b = await res.json()
+    return { local_model: b?.local_model === true, generator_enabled: b?.generator_enabled === true }
+  } catch {
+    return { local_model: false, generator_enabled: false }
+  }
+}
+
+export type DraftCheck = { id: string; name: string; ok: boolean; reason: string | null }
+
+export type GeneratedPlan = RemediationPlan & {
+  source: "generated"
+  line_key: string
+  new_value: string
+  diff: Record<string, string>
+  checks: DraftCheck[]
+  revisions: { round: number; raw_output: string; checks: DraftCheck[] }[]
+  raw_output: string
+  model_id: string
+  model_revision: string
+  self_review: { verdict: "no concerns" | "concerns" | "unavailable"; reason: string | null } | null
+  agrees_with_handwritten?: boolean
+  handwritten_diff?: Record<string, string> | null
+  latency_s: number
+}
+
+export type GenerateResult =
+  | { ok: true; plan_id: string; plan: GeneratedPlan }
+  | { ok: false; stage?: string; reason?: string; error?: string; checks?: DraftCheck[]; revisions?: GeneratedPlan["revisions"] }
+
+export async function generateRemediation(ruleId: string, target: string, observed?: unknown): Promise<GenerateResult> {
+  try {
+    const res = await fetch("/api/remediate/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rule_id: ruleId, target, observed: observed ?? null }),
+    })
+    return (await res.json()) as GenerateResult
+  } catch (e) {
+    return { ok: false, error: String(e) }
+  }
 }
 
 export type LabTarget = { name: string; running: boolean }
@@ -287,12 +358,12 @@ export async function remediationTargets(): Promise<{ targets: LabTarget[]; reco
   }
 }
 
-export async function previewRemediation(ruleId: string, target: string): Promise<RemediationPreview> {
+export async function previewRemediation(ruleId: string, target: string, planId?: string | null): Promise<RemediationPreview> {
   try {
     const res = await fetch("/api/remediate/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rule_id: ruleId, target }),
+      body: JSON.stringify({ rule_id: ruleId, target, plan_id: planId ?? null }),
     })
     return (await res.json()) as RemediationPreview
   } catch (e) {
@@ -304,12 +375,13 @@ export async function applyRemediation(
   ruleId: string,
   target: string,
   confirm: boolean = true,
+  opts: { digest?: string; planId?: string | null } = {},
 ): Promise<RemediationApplyResult> {
   try {
     const res = await fetch("/api/remediate/apply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rule_id: ruleId, target, confirm }),
+      body: JSON.stringify({ rule_id: ruleId, target, confirm, digest: opts.digest ?? null, plan_id: opts.planId ?? null }),
     })
     const data = await res.json()
     return data as RemediationApplyResult
