@@ -16,6 +16,11 @@ run() {   # run "name" cmd...
     if "$@" >> "$LOG" 2>&1; then rows+=("PASS  $name"); else rows+=("FAIL  $name"); fail=1; fi
 }
 skip() { rows+=("SKIP  $1  ($2)"); }
+live() {  # live "name" check: build/live_checks.py exit 0 PASS, 3 SKIP (reason = its last line), else FAIL
+    local name="$1" out rc; echo "=== $name" >> "$LOG"
+    out=$("$PY" build/live_checks.py "$2" 2>&1); rc=$?; echo "$out" >> "$LOG"
+    if [ $rc -eq 0 ]; then rows+=("PASS  $name"); elif [ $rc -eq 3 ]; then skip "$name" "$(echo "$out" | tail -1)"; else rows+=("FAIL  $name"); fail=1; fi
+}
 
 run "guard: diff is in scope, no protected/test/secret problems" "$PY" build/guard_diff.py
 run "unit tests (pytest)" "$PY" -m pytest -q
@@ -30,6 +35,7 @@ if [ "$FAST" -eq 0 ]; then
     run "ground truth: every capture vs what the endpoints reported" "$PY" build/validate_e2e.py
     run "dataset: hashes, provenance, splits" "$PY" dataset/validate.py
     run "findings differential: only intended changes" "$PY" build/findings_diff.py --base "${BASE:-main}"
+    live "live: local model loads offline and answers (Apple Silicon only)" model
     if curl -sI --max-time 5 https://wiki.wireshark.org >/dev/null 2>&1; then
         run "third-party captures (Wireshark wiki)" "$PY" build/validate_external.py
     else
