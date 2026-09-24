@@ -21,8 +21,8 @@ PS e) risk score and threat matrix, computed from cited verdicts.
 ## 2 · Traffic type inside the tunnel (45s) — PS c)
 Open `exp15-tun-messaging-rep4.pcap` → **Traffic & exposure**.
 **Point:** "Messaging (WhatsApp-like), 98% model confidence" with the next alternatives, from packet
-sizes and timing only, through AES-GCM. Our own Random Forest, trained on our lab traffic (macro-F1
-0.995 on held-out runs). Say the limit out loud: shapes, not apps; mixed traffic names the dominant
+sizes and timing only, through AES-GCM. Our own Random Forest, trained on our lab traffic plus real public VPN traffic (MIT VNAT)
+(macro-F1 0.995 on held-out lab runs, 0.741 on real VPN captures it never saw). Say the limit out loud: shapes, not apps; mixed traffic names the dominant
 one; video+interactive is misread as web, and the tool says so.
 
 ## 3 · Mode, AH and the handshake-vs-data cipher (45s) — PS c)
