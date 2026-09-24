@@ -729,6 +729,88 @@ def _capture_verdicts(target: str, phase: str) -> tuple[dict[str, str], int]:
                 pass
 
 
+_REKEY_ARGV = (["swanctl", "--rekey", "--ike", LAB_CONNECTION], ["swanctl", "--rekey", "--child", LAB_CONNECTION])
+_SA_FIELD = re.compile(r"([\w-]+)=([^\s{}\[\]]+)")
+REKEY_NOTE = ("A rekey (CREATE_CHILD_SA) is encrypted under the IKE SA, so a passive capture cannot show which "
+              "algorithms it chose: passive result NOT_OBSERVABLE. The algorithms below are what the target's own "
+              "daemon reports (endpoint vantage), shown for information, never as evidence.")
+
+
+def _sa_fields(target: str) -> dict[str, Any] | None:
+    """The lab connection's IKE SA as the daemon reports it (`swanctl --list-sas --raw`):
+    {fields..., "child_installed": bool}, or None if there is no such SA."""
+    out = _exec(target, ["swanctl", "--list-sas", "--ike", LAB_CONNECTION, "--raw"], timeout=10).stdout or ""
+    m = re.search(r"\b" + re.escape(LAB_CONNECTION) + r" \{(.*)", out, re.S)
+    if not m:
+        return None
+    ike_part, _, child_part = m.group(1).partition("child-sas {")
+    fields = dict(_SA_FIELD.findall(ike_part))
+    fields["child_installed"] = "state=INSTALLED" in child_part
+    return fields
+
+
+def _endpoint_algorithms(f: dict[str, Any]) -> list[str]:
+    """strongSwan algorithm names of an IKE SA, in the keyword list's naming (AES_CBC_256, MODP_4096, ...)."""
+    names = []
+    if f.get("encr-alg"):
+        names.append(f"{f['encr-alg']}_{f['encr-keysize']}" if f.get("encr-keysize") else f["encr-alg"])
+    for k in ("integ-alg", "prf-alg", "dh-group"):
+        if f.get(k):
+            names.append(f[k])
+    for k, v in f.items():
+        m = re.fullmatch(r"ke(\d)(?:-group)?", k)
+        if m:
+            names.append(f"KE{m.group(1)}_{v}")
+    return names
+
+
+def _endpoint_rule_verdict(rule_id: str, f: dict[str, Any]) -> str:
+    """The rule's own predicate on the endpoint-reported algorithms, through the wire values the
+    keyword list learned from captures. UNKNOWN when the rule judges something else, or an
+    algorithm was never observed on a capture."""
+    from ..assess.engine import _assert, load_baselines
+    from .vocab import load_vocab
+    rule = next((r for b in load_baselines() for r in b["rules"] if r["id"] == rule_id), None)
+    if rule is None:
+        return "UNKNOWN"
+    ev = load_vocab()["evidence"]
+    if rule["attribute"] == "ike_version":
+        values = [e["value"] for e in ev.get("version", {}).get(str(f.get("version")), [])]
+    else:
+        values = [e["value"] for n in _endpoint_algorithms(f)
+                  for e in ([ev["ike"][n]] if n in ev["ike"] else []) if e["attribute"] == rule["attribute"]]
+    if not values:
+        return "UNKNOWN"
+    results = [_assert(rule["assert"]["op"], rule["assert"].get("value"), v) for v in values]
+    return "FAIL" if False in results else "PASS" if all(r is True for r in results) else "UNKNOWN"
+
+
+def rekey_check(target: str, rule_id: str) -> dict[str, Any]:
+    """Known limit of build/12, closed as far as the evidence allows (T-107): force an IKE and a
+    CHILD rekey after a confirmed fix. The tunnel must still be established and installed
+    afterwards (endpoint-reported); the rekey's algorithms are reported, not judged as evidence."""
+    res: dict[str, Any] = {"passive": "NOT_OBSERVABLE", "note": REKEY_NOTE, "tunnel_after_rekey": None,
+                           "rekeyed": None, "endpoint_reported": None}
+    try:
+        before = _sa_fields(target)
+        for argv in _REKEY_ARGV:
+            _exec(target, argv, timeout=15)
+        time.sleep(2)
+        after = _sa_fields(target)
+    except Exception as e:
+        res["error"] = f"the rekey could not be checked: {e}"
+        return res
+    if after is None or after.get("state") != "ESTABLISHED" or not after.get("child_installed"):
+        res["tunnel_after_rekey"] = False
+        return res
+    res["tunnel_after_rekey"] = True
+    res["rekeyed"] = bool(before) and (before.get("initiator-spi"), before.get("responder-spi")) != \
+        (after.get("initiator-spi"), after.get("responder-spi"))
+    res["endpoint_reported"] = {"algorithms": _endpoint_algorithms(after),
+                                "rule_verdict": _endpoint_rule_verdict(rule_id, after)}
+    return res
+
+
 def _check_service_restored(target: str, before: dict[str, str]) -> dict[str, Any]:
     """Restoring the files and reloading is not enough: an SA negotiated with the bad settings
     keeps them until it is re-negotiated. Re-negotiate now, capture, and compare with the
@@ -943,6 +1025,7 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
 
     confirmed = False
     rb: dict[str, Any] | None = None
+    rekey: dict[str, Any] | None = None
     if n_after == 0:
         verdict_after = "REGRESSION"
         reason = f"no IKE SA was negotiated after the change (tunnel outage){': ' + verify_error if verify_error else ''}"
@@ -953,8 +1036,14 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
         verdict_after = "REGRESSION"
         reason = f"{rule_id} passes, but these rules were not failing before and are now: {', '.join(regressions)}"
     else:
+        rekey = rekey_check(target, rule_id)
         verdict_after = "PASS"
         reason = f"{rule_id} passes on a fresh capture and no other rule got worse"
+    if rekey is not None and rekey.get("tunnel_after_rekey") is False:
+        verdict_after = "REGRESSION"
+        reason = (f"{rule_id} passes on the first handshake, but the tunnel did not survive a forced rekey "
+                  "(reported by the endpoint)")
+    elif verdict_after == "PASS":
         # Check both snapshots are intact BEFORE disarming either: if one watchdog already
         # restored its side, disarming the other would delete the snapshot we need to undo it.
         intact = _manifest_token(target) == token and (not peer or _manifest_token(peer) == token)
@@ -991,6 +1080,7 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
         "service_restored": None if confirmed else (rb or {}).get("service"),
         "dry_run_diff": dry_diff,
         "clone_check": dry_report.get("clone_check"),
+        "rekey": rekey,
         "peer": ({"container": peer, "commands_run": peer_commands_run, "dry_run_diff": peer_dry_diff,
                   "clone_check": dry_report.get("peer", {}).get("clone_check")}
                  if peer else None),
