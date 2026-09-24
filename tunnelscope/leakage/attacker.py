@@ -42,8 +42,10 @@ LABEL = {"voip": "VoIP call", "web": "Web browsing", "bulk": "File transfer", "i
 # read as web in 8 of 8. Stated with every prediction it affects.
 KNOWN_CONFUSION = {"web": "video streaming mixed with an interactive session also reads as web browsing; the "
                           "mixed-traffic check (EXP-16) catches that case, but it is the known weak spot"}
-MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (it catches 96% of mixed "
-              "sessions, and wrongly flags 8% of single ones)")
+# Numbers from EXP-16 Part D (experiments/exp16-real-apps-cross-impl/RESULT.md, P16-5), the same ones
+# the dashboard shows. An earlier version said "96%", which no experiment produced.
+MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (in testing it caught 92.9% "
+              "of mixed sessions and wrongly flagged 8.3% of single ones)")
 # abstain rule (set from EXP-15's leave-one-repetition-out analysis; see RESULT.md)
 TAU = 0.60              # minimum mean top-class probability
 MIN_CONSISTENCY = 0.70  # minimum share of windows agreeing with the session's top class
