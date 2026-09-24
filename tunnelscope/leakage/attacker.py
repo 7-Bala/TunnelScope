@@ -1,7 +1,7 @@
 """The traffic classifier and Random Forest ATTACKER (EXP-05, EXP-15), run live on a capture.
 
 What it is: a model of a passive eavesdropper. It was trained on our own lab
-traffic (EXP-05: voip / web / bulk / interactive / video, with and without TFC
+traffic (and, since EXP-19 / DEC-036, real public VPN traffic from MIT VNAT) (EXP-05: voip / web / bulk / interactive / video, with and without TFC
 padding) to guess what kind of traffic is inside an encrypted ESP tunnel from
 packet sizes, timing and direction alone. On that data it was right almost
 every time (macro-F1 1.000 unpadded, 0.995 padded; leave-one-repetition-out).
@@ -57,8 +57,11 @@ DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "traff
 # lab applications + Libreswan). The last number is the one to keep in mind: a
 # model trained ONLY on synthetic shapes scored 0.46 on real applications, so
 # training data that looks like the target traffic is what matters, not the tuning.
+# EXP-19 (DEC-036) adds real public traffic (MIT VNAT, OpenVPN tunnels recorded by others): a lab-only
+# model scored 0.47 on it, the shipped lab + real model 0.74 on capture files it never saw.
 REFERENCE = {"f1_unpadded": 0.995, "f1_tfc_padded": 0.958, "f1_real_apps_loro": 0.995,
              "f1_cross_implementation": 1.0, "f1_synthetic_only_on_real_apps": 0.461,
+             "f1_lab_only_on_real_public": 0.472, "f1_real_public_heldout": 0.741,
              "chance": round(1 / len(CLASSES), 3)}
 
 
@@ -138,7 +141,7 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     base.update(n_train_windows=n_train, in_distribution_share=round(float(in_dist.mean()), 3))
     if in_dist.mean() < 0.5:
         return {**base, "status": "out_of_distribution", "level": None,
-                "note": "this traffic looks unlike the lab traffic the attacker was trained on, "
+                "note": "this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, "
                         "so its confidence would mean nothing here; the size/timing bits still apply"}
     P = rf.predict_proba(X[in_dist])
     top = P.max(axis=1)
@@ -176,7 +179,7 @@ def _note(level: str, conf: float, cons: float, n: int) -> str:
     what = {"high": "can reliably tell what kind of traffic this tunnel carries",
             "medium": "can partly tell what kind of traffic this tunnel carries",
             "low": "cannot reliably tell what kind of traffic this tunnel carries"}[level]
-    return (f"A passive attacker model trained on lab traffic {what}, from packet sizes and timing alone "
+    return (f"A passive attacker model trained on lab and real public traffic {what}, from packet sizes and timing alone "
             f"(average confidence {conf:.0%}, same guess in {cons:.0%} of {n} windows). "
             "Encryption hides the content, not the shape.")
 
@@ -206,9 +209,10 @@ def extract_attacker(rec) -> None:
                         note=f"predicted from packet sizes, timing and direction over {r['windows']} windows; "
                              f"{r['consistency']:.0%} of windows agree. Next most likely: {alts}. The traffic "
                              "classes are learned from our lab traffic (synthetic shapes plus real browser, SSH, "
-                             "SFTP, SMTP, XMPP and RTP sessions), not from app fingerprints; traffic unlike anything "
-                             "in that training set can be misread (EXP-16: a synthetic-only model scored 0.46 on real "
-                             "applications); "
+                             "SFTP, SMTP, XMPP and RTP sessions) and from real public traffic in other people's OpenVPN "
+                             "tunnels (MIT VNAT), not from app fingerprints; traffic unlike anything in that training "
+                             "set can be misread (EXP-16: a synthetic-only model scored 0.46 on real applications; "
+                             "EXP-19: 0.74 on real public tunnels it never saw); "
                              + MIXED_NOTE
                              + (f"; caution: {KNOWN_CONFUSION[t['class']]}" if t["class"] in KNOWN_CONFUSION else "")
                              + "."))

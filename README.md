@@ -50,7 +50,7 @@ Core capabilities:
 
 ## Honest limits
 
-- The traffic-type model was trained on lab traffic. A model trained on synthetic traffic only scored 0.461 on real applications; the shipped model is trained on synthetic, real-application and Libreswan traffic. Traffic unlike its training data can be misread.
+- The traffic-type model was trained on lab traffic plus real public traffic (4,702 windows from 82 real OpenVPN tunnels in MIT Lincoln Laboratory's VNAT dataset, EXP-19). A lab-only model scored 0.472 on real traffic it had never seen; with the real data it scores 0.741 on real capture files it never saw, below the 0.80 we set in advance (shipped by owner decision, DEC-036). Real OpenVPN traffic did not transfer to IPsec (0.378). Traffic unlike its training data can be misread.
 - Tunnel/transport mode, the ESP key length, and how the peers authenticated cannot always be read from a capture. The tool says "unknown" when it cannot tell.
 - Whether a receiver drops replayed packets is not visible from a capture.
 - Everything was measured on one lab, two IPsec implementations (strongSwan, Libreswan), no real WAN.
