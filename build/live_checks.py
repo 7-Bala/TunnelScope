@@ -63,7 +63,43 @@ def check_model() -> int:
     return PASS
 
 
-CHECKS = {"model": check_model}
+def _lab_up() -> bool:
+    from tunnelscope.remediate import execute
+    return all(execute.is_container_running(c) for c in ("sih26-alice-pq", "sih26-bob-pq"))
+
+
+def check_generator() -> int:
+    """SMOKE, not the evaluation (that is EXP-18): the real model drafts a fix for every
+    generatable rule against the real lab config, side by side with the hand-written fix. PASS
+    means every draft either passed every check or was refused by a named check, and nothing
+    crashed; it says nothing about how often the model is right."""
+    from tunnelscope.rephrase import runtime
+    if not runtime.model_available():
+        print("SKIP: the local model is not available on this machine")
+        return SKIP
+    if not _lab_up():
+        print("SKIP: lab containers sih26-alice-pq / sih26-bob-pq are not running")
+        return SKIP
+    from tunnelscope.remediate import generate
+    from tunnelscope.remediate.plan import GENERATABLE_RULES
+    bad = 0
+    for rule in sorted(GENERATABLE_RULES):
+        r = generate.generate_plan(rule, "sih26-alice-pq", compare_with_handwritten=True)
+        p = r.get("plan") or {}
+        raw = (p.get("raw_output") or (r.get("revisions") or [{}])[-1].get("raw_output") or "")
+        print(json.dumps({"rule": rule, "ok": r["ok"], "stage": r.get("stage"), "reason": r.get("reason"),
+                          "change": p.get("change"), "agrees_with_handwritten": p.get("agrees_with_handwritten"),
+                          "latency_s": p.get("latency_s") or r.get("latency_s"), "raw": raw[:300]}))
+        if r.get("stage") in ("internal", "model"):
+            bad += 1
+    if bad:
+        print(f"FAIL: {bad} draft(s) crashed or got no model answer")
+        return FAIL
+    print("PASS: every draft was either fully checked or refused by a named check (smoke only)")
+    return PASS
+
+
+CHECKS = {"model": check_model, "generator": check_generator}
 
 if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else ""

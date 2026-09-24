@@ -177,7 +177,18 @@ def evidence_map() -> dict:
     from tunnelscope.report.report import analyze
     arms = json.loads((ROOT / "testbed/configs/exp15/arms.json").read_text())
     ike: dict[str, dict] = {}
-    lines: dict[str, dict] = {"esp_proposals": {}, "ah_proposals": {}}
+    lines: dict[str, dict] = {"esp_proposals": {}, "ah_proposals": {}, "version": {}}
+    # each arm's `version` setting, read from the generated config the captures were taken with
+    conf = (ROOT / "testbed/configs/exp15/alice.conf").read_text().splitlines()
+    arm_version: dict[str, str] = {}
+    current = None
+    for line in conf:
+        m = re.match(r"^    ([^\s{}#]+) \{\s*$", line)
+        if m:
+            current = m.group(1)
+        v = re.match(r"^\s*version\s*=\s*(\S+)", line)
+        if v and current and current not in arm_version:
+            arm_version[current] = v.group(1)
     attr_of = {"encr": "ike_encr", "integ": "ike_integ", "prf": "ike_prf", "ke": "ike_dh_group"}
     for pcap in sorted((ROOT / "testbed/captures/exp15").glob("*.pcap")):
         arm = pcap.stem
@@ -204,6 +215,9 @@ def evidence_map() -> dict:
             if old and old["value"] != v:
                 raise SystemExit(f"captures disagree on {norm}: {old['value']} vs {v}")
             ike[norm] = {"attribute": attr_of[kind], "value": v, "source": src}
+        if arm in arm_version and val("ike_version") is not None:
+            lines["version"].setdefault(arm_version[arm], []).append(
+                {"attribute": "ike_version", "value": val("ike_version"), "source": src})
         proto, child = arms[arm]["proto"], arms[arm]["child"]
         key = "esp_proposals" if proto == "esp" else "ah_proposals"
         attr = "esp_cipher_family" if proto == "esp" else "ah_integrity"
@@ -254,7 +268,7 @@ def main() -> None:
     OUT.write_text(json.dumps(doc, indent=1, sort_keys=False) + "\n")
     print(f"candidates {len(cands)}, accepted {len(doc['keywords'])}, rejected {len(doc['rejected'])}")
     print(f"evidence: ike {len(doc['evidence']['ike'])} names, esp {len(doc['evidence']['esp_proposals'])} values, "
-          f"ah {len(doc['evidence']['ah_proposals'])} values")
+          f"ah {len(doc['evidence']['ah_proposals'])} values, version {sorted(doc['evidence']['version'])}")
     print(f"images: {ids}")
     print(f"wrote {OUT.relative_to(ROOT)}")
 
