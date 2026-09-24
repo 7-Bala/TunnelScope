@@ -1,10 +1,13 @@
 """The traffic classifier and Random Forest ATTACKER (EXP-05, EXP-15), run live on a capture.
 
 What it is: a model of a passive eavesdropper. It was trained on our own lab
-traffic (and, since EXP-19 / DEC-036, real public VPN traffic from MIT VNAT) (EXP-05: voip / web / bulk / interactive / video, with and without TFC
-padding) to guess what kind of traffic is inside an encrypted ESP tunnel from
-packet sizes, timing and direction alone. On that data it was right almost
-every time (macro-F1 1.000 unpadded, 0.995 padded; leave-one-repetition-out).
+traffic (EXP-05: voip / web / bulk / interactive / video, with and without TFC padding) and,
+since EXP-19/DEC-036 and EXP-20/DEC-037, on real public traffic recorded by others: OpenVPN
+tunnels (MIT VNAT), real IPsec tunnels (USBVPN2022 L2TP-IPsec) and real people's WireGuard traffic
+(excluding its unlabelled-video-as-"web" class, EXP-20 Q5) — to guess what kind of traffic is
+inside an encrypted ESP tunnel from packet sizes, timing and direction alone. On our own lab data
+it was right almost every time (macro-F1 1.000 unpadded, 0.995 padded; leave-one-repetition-out);
+on real IPsec traffic it had never seen, adding that data raised it from 0.174 to 0.757 (EXP-20).
 
 What it reports for a capture (DEC-027, superseding DEC-021's "never a label"):
   - attacker_exposure: how SURE and how CONSISTENT the attacker is, 0-100;
@@ -21,8 +24,11 @@ Trust limits, reported with every result:
   - a capture needs enough ESP traffic for at least MIN_WINDOWS full windows.
 
 No pickled model ships (pickles are version-fragile and a code-execution risk):
-the training windows ship as a plain .npz (build/models/make_attacker_data.py)
-and the forest is trained on first use, in about a second, then cached.
+the training windows ship as a plain .npz (build/models/make_traffic_data.py)
+and the forest is trained on first use, then cached. The fit runs in parallel
+(n_jobs=-1): measured at 0.68 s on today's ~20,000 windows, versus 5.0 s single-threaded
+(EXP-20) with numerically identical predictions (same random_state; the only
+difference is floating-point summation order, ~2e-16).
 """
 from __future__ import annotations
 
@@ -42,8 +48,10 @@ LABEL = {"voip": "VoIP call", "web": "Web browsing", "bulk": "File transfer", "i
 # read as web in 8 of 8. Stated with every prediction it affects.
 KNOWN_CONFUSION = {"web": "video streaming mixed with an interactive session also reads as web browsing; the "
                           "mixed-traffic check (EXP-16) catches that case, but it is the known weak spot"}
-MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (it catches 96% of mixed "
-              "sessions, and wrongly flags 8% of single ones)")
+# Numbers from EXP-16 Part D (experiments/exp16-real-apps-cross-impl/RESULT.md, P16-5), the same ones
+# the dashboard shows. An earlier version said "96%", which no experiment produced.
+MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (in testing it caught 92.9% "
+              "of mixed sessions and wrongly flagged 8.3% of single ones)")
 # abstain rule (set from EXP-15's leave-one-repetition-out analysis; see RESULT.md)
 TAU = 0.60              # minimum mean top-class probability
 MIN_CONSISTENCY = 0.70  # minimum share of windows agreeing with the session's top class
@@ -59,9 +67,13 @@ DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "traff
 # training data that looks like the target traffic is what matters, not the tuning.
 # EXP-19 (DEC-036) adds real public traffic (MIT VNAT, OpenVPN tunnels recorded by others): a lab-only
 # model scored 0.47 on it, the shipped lab + real model 0.74 on capture files it never saw.
+# EXP-20 (DEC-037) adds real IPsec traffic (USBVPN2022) and real people's WireGuard traffic: before
+# that data, the model scored 0.174 on real IPsec and answered 0% of the time (always abstained);
+# with it, 0.757 macro-F1 and answers 93.6% of the time at 99.8% accuracy when it does.
 REFERENCE = {"f1_unpadded": 0.995, "f1_tfc_padded": 0.958, "f1_real_apps_loro": 0.995,
              "f1_cross_implementation": 1.0, "f1_synthetic_only_on_real_apps": 0.461,
              "f1_lab_only_on_real_public": 0.472, "f1_real_public_heldout": 0.741,
+             "f1_before_real_ipsec": 0.174, "f1_with_real_ipsec_and_people": 0.757,
              "chance": round(1 / len(CLASSES), 3)}
 
 
@@ -99,14 +111,16 @@ def window_features(pkts: list[tuple[float, str, int]], complete_only: bool = Tr
 
 @lru_cache(maxsize=1)
 def _model():
-    """Train once per process on the shipped EXP-05 windows (base + TFC arms)."""
+    """Train once per process on the shipped training windows (build/models/make_traffic_data.py).
+    n_jobs=-1 (EXP-20/DEC-037): parallel fit, 0.68 s measured vs 5.0 s single-threaded on today's
+    data, predictions identical to n_jobs=1 up to floating-point noise (same random_state)."""
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.neighbors import NearestNeighbors
     from sklearn.preprocessing import StandardScaler
 
     d = np.load(DATA, allow_pickle=False)
     X, y = d["X"], d["y"]
-    rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=1, min_samples_leaf=2).fit(X, y)
+    rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=-1, min_samples_leaf=2).fit(X, y)
     # out-of-distribution gate: how far is a window from the nearest training
     # window, compared with how far training windows are from each other
     sc = StandardScaler().fit(X)

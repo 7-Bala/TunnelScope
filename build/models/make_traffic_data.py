@@ -31,11 +31,15 @@ ARM_NAME = {"base": "tunnel", "tun": "tunnel", "tfc": "tunnel+tfc", "tra": "tran
 
 
 VNAT = ROOT / "build/models/vnat_windows.npz"
+USBVPN = ROOT / "build/models/usbvpn_windows.npz"
+WG = ROOT / "build/models/wg_windows.npz"
 
 
 def load(include_mux=False, keep=None, include_real_public=False):
     """keep: only these arm names (after ARM_NAME mapping); None = all.
-    include_real_public: add the real public VNAT windows (EXP-19). Off by default so every earlier
+    include_real_public: add the real public windows (EXP-19/DEC-036: MIT VNAT OpenVPN tunnels;
+    EXP-20/DEC-037: USBVPN2022 real L2TP-IPsec tunnels, and real people's WireGuard traffic with
+    its unlabelled-video-as-"web" class excluded, EXP-20 Q5). Off by default so every earlier
     experiment's analysis reproduces exactly; the shipped model build turns it on."""
     X, y, arm, rep, sess, src = [], [], [], [], [], []
     for tag, cap, arms in SOURCES:
@@ -53,13 +57,31 @@ def load(include_mux=False, keep=None, include_real_public=False):
             for v in window_features(pk):
                 X.append(v); y.append(cls); arm.append(name); rep.append(int(r))
                 sess.append(t); src.append(tag)
-    if include_real_public and (keep is None or "vnat-openvpn" in keep):
-        # EXP-19 / DEC-036: real public traffic (MIT VNAT, OpenVPN tunnels), windows built by
-        # experiments/exp19-real-public-traffic/export_windows.py. rep 0 is never a lab repetition,
-        # so every lab leave-one-repetition-out test keeps these windows in training only.
-        v = np.load(VNAT, allow_pickle=False)
-        X += v["X"].astype(float).tolist(); y += v["y"].tolist(); arm += ["vnat-openvpn"] * len(v["y"])
-        rep += [0] * len(v["y"]); sess += v["capture"].tolist(); src += ["VNAT"] * len(v["y"])
+    if include_real_public:
+        # rep 0 is never a lab repetition, so every lab leave-one-repetition-out test keeps all of
+        # the sources below in training only (they never become a held-out "rep").
+        if keep is None or "vnat-openvpn" in keep:
+            # EXP-19 / DEC-036: real public traffic (MIT VNAT, OpenVPN tunnels), windows built by
+            # experiments/exp19-real-public-traffic/export_windows.py.
+            v = np.load(VNAT, allow_pickle=False)
+            X += v["X"].astype(float).tolist(); y += v["y"].tolist(); arm += ["vnat-openvpn"] * len(v["y"])
+            rep += [0] * len(v["y"]); sess += v["capture"].tolist(); src += ["VNAT"] * len(v["y"])
+        if keep is None or "usbvpn-l2tpipsec" in keep:
+            # EXP-20 / DEC-037: real IPsec traffic (USBVPN2022, L2TP-over-IPsec), windows built by
+            # experiments/exp20-real-ipsec-and-users/export_windows.py. The first real IPsec traffic
+            # the project has; raised real-IPsec macro-F1 from 0.174 to 0.757 (EXP-20 R1 vs R0).
+            v = np.load(USBVPN, allow_pickle=False)
+            X += v["X"].astype(float).tolist(); y += v["y"].tolist(); arm += ["usbvpn-l2tpipsec"] * len(v["y"])
+            rep += [0] * len(v["y"]); sess += v["group"].tolist(); src += ["USBVPN"] * len(v["y"])
+        if keep is None or "wireguard-real" in keep:
+            # EXP-20 / DEC-037: real people's traffic (WireGuard matched-view), its "web" class
+            # excluded (EXP-20 Q5: nDPI files unlabelled video under "web"; including it lowered
+            # real-IPsec accuracy and collapsed voip's F1, so it stays out).
+            v = np.load(WG, allow_pickle=False)
+            m = v["y"] != "web"
+            n = int(m.sum())
+            X += v["X"][m].astype(float).tolist(); y += v["y"][m].tolist(); arm += ["wireguard-real"] * n
+            rep += [0] * n; sess += v["group"][m].tolist(); src += ["WireGuard"] * n
     return (np.array(X, float), np.array(y), np.array(arm), np.array(rep), np.array(sess), np.array(src))
 
 

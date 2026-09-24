@@ -1,0 +1,56 @@
+{
+ "source_zip": "encrypted_vpn_dataset.zip",
+ "source_zip_bytes": 811738498,
+ "source_zip_sha256": "8039945ffa3f22ff9443787dfbeaf74fd89d33cddd292dcaa6f7cc4b9fe2f54e",
+ "folder": "VPN/L2TP IPsec",
+ "tunnel_selection": "UDP, port 4500 on both ends (ESP in UDP)",
+ "size_unit": "IP length (bytes)",
+ "out_direction": "sign of the record's first packet",
+ "label_by_file": {
+  "mail": "email",
+  "meet": "voip",
+  "streaming": "video",
+  "non_streaming": "web",
+  "ssh": "interactive"
+ },
+ "merged_row_rule": "exact sum from the file's top 20 single sizes per direction, else even split",
+ "tunnel_records": 1118,
+ "packets": 16154280,
+ "per_file": {
+  "mail.json": {
+   "records": 5,
+   "merged_rows_exact": 7,
+   "packets_from_merged": 14,
+   "packets": 1095
+  },
+  "meet.json": {
+   "records": 2,
+   "merged_rows_exact": 8511,
+   "packets_from_merged": 18520,
+   "merged_rows_even": 137,
+   "packets": 91835,
+   "records_dropped_not_tunnel": 2
+  },
+  "non_streaming.json": {
+   "records": 1013,
+   "merged_rows_exact": 1859457,
+   "packets_from_merged": 4075790,
+   "merged_rows_even": 19239,
+   "packets": 14622220,
+   "records_dropped_not_tunnel": 746
+  },
+  "ssh.json": {
+   "records": 5,
+   "packets": 206
+  },
+  "streaming.json": {
+   "records": 93,
+   "merged_rows_even": 771,
+   "packets_from_merged": 370783,
+   "merged_rows_exact": 171001,
+   "packets": 1438924,
+   "records_dropped_not_tunnel": 89
+  }
+ },
+ "output": "/Users/bala/Datasets/usbvpn2022/converted/usbvpn_l2tpipsec_packets.npz"
+}
