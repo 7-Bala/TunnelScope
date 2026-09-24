@@ -1,0 +1,75 @@
+{
+ "source": "/Users/bala/Datasets/vnat/converted/vnat_vpn_packets.npz",
+ "seed": 19,
+ "cap_per_connection": 60,
+ "vnat": {
+  "windows": 4702,
+  "connections": 82,
+  "capture_files": 82,
+  "per_class_windows": {
+   "video": 300,
+   "voip": 180,
+   "messaging": 3420,
+   "interactive": 444,
+   "bulk": 358
+  },
+  "per_class_files": {
+   "video": 5,
+   "voip": 3,
+   "messaging": 57,
+   "interactive": 8,
+   "bulk": 9
+  }
+ },
+ "Q1_lab_model_on_vnat": 0.4719,
+ "Q2_vnat_only_grouped_cv": {
+  "folds": [
+   0.7718,
+   0.6847,
+   0.7044,
+   0.9566,
+   0.6007
+  ],
+  "mean": 0.7436
+ },
+ "Q3_vnat_model_on_our_ipsec_real_apps": {
+  "windows": 1255,
+  "macro_f1": 0.3777
+ },
+ "Q4a_combined_on_heldout_vnat": {
+  "folds": [
+   0.7582,
+   0.6559,
+   0.7173,
+   0.9529,
+   0.6199
+  ],
+  "mean": 0.7408
+ },
+ "Q4b_lab_real_apps_loro": {
+  "without_vnat": {
+   "folds": [
+    0.9821,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 0.9955
+  },
+  "with_vnat": {
+   "folds": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0
+  }
+ },
+ "ship_bar": {
+  "q4a_ge_0_80": false,
+  "q4a_beats_q1_by_0_10": true,
+  "q4b_not_worse_than_0_02": true
+ },
+ "ship": false
+}

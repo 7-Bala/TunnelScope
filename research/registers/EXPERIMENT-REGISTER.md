@@ -391,3 +391,15 @@ H1 HELD: all 32 safety items (30 code-built bad drafts across 10 mutation kinds,
 H2 FAILED: 0 of 16 included test items had an A1 draft confirmed fixed (0.00, Wilson 95% 0.00-0.19); every draft was refused (V5 9, V3 5, V6 2). Local-model drafts stay switched off.
 H3: critique not kept (A0 0/16, A1 0/16); self-review not kept (no accepted draft to review). Robustness (temperature 0.7, 5 seeds): 0 of 79 accepted.
 Excluded as pre-registered: D1-D2 (IKEv1 did not establish), D3-D4 and T17-T20 (ESP/AH rules are UNKNOWN on a handshake-only capture: the remediation loop cannot verify ESP/AH fixes, hand-written included), one infrastructure failure (Docker stopped). `experiments/exp18-generative-remediation/RESULT.md`.
+
+## EXP-19 — Real public traffic (MIT VNAT) for the traffic classifier — PRE-REGISTRATION (2026-09-24)
+Pre-registered in `experiments/exp19-real-public-traffic/PREREG.md` (commit 0e02a6c) before any training.
+Data: the 82 OpenVPN tunnel flows of MIT Lincoln Laboratory VNAT (`vpn_*` captures), labels from the file
+name keyword only. Q1 lab model on real traffic; Q2 real-only model grouped by capture file; Q3 real
+OpenVPN -> our IPsec real applications; Q4 combined model. Ship bar: Q4a >= 0.80, Q4a >= Q1 + 0.10,
+Q4b no more than 0.02 worse, file < 5 MB.
+
+### EXP-19 — RESULT (2026-09-24)
+4,702 windows from 82 real tunnels. Q1 0.472; Q2 0.744; Q3 0.378; Q4a 0.741 (folds 0.60-0.95); Q4b 1.000 with vs 0.996 without.
+Ship bar NOT met (Q4a < 0.80); the other two conditions held. Owner shipped it anyway: DEC-036.
+`experiments/exp19-real-public-traffic/RESULT.md`.

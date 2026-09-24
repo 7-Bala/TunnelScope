@@ -1,0 +1,15 @@
+{
+ "source_file": "VNAT_Dataframe_release_1.h5",
+ "source_bytes": 1045436008,
+ "source_sha256": "5d0c3d76cd292f19e25b5229719264bc1ddd71920a20bb27a7dec6c7138914de",
+ "connections_total": 33711,
+ "vpn_files": 82,
+ "vpn_connections": 379,
+ "tunnel_flows_used": 82,
+ "unmapped_files": [],
+ "packets": 15487445,
+ "size_unit": "IP length (bytes)",
+ "out_direction": "sender of the flow's first packet",
+ "tunnel_selection": "UDP, port 1195 on both ends",
+ "output": "/Users/bala/Datasets/vnat/converted/vnat_vpn_packets.npz"
+}
