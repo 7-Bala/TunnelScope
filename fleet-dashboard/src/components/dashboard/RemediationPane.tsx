@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   remediationPlan,
   applyRemediation,
+  generateRemediation,
   previewRemediation,
+  remediationCapabilities,
   remediationTargets,
+  type GenerateResult,
   type LabTarget,
+  type RemediationCapabilities,
   type RemediationPlan,
   type RemediationApplyResult,
   type RemediationPreview,
@@ -61,6 +65,15 @@ export function RemediationControl({
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<RemediationApplyResult | null>(null)
   const [showDetailed, setShowDetailed] = useState(false)
+  // Local-model draft (DEC-034): shown next to the hand-written fix, which stays the default.
+  const [caps, setCaps] = useState<RemediationCapabilities | null>(null)
+  const [draft, setDraft] = useState<GenerateResult | null>(null)
+  const [drafting, setDrafting] = useState(false)
+  const [draftSeconds, setDraftSeconds] = useState(0)
+  const [choice, setChoice] = useState<"hand" | "draft">("hand")
+  const [concernAcknowledged, setConcernAcknowledged] = useState(false)
+  const draftRequest = useRef(0)
+  const busy = useRef(false) // a second click before React re-renders must not send a second request
 
   useEffect(() => {
     if (decision !== "approved") return
@@ -71,10 +84,20 @@ export function RemediationControl({
       const rec = t.targets.find((x) => x.name === t.recommended && x.running)
       if (rec) setTarget(rec.name)
     })
+    remediationCapabilities().then((c) => {
+      if (live) setCaps(c)
+    })
     return () => {
       live = false
     }
   }, [decision])
+
+  useEffect(() => {
+    if (!drafting) return
+    const started = Date.now()
+    const t = setInterval(() => setDraftSeconds(Math.round((Date.now() - started) / 1000)), 500)
+    return () => clearInterval(t)
+  }, [drafting])
 
   async function handleOpen() {
     if (hasFetched) {
@@ -94,29 +117,69 @@ export function RemediationControl({
 
   function chooseTarget(name: string) {
     setTarget(name)
-    // A preview is for one container; a new target needs a new preview before applying.
+    // A preview (and a draft) is for one container; a new target needs new ones before applying.
     setPreview(null)
     setApplyResult(null)
+    setDraft(null)
+    setChoice("hand")
+    setConcernAcknowledged(false)
+    draftRequest.current++
+    setDrafting(false)
   }
 
+  function choosePlan(c: "hand" | "draft") {
+    setChoice(c)
+    setPreview(null)
+    setApplyResult(null)
+    setConcernAcknowledged(false)
+  }
+
+  async function handleDraft() {
+    const id = ++draftRequest.current
+    setDrafting(true)
+    setDraftSeconds(0)
+    setDraft(null)
+    choosePlan("hand")
+    const r = await generateRemediation(ruleId, target, observed)
+    if (draftRequest.current !== id) return // cancelled, or the target changed meanwhile
+    setDraft(r)
+    setDrafting(false)
+  }
+
+  function cancelDraft() {
+    draftRequest.current++
+    setDrafting(false)
+  }
+
+  const draftPlanId = choice === "draft" && draft?.ok ? draft.plan_id : null
+
   async function handlePreview() {
+    if (busy.current) return
+    busy.current = true
     setPreviewing(true)
     setPreview(null)
     setApplyResult(null)
     try {
-      setPreview(await previewRemediation(ruleId, target))
+      setPreview(await previewRemediation(ruleId, target, draftPlanId))
     } finally {
       setPreviewing(false)
+      busy.current = false
     }
   }
 
   async function handleApply() {
+    if (busy.current) return
+    busy.current = true
     setApplying(true)
     setApplyResult(null)
     try {
-      setApplyResult(await applyRemediation(ruleId, target, true, { digest: preview?.digest }))
+      const r = await applyRemediation(ruleId, target, true, { digest: preview?.digest, planId: draftPlanId })
+      setApplyResult(r)
+      // What was previewed no longer matches the lab: that preview must not be applied again.
+      if (r.stage === "stale_preview") setPreview(null)
     } finally {
       setApplying(false)
+      busy.current = false
     }
   }
 
@@ -160,11 +223,15 @@ export function RemediationControl({
   if (!plan) return null
 
   const automated = plan.auto_applicable && plan.automated_fix_available !== false
-  const previewReady = preview?.ok === true
+  const draftConcern = choice === "draft" && draft?.ok && draft.plan.self_review?.verdict === "concerns"
+  const previewReady = preview?.ok === true && (!draftConcern || concernAcknowledged)
   const targetInfo = targets.find((t) => t.name === target)
 
   return (
-    <div className="mt-2 max-w-[560px] space-y-2.5 rounded-lg border border-border bg-background/60 p-3 text-[12.5px] text-foreground/90">
+    <div
+      data-testid={`remediation-pane-${ruleId}`}
+      className="mt-2 w-full max-w-[min(560px,calc(100vw-5rem))] space-y-2.5 rounded-lg border border-border bg-background/60 p-3 text-[12.5px] text-foreground/90"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <span className="text-[11px] font-medium uppercase tracking-wider text-faint">Proposed change</span>
@@ -323,14 +390,14 @@ export function RemediationControl({
 
               <div className="space-y-2 rounded border border-border/70 bg-secondary/30 p-2.5 text-[12px]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-faint">Lab target:</span>
+                  <div className="flex min-w-0 max-w-full items-center gap-2">
+                    <span className="shrink-0 text-[11px] font-medium uppercase tracking-wider text-faint">Lab target:</span>
                     <select
                       value={target}
                       onChange={(e) => chooseTarget(e.target.value)}
                       disabled={applying || previewing}
                       aria-label={`Select lab container target for ${ruleId}`}
-                      className="rounded border border-border bg-background px-2 py-0.5 font-mono text-[11.5px] text-foreground focus:outline-none"
+                      className="min-w-0 max-w-full rounded border border-border bg-background px-2 py-0.5 font-mono text-[11.5px] text-foreground"
                     >
                       {targets.map((t) => (
                         <option key={t.name} value={t.name}>
@@ -363,6 +430,39 @@ export function RemediationControl({
                   </div>
                 </div>
 
+                <DraftPanel
+                  caps={caps}
+                  draft={draft}
+                  drafting={drafting}
+                  seconds={draftSeconds}
+                  choice={choice}
+                  disabled={applying || previewing || targetInfo?.running === false}
+                  ruleId={ruleId}
+                  onDraft={handleDraft}
+                  onCancel={cancelDraft}
+                  onChoose={choosePlan}
+                />
+
+                {draftConcern && preview?.ok && !concernAcknowledged && (
+                  <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[11.5px] text-amber-300">
+                    <p>
+                      <span className="font-semibold">The model's own review raised a concern: </span>
+                      {draft?.ok ? draft.plan.self_review?.reason : ""}
+                    </p>
+                    <p className="mt-1 text-foreground/80">
+                      Every code check passed. The concern is the model's opinion; read the diff before you decide.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setConcernAcknowledged(true)}
+                      aria-label={`I have read the concern, allow Apply for ${ruleId}`}
+                      className="mt-1.5 rounded border border-amber-500/50 px-2 py-0.5 text-[11px] font-medium text-amber-300 hover:bg-amber-500/10"
+                    >
+                      I have read it, allow Apply
+                    </button>
+                  </div>
+                )}
+
                 {preview && !preview.ok && (
                   <p className="text-[12px] text-warn">
                     <span className="font-semibold">Cannot apply here: </span>
@@ -373,7 +473,9 @@ export function RemediationControl({
                 {preview?.ok && (
                   <div className="space-y-1.5">
                     <p className="text-[11.5px] text-muted-foreground">
-                      Dry run on copies of the real files in {target}. This is exactly what "Apply in lab" will change:
+                      Dry run of the {choice === "draft" ? "local model's draft" : "hand-written fix"} on copies of the real
+                      files in {target}, and strongSwan loaded the result in a throwaway copy of the container. This is exactly
+                      what "Apply in lab" will change:
                     </p>
                     {Object.entries(preview.diff ?? {}).map(([file, d]) => (
                       <DiffBlock key={file} diff={d} />
@@ -454,6 +556,9 @@ function ApplyOutcome({ result }: { result: RemediationApplyResult }) {
       : "The configuration was restored from the pre-change snapshot, but the restored files could not be verified. The snapshot was kept and the watchdog will retry; check the container."
   return (
     <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[12px]">
+      <p className="text-[11px] text-faint">
+        Plan used: {result.source === "generated" ? "the local model's draft (checked by code)" : "the hand-written fix"}
+      </p>
       {result.decision === "failed" ? (
         <p className="font-semibold text-warn">A command failed in the lab: {result.error}</p>
       ) : (
@@ -512,6 +617,191 @@ function ApplyOutcome({ result }: { result: RemediationApplyResult }) {
           with the target when not confirmed.
         </p>
       )}
+    </div>
+  )
+}
+
+const DRAFT_LABEL =
+  "Drafted on this Mac by a local language model (MiniCPM5-2B). Every line was then checked by code, and the change was tried on copies of the config before you see it. The model can be wrong; the checks and the automatic rollback are what protect the lab."
+
+function DraftPanel({
+  caps,
+  draft,
+  drafting,
+  seconds,
+  choice,
+  disabled,
+  ruleId,
+  onDraft,
+  onCancel,
+  onChoose,
+}: {
+  caps: RemediationCapabilities | null
+  draft: GenerateResult | null
+  drafting: boolean
+  seconds: number
+  choice: "hand" | "draft"
+  disabled: boolean
+  ruleId: string
+  onDraft: () => void
+  onCancel: () => void
+  onChoose: (c: "hand" | "draft") => void
+}) {
+  if (!caps) return null
+  if (!caps.generator_enabled) {
+    return (
+      <p className="text-[11px] text-faint">
+        Local-model drafts are switched off until their evaluation (EXP-18) passes. The hand-written fix is used.
+      </p>
+    )
+  }
+  if (!caps.local_model) {
+    return <p className="text-[11px] text-faint">The local model is not available on this machine.</p>
+  }
+  return (
+    <div className="space-y-2 rounded border border-border/60 bg-background/40 p-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {drafting ? (
+          <>
+            <span className="animate-pulse text-[11.5px] text-muted-foreground">
+              The local model is drafting, then code checks the draft... {seconds} s
+            </span>
+            <button
+              type="button"
+              onClick={onCancel}
+              aria-label={`Cancel the local model draft for ${ruleId}`}
+              className="text-[11px] text-faint underline hover:text-muted-foreground"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={onDraft}
+            disabled={disabled}
+            aria-label={`Draft a fix with the local model for ${ruleId}`}
+            className="rounded border border-border bg-secondary px-2.5 py-1 text-[11.5px] font-medium text-foreground/90 transition-colors hover:text-foreground disabled:opacity-50"
+          >
+            {draft ? "Draft again" : "Draft a fix with the local model"}
+          </button>
+        )}
+      </div>
+
+      {draft && !draft.ok && <DraftRefused draft={draft} />}
+
+      {draft?.ok && (
+        <div className="space-y-2">
+          <div className="grid gap-2 md:grid-cols-2">
+            <div className="min-w-0">
+              <span className="text-[11px] font-medium text-faint">Hand-written fix</span>
+              {Object.values(draft.plan.handwritten_diff ?? {}).map((d, i) => (
+                <DiffBlock key={i} diff={d} />
+              ))}
+              {!draft.plan.handwritten_diff && (
+                <p className="mt-1 text-[11px] text-faint">The hand-written fix would not change this configuration.</p>
+              )}
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-medium text-faint">Local model's draft</span>
+              {Object.values(draft.plan.diff).map((d, i) => (
+                <DiffBlock key={i} diff={d} />
+              ))}
+            </div>
+          </div>
+          <p className="text-[11.5px] text-foreground/90">
+            {draft.plan.agrees_with_handwritten ? "Both make the same change." : "They differ."}
+          </p>
+          <p className="text-[11px] leading-relaxed text-faint">{DRAFT_LABEL}</p>
+          <DraftChecks checks={draft.plan.checks} rounds={draft.plan.revisions.length} />
+          {draft.plan.self_review && (
+            <p className={cn("text-[11px]", draft.plan.self_review.verdict === "concerns" ? "text-amber-300" : "text-faint")}>
+              The model's review of its own draft:{" "}
+              {draft.plan.self_review.verdict === "concerns"
+                ? `concern: ${draft.plan.self_review.reason}`
+                : draft.plan.self_review.verdict === "no concerns"
+                  ? "no concerns raised (its opinion, not a check)"
+                  : "not available"}
+            </p>
+          )}
+          <fieldset className="flex flex-wrap items-center gap-3 text-[11.5px]">
+            <legend className="sr-only">Which plan to preview and apply</legend>
+            <label className="flex items-center gap-1.5">
+              <input
+                type="radio"
+                name={`plan-${ruleId}`}
+                checked={choice === "hand"}
+                onChange={() => onChoose("hand")}
+                aria-label={`Use the hand-written fix for ${ruleId}`}
+              />
+              Use the hand-written fix
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input
+                type="radio"
+                name={`plan-${ruleId}`}
+                checked={choice === "draft"}
+                onChange={() => onChoose("draft")}
+                aria-label={`Use the local model's draft for ${ruleId}`}
+              />
+              Use the local model's draft
+            </label>
+          </fieldset>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DraftChecks({ checks, rounds }: { checks: { id: string; name: string; ok: boolean; reason: string | null }[]; rounds: number }) {
+  return (
+    <div>
+      <span className="text-[11px] text-faint">
+        Checks run by code{rounds > 1 ? ` (on the model's attempt ${rounds}; earlier attempts failed a check)` : ""}:
+      </span>
+      <ul className="mt-0.5 space-y-0.5">
+        {checks.map((c) => (
+          <li key={c.id} className="flex gap-2 text-[11px]">
+            <span className={cn("w-12 shrink-0 font-mono", c.ok ? "text-emerald-400" : "text-warn")}>{c.ok ? "passed" : "failed"}</span>
+            <span className="text-muted-foreground">
+              {c.name}
+              {!c.ok && c.reason ? `. Reason: ${c.reason}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function DraftRefused({ draft }: { draft: Extract<GenerateResult, { ok: false }> }) {
+  const last = draft.revisions?.[draft.revisions.length - 1]
+  const failed = draft.checks?.find((c) => !c.ok)
+  return (
+    <div className="space-y-1 rounded border border-warn/30 bg-warn/10 p-2 text-[11.5px]">
+      <p className="font-semibold text-warn">
+        {failed ? "The local model's draft did not pass the checks." : "No draft from the local model."}
+      </p>
+      {failed ? (
+        <p className="text-foreground/80">
+          <span className="text-faint">Failed check {failed.id} ({failed.name}). </span>
+          Reason: {failed.reason ?? "not given"}
+        </p>
+      ) : (
+        <p className="text-foreground/80">{draft.reason || draft.error || "it could not be drafted"}</p>
+      )}
+      {draft.revisions && draft.revisions.length > 1 && (
+        <p className="text-faint">The model was told which check failed and tried {draft.revisions.length} times.</p>
+      )}
+      {last?.raw_output && (
+        <details>
+          <summary className="cursor-pointer text-faint">What the model proposed</summary>
+          <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded bg-secondary/60 p-1.5 font-mono text-[10.5px] text-foreground/80">
+            {last.raw_output}
+          </pre>
+        </details>
+      )}
+      <p className="text-faint">Nothing was changed. The hand-written fix is still available above.</p>
     </div>
   )
 }

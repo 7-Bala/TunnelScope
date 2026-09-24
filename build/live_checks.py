@@ -101,7 +101,62 @@ def check_generator() -> int:
     return PASS
 
 
-CHECKS = {"model": check_model, "generator": check_generator}
+def check_browser() -> int:
+    """T-105 B2: the dashboard in a real browser (Playwright) against a real engine, the real local
+    model and the real lab. Starts its own engine with drafts switched on for the test only
+    (TUNNELSCOPE_GENERATOR=1) and a throwaway history folder, then stops it."""
+    import os
+    import subprocess
+    import tempfile
+    import urllib.request
+    from tunnelscope.rephrase import runtime
+    dash = ROOT / "fleet-dashboard"
+    if not runtime.model_available():
+        print("SKIP: the local model is not available on this machine")
+        return SKIP
+    if not _lab_up():
+        print("SKIP: lab containers sih26-alice-pq / sih26-bob-pq are not running")
+        return SKIP
+    if not (dash / "node_modules" / "@playwright" / "test").is_dir() or not (dash / "dist" / "index.html").is_file():
+        print("SKIP: dashboard not built or Playwright not installed (cd fleet-dashboard && npm ci && npm run build)")
+        return SKIP
+    with socket.socket() as sk:
+        sk.bind(("127.0.0.1", 0))
+        port = sk.getsockname()[1]
+    history = tempfile.mkdtemp(prefix="ts-e2e-history-")
+    env = {**os.environ, "TUNNELSCOPE_GENERATOR": "1"}
+    eng = subprocess.Popen([str(ROOT / ".venv/bin/python"), "-m", "tunnelscope.cli", "serve", "--no-browser",
+                            "--port", str(port), "--history", history], cwd=ROOT, env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(100):
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=1)
+                break
+            except Exception:
+                time.sleep(0.2)
+        else:
+            print("FAIL: the engine did not start")
+            return FAIL
+        r = subprocess.run(["npx", "playwright", "test", "--project=live", "--reporter=line"], cwd=dash,
+                           env={**os.environ, "E2E_LIVE": "1", "E2E_BASE_URL": f"http://127.0.0.1:{port}",
+                                "E2E_HISTORY": history}, capture_output=True, text=True, timeout=1200)
+        print(r.stdout[-3000:])
+        if r.returncode != 0:
+            print(r.stderr[-2000:])
+            print("FAIL: live browser tests failed")
+            return FAIL
+        print("PASS: live browser tests (real engine, model and lab)")
+        return PASS
+    finally:
+        eng.terminate()
+        try:
+            eng.wait(timeout=10)
+        except Exception:
+            eng.kill()
+
+
+CHECKS = {"model": check_model, "generator": check_generator, "browser": check_browser}
 
 if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else ""

@@ -1,0 +1,797 @@
+{
+ "ok": true,
+ "filename": "s-modp1024.pcap",
+ "n_sas": 1,
+ "sas": [
+  {
+   "id": "s-modp1024.pcap#1",
+   "source": "s-modp1024.pcap",
+   "src": "10.10.1.220",
+   "dst": "10.10.2.220",
+   "ike_spi": "75f3a77768e674eb_7135ca803e990052",
+   "posture": "classical (quantum-vulnerable key exchange)",
+   "fails": [
+    {
+     "baseline": "DISA-VPN-SRG-V2R6",
+     "rule_id": "V-207193",
+     "severity": "high",
+     "title": "IKE Phase 1 must use a Diffie-Hellman group of 16 or greater",
+     "message": "DH group below 16 for the IKE SA (DISA baseline; note RFC 8247 permits group 14)"
+    },
+    {
+     "baseline": "DISA-VPN-SRG-V2R6",
+     "rule_id": "V-207223",
+     "severity": "medium",
+     "title": "IKE must use FIPS-validated SHA-2 at 384 bits or higher",
+     "message": "IKE integrity below SHA2-384"
+    },
+    {
+     "baseline": "DST-NQM-2026",
+     "rule_id": "DST-PQ-KE",
+     "severity": "informational",
+     "title": "CII cryptographic assets should negotiate a post-quantum key exchange (assess quantum risk)",
+     "message": "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)"
+    },
+    {
+     "baseline": "RFC-8247",
+     "rule_id": "RFC8247-DH-MUST",
+     "severity": "high",
+     "title": "IKE SA key exchange must not use a group RFC 8247 marks MUST NOT or SHOULD NOT (1, 2, 5, 22, 23, 24)",
+     "message": "IKE SA uses a key-exchange group RFC 8247 marks MUST NOT (1, 22) or SHOULD NOT (2, 5, 23, 24)"
+    },
+    {
+     "baseline": "RFC-8247",
+     "rule_id": "RFC8247-DH-OFFER",
+     "severity": "medium",
+     "title": "An initiator's offer should not include groups RFC 8247 marks MUST NOT or SHOULD NOT",
+     "message": "the initiator would accept a discouraged group if a responder chose it (downgrade exposure); only the initiator's offer is visible on the wire"
+    }
+   ],
+   "verdicts": [
+    {
+     "verdict": "PASS",
+     "baseline": "CVE-WATCH",
+     "authority": "CVE-2026-78135 (strongSwan 5.9.7-6.0.x: Child SA obtainable from CREATE_CHILD_SA before IKE_AUTH completes; fixed in 6.1.0)",
+     "rule_id": "CVE-2026-78135",
+     "title": "No CREATE_CHILD_SA may be attempted before IKE_AUTH completes (pre-auth Child SA, CVE-2026-78135 pattern)",
+     "severity": "high",
+     "attribute": "early_childsa_cve",
+     "observed": "not-detected",
+     "message": ""
+    },
+    {
+     "verdict": "PASS",
+     "baseline": "DISA-VPN-SRG-V2R6",
+     "authority": "DISA Virtual Private Network (VPN) Security Requirements Guide, V2R6",
+     "rule_id": "V-207205",
+     "title": "The IPsec VPN Gateway must use IKEv2 for IPsec SAs",
+     "severity": "high",
+     "attribute": "ike_version",
+     "observed": "IKEv2",
+     "message": ""
+    },
+    {
+     "verdict": "FAIL",
+     "baseline": "DISA-VPN-SRG-V2R6",
+     "authority": "DISA Virtual Private Network (VPN) Security Requirements Guide, V2R6",
+     "rule_id": "V-207193",
+     "title": "IKE Phase 1 must use a Diffie-Hellman group of 16 or greater",
+     "severity": "high",
+     "attribute": "ike_dh_group",
+     "observed": "MODP-1024",
+     "message": "DH group below 16 for the IKE SA (DISA baseline; note RFC 8247 permits group 14)"
+    },
+    {
+     "verdict": "FAIL",
+     "baseline": "DISA-VPN-SRG-V2R6",
+     "authority": "DISA Virtual Private Network (VPN) Security Requirements Guide, V2R6",
+     "rule_id": "V-207223",
+     "title": "IKE must use FIPS-validated SHA-2 at 384 bits or higher",
+     "severity": "medium",
+     "attribute": "ike_integ",
+     "observed": "HMAC-SHA1-96",
+     "message": "IKE integrity below SHA2-384"
+    },
+    {
+     "verdict": "FAIL",
+     "baseline": "DST-NQM-2026",
+     "authority": "DST/National Quantum Mission - Implementation of Quantum Safe Ecosystem in India, Task Force Report, Feb 2026",
+     "rule_id": "DST-PQ-KE",
+     "title": "CII cryptographic assets should negotiate a post-quantum key exchange (assess quantum risk)",
+     "severity": "informational",
+     "attribute": "pq_key_exchange",
+     "observed": "classical-only",
+     "message": "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)"
+    },
+    {
+     "verdict": "PASS",
+     "baseline": "DST-NQM-2026",
+     "authority": "DST/National Quantum Mission - Implementation of Quantum Safe Ecosystem in India, Task Force Report, Feb 2026",
+     "rule_id": "DST-PQ-DOWNGRADE",
+     "title": "A proposed PQ key exchange must not fall back to classical (prevent insecure fallback)",
+     "severity": "high",
+     "attribute": "pq_key_exchange",
+     "observed": "classical-only",
+     "message": ""
+    },
+    {
+     "verdict": "PASS",
+     "baseline": "RFC-8221/4303",
+     "authority": "RFC 8221 (ESP and AH algorithm requirements), RFC 4301 (IPsec architecture), RFC 4303 (ESP), RFC 4302 (AH)",
+     "rule_id": "RFC4301-CONFIDENTIALITY",
+     "title": "Traffic should be protected by ESP; AH alone authenticates but does not encrypt (RFC 4301 sec 3.2)",
+     "severity": "medium",
+     "attribute": "ipsec_protocols",
+     "observed": [
+      "ESP"
+     ],
+     "message": ""
+    },
+    {
+     "verdict": "UNKNOWN",
+     "baseline": "RFC-8221/4303",
+     "authority": "RFC 8221 (ESP and AH algorithm requirements), RFC 4301 (IPsec architecture), RFC 4303 (ESP), RFC 4302 (AH)",
+     "rule_id": "RFC8221-ESP-3DES",
+     "title": "ESP encryption should not be 3DES (RFC 8221 sec 5: ENCR_3DES SHOULD NOT)",
+     "severity": "medium",
+     "attribute": "esp_cipher_family",
+     "observed": [
+      "AES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "Twofish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "message": "this rule cannot judge the observed value ['AES-CBC+HMAC-SHA1-96', 'AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', '3DES-CBC+HMAC-SHA1-96', 'AES-CTR+HMAC-SHA1-96', 'DES-CBC+HMAC-96', 'Blowfish-CBC+HMAC-96', 'Twofish-CBC+HMAC-96', 'CAST-CBC+HMAC-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']"
+    },
+    {
+     "verdict": "PASS",
+     "baseline": "RFC-8221/4303",
+     "authority": "RFC 8221 (ESP and AH algorithm requirements), RFC 4301 (IPsec architecture), RFC 4303 (ESP), RFC 4302 (AH)",
+     "rule_id": "RFC4303-SEQ",
+     "title": "A sequence number must not repeat on one SA (RFC 4303 sec 3.3.3 / RFC 4302 sec 3.3.2: the counter increases and MUST NOT cycle)",
+     "severity": "high",
+     "attribute": "sequence_integrity",
+     "observed": {
+      "spis": 4,
+      "packets": 56,
+      "replayed": 0,
+      "resets": 0,
+      "reordered": 0,
+      "capture_duplicates": 0,
+      "max_seq": 24
+     },
+     "message": ""
+    },
+    {
+     "verdict": "FAIL",
+     "baseline": "RFC-8247",
+     "authority": "RFC 8247 - Algorithm Implementation Requirements and Usage Guidance for IKEv2 (updated by RFC 9395)",
+     "rule_id": "RFC8247-DH-MUST",
+     "title": "IKE SA key exchange must not use a group RFC 8247 marks MUST NOT or SHOULD NOT (1, 2, 5, 22, 23, 24)",
+     "severity": "high",
+     "attribute": "ike_dh_group",
+     "observed": "MODP-1024",
+     "message": "IKE SA uses a key-exchange group RFC 8247 marks MUST NOT (1, 22) or SHOULD NOT (2, 5, 23, 24)"
+    },
+    {
+     "verdict": "FAIL",
+     "baseline": "RFC-8247",
+     "authority": "RFC 8247 - Algorithm Implementation Requirements and Usage Guidance for IKEv2 (updated by RFC 9395)",
+     "rule_id": "RFC8247-DH-OFFER",
+     "title": "An initiator's offer should not include groups RFC 8247 marks MUST NOT or SHOULD NOT",
+     "severity": "medium",
+     "attribute": "ike_offered_dh",
+     "observed": [
+      "MODP-1024"
+     ],
+     "message": "the initiator would accept a discouraged group if a responder chose it (downgrade exposure); only the initiator's offer is visible on the wire"
+    },
+    {
+     "verdict": "PASS",
+     "baseline": "RFC-8247",
+     "authority": "RFC 8247 - Algorithm Implementation Requirements and Usage Guidance for IKEv2 (updated by RFC 9395)",
+     "rule_id": "RFC8247-ENCR",
+     "title": "IKE encryption should be AES (GCM preferred; CBC acceptable)",
+     "severity": "medium",
+     "attribute": "ike_encr",
+     "observed": "AES-CBC-128",
+     "message": ""
+    }
+   ],
+   "findings": [
+    {
+     "attribute": "ike_version",
+     "label": "IKE version",
+     "status": "OBSERVED",
+     "value": "IKEv2",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "ike_meta",
+     "note": "ISAKMP version 2 exchange types present"
+    },
+    {
+     "attribute": "ike_exchanges",
+     "label": "IKE exchanges seen",
+     "status": "OBSERVED",
+     "value": [
+      "CREATE_CHILD_SA",
+      "IKE_AUTH",
+      "IKE_SA_INIT",
+      "INFORMATIONAL"
+     ],
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "ike_meta",
+     "note": ""
+    },
+    {
+     "attribute": "ike_spi",
+     "label": "IKE SA SPIs",
+     "status": "OBSERVED",
+     "value": {
+      "initiator": "75f3a77768e674eb",
+      "responder": "7135ca803e990052"
+     },
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "ike_meta",
+     "note": ""
+    },
+    {
+     "attribute": "ike_prf",
+     "label": "Handshake (IKE SA) PRF",
+     "status": "OBSERVED",
+     "value": "PRF-HMAC-SHA1",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "ike_crypto",
+     "note": ""
+    },
+    {
+     "attribute": "ike_encr",
+     "label": "Handshake (IKE SA) encryption",
+     "status": "OBSERVED",
+     "value": "AES-CBC-128",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "ike_crypto",
+     "note": ""
+    },
+    {
+     "attribute": "ike_integ",
+     "label": "Handshake (IKE SA) integrity",
+     "status": "OBSERVED",
+     "value": "HMAC-SHA1-96",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "ike_crypto",
+     "note": ""
+    },
+    {
+     "attribute": "ike_dh_group",
+     "label": "Handshake key-exchange group",
+     "status": "OBSERVED",
+     "value": "MODP-1024",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "ike_crypto",
+     "note": "DH group id 2"
+    },
+    {
+     "attribute": "pq_key_exchange",
+     "label": "Post-quantum key exchange",
+     "status": "OBSERVED",
+     "value": "classical-only",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "pq_addke",
+     "note": "no additional key exchange offered (or only NONE)"
+    },
+    {
+     "attribute": "ipsec_protocols",
+     "label": "IPsec protocol(s)",
+     "status": "OBSERVED",
+     "value": [
+      "ESP"
+     ],
+     "confidence": 1.0,
+     "vantage": "T0",
+     "method": "protocol_id",
+     "note": ""
+    },
+    {
+     "attribute": "esp_cipher_family",
+     "label": "Data (ESP) cipher: candidates",
+     "status": "INFERRED",
+     "value": [
+      "AES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "Twofish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "confidence": 0.9,
+     "vantage": "T0",
+     "method": "cipher_sieve (EXP-01)",
+     "note": "one-directional sieve -> CBC or AEAD/stream (ambiguous); 13 candidate(s) among the 16 families modelled. ESP with no integrity at all (RFC 8221: MUST NOT outside AEAD) or a cipher outside that table would not appear here"
+    },
+    {
+     "attribute": "pfs",
+     "label": "Perfect forward secrecy",
+     "status": "INFERRED",
+     "value": false,
+     "confidence": 0.9,
+     "vantage": "T1",
+     "method": "pfs (EXP-03 length gap)",
+     "note": "CREATE_CHILD_SA request 236 B, no KE payload"
+    },
+    {
+     "attribute": "rekey_cadence",
+     "label": "Rekey interval (key lifetime)",
+     "status": "NOT_OBSERVABLE",
+     "value": null,
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "sa_lifecycle (EXP-12)",
+     "note": "1 CREATE_CHILD_SA rekey(s) observed; need >=2 to measure an interval"
+    },
+    {
+     "attribute": "mode",
+     "label": "Tunnel / transport mode",
+     "status": "UNKNOWN",
+     "value": null,
+     "confidence": 1.0,
+     "vantage": "T0",
+     "method": "mode (EXP-08/14)",
+     "note": "not provable from this capture (no packet below the tunnel-mode size floor, and the mode model abstained or could not run). The mode is negotiated inside the encrypted IKE_AUTH; endpoint telemetry (T2, crosstier) states it exactly."
+    },
+    {
+     "attribute": "sequence_integrity",
+     "label": "Sequence numbers (replay)",
+     "status": "OBSERVED",
+     "value": {
+      "spis": 4,
+      "packets": 56,
+      "replayed": 0,
+      "resets": 0,
+      "reordered": 0,
+      "capture_duplicates": 0,
+      "max_seq": 24
+     },
+     "confidence": 1.0,
+     "vantage": "T0",
+     "method": "sequence (RFC 4303 \u00a73.3.3)",
+     "note": "no sequence number repeated on any SA. Whether the receiver DROPS replays (anti-replay window) is not visible passively."
+    },
+    {
+     "attribute": "peer_auth_method",
+     "label": "Peer authentication method",
+     "status": "NOT_OBSERVABLE",
+     "value": null,
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "auth_hint (EXP-11)",
+     "note": "the actual CERT/AUTH payload is inside encrypted IKE_AUTH; CERTREQ/SIGHASH in IKE_SA_INIT do not reliably indicate THIS tunnel's auth method (EXP-11)"
+    },
+    {
+     "attribute": "responder_cert_capability",
+     "label": "Responder certificate capability",
+     "status": "OBSERVED",
+     "value": false,
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "auth_hint (EXP-11)",
+     "note": "CERTREQ presence in the IKE_SA_INIT response - reflects the responder's own certificate trust-anchor policy fleet-wide, not necessarily this SA's negotiated method (validated by a same-responder differential test, EXP-11)"
+    },
+    {
+     "attribute": "negotiation_outcome",
+     "label": "Negotiation outcome",
+     "status": "OBSERVED",
+     "value": "success",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "failure_diag F0",
+     "note": "IKE_AUTH completed and ESP flows"
+    },
+    {
+     "attribute": "early_childsa_cve",
+     "label": "CVE-2026-78135 pattern",
+     "status": "OBSERVED",
+     "value": "not-detected",
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "EXP-09 early-Child-SA (CVE-2026-78135)",
+     "note": "IKE_AUTH (frame 3) precedes CREATE_CHILD_SA (frame 53)"
+    },
+    {
+     "attribute": "ike_offered_dh",
+     "label": "Key-exchange groups offered",
+     "status": "OBSERVED",
+     "value": [
+      "MODP-1024"
+     ],
+     "confidence": 1.0,
+     "vantage": "T1",
+     "method": "offered_dh (EXP-13)",
+     "note": "groups 10.10.1.220 (initiator) offered in IKE_SA_INIT; the responder's acceptable set is not visible"
+    },
+    {
+     "attribute": "metadata_exposure",
+     "label": "Metadata exposure (bits)",
+     "status": "MEASURED",
+     "value": {
+      "size_bits": 3.093,
+      "timing_bits": 2.016,
+      "tfc_padding_active": false
+     },
+     "confidence": 1.0,
+     "vantage": "T0",
+     "method": "leakage (EXP-05)",
+     "note": "passive size channel ~3.1 bits/packet and timing ~2.0 bits/packet are exposed. Enabling ESP TFC padding would mask sizes (at a bandwidth cost); it would NOT hide the traffic class from a timing-aware observer (EXP-05)."
+    },
+    {
+     "attribute": "attacker_exposure",
+     "label": "Attacker exposure (Random Forest)",
+     "status": "UNKNOWN",
+     "value": null,
+     "confidence": 1.0,
+     "vantage": "T0",
+     "method": "random-forest attacker (EXP-05)",
+     "note": "only 1 usable 2-second window(s) of ESP traffic; the attacker needs at least 3 to say anything"
+    },
+    {
+     "attribute": "traffic_type",
+     "label": "Traffic type inside the tunnel",
+     "status": "UNKNOWN",
+     "value": null,
+     "confidence": 1.0,
+     "vantage": "T0",
+     "method": "traffic classifier (EXP-15)",
+     "note": "uncertain: only 1 usable 2-second window(s) of ESP traffic; the attacker needs at least 3 to say anything"
+    }
+   ],
+   "scores": {
+    "CVE-WATCH": {
+     "score": 100.0,
+     "coverage": 1.0,
+     "counts": {
+      "pass": 1,
+      "fail": 0,
+      "unknown": 0,
+      "not_observable": 0,
+      "contradictory": 0
+     },
+     "high_severity_failures": [],
+     "note": "1/1 assessable rules pass (severity-weighted); 0 not assessable"
+    },
+    "DISA-VPN-SRG-V2R6": {
+     "score": 38.5,
+     "coverage": 1.0,
+     "counts": {
+      "pass": 1,
+      "fail": 2,
+      "unknown": 0,
+      "not_observable": 0,
+      "contradictory": 0
+     },
+     "high_severity_failures": [
+      "V-207193"
+     ],
+     "note": "1/3 assessable rules pass (severity-weighted); 0 not assessable"
+    },
+    "DST-NQM-2026": {
+     "score": 90.9,
+     "coverage": 1.0,
+     "counts": {
+      "pass": 1,
+      "fail": 1,
+      "unknown": 0,
+      "not_observable": 0,
+      "contradictory": 0
+     },
+     "high_severity_failures": [],
+     "note": "1/2 assessable rules pass (severity-weighted); 0 not assessable"
+    },
+    "RFC-8221/4303": {
+     "score": 100.0,
+     "coverage": 0.67,
+     "counts": {
+      "pass": 2,
+      "fail": 0,
+      "unknown": 1,
+      "not_observable": 0,
+      "contradictory": 0
+     },
+     "high_severity_failures": [],
+     "note": "2/2 assessable rules pass (severity-weighted); 1 not assessable"
+    },
+    "RFC-8247": {
+     "score": 27.3,
+     "coverage": 1.0,
+     "counts": {
+      "pass": 1,
+      "fail": 2,
+      "unknown": 0,
+      "not_observable": 0,
+      "contradictory": 0
+     },
+     "high_severity_failures": [
+      "RFC8247-DH-MUST"
+     ],
+     "note": "1/3 assessable rules pass (severity-weighted); 0 not assessable"
+    }
+   },
+   "score_stability": "fragile",
+   "gaps": [],
+   "anomaly": null,
+   "risk": {
+    "threats": [
+     {
+      "id": "TH-01",
+      "name": "Key exchange broken by cryptanalysis",
+      "impact": 3,
+      "description": "a weak Diffie-Hellman group lets a capable attacker recover the keys and decrypt all traffic",
+      "status": "present",
+      "likelihood": 3,
+      "evidence": [
+       "RFC8247-DH-MUST",
+       "V-207193"
+      ],
+      "reason": "IKE SA uses a key-exchange group RFC 8247 marks MUST NOT (1, 22) or SHOULD NOT (2, 5, 23, 24); DH group below 16 for the IKE SA (DISA baseline; note RFC 8247 permits group 14)",
+      "likelihood_label": "high",
+      "impact_label": "high"
+     },
+     {
+      "id": "TH-02",
+      "name": "Harvest now, decrypt later (quantum)",
+      "impact": 3,
+      "description": "recorded traffic is decrypted once a large quantum computer exists; classical key exchange only",
+      "status": "present",
+      "likelihood": 1,
+      "evidence": [
+       "DST-PQ-KE"
+      ],
+      "reason": "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)",
+      "likelihood_label": "low",
+      "impact_label": "high"
+     },
+     {
+      "id": "TH-03",
+      "name": "Downgrade attack",
+      "impact": 3,
+      "description": "an attacker in the path steers the peers to the weakest option both still accept",
+      "status": "present",
+      "likelihood": 2,
+      "evidence": [
+       "RFC8247-DH-OFFER"
+      ],
+      "reason": "the initiator would accept a discouraged group if a responder chose it (downgrade exposure); only the initiator's offer is visible on the wire",
+      "likelihood_label": "medium",
+      "impact_label": "high"
+     },
+     {
+      "id": "TH-04",
+      "name": "Weak or legacy cipher",
+      "impact": 2,
+      "description": "an outdated or non-recommended cipher weakens confidentiality",
+      "status": "mitigated",
+      "likelihood": 0,
+      "evidence": [
+       "RFC8247-ENCR"
+      ],
+      "reason": "the rules that test for it pass",
+      "likelihood_label": "-",
+      "impact_label": "medium"
+     },
+     {
+      "id": "TH-05",
+      "name": "Tampering via weak integrity",
+      "impact": 2,
+      "description": "a weak integrity algorithm makes forging or altering protected messages easier",
+      "status": "present",
+      "likelihood": 1,
+      "evidence": [
+       "V-207223"
+      ],
+      "reason": "IKE integrity below SHA2-384",
+      "likelihood_label": "low",
+      "impact_label": "medium"
+     },
+     {
+      "id": "TH-06",
+      "name": "Legacy protocol (IKEv1)",
+      "impact": 3,
+      "description": "IKEv1 is retired and has known weaknesses (e.g. aggressive-mode PSK cracking)",
+      "status": "mitigated",
+      "likelihood": 0,
+      "evidence": [
+       "V-207205"
+      ],
+      "reason": "the rules that test for it pass",
+      "likelihood_label": "-",
+      "impact_label": "high"
+     },
+     {
+      "id": "TH-07",
+      "name": "No confidentiality (plaintext payload)",
+      "impact": 3,
+      "description": "AH authenticates but does not encrypt: anyone on the path reads the content",
+      "status": "mitigated",
+      "likelihood": 0,
+      "evidence": [
+       "RFC4301-CONFIDENTIALITY"
+      ],
+      "reason": "the rules that test for it pass",
+      "likelihood_label": "-",
+      "impact_label": "high"
+     },
+     {
+      "id": "TH-08",
+      "name": "Replay of captured packets",
+      "impact": 2,
+      "description": "an attacker re-sends recorded packets; only the receiver's anti-replay window stops them",
+      "status": "not_seen",
+      "likelihood": 0,
+      "evidence": [
+       "RFC4303-SEQ"
+      ],
+      "reason": "no sequence number repeated on the wire; whether the receiver would drop a replay (anti-replay window) is not visible passively",
+      "likelihood_label": "-",
+      "impact_label": "medium"
+     },
+     {
+      "id": "TH-09",
+      "name": "Pre-authentication exploitation (CVE-2026-78135)",
+      "impact": 3,
+      "description": "a Child SA created before IKE_AUTH completes on vulnerable software",
+      "status": "mitigated",
+      "likelihood": 0,
+      "evidence": [
+       "CVE-2026-78135"
+      ],
+      "reason": "the rules that test for it pass",
+      "likelihood_label": "-",
+      "impact_label": "high"
+     },
+     {
+      "id": "TH-10",
+      "name": "Traffic analysis (metadata exposure)",
+      "impact": 1,
+      "description": "sizes and timing reveal what kind of traffic is inside, without breaking encryption",
+      "status": "present",
+      "likelihood": 1,
+      "evidence": [
+       "metadata_exposure"
+      ],
+      "reason": "size channel 3.093 bits, timing 2.016 bits per packet exposed",
+      "likelihood_label": "low",
+      "impact_label": "low"
+     },
+     {
+      "id": "TH-11",
+      "name": "No forward secrecy on rekey",
+      "impact": 2,
+      "description": "one stolen key decrypts past and future child SAs derived without a fresh key exchange",
+      "status": "present",
+      "likelihood": 1,
+      "evidence": [
+       "pfs"
+      ],
+      "reason": "CREATE_CHILD_SA request 236 B, no KE payload",
+      "likelihood_label": "low",
+      "impact_label": "medium"
+     },
+     {
+      "id": "TH-12",
+      "name": "Configuration drift",
+      "impact": 2,
+      "description": "the tunnel's crypto or behaviour changed from what it usually is",
+      "status": "not_assessable",
+      "likelihood": 0,
+      "evidence": [],
+      "reason": "anomaly history is off (start the engine with --history)",
+      "likelihood_label": "-",
+      "impact_label": "medium"
+     }
+    ],
+    "risk": {
+     "score": 87,
+     "band": "critical",
+     "present": 6,
+     "assessable": 11,
+     "total": 12,
+     "coverage": 0.92,
+     "top": [
+      {
+       "id": "TH-01",
+       "name": "Key exchange broken by cryptanalysis",
+       "likelihood": 3,
+       "impact": 3
+      },
+      {
+       "id": "TH-03",
+       "name": "Downgrade attack",
+       "likelihood": 2,
+       "impact": 3
+      },
+      {
+       "id": "TH-02",
+       "name": "Harvest now, decrypt later (quantum)",
+       "likelihood": 1,
+       "impact": 3
+      }
+     ],
+     "note": "driven by key exchange broken by cryptanalysis, downgrade attack, harvest now, decrypt later (quantum)"
+    },
+    "confidence": {
+     "score": 76,
+     "observed": 15,
+     "inferred": 2,
+     "not_visible": 5,
+     "attributes": 22,
+     "note": "share of the attributes TunnelScope assesses that this capture supports, weighted by how directly each was established (observed 1.0, inferred at its stated confidence, unknown 0)"
+    }
+   },
+   "explanation": {
+    "summary": "This tunnel between 10.10.1.220 and 10.10.2.220 was checked against 12 rules: 6 passed, 5 failed, 2 of them high severity, and the rest could not be judged from this capture. Post-quantum posture: classical (quantum-vulnerable key exchange).",
+    "points": [
+     {
+      "kind": "fail",
+      "rule_id": "RFC8247-DH-MUST",
+      "severity": "high",
+      "text": "RFC8247-DH-MUST (high): the tunnel agreed on a key-exchange group that the IPsec standard (RFC 8247) says must not or should not be used (seen: MODP-1024). Why it matters: these groups are too weak today. What to do: remove that group from both ends and use MODP-2048 or stronger, or an elliptic-curve group."
+     },
+     {
+      "kind": "fail",
+      "rule_id": "V-207193",
+      "severity": "high",
+      "text": "V-207193 (high): the key exchange uses a Diffie-Hellman group below what the US DoD requires (group 16 or higher) (seen: MODP-1024). Why it matters: a weaker key exchange is easier for a well-funded attacker to break later. What to do: configure a stronger group, such as ECP-384 or MODP-4096."
+     },
+     {
+      "kind": "fail",
+      "rule_id": "RFC8247-DH-OFFER",
+      "severity": "medium",
+      "text": "RFC8247-DH-OFFER (medium): one side still OFFERS key-exchange groups that RFC 8247 forbids, even if this tunnel did not pick one (seen: MODP-1024). Why it matters: any peer (or an attacker in the middle) that asks for the weak group can get it. What to do: delete the weak groups from that endpoint's proposal list."
+     },
+     {
+      "kind": "fail",
+      "rule_id": "V-207223",
+      "severity": "medium",
+      "text": "V-207223 (medium): the handshake's integrity check is weaker than SHA-384 (seen: HMAC-SHA1-96). Why it matters: the integrity check is what stops tampering with the handshake. What to do: use a SHA-384 or SHA-512 based integrity setting."
+     },
+     {
+      "kind": "fail",
+      "rule_id": "DST-PQ-KE",
+      "severity": "informational",
+      "text": "DST-PQ-KE (informational): the key exchange is classical only, with no post-quantum part (seen: classical-only). Why it matters: traffic recorded today could be decrypted later by a large quantum computer. What to do: plan a move to a hybrid post-quantum key exchange (ML-KEM added to the classical one)."
+     }
+    ],
+    "unseen": [
+     "rekey cadence cannot be seen from a passive capture at all (it needs endpoint data)",
+     "mode could not be determined from this capture",
+     "peer auth method cannot be seen from a passive capture at all (it needs endpoint data)",
+     "attacker exposure could not be determined from this capture",
+     "traffic type could not be determined from this capture"
+    ],
+    "source": "template"
+   }
+  }
+ ]
+}

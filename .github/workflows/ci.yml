@@ -106,6 +106,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      # T-105 B1: the remediation pane in a real browser (Chromium), every /api call answered by
+      # typed fixtures; 13 cases x 1440/375 px x light/dark. The live half needs the lab (local only).
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests (mocked engine)
+        run: npx playwright test --project=mock --reporter=line
+        env:
+          CI: "1"
+
   external:
     runs-on: ubuntu-latest
     continue-on-error: true
