@@ -12,7 +12,10 @@ What happens on apply, in order. Every step that can refuse runs before anything
     to a shell: sed runs with an argument list, and the reload is swanctl with an argument list.
  3. Dry run: the sed scripts run on scratch copies of the real config files in the container,
     and the actual resulting diff is checked (it must change something, and only proposals /
-    version settings). Nothing is loaded into the running daemon. Fails closed.
+    version settings). Then the changed files are loaded by strongSwan in a throwaway clone of
+    the container's image with no network (clone_load_check): every connection that loaded
+    before must still load, so an invented or misspelt algorithm is refused. Nothing is loaded
+    into the running daemon. Fails closed.
  4. Baseline: capture a handshake and record every rule's verdict BEFORE the change. The target
     rule must be FAIL; otherwise nothing is applied (already fixed, or not observable).
  5. Snapshot every config file (target, and the lab peer if the peer step applies), then arm a
@@ -28,9 +31,11 @@ Every attempt, refusal, rollback and watchdog restore is appended to remediate.j
 from __future__ import annotations
 
 import difflib
+import io
 import json
 import re
 import subprocess
+import tarfile
 import threading
 import time
 import uuid
@@ -84,6 +89,15 @@ _LAB_ALIAS_SCRIPT = 'for j in 0 1 2 3 4; do ip addr add "10.10.$1.$((210+j))/32"
 _LAB_SIDE = {"sih26-alice-pq": "1", "sih26-bob-pq": "2"}
 
 _APPLY_LOCK = threading.Lock()
+# What the last dry run on this thread found beyond its (ok, error, diffs) result (the clone
+# check). Kept out of the return value so the dry run's call shape stays the same.
+_DRY_RUN_REPORT = threading.local()
+
+
+def _take_dry_run_report() -> dict[str, Any]:
+    rep = getattr(_DRY_RUN_REPORT, "last", None) or {}
+    _DRY_RUN_REPORT.last = {}
+    return rep
 
 
 class _Refusal(Exception):
@@ -259,10 +273,13 @@ def _connection_span(lines: list[str], name: str = LAB_CONNECTION) -> tuple[int,
     return None
 
 
-def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change: bool = False) -> tuple[bool, str | None, dict[str, str]]:
+def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change: bool = False,
+                              report: dict[str, Any] | None = None) -> tuple[bool, str | None, dict[str, str]]:
     """Run the plan's sed scripts on scratch copies of the container's real config files and
-    check the actual diff. Returns (ok, error, {file: unified diff}). Never loads anything
-    into the running daemon; fails closed on any error."""
+    check the actual diff, then load the changed files in a clone of the image. Returns
+    (ok, error, {file: unified diff}); `report`, if given, receives the clone check result.
+    Never loads anything into the running daemon; fails closed on any error."""
+    _DRY_RUN_REPORT.last = {}
     try:
         files = list_config_files(target)
         if not files:
@@ -284,6 +301,7 @@ def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change:
             if res.returncode != 0:
                 return False, f"sed rejected the script: {(res.stderr or '').strip()}", {}
         diffs: dict[str, str] = {}
+        changed: dict[str, tuple[str, str]] = {}
         problems: list[str] = []
         for f, s in scratch.items():
             before, after = read_file(target, f), read_file(target, s)
@@ -291,6 +309,7 @@ def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change:
                 return False, f"could not read {f} back during the dry run", {}
             if before == after:
                 continue
+            changed[f] = (before, after)
             b, a = before.splitlines(), after.splitlines()
             if len(b) != len(a):
                 problems.append(f"{f}: the change adds or removes lines")
@@ -314,6 +333,14 @@ def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change:
         if not diffs and not allow_no_change:
             return False, ("the commands would change nothing in this container's configuration "
                            "(the setting may already be compliant, or the plan does not match this config)"), {}
+        if changed:
+            clone = clone_load_check(target, {f: b for f, (b, _) in changed.items()},
+                                     {f: a for f, (_, a) in changed.items()})
+            _DRY_RUN_REPORT.last = {"clone_check": clone}
+            if report is not None:
+                report["clone_check"] = clone
+            if not clone["ok"]:
+                return False, f"the changed configuration does not load in a clone of {target}: {clone['reason']}", diffs
         return True, None, diffs
     except Exception as e:
         return False, f"the dry run could not complete: {e}", {}
@@ -322,6 +349,149 @@ def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change:
             _exec(target, ["rm", "-rf", DRYRUN_DIR], timeout=5)
         except Exception:
             pass
+
+
+# ------------------------------------------------------------------ clone load check (Layer 4, T-100)
+
+CLONE_LABEL = "tunnelscope.clone=1"
+CLONE_TIMEOUT_S = 60
+CLONE_MAX_AGE_S = 180
+# Fixed script run in the clone. The files arrive as a tar on stdin; nothing is interpolated.
+# Exit codes are never used (a pipe once hid swanctl's): the output text is parsed instead.
+_CLONE_SCRIPT = (
+    "mkdir -p /probe /var/run/charon && tar -x -C /probe || { echo TS_ERR tar; exit 0; }; "
+    "C=/usr/libexec/ipsec/charon; [ -x $C ] || C=/usr/lib/ipsec/charon; $C >/tmp/charon.log 2>&1 & "
+    "i=0; until swanctl --stats >/dev/null 2>&1; do i=$((i+1)); [ $i -gt 100 ] && { echo TS_ERR charon; exit 0; }; sleep 0.1; done; "
+    "for f in $(ls /probe/c | sort); do echo \"TS_FILE $f\"; swanctl --load-conns --file /probe/c/$f 2>&1; "
+    "echo TS_END; swanctl --load-conns --file /probe/empty.conf >/dev/null 2>&1; done; "
+    "echo TS_LOG; grep -E 'not recognized|invalid' /tmp/charon.log; echo TS_DONE"
+)
+_CLONE_NAME = re.compile(r"tunnelscope-clone-(\d+)-[0-9a-f]+")
+_LOADED = re.compile(r"^loaded connection '([^']+)'", re.M)
+_LOAD_FAILED = re.compile(r"^loading connection '([^']+)' failed", re.M)
+_NOT_RECOGNIZED = re.compile(r"algorithm '([^']+)' not recognized")
+
+
+def _docker(argv: list[str], stdin: bytes | None = None, timeout: float = 10) -> subprocess.CompletedProcess:
+    """Docker commands that are not `docker exec` into a lab container: image lookup and the
+    throwaway clone. Argument lists only."""
+    return subprocess.run(["docker", *argv], input=stdin, capture_output=True, check=False, timeout=timeout)
+
+
+def image_of(target: str) -> str | None:
+    """The image id (not the tag) the running container was created from."""
+    try:
+        r = _docker(["inspect", "--format", "{{.Image}}", target])
+    except Exception:
+        return None
+    out = (r.stdout or b"").decode(errors="replace").strip()
+    return out if r.returncode == 0 and out.startswith("sha256:") else None
+
+
+def sweep_clones(max_age_s: int = CLONE_MAX_AGE_S) -> list[str]:
+    """Remove clones left behind by a crash (their names carry their start time)."""
+    removed = []
+    try:
+        r = _docker(["ps", "-a", "--filter", "label=" + CLONE_LABEL, "--format", "{{.Names}}"])
+        now = int(time.time())
+        for name in (r.stdout or b"").decode(errors="replace").split():
+            m = _CLONE_NAME.fullmatch(name)
+            if m and now - int(m.group(1)) > max_age_s:
+                _docker(["rm", "-f", name])
+                removed.append(name)
+    except Exception:
+        pass
+    return removed
+
+
+def _clone_tar(pairs: list[tuple[str, str]]) -> bytes:
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        def add(name: str, text: str) -> None:
+            data = text.encode()
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+        add("empty.conf", "connections {\n}\n")
+        for i, (before, after) in enumerate(pairs):
+            add(f"c/{i:03d}-a-before", before)
+            add(f"c/{i:03d}-b-after", after)
+    return buf.getvalue()
+
+
+def _parse_clone_output(out: str) -> dict[str, Any] | None:
+    if "TS_DONE" not in out or "TS_ERR" in out:
+        return None
+    body, _, log = out.partition("TS_LOG")
+    blocks = {}
+    for chunk in body.split("TS_FILE ")[1:]:
+        head, _, rest = chunk.partition("\n")
+        text, ended, _ = rest.partition("TS_END")
+        if not ended:
+            return None
+        blocks[head.strip()] = {"loaded": _LOADED.findall(text), "failed": _LOAD_FAILED.findall(text)}
+    return {"blocks": blocks, "rejected_keywords": sorted(set(_NOT_RECOGNIZED.findall(log)))}
+
+
+def clone_load_check(target: str, before: dict[str, str], after: dict[str, str]) -> dict[str, Any]:
+    """Load the before and after version of every changed config file in a throwaway clone of
+    the target's image (no network, removed afterwards) and compare. ok only if, for every file,
+    each connection that loaded before still loads, none newly fails, and the lab connection
+    loads. Never touches the running daemon. Fails closed."""
+    t0 = time.monotonic()
+    res: dict[str, Any] = {"ok": False, "reason": None, "image": None, "files": {}, "rejected_keywords": []}
+    changed = [f for f in after if before.get(f) != after[f]]
+    if not changed:
+        res.update(ok=True, note="nothing changed, so nothing was loaded")
+        return res
+    image = image_of(target)
+    res["image"] = image
+    if not image:
+        res["reason"] = f"could not identify the image of {target} (is Docker running?)"
+        return res
+    sweep_clones()
+    name = f"tunnelscope-clone-{int(time.time())}-{uuid.uuid4().hex[:8]}"
+    try:
+        r = _docker(["run", "--rm", "-i", "--name", name, "--network", "none", "--cap-add", "NET_ADMIN",
+                     "--label", CLONE_LABEL, "--entrypoint", "sh", image, "-c", _CLONE_SCRIPT],
+                    stdin=_clone_tar([(before.get(f, ""), after[f]) for f in changed]), timeout=CLONE_TIMEOUT_S)
+        out = (r.stdout or b"").decode(errors="replace")
+    except subprocess.TimeoutExpired:
+        _docker(["rm", "-f", name])
+        res["reason"] = f"the clone did not finish within {CLONE_TIMEOUT_S} s"
+        return res
+    except Exception as e:
+        res["reason"] = f"the clone could not be started: {e}"
+        return res
+    finally:
+        res["seconds"] = round(time.monotonic() - t0, 2)
+    parsed = _parse_clone_output(out)
+    if parsed is None:
+        res["reason"] = "the clone did not report a complete result, so the change is not trusted"
+        return res
+    res["rejected_keywords"] = parsed["rejected_keywords"]
+    problems = []
+    for i, f in enumerate(changed):
+        b = parsed["blocks"].get(f"{i:03d}-a-before")
+        a = parsed["blocks"].get(f"{i:03d}-b-after")
+        if b is None or a is None:
+            res["reason"] = "the clone did not report a complete result, so the change is not trusted"
+            return res
+        res["files"][f] = {"before": {"loaded": len(b["loaded"]), "failed": len(b["failed"])},
+                           "after": {"loaded": len(a["loaded"]), "failed": len(a["failed"])}}
+        lost = sorted(set(b["loaded"]) - set(a["loaded"]))
+        if lost:
+            problems.append(f"{f}: connection(s) {', '.join(lost[:5])} loaded before the change and do not load after it")
+        if len(a["failed"]) > len(b["failed"]):
+            problems.append(f"{f}: {len(a['failed']) - len(b['failed'])} more connection(s) fail to load after the change")
+        if _connection_span(after[f].splitlines()) is not None and LAB_CONNECTION not in a["loaded"]:
+            problems.append(f"{f}: the lab connection {LAB_CONNECTION} does not load after the change")
+    if problems:
+        rk = res["rejected_keywords"]
+        res["reason"] = "; ".join(problems[:5]) + (f" (strongSwan did not recognise: {', '.join(rk)})" if rk else "")
+        return res
+    res["ok"] = True
+    return res
 
 
 # ------------------------------------------------------------------ snapshot, watchdog, rollback
@@ -503,17 +673,21 @@ def preview_remediation(rule_id: str, target: str, caller: str | None = None,
             "caller": caller or "unknown", "decision": "preview"}
     try:
         plan, peer = _validate(rule_id, target, compose_path)
+        _take_dry_run_report()
         ok, err, diffs = perform_sandboxed_dry_run(target, plan["exec_commands"])
+        report = _take_dry_run_report()
         if not ok:
             raise _Refusal("dry_run", f"Dry run failed: {err}")
         peer_info = None
         if peer:
             pok, perr, pdiffs = perform_sandboxed_dry_run(peer, peer_commands_for(plan), allow_no_change=True)
+            preport = _take_dry_run_report()
             if not pok:
                 raise _Refusal("dry_run", f"Dry run failed on the lab peer {peer}: {perr}")
-            peer_info = {"container": peer, "diff": pdiffs,
+            peer_info = {"container": peer, "diff": pdiffs, "clone_check": preport.get("clone_check"),
                          "why": "both ends of a tunnel must agree on a proposal, so the other end gets the same change"}
-        res = {"ok": True, "rule_id": rule_id, "target": target, "diff": diffs, "peer": peer_info}
+        res = {"ok": True, "rule_id": rule_id, "target": target, "diff": diffs, "peer": peer_info,
+               "clone_check": report.get("clone_check")}
         record_audit({**base, "ok": True, "files_changed": sorted(diffs),
                       "peer_files_changed": sorted(peer_info["diff"]) if peer_info else []}, history_dir)
         return res
@@ -579,12 +753,15 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
     peer_commands = peer_commands_for(plan) if peer else []
 
     # 3. Dry run on scratch copies of the real files
+    _take_dry_run_report()
     ok, err, dry_diff = perform_sandboxed_dry_run(target, exec_commands)
+    dry_report = _take_dry_run_report()
     if not ok:
         return refuse("dry_run", f"Pre-flight sandbox dry-run validation failed: {err}")
     peer_dry_diff: dict[str, str] = {}
     if peer:
         ok, err, peer_dry_diff = perform_sandboxed_dry_run(peer, peer_commands, allow_no_change=True)
+        dry_report["peer"] = _take_dry_run_report()
         if not ok:
             return refuse("dry_run", f"Pre-flight sandbox dry-run validation failed on the lab peer {peer}: {err}")
 
@@ -708,7 +885,9 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
         # after a rollback: the tunnel re-negotiated on the restored settings and no rule is worse than the baseline
         "service_restored": None if confirmed else (rb or {}).get("service"),
         "dry_run_diff": dry_diff,
-        "peer": ({"container": peer, "commands_run": peer_commands_run, "dry_run_diff": peer_dry_diff}
+        "clone_check": dry_report.get("clone_check"),
+        "peer": ({"container": peer, "commands_run": peer_commands_run, "dry_run_diff": peer_dry_diff,
+                  "clone_check": dry_report.get("peer", {}).get("clone_check")}
                  if peer else None),
         "lab_prep": lab_prep,
         "watchdog_timeout_s": watchdog_timeout_s,
