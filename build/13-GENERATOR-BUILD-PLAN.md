@@ -986,3 +986,14 @@ Before merging any task, the reviewer (Claude, in a fresh session if possible) d
   fail on the lab were drafted and all three drafts were refused (V4 once, V6 twice): the 2B model
   copied a few-shot example instead of answering the rule asked. The other six were refused by the
   precondition without a model call. This is a smoke, not a measurement; EXP-18 measures.
+
+**T-103 (2026-09-24).** Built as planned. Differences and findings:
+- `generate_plan` keeps the T-102 behaviour by default (one draft, no review) so the merged T-102
+  tests stay valid unchanged; the product passes `PRODUCT_SETTINGS` (2 critique rounds,
+  self-review on, 45 s budget). Every plan records its settings, so EXP-18 can compare arms.
+- The feedback is a fixed sentence per check plus vocabulary-derived values that satisfy the rule;
+  it never contains the failure text, the config or the draft (a test plants text in both).
+- Live smoke with critique on (real model, real lab): for V-207193 the model answered the V-207223
+  few-shot example word for word in all three rounds (sha256 -> sha384), ignoring the feedback
+  that listed modp4096 etc.; V-207223 and DST-PQ-KE behaved the same way. All refused by V4/V6,
+  about 9 s per rule. The loop works; this 2B model does not use the feedback. EXP-18 measures it.
