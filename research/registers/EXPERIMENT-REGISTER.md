@@ -403,3 +403,23 @@ Q4b no more than 0.02 worse, file < 5 MB.
 4,702 windows from 82 real tunnels. Q1 0.472; Q2 0.744; Q3 0.378; Q4a 0.741 (folds 0.60-0.95); Q4b 1.000 with vs 0.996 without.
 Ship bar NOT met (Q4a < 0.80); the other two conditions held. Owner shipped it anyway: DEC-036.
 `experiments/exp19-real-public-traffic/RESULT.md`.
+
+## EXP-20 — Real IPsec traffic (USBVPN2022) and real people (WireGuard matched-view) — PRE-REGISTRATION (2026-09-25)
+Pre-registered in `experiments/exp20-real-ipsec-and-users/PREREG.md` (commit dc0020f), with a frozen
+scoreboard (`build/models/benchmark.py`, T-110) of 4 grouped test sets, before any training. A: real
+IPsec traffic (USBVPN2022 L2TP-IPsec, the first the project has). B: real people (WireGuard matched
+outer/inner captures), session 1 trains, session 2 tests. C: real OpenVPN (VNAT, EXP-19 continuity).
+D: our lab (EXP-16 real apps, leave one repetition out). Five recipes R0-R4; ship bar: A up by >= 0.05,
+B/C/D not more than 0.02 down, abstain accuracy not down, files < 5 MB, startup fit (n_jobs=1) < 5 s.
+
+### EXP-20 — RESULT (2026-09-25)
+6,069 real-IPsec windows (994 records) + 11,450 real-people windows (1,186 flows). Today's shipped
+model (R0) scores 0.174 macro-F1 on real IPsec and answers 0% of the time (always abstains). The
+candidate R3 (+ USBVPN + WireGuard without web) reaches **0.757** and answers 93.6% of the time at
+99.8% accuracy when answering, with B/C/D flat or improved. Every accuracy condition of the ship bar
+passed by a wide margin; **R3 failed the bar on one operational condition**: the shipped code's
+single-threaded startup fit measured 5.00 s against the pre-registered < 5 s line (parallel fit of
+the same data: 0.68 s, predictions identical to floating-point noise — a separate decision from this
+experiment's bar). R4 (+ WireGuard's nDPI "web") was ruled out by its own pre-registered check (Q5):
+it lowers A and collapses voip's F1, the label-noise risk stated in advance. Nothing shipped
+automatically; owner decision pending. `experiments/exp20-real-ipsec-and-users/RESULT.md`.
