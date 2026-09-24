@@ -67,7 +67,7 @@ DRYRUN_DIR = "/tmp/.tunnelscope_dryrun"
 # Longer than the worst case of steps 6-8 (command timeouts plus the verification capture),
 # so the watchdog never races a verification that is still running.
 WATCHDOG_TIMEOUT_S = 180
-CAPTURE_PACKETS = "60"
+CAPTURE_PACKETS = "80"   # the handshake plus the ping traffic
 
 _ALLOWED_DIFF_LINE = re.compile(r"^\s*(proposals|esp_proposals|ah_proposals|version)\s*=")
 _BAD = ("FAIL", "CONTRADICTORY")
@@ -89,6 +89,19 @@ _WATCHDOG_SCRIPT = (
 )
 _LAB_ALIAS_SCRIPT = 'for j in 0 1 2 3 4; do ip addr add "10.10.$1.$((210+j))/32" dev eth0 2>/dev/null; done; true'
 _LAB_SIDE = {"sih26-alice-pq": "1", "sih26-bob-pq": "2"}
+# ESP/AH algorithms are only inferred from data packets, so every verification capture carries a few
+# pings through the tunnel (t-tun's traffic selectors: 10.10.1.210 <-> 10.10.2.210). Fixed argv.
+TRAFFIC_PINGS = "8"
+# What the last capture on this thread observed per rule (for honest refusal messages).
+_LAST_CAPTURE = threading.local()
+
+
+def _traffic_argv(target: str) -> list[str] | None:
+    side = _LAB_SIDE.get(target)
+    if side is None:
+        return None
+    other = "2" if side == "1" else "1"
+    return ["ping", "-c", TRAFFIC_PINGS, "-i", "0.2", "-W", "1", "-I", f"10.10.{side}.210", f"10.10.{other}.210"]
 
 _APPLY_LOCK = threading.Lock()
 # What the last dry run on this thread found beyond its (ok, error, diffs) result (the clone
@@ -689,6 +702,32 @@ def _verdicts_of(sas: list[Any]) -> dict[str, str]:
     return agg
 
 
+def _observed_of(sas: list[Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for sa in sas:
+        vs = sa.get("verdicts", []) if isinstance(sa, dict) else getattr(sa, "verdicts", [])
+        for v in vs:
+            rid = v.get("rule_id") if isinstance(v, dict) else getattr(v, "rule_id", None)
+            obs = v.get("observed") if isinstance(v, dict) else getattr(v, "observed", None)
+            if rid and rid not in out:
+                out[rid] = obs
+    return out
+
+
+def why_not_judged(rule_id: str, verdict: str | None) -> str:
+    """Plain reason a rule was not FAIL/PASS on the last capture: the wire narrowed the algorithm
+    to several candidates (a passive limit), or the attribute was not seen at all."""
+    obs = (getattr(_LAST_CAPTURE, "observed", None) or {}).get(rule_id)
+    if isinstance(obs, list) and len(obs) > 1:
+        return (f"{rule_id} is {verdict} because a passive capture cannot tell which of these the tunnel uses: "
+                f"{', '.join(map(str, obs))}. It cannot be judged from the wire, so a fix cannot be verified "
+                "here (change it by hand and check on the endpoint); nothing was changed")
+    if obs is None:
+        return (f"{rule_id} is {verdict or 'not judged'}: the capture did not contain what it judges (for ESP/AH "
+                "rules, no protected data packets were seen), so a fix could not be proven; nothing was changed")
+    return f"{rule_id} is {verdict} on a fresh capture (it must be FAIL), so a fix could not be proven; nothing was changed"
+
+
 def _prepare_lab_network(target: str, peer: str | None) -> list[str]:
     """Lab-only: the t-tun connection uses extra addresses that a container restart drops."""
     done = []
@@ -713,13 +752,17 @@ def _capture_verdicts(target: str, phase: str) -> tuple[dict[str, str], int]:
         _exec(capture_on, ["tcpdump", "-i", "any", "-w", inside, "-c", CAPTURE_PACKETS], timeout=5, detach=True)
         time.sleep(1)
         _exec(target, ["swanctl", "--initiate", "--child", LAB_CONNECTION, "--timeout", "5"], timeout=10)
-        time.sleep(2)
+        traffic = _traffic_argv(target)
+        if traffic:
+            _exec(target, traffic, timeout=10)
+        time.sleep(1)
         _exec(capture_on, ["pkill", "tcpdump"], timeout=5)
         time.sleep(1)
         if not host.is_file() or host.stat().st_size == 0:
             return {}, 0
         from ..report import report as _report
         sas = _report.analyze(str(host)).get("sas", [])
+        _LAST_CAPTURE.observed = _observed_of(sas)
         return _verdicts_of(sas), len(sas)
     finally:
         if host.exists():
@@ -965,8 +1008,7 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
     if vb == "PASS":
         return refuse("baseline", f"{rule_id} already passes on a fresh capture; nothing to fix", verdict_before=vb)
     if vb != "FAIL":
-        return refuse("baseline", f"{rule_id} is {vb or 'not judged'} on a fresh capture (it must be FAIL), so a fix "
-                                  "could not be proven; nothing was changed", verdict_before=vb)
+        return refuse("baseline", why_not_judged(rule_id, vb), verdict_before=vb)
 
     # 5. Snapshot and arm the watchdogs
     try:

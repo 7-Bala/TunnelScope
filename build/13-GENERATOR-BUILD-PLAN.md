@@ -1053,3 +1053,15 @@ predicate applied to them, for information only (a test proves a weak endpoint r
 the verdict). Evidence: 7 tests, 6/6 reintroduced bugs caught; live: V-207193 confirmed FAIL -> PASS
 in 16.3 s, the rekey produced a new IKE SA (new SPI), still established on MODP_4096, endpoint-reported
 verdict PASS. Not built: showing the rekey result in the dashboard (the API returns it).
+
+**T-108 (2026-09-24, after the plan).** Two follow-ups the owner asked for.
+- Verification captures now carry 8 pings through the tunnel (fixed argv, t-tun's selectors), so
+  ESP/AH packets are on the wire. Live: RFC8221-AH-LEGACY went from UNKNOWN (EXP-18) to judgeable:
+  a weak `ah_proposals = sha1` baseline was FAIL, the hand-written fix was confirmed PASS in 17.4 s
+  and survived the forced rekey. RFC8221-AH-INTEG and RFC8221-ESP-3DES stay UNKNOWN, which is correct:
+  the wire leaves 3 and 13 candidate algorithms; the refusal now names them and says the rule cannot
+  be judged from the wire (change by hand, check on the endpoint), instead of a bare "must be FAIL".
+- The dashboard shows the rekey result: "stayed up after a forced rekey; what it negotiated is not
+  visible on the wire", with the endpoint's own report labelled as not evidence, or "not kept" when
+  the tunnel did not survive. Two new browser cases (B1-19, B1-20) x 4 viewport/theme variants.
+Evidence: 4 backend tests + 8 browser runs, 7/7 reintroduced bugs caught.

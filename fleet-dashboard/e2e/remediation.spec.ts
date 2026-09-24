@@ -3,7 +3,7 @@
 // the typed fixtures in ./fixtures.ts. Each case runs at 1440x900 and 375x812, light and dark.
 import { expect, test, type Page, type Request, type Route } from "@playwright/test"
 import {
-  ANALYZE, APPLY_CONFIRMED, APPLY_ROLLED_BACK, APPLY_STALE, CAPS_NO_MODEL, CAPS_OFF, CAPS_ON, CAPTURE,
+  ANALYZE, APPLY_CONFIRMED, APPLY_CONFIRMED_REKEY, APPLY_REKEY_DOWN, APPLY_ROLLED_BACK, APPLY_STALE, CAPS_NO_MODEL, CAPS_OFF, CAPS_ON, CAPTURE,
   DRAFT_AGREES, DRAFT_DIFFERS_CONCERN, DRAFT_REFUSED_V4, PLAN, PREVIEW_DRAFT, PREVIEW_HAND, TARGETS,
 } from "./fixtures.ts"
 import type { GenerateResult, RemediationApplyResult, RemediationCapabilities, RemediationPreview } from "../src/lib/api.ts"
@@ -136,6 +136,34 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         await expect(pane.getByText("Plan used: the hand-written fix")).toBeVisible()
         expect(seen.apply).toHaveLength(1)
         expect(seen.apply[0]).toMatchObject({ digest: PREVIEW_HAND.digest, plan_id: null, confirm: true })
+        await invariants(page, seen)
+      })
+
+      test("B1-19 rekey: confirmed fix says what the rekey shows and what it cannot", async ({ page }) => {
+        const seen = await mockEngine(page, { apply: APPLY_CONFIRMED_REKEY })
+        const pane = await openPane(page)
+        await approve(page)
+        await page.getByRole("button", { name: `Preview the real change for ${RULE}` }).click()
+        await page.getByRole("button", { name: `Apply remediation in lab for ${RULE}` }).click()
+        await expect(pane.getByText(/Confirmed fixed/)).toBeVisible()
+        const line = pane.getByText(/stayed up after a forced rekey/)
+        await expect(line).toBeVisible()
+        await expect(line).toContainText("not observable passively")
+        await expect(line).toContainText("The endpoint itself reports AES_CBC_256, HMAC_SHA2_256_128, PRF_HMAC_SHA2_256, MODP_4096")
+        await expect(line).toContainText("V-207193 would be PASS on those")
+        await expect(line).toContainText("not evidence")
+        await invariants(page, seen)
+      })
+
+      test("B1-20 rekey: a tunnel that does not survive is shown as not kept, never fixed", async ({ page }) => {
+        const seen = await mockEngine(page, { apply: APPLY_REKEY_DOWN })
+        const pane = await openPane(page)
+        await approve(page)
+        await page.getByRole("button", { name: `Preview the real change for ${RULE}` }).click()
+        await page.getByRole("button", { name: `Apply remediation in lab for ${RULE}` }).click()
+        await expect(pane.getByText(/no longer reported the tunnel as up, so the change was not kept/)).toBeVisible()
+        await expect(pane.getByText("Not fixed — the change was undone.")).toBeVisible()
+        await expect(pane.getByText(/Confirmed fixed/)).toHaveCount(0)
         await invariants(page, seen)
       })
 
