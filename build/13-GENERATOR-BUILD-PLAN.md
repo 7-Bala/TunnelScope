@@ -960,3 +960,13 @@ Before merging any task, the reviewer (Claude, in a fresh session if possible) d
   shape); the clone result reaches preview and apply through a per-thread record.
 - Correction found while building: the lab config has **19** connections, not 38 as the T-099
   review said (38 counted the secrets entries too). Corrected in build/12 and the test docstring.
+
+**T-101 (2026-09-24).** Built as planned, with these differences:
+- `local_model_path()` lives in `rephrase.py` (next to `MODEL_ID`, with `MODEL_REVISION`), and
+  `_get_model` now loads the pinned local snapshot when present, so rephrase and the runtime share
+  one model. It resolves `models--<org>--<name>/snapshots/<revision>` directly and requires
+  `config.json` + a `*.safetensors`: the Hub's `snapshot_download(local_files_only=True)` refused
+  the real cache as "incomplete" because `mlx_lm` never downloads the READMEs (found live).
+- Live checks: `build/live_checks.py` (exit 0/1/3) + `build/check_live.sh`; `check_all.sh` gets a
+  `live()` helper and one row in full mode. Also fixed a T-100 gap: `remediate/*.json` is now
+  package data (an installed wheel would otherwise lack the keyword list), with a test.

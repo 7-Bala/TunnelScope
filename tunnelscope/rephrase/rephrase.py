@@ -21,6 +21,8 @@ from typing import Any
 logger = logging.getLogger("tunnelscope.rephrase")
 
 MODEL_ID = "openbmb/MiniCPM5-2B-MLX"
+# DEC-034 D-C: the exact revision that was tested; loaded from the local cache only.
+MODEL_REVISION = "8a9ad7539ac86281d0ac2b017ba04a5de53fe9a3"
 FALLBACK_MODEL_ID = "unsloth/gemma-4-E4B-it-UD-MLX-4bit"
 
 _DATA_START = "<<<TEXT_TO_REWORD_START>>>"
@@ -322,13 +324,37 @@ def _clean_candidate(raw: str) -> str:
     return candidate
 
 
+def local_model_path() -> str | None:
+    """The pinned revision of MODEL_ID in the local Hugging Face cache, or None if it has not been
+    downloaded. Switches the Hub client to offline mode first (unless the environment already
+    says otherwise), so resolving the path can never become a download or a network call."""
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+    try:
+        from huggingface_hub import constants
+        from pathlib import Path
+        # The cache layout is models--<org>--<name>/snapshots/<revision>. mlx_lm downloads only the
+        # files it needs, so the hub's own "is this snapshot complete" check (which also wants the
+        # READMEs) would wrongly say no; check for the files loading actually needs instead.
+        snap = (Path(constants.HF_HUB_CACHE) / ("models--" + MODEL_ID.replace("/", "--"))
+                / "snapshots" / MODEL_REVISION)
+        if (snap / "config.json").is_file() and any(snap.glob("*.safetensors")):
+            return str(snap)
+        return None
+    except Exception:
+        return None
+
+
 def _get_model(model_id: str = MODEL_ID) -> tuple[Any, Any]:
-    """Lazy model loader cached at module level (thread-safe, silenced)."""
+    """Lazy model loader cached at module level (thread-safe, silenced). MODEL_ID loads from the
+    pinned local snapshot when it is present; the cache key stays the model id, so rephrase and
+    the remediation runtime share one model in memory."""
     with _MODEL_LOCK:
         if model_id not in _MODEL_CACHE:
             with _silence_io():
                 import mlx_lm
-                _MODEL_CACHE[model_id] = mlx_lm.load(model_id)
+                source = (local_model_path() if model_id == MODEL_ID else None) or model_id
+                _MODEL_CACHE[model_id] = mlx_lm.load(source)
         return _MODEL_CACHE[model_id]
 
 
