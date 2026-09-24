@@ -176,6 +176,27 @@ def _sniff(head: bytes) -> str | None:
     return None
 
 
+_LOCAL_MODEL: list[bool] = []
+
+
+def local_model_available() -> bool:
+    """Whether the pinned local model can run here (Apple Silicon + mlx_lm + the model on disk).
+    Worked out once per process: /health is polled."""
+    if not _LOCAL_MODEL:
+        try:
+            from ..rephrase.runtime import model_available
+            _LOCAL_MODEL.append(bool(model_available()))
+        except Exception:
+            _LOCAL_MODEL.append(False)
+    return _LOCAL_MODEL[0]
+
+
+def generator_enabled() -> bool:
+    """DEC-034 D-E: local-model drafts are OFF until EXP-18's H1 and H2 bars pass and a decision
+    row turns them on. Only an explicit TUNNELSCOPE_GENERATOR=1 (lab testing) enables them."""
+    return os.environ.get("TUNNELSCOPE_GENERATOR") == "1"
+
+
 class _Handler(BaseHTTPRequestHandler):
     server_version = "TunnelScope/0.2"
 
@@ -219,6 +240,8 @@ class _Handler(BaseHTTPRequestHandler):
         if path == "/health":
             self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file(),
                              "history": bool(HISTORY_DIR), "live": LIVE is not None})
+        elif path == "/api/remediate/capabilities":
+            self._json(200, {"ok": True, "local_model": local_model_available(), "generator_enabled": generator_enabled()})
         elif path == "/api/history":
             self._json(200, history_summary())
         elif path == "/api/live":
@@ -306,6 +329,9 @@ class _Handler(BaseHTTPRequestHandler):
                 confirm=confirm,
                 caller=caller,
                 history_dir=HISTORY_DIR,
+                plan_id=body.get("plan_id"),
+                digest=body.get("digest"),
+                require_digest=True,   # T-104: the dashboard applies only what it previewed
             )
             # A refusal is the caller's to fix (400). A change that ran and was rolled back
             # is a real outcome, reported with 200 like a successful one.
@@ -333,11 +359,62 @@ class _Handler(BaseHTTPRequestHandler):
             return
         try:
             from ..remediate.execute import preview_remediation
-            res = preview_remediation(body["rule_id"], body["target"], caller=self.address_string(), history_dir=HISTORY_DIR)
+            res = preview_remediation(body["rule_id"], body["target"], caller=self.address_string(), history_dir=HISTORY_DIR,
+                                      plan_id=body.get("plan_id"))
             self._json(200 if res.get("ok") else 400, res)
         except Exception as e:
             sys.stderr.write(f"[tunnelscope serve] remediate preview error: {e}\n")
             self._json(500, {"ok": False, "stage": "dry_run", "error": "unexpected server error during the dry run"})
+
+    def _read_json_body(self) -> dict | None:
+        """Parse a JSON object body, answering 400/413 itself on failure (then returns None)."""
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length <= 0 or length > 1024 * 1024:
+            self._json(400 if length <= 0 else 413, {"ok": False, "stage": "validate", "error": "empty or oversized body"})
+            return None
+        try:
+            body = json.loads(self.rfile.read(length).decode("utf-8"))
+        except Exception:
+            self._json(400, {"ok": False, "stage": "validate", "error": "invalid json"})
+            return None
+        if not isinstance(body, dict):
+            self._json(400, {"ok": False, "stage": "validate", "error": "body must be an object"})
+            return None
+        return body
+
+    def _remediate_generate(self) -> None:
+        """A local-model draft, checked by code and dry-run, shown next to the hand-written fix
+        (DEC-034). Never applies anything; a checked draft is stored and gets a plan_id."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        if not isinstance(body.get("rule_id"), str) or not isinstance(body.get("target"), str):
+            self._json(400, {"ok": False, "stage": "validate", "error": "rule_id and target are required strings"})
+            return
+        if not generator_enabled():
+            self._json(403, {"ok": False, "stage": "disabled",
+                             "error": "local-model drafts are off until the EXP-18 evaluation passes (DEC-034)"})
+            return
+        try:
+            from ..remediate import execute, generate
+            res = generate.generate_plan(body["rule_id"], body["target"], body.get("observed"),
+                                         compare_with_handwritten=True, **generate.PRODUCT_SETTINGS)
+            if res.get("ok"):
+                res["plan_id"] = execute.store_generated_plan(res["plan"], body["target"], HISTORY_DIR)
+            plan = res.get("plan") or {}
+            execute.record_audit({"timestamp": time.time(), "at": time.time(), "decision": "generate",
+                                  "caller": self.address_string(), "rule_id": body["rule_id"], "target": body["target"],
+                                  "ok": bool(res.get("ok")), "stage": res.get("stage"), "reason": res.get("reason"),
+                                  "plan_id": res.get("plan_id"), "model_revision": plan.get("model_revision"),
+                                  "prompt_sha256": plan.get("prompt_sha256"),
+                                  "rounds": len(plan.get("revisions") or res.get("revisions") or [])}, HISTORY_DIR)
+            self._json(200, res)
+        except Exception as e:
+            sys.stderr.write(f"[tunnelscope serve] remediate generate error: {e}\n")
+            self._json(500, {"ok": False, "stage": "internal", "error": "unexpected server error while drafting"})
 
     def do_POST(self):  # noqa: N802
         url = urlparse(self.path)
@@ -349,6 +426,9 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if url.path == "/api/remediate/preview":
             self._remediate_preview()
+            return
+        if url.path == "/api/remediate/generate":
+            self._remediate_generate()
             return
         if url.path not in ("/api/upload", "/api/analyze"):
             self._json(404, {"ok": False, "error": "not found"})
