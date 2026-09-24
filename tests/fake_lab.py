@@ -217,6 +217,7 @@ class FakeLab:
         self.ike_spi = 1
         self.sa_fields = "version=2 state=ESTABLISHED encr-alg=AES_CBC encr-keysize=256 integ-alg=HMAC_SHA2_256_128 prf-alg=PRF_HMAC_SHA2_256 dh-group=MODP_4096"
         self.rekeys: list[str] = []
+        self.pings: list[tuple[str, list[str]]] = []
         ids = vocab.load_vocab()["images"]
         self.images = {"sih26-alice-pq": ids["testbed-alice-pq"], "sih26-bob-pq": ids["testbed-bob-pq"]}
 
@@ -356,6 +357,9 @@ class FakeLab:
             if not self.fail.get("no_capture"):
                 name = Path(argv[argv.index("-w") + 1]).name
                 (self.captures_dir / name).write_bytes(b"fake-pcap")
+            return _Res()
+        if prog == "ping":
+            self.pings.append((c, list(argv)))
             return _Res()
         if prog in ("pkill", "ip"):
             return _Res()

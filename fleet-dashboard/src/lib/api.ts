@@ -267,6 +267,15 @@ export type RemediationApplyResult = {
   watchdog_timeout_s?: number
   source?: "hand-written" | "generated"
   plan_id?: string | null
+  /** after a confirmed fix the tunnel is forced to rekey (T-107); null when no rekey was tried */
+  rekey?: {
+    passive: "NOT_OBSERVABLE"
+    note: string
+    tunnel_after_rekey: boolean | null
+    rekeyed: boolean | null
+    endpoint_reported: { algorithms: string[]; rule_verdict: "PASS" | "FAIL" | "UNKNOWN" } | null
+    error?: string
+  } | null
 }
 
 export type CloneCheck = {

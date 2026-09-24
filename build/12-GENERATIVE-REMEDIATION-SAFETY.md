@@ -173,3 +173,9 @@ at a later child-SA rekey is not seen. The connection scope relies on the lab ge
 indentation (the dry run's independent brace-matching check refuses anything outside the
 connection). The Python sed emulation in the tests is not GNU sed; GNU sed 4.9 behaviour is
 checked in the live lab only.
+
+**Update 2026-09-24 (T-107, T-108).** The rekey limit is closed as far as the evidence allows: after a
+confirmed fix the tunnel is forced to rekey and must stay up (endpoint-reported); what the rekey
+negotiated is not observable passively and is reported as such. Verification captures now carry
+traffic, so AH-LEGACY fixes are verifiable; AH-INTEG and ESP-3DES are not judgeable passively (several
+candidate algorithms fit the wire) and are refused with that reason.

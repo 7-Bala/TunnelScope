@@ -84,6 +84,26 @@ export const APPLY_CONFIRMED: RemediationApplyResult = {
   service_restored: null,
   source: "hand-written",
 }
+export const APPLY_CONFIRMED_REKEY: RemediationApplyResult = {
+  ...APPLY_CONFIRMED,
+  rekey: {
+    passive: "NOT_OBSERVABLE",
+    note: "A rekey (CREATE_CHILD_SA) is encrypted under the IKE SA ...",
+    tunnel_after_rekey: true,
+    rekeyed: true,
+    endpoint_reported: { algorithms: ["AES_CBC_256", "HMAC_SHA2_256_128", "PRF_HMAC_SHA2_256", "MODP_4096"], rule_verdict: "PASS" },
+  },
+}
+export const APPLY_REKEY_DOWN: RemediationApplyResult = {
+  ...APPLY_CONFIRMED,
+  verdict_after: "REGRESSION",
+  confirmed_fixed: false,
+  reason: "V-207193 passes on the first handshake, but the tunnel did not survive a forced rekey (reported by the endpoint)",
+  rolled_back: true,
+  rollback_verified: true,
+  service_restored: { tunnel_up: true, matches_baseline: true, worse_than_baseline: [] },
+  rekey: { passive: "NOT_OBSERVABLE", note: "", tunnel_after_rekey: false, rekeyed: null, endpoint_reported: null },
+}
 export const APPLY_ROLLED_BACK: RemediationApplyResult = {
   ...APPLY_CONFIRMED,
   verdict_after: "FAIL",
