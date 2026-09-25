@@ -174,14 +174,18 @@ def _traffic_layer(cur: dict, past: list[dict]) -> list[dict]:
             continue
         med = statistics.median(xs)
         mad = statistics.median(abs(v - med) for v in xs)
-        if mad == 0:
+        steady = mad == 0
+        if steady:
             mad = max(abs(med) * 0.05, 1e-6)     # a perfectly steady history: allow 5% jitter
         z = 0.6745 * (x - med) / mad
         if abs(z) > Z_CUT:
+            # With no spread in the history, z is a division by the 5%-jitter floor (or by ~0 when the
+            # history is all zeros) and its size means nothing: say what happened, not a fake z.
+            why = (f"exactly {med:g} in all {len(xs)} earlier captures, now {x:g}" if steady
+                   else f"usually about {med:g}, now {x:g} (robust z {z:+.1f})")
             out.append({"layer": "traffic", "kind": "shift", "severity": "medium", "attribute": k,
-                        "usual": round(med, 3), "now": x, "z": round(z, 1),
-                        "message": f"{k.replace('_', ' ')} {'up' if z > 0 else 'down'} sharply: "
-                                   f"usually about {med:g}, now {x:g} (robust z {z:+.1f})"})
+                        "usual": round(med, 3), "now": x, "z": None if steady else round(z, 1),
+                        "message": f"{k.replace('_', ' ')} {'up' if z > 0 else 'down'} sharply: {why}"})
     return out
 
 
