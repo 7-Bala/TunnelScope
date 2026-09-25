@@ -434,7 +434,7 @@ class _Handler(BaseHTTPRequestHandler):
             from ..remediate import execute, generate
             res = generate.generate_plan(body["rule_id"], body["target"], body.get("observed"),
                                          compare_with_handwritten=True, backend=generator_backend(),
-                                         **generate.PRODUCT_SETTINGS)
+                                         **generate.SHIPPED_SETTINGS)
             if res.get("ok"):
                 res["plan_id"] = execute.store_generated_plan(res["plan"], body["target"], HISTORY_DIR)
             plan = res.get("plan") or {}
