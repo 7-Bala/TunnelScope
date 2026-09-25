@@ -702,14 +702,18 @@ def test_apply_remediation_rollback_on_failure(tmp_path, monkeypatch):
 # ---- live-lab fixture (used by test_lab_remediation_e2e above) ----
 
 def _reset_lab_tunnel():
-    """Put both ends of the lab t-tun back to their generated configs and re-negotiate."""
+    """Put both ends of the lab t-tun back to their generated configs and re-negotiate.
+    Adds the tunnel's extra addresses first (a freshly started container lacks them) and waits at
+    most 15 s: it used to pass 15000 (swanctl counts seconds) and hang for hours on a fresh lab."""
+    from tunnelscope.remediate.execute import _prepare_lab_network
+    _prepare_lab_network("sih26-alice-pq", "sih26-bob-pq")
     root = pathlib.Path(__file__).resolve().parents[1]
     for c, side in (("sih26-alice-pq", "alice"), ("sih26-bob-pq", "bob")):
         subprocess.run(["docker", "cp", str(root / "testbed/configs/exp15" / f"{side}.conf"), f"{c}:/tmp/exp15-{side}.conf"],
                        check=True, capture_output=True)
         subprocess.run(["docker", "exec", c, "swanctl", "--load-all", "--file", f"/tmp/exp15-{side}.conf"], capture_output=True)
     subprocess.run(["docker", "exec", "sih26-alice-pq", "swanctl", "--terminate", "--ike", "t-tun"], capture_output=True)
-    subprocess.run(["docker", "exec", "sih26-alice-pq", "swanctl", "--initiate", "--child", "t-tun", "--timeout", "15000"],
+    subprocess.run(["docker", "exec", "sih26-alice-pq", "swanctl", "--initiate", "--child", "t-tun", "--timeout", "15"],
                    capture_output=True)
 
 
