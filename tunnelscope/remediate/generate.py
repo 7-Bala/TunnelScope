@@ -117,11 +117,23 @@ N_EXAMPLES = 3
 # T-103 defaults (DEC-033 step 3). EXP-18 decides whether critique and self-review stay on: they
 # are recorded in every plan so runs with and without them can be compared.
 # `generate_plan` itself defaults to one draft and no review (the T-102 behaviour); the product
-# (API, live checks) passes PRODUCT_SETTINGS.
+# (API, live checks) passes SHIPPED_SETTINGS, defined after PRODUCT_SETTINGS below.
 CRITIQUE_ROUNDS = 2
 SELF_REVIEW = True
 TIME_BUDGET_S = 45.0
+# EXP-18's exact configuration, frozen: kept exactly as that experiment defined and measured it
+# (test_product_settings_turn_critique_and_review_on pins this), never edited to match a later
+# decision — a later decision gets a new constant instead, below.
 PRODUCT_SETTINGS = {"critique_rounds": CRITIQUE_ROUNDS, "self_review_on": SELF_REVIEW, "time_budget_s": TIME_BUDGET_S}
+
+# What the live dashboard/API and the live smoke check actually use (2026-09-25, owner: "make it
+# faster"). critique_rounds is 0 here, not PRODUCT_SETTINGS's 2, because EXP-18's own H3 result is
+# that 2 rounds confirmed exactly as many fixes as 0 (both 0/16 on the test set) — the extra round
+# was pure latency (~3 s per round measured on this machine) for no measured accuracy gain. This
+# acts on EXP-18's finding; it does not change what "confirmed fixed" means or re-run any bar.
+# self_review stays on: it only runs after an accepted draft, so it costs nothing while nothing is
+# accepted. A future model or EXP-18b can raise critique_rounds again, measured on its own bar.
+SHIPPED_SETTINGS = {"critique_rounds": 0, "self_review_on": SELF_REVIEW, "time_budget_s": TIME_BUDGET_S}
 
 
 # Which strongSwan transform types each IKE attribute judges (types as `swanctl --list-conns --raw` names them).

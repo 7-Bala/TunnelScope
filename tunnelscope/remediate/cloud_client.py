@@ -30,7 +30,12 @@ import threading
 import time
 from typing import Any
 
-MODEL_ID = os.environ.get("TUNNELSCOPE_GEMINI_MODEL", "gemini-3.1-pro-preview")
+# Measured 2026-09-25 against the project's own key: gemini-3.1-pro-preview (the top reasoning
+# model) returned 429 "quota exceeded" on every call (this key's tier has none for it);
+# gemini-3.8-flash answered normally and is Google's own description for this kind of task
+# ("engineered for long-horizon software engineering, autonomous agents"). Override with
+# TUNNELSCOPE_GEMINI_MODEL if a key with Pro-tier quota is used later.
+MODEL_ID = os.environ.get("TUNNELSCOPE_GEMINI_MODEL", "gemini-3.8-flash")
 API_KEY_ENV = "TUNNELSCOPE_GEMINI_API_KEY"
 DEFAULT_TIMEOUT_S = 30.0
 
