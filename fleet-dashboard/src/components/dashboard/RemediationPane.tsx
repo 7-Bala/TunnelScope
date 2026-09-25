@@ -638,6 +638,8 @@ function ApplyOutcome({ result }: { result: RemediationApplyResult }) {
 
 const DRAFT_LABEL =
   "Drafted on this Mac by a local language model (MiniCPM5-2B). Every line was then checked by code, and the change was tried on copies of the config before you see it. The model can be wrong; the checks and the automatic rollback are what protect the lab."
+const DRAFT_LABEL_CLOUD =
+  "Drafted by a cloud model this machine sent a request to: the failing rule and the lab connection's current settings left this machine (never the pre-shared key or any traffic). Every line was then checked by code, and the change was tried on copies of the config before you see it. The model can be wrong; the checks and the automatic rollback are what protect the lab."
 
 function DraftPanel({
   caps,
@@ -670,21 +672,34 @@ function DraftPanel({
       </p>
     )
   }
-  if (!caps.local_model) {
-    return <p className="text-[11px] text-faint">The local model is not available on this machine.</p>
+  const usingCloud = caps.backend === "cloud"
+  const modelNoun = usingCloud ? "cloud model" : "local model"
+  const draftLabel = usingCloud ? DRAFT_LABEL_CLOUD : DRAFT_LABEL
+  if (usingCloud ? !caps.cloud_model : !caps.local_model) {
+    return (
+      <p className="text-[11px] text-faint">
+        {usingCloud ? "The cloud model is not configured (no API key)." : "The local model is not available on this machine."}
+      </p>
+    )
   }
   return (
     <div className="space-y-2 rounded border border-border/60 bg-background/40 p-2">
+      {usingCloud && (
+        <p className="text-[11px] leading-relaxed text-warn">
+          This draft comes from a cloud model. Drafting a fix below sends the failing rule and the lab connection&apos;s
+          current settings to that service over the network.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         {drafting ? (
           <>
             <span className="animate-pulse text-[11.5px] text-muted-foreground">
-              The local model is drafting, then code checks the draft... {seconds} s
+              The {modelNoun} is drafting, then code checks the draft... {seconds} s
             </span>
             <button
               type="button"
               onClick={onCancel}
-              aria-label={`Cancel the local model draft for ${ruleId}`}
+              aria-label={`Cancel the ${modelNoun} draft for ${ruleId}`}
               className="text-[11px] text-faint underline hover:text-muted-foreground"
             >
               Cancel
@@ -695,10 +710,10 @@ function DraftPanel({
             type="button"
             onClick={onDraft}
             disabled={disabled}
-            aria-label={`Draft a fix with the local model for ${ruleId}`}
+            aria-label={`Draft a fix with the ${modelNoun} for ${ruleId}`}
             className="rounded border border-border bg-secondary px-2.5 py-1 text-[11.5px] font-medium text-foreground/90 transition-colors hover:text-foreground disabled:opacity-50"
           >
-            {draft ? "Draft again" : "Draft a fix with the local model"}
+            {draft ? "Draft again" : `Draft a fix with the ${modelNoun}`}
           </button>
         )}
       </div>
@@ -718,7 +733,9 @@ function DraftPanel({
               )}
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-faint">Local model's draft</span>
+              <span className="text-[11px] font-medium text-faint">
+                {usingCloud ? "Cloud model's draft" : "Local model's draft"}
+              </span>
               {Object.values(draft.plan.diff).map((d, i) => (
                 <DiffBlock key={i} diff={d} />
               ))}
@@ -727,7 +744,7 @@ function DraftPanel({
           <p className="text-[11.5px] text-foreground/90">
             {draft.plan.agrees_with_handwritten ? "Both make the same change." : "They differ."}
           </p>
-          <p className="text-[11px] leading-relaxed text-faint">{DRAFT_LABEL}</p>
+          <p className="text-[11px] leading-relaxed text-faint">{draftLabel}</p>
           <DraftChecks checks={draft.plan.checks} rounds={draft.plan.revisions.length} />
           {draft.plan.self_review && (
             <p className={cn("text-[11px]", draft.plan.self_review.verdict === "concerns" ? "text-amber-300" : "text-faint")}>
@@ -757,9 +774,9 @@ function DraftPanel({
                 name={`plan-${ruleId}`}
                 checked={choice === "draft"}
                 onChange={() => onChoose("draft")}
-                aria-label={`Use the local model's draft for ${ruleId}`}
+                aria-label={`Use the ${modelNoun}'s draft for ${ruleId}`}
               />
-              Use the local model's draft
+              Use the {modelNoun}&apos;s draft
             </label>
           </fieldset>
         </div>

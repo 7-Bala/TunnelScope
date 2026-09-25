@@ -22,6 +22,9 @@ venv/
 *.pem
 *.key
 !testbed/**/certs/README.md
+.env
+.env.*
+!.env.example
 
 # Docker volumes / runtime state
 testbed/**/run/

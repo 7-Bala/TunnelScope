@@ -3,8 +3,9 @@
 // the typed fixtures in ./fixtures.ts. Each case runs at 1440x900 and 375x812, light and dark.
 import { expect, test, type Page, type Request, type Route } from "@playwright/test"
 import {
-  ANALYZE, APPLY_CONFIRMED, APPLY_CONFIRMED_REKEY, APPLY_REKEY_DOWN, APPLY_ROLLED_BACK, APPLY_STALE, CAPS_NO_MODEL, CAPS_OFF, CAPS_ON, CAPTURE,
-  DRAFT_AGREES, DRAFT_DIFFERS_CONCERN, DRAFT_REFUSED_V4, PLAN, PREVIEW_DRAFT, PREVIEW_HAND, TARGETS,
+  ANALYZE, APPLY_CONFIRMED, APPLY_CONFIRMED_REKEY, APPLY_REKEY_DOWN, APPLY_ROLLED_BACK, APPLY_STALE, CAPS_CLOUD_NO_KEY, CAPS_CLOUD_ON,
+  CAPS_NO_MODEL, CAPS_OFF, CAPS_ON, CAPTURE,
+  DRAFT_AGREES, DRAFT_AGREES_CLOUD, DRAFT_DIFFERS_CONCERN, DRAFT_REFUSED_V4, PLAN, PREVIEW_DRAFT, PREVIEW_HAND, TARGETS,
 } from "./fixtures.ts"
 import type { GenerateResult, RemediationApplyResult, RemediationCapabilities, RemediationPreview } from "../src/lib/api.ts"
 
@@ -219,6 +220,34 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         await expect(pane.getByText(/not what you previewed/)).toBeVisible()
         await expect(page.getByRole("button", { name: `Apply remediation in lab for ${RULE}` })).toBeDisabled()
         await invariants(page, seen, [HTTP_400])
+      })
+
+      test("B1-23 cloud backend, no key: distinct line from the local-model case", async ({ page }) => {
+        const seen = await mockEngine(page, { caps: CAPS_CLOUD_NO_KEY })
+        const pane = await openPane(page)
+        await approve(page)
+        await expect(pane.getByText("The cloud model is not configured (no API key).")).toBeVisible()
+        await expect(pane.getByText("The local model is not available on this machine.")).toHaveCount(0)
+        await expect(page.getByRole("button", { name: `Draft a fix with the cloud model for ${RULE}` })).toHaveCount(0)
+        expect(seen.generate).toBe(0)
+        await invariants(page, seen)
+      })
+
+      test("B1-24 cloud backend: sending-data disclosure shown, draft labelled as cloud, network sent to the engine only", async ({ page }) => {
+        const seen = await mockEngine(page, {
+          caps: CAPS_CLOUD_ON,
+          generate: DRAFT_AGREES_CLOUD,
+          preview: (b) => (b.plan_id ? { ...PREVIEW_DRAFT, plan_id: b.plan_id as string } : PREVIEW_HAND),
+        })
+        const pane = await openPane(page)
+        await approve(page)
+        await expect(pane.getByText(/sends the failing rule and the lab connection.s current settings to that service/)).toBeVisible()
+        await page.getByRole("button", { name: `Draft a fix with the cloud model for ${RULE}` }).click()
+        await expect(pane.getByText("Cloud model's draft", { exact: true })).toBeVisible()
+        await expect(pane.getByText(/Drafted by a cloud model this machine sent a request to/)).toBeVisible()
+        await expect(page.getByRole("radio", { name: `Use the cloud model's draft for ${RULE}` })).toBeVisible()
+        expect(seen.generate).toBe(1)
+        await invariants(page, seen)
       })
 
       test("B1-07 model unavailable: a plain line, no draft button", async ({ page }) => {
