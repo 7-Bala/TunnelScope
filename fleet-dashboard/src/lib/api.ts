@@ -242,7 +242,9 @@ export async function remediationPlan(
 
 export type RemediationApplyResult = {
   ok: boolean
-  decision?: "applied" | "refused" | "failed"
+  /** "unknown": the engine's answer was lost or unreadable, or it failed unexpectedly: the lab may
+   * or may not have been changed (the in-container watchdog restores an unconfirmed change). */
+  decision?: "applied" | "refused" | "failed" | "unknown"
   stage?: string
   error?: string
   rule_id?: string
@@ -386,16 +388,22 @@ export async function applyRemediation(
   confirm: boolean = true,
   opts: { digest?: string; planId?: string | null } = {},
 ): Promise<RemediationApplyResult> {
+  let res: Response
   try {
-    const res = await fetch("/api/remediate/apply", {
+    res = await fetch("/api/remediate/apply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rule_id: ruleId, target, confirm, digest: opts.digest ?? null, plan_id: opts.planId ?? null }),
     })
-    const data = await res.json()
-    return data as RemediationApplyResult
   } catch (e) {
-    return { ok: false, error: String(e) }
+    // The request may already have reached the engine and changed the lab before the connection
+    // failed; the browser cannot tell. Never report this as "nothing was changed".
+    return { ok: false, decision: "unknown", error: `the connection to the engine was lost (${String(e)})` }
+  }
+  try {
+    return (await res.json()) as RemediationApplyResult
+  } catch {
+    return { ok: false, decision: "unknown", error: `the engine's reply could not be read (HTTP ${res.status})` }
   }
 }
 
