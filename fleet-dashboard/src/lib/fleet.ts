@@ -90,8 +90,12 @@ export function headline(s: ReturnType<typeof fleetStats>): { title: string; det
       ? `The key exchange of ${plural(total, "this tunnel", `these ${total} tunnels`)} is not in the capture.`
       : vulnerable === 0
         ? counts.pq === total
-          ? `All ${total} ${plural(total, "tunnel negotiates", "tunnels negotiate")} hybrid post-quantum key exchange.`
-          : `All ${seen} ${plural(seen, "tunnel", "tunnels")} whose key exchange was seen ${plural(seen, "negotiates", "negotiate")} hybrid post-quantum.`
+          ? total === 1
+            ? "This tunnel negotiates hybrid post-quantum key exchange."
+            : `All ${total} tunnels negotiate hybrid post-quantum key exchange.`
+          : seen === 1
+            ? "The one tunnel whose key exchange was seen negotiates hybrid post-quantum."
+            : `All ${seen} tunnels whose key exchange was seen negotiate hybrid post-quantum.`
         : `${vulnerable} of ${total} ${plural(total, "tunnel", "tunnels")} still ${plural(vulnerable, "negotiates", "negotiate")} classical key exchange.`
   const parts: string[] = []
   if (counts.downgraded)
