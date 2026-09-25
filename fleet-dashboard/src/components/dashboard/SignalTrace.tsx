@@ -10,6 +10,7 @@ const KIND_COLOR: Record<string, string> = {
   classical: "var(--warn)",
   pq: "var(--pos)",
   downgraded: "var(--neg)",
+  unknown: "var(--chart-5)",
 }
 
 const config = { load: { label: "Failed-check load", color: "var(--violet)" } } satisfies ChartConfig

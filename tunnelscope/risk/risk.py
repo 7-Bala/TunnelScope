@@ -74,9 +74,12 @@ def threats(record, verdicts, anomaly: dict | None = None) -> list[Threat]:
                "an attacker in the path steers the peers to the weakest option both still accept")
     rule_threat(t, [("DST-PQ-DOWNGRADE", 3), ("RFC8247-DH-OFFER", 2)])
     if anomaly and any(a.get("kind") == "downgrade" for a in anomaly.get("anomalies", [])):
+        # Only a rule that FAILED is evidence of the threat: if the rules had cleared it (or could not
+        # judge it), their ids and reason must not be presented as support for "present".
+        by_rules = t.status == "present"
         t.status, t.likelihood = "present", 3
-        t.evidence = t.evidence + ["anomaly: downgrade from this tunnel's usual crypto"]
-        t.reason = (t.reason + "; " if t.status == "present" and t.reason else "") + "this tunnel was stronger before"
+        t.evidence = (t.evidence if by_rules else []) + ["anomaly: downgrade from this tunnel's usual crypto"]
+        t.reason = (t.reason + "; " if by_rules and t.reason else "") + "this tunnel was stronger before"
     rule_threat(Threat("TH-04", "Weak or legacy cipher", 2,
                        "an outdated or non-recommended cipher weakens confidentiality"),
                 [("RFC8247-ENCR", 2), ("RFC8221-ESP-3DES", 2)])

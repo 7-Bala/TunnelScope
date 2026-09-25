@@ -37,18 +37,22 @@ export function toGateway(sa: AnalyzedSA, index: number, total: number): Gateway
   }
 }
 
-export type PostureKind = "classical" | "downgraded" | "pq"
+export type PostureKind = "classical" | "downgraded" | "pq" | "unknown"
 
+/** Only what the engine actually established: a posture it could not tell (ESP-only capture, or a
+ * handshake that was not in the capture) is "unknown", never counted as classical (DEC-008). */
 export function postureKind(posture: string): PostureKind {
   if (posture.includes("DOWNGRADED")) return "downgraded"
-  if (posture.includes("post-quantum")) return "pq"
-  return "classical"
+  if (posture.startsWith("post-quantum")) return "pq"
+  if (posture.startsWith("classical")) return "classical"
+  return "unknown"
 }
 
 export const POSTURE_META: Record<PostureKind, { label: string; color: string }> = {
   classical: { label: "Classical", color: "var(--warn)" },
   downgraded: { label: "PQ not selected", color: "var(--neg)" },
   pq: { label: "Post-quantum", color: "var(--pos)" },
+  unknown: { label: "Not seen", color: "var(--chart-5)" },
 }
 
 export function worstSeverity(fails: Finding[]): Finding["severity"] | null {
@@ -59,7 +63,7 @@ export function worstSeverity(fails: Finding[]): Finding["severity"] | null {
 }
 
 export function fleetStats(gateways: Gateway[]) {
-  const counts: Record<PostureKind, number> = { classical: 0, downgraded: 0, pq: 0 }
+  const counts: Record<PostureKind, number> = { classical: 0, downgraded: 0, pq: 0, unknown: 0 }
   let high = 0, medium = 0, informational = 0, cve = 0
   gateways.forEach((g) => {
     counts[postureKind(g.posture)]++
@@ -80,10 +84,19 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 /** The headline, computed from the data shown — never hard-coded to one dataset. */
 export function headline(s: ReturnType<typeof fleetStats>): { title: string; detail: string } {
   const { total, vulnerable, counts, cve } = s
+  const seen = total - counts.unknown
   const title =
-    vulnerable === 0
-      ? `All ${total} ${plural(total, "tunnel negotiates", "tunnels negotiate")} hybrid post-quantum key exchange.`
-      : `${vulnerable} of ${total} ${plural(total, "tunnel", "tunnels")} still ${plural(vulnerable, "negotiates", "negotiate")} classical key exchange.`
+    seen === 0
+      ? `The key exchange of ${plural(total, "this tunnel", `these ${total} tunnels`)} is not in the capture.`
+      : vulnerable === 0
+        ? counts.pq === total
+          ? total === 1
+            ? "This tunnel negotiates hybrid post-quantum key exchange."
+            : `All ${total} tunnels negotiate hybrid post-quantum key exchange.`
+          : seen === 1
+            ? "The one tunnel whose key exchange was seen negotiates hybrid post-quantum."
+            : `All ${seen} tunnels whose key exchange was seen negotiate hybrid post-quantum.`
+        : `${vulnerable} of ${total} ${plural(total, "tunnel", "tunnels")} still ${plural(vulnerable, "negotiates", "negotiate")} classical key exchange.`
   const parts: string[] = []
   if (counts.downgraded)
     parts.push(`${counts.downgraded} offered post-quantum but negotiated classical`)
@@ -93,6 +106,8 @@ export function headline(s: ReturnType<typeof fleetStats>): { title: string; det
       ? `${counts.pq} ${plural(counts.pq, "is", "are")} hardened with hybrid ML-KEM`
       : "none are hardened with hybrid ML-KEM",
   )
+  if (counts.unknown)
+    parts.push(`for ${counts.unknown} the key exchange is not in the capture, so ${plural(counts.unknown, "its", "their")} posture is not known`)
   const detail = parts.join("; ")
   return { title, detail: detail.charAt(0).toUpperCase() + detail.slice(1) + "." }
 }

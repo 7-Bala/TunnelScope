@@ -338,7 +338,12 @@ class _Handler(BaseHTTPRequestHandler):
             self._json(400 if res.get("decision") == "refused" else 200, res)
         except Exception as e:
             sys.stderr.write(f"[tunnelscope serve] remediate apply error: {e}\n")
-            self._json(500, {"ok": False, "stage": "execute", "error": "unexpected server error during remediation"})
+            # The exception may come after the lab was changed, so the outcome is NOT "nothing changed":
+            # say it is unknown, and that the in-container watchdog restores an unconfirmed change.
+            from ..remediate.execute import WATCHDOG_TIMEOUT_S
+            self._json(500, {"ok": False, "stage": "execute", "decision": "unknown",
+                             "error": "unexpected server error during remediation",
+                             "watchdog_timeout_s": WATCHDOG_TIMEOUT_S})
 
     def _remediate_preview(self) -> None:
         """Dry run only: the real diff for a rule on a lab container, shown before approval."""

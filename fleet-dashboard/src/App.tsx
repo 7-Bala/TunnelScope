@@ -247,6 +247,9 @@ function App() {
                     <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-warn" />classical</span>
                     <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-pos" />post-quantum</span>
                     <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-neg" />PQ not selected / CVE</span>
+                    {s.counts.unknown > 0 && (
+                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: "var(--chart-5)" }} />key exchange not seen</span>
+                    )}
                     <span className="sm:ml-auto">weighted failed checks per tunnel</span>
                   </div>
                 </>

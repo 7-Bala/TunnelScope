@@ -56,7 +56,7 @@ def render_sas_html(a: dict) -> str:
     for i, sa in enumerate(a["sas"], 1):
         r = sa["record"]
         posture = a["cbom"]["tunnelscope_sa_summary"][i - 1]["quantum_posture"]
-        dg = "dg" if ("DOWNGRAD" in posture or "classical (quantum" in posture) else ""
+        dg = "dg" if ("DOWNGRAD" in posture or posture.startswith("classical")) else ""
         body.append('<div class="card">')
         body.append(f'<div class="sa-h"><div><b>SA {i}</b> &nbsp;{html.escape(r.src)} ↔ {html.escape(r.dst)}</div>'
                     f'<span class="posture {dg}">{html.escape(posture)}</span></div>')

@@ -43,7 +43,9 @@ def _asset(name, primitive, extra=None):
 def record_to_components(rec: EvidenceRecord) -> tuple[list, list, str]:
     """Return (components, gaps, quantum_posture) for one SA."""
     comps, gaps = [], []
-    qs_posture = "classical"
+    # Nothing seen yet means nothing is known (DEC-008): the posture is only "classical" when the
+    # handshake showed a classical-only key exchange, or when the protocol itself has no PQ option.
+    qs_posture = "unknown (key exchange not observed)"
 
     ver = rec.findings.get("ike_version")
     if ver and ver.value:
@@ -80,6 +82,10 @@ def record_to_components(rec: EvidenceRecord) -> tuple[list, list, str]:
                      "note": "post-quantum key exchange offered but not used"})
     elif pq and pq.value == "classical-only":
         qs_posture = "classical (quantum-vulnerable key exchange)"
+    elif ver and ver.status.value == "OBSERVED" and ver.value == "IKEv1":
+        # IKEv1 has no post-quantum key exchange at all (RFC 9370 extends IKEv2 only), so classical
+        # is certain from the version alone even when the key-exchange payload was not seen.
+        qs_posture = "classical (IKEv1: no post-quantum key exchange exists)"
 
     return comps, gaps, qs_posture
 

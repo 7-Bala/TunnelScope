@@ -180,6 +180,36 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         await invariants(page, seen)
       })
 
+      test("B1-21 connection lost during apply: result not known, never 'nothing was changed'", async ({ page }) => {
+        // Found in the 2026-09-25 E2E run: the engine was killed mid-apply after the lab had been
+        // changed, and the pane said "Nothing was changed".
+        const seen = await mockEngine(page, {})
+        await page.route("**/api/remediate/apply", (r) => r.abort("connectionreset"))
+        const pane = await openPane(page)
+        await approve(page)
+        await page.getByRole("button", { name: `Preview the real change for ${RULE}` }).click()
+        await page.getByRole("button", { name: `Apply remediation in lab for ${RULE}` }).click()
+        await expect(pane.getByText(/Result not known/)).toBeVisible()
+        await expect(pane.getByText(/may already have been made in the lab/)).toBeVisible()
+        await expect(pane.getByText(/Nothing was changed/)).toHaveCount(0)
+        await expect(pane.getByText(/Confirmed fixed/)).toHaveCount(0)
+        await invariants(page, seen, [/Failed to load resource/])
+      })
+
+      test("B1-22 server error during apply: result not known, with the watchdog timeout", async ({ page }) => {
+        const seen = await mockEngine(page, {})
+        await page.route("**/api/remediate/apply", (r) =>
+          json(r, { ok: false, stage: "execute", decision: "unknown", error: "unexpected server error during remediation", watchdog_timeout_s: 180 }, 500))
+        const pane = await openPane(page)
+        await approve(page)
+        await page.getByRole("button", { name: `Preview the real change for ${RULE}` }).click()
+        await page.getByRole("button", { name: `Apply remediation in lab for ${RULE}` }).click()
+        await expect(pane.getByText(/Result not known/)).toBeVisible()
+        await expect(pane.getByText(/within 180 seconds/)).toBeVisible()
+        await expect(pane.getByText(/Nothing was changed/)).toHaveCount(0)
+        await invariants(page, seen, [/status of 500/])
+      })
+
       test("B1-06 stale preview: refused, and a new preview is required", async ({ page }) => {
         const seen = await mockEngine(page, { apply: APPLY_STALE })
         const pane = await openPane(page)
