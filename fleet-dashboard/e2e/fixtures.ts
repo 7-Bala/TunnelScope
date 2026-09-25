@@ -30,9 +30,11 @@ export const TARGETS = {
   recommended: "sih26-alice-pq",
 }
 
-export const CAPS_ON: RemediationCapabilities = { local_model: true, generator_enabled: true }
-export const CAPS_OFF: RemediationCapabilities = { local_model: true, generator_enabled: false }
-export const CAPS_NO_MODEL: RemediationCapabilities = { local_model: false, generator_enabled: true }
+export const CAPS_ON: RemediationCapabilities = { local_model: true, cloud_model: false, backend: "local", generator_enabled: true }
+export const CAPS_OFF: RemediationCapabilities = { local_model: true, cloud_model: false, backend: "local", generator_enabled: false }
+export const CAPS_NO_MODEL: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "local", generator_enabled: true }
+export const CAPS_CLOUD_ON: RemediationCapabilities = { local_model: false, cloud_model: true, backend: "cloud", generator_enabled: true }
+export const CAPS_CLOUD_NO_KEY: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "cloud", generator_enabled: true }
 
 const DIFF_HAND =
   "--- /tmp/exp15-alice.conf\n+++ /tmp/exp15-alice.conf (after)\n@@ -14,7 +14,7 @@\n         version = 2\n-        proposals = aes128-sha1-modp1024\n+        proposals = aes128-sha1-modp4096\n         children {\n"
@@ -164,6 +166,11 @@ export const DRAFT_AGREES: GenerateResult = {
   ok: true,
   plan_id: "d".repeat(64),
   plan: { ...DRAFT_PLAN, diff: { "/tmp/exp15-alice.conf": DIFF_HAND }, agrees_with_handwritten: true },
+}
+export const DRAFT_AGREES_CLOUD: GenerateResult = {
+  ok: true,
+  plan_id: "e".repeat(64),
+  plan: { ...DRAFT_PLAN, diff: { "/tmp/exp15-alice.conf": DIFF_HAND }, agrees_with_handwritten: true, backend: "cloud" },
 }
 const RAW_BAD =
   '{"line_key": "proposals", "edits": [{"op": "replace", "from": "modp1024", "to": "modp3076"}], "problem": "p", "why": "w", "expected_line_after": "proposals = aes128-sha1-modp3076"}'

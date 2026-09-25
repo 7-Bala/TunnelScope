@@ -46,13 +46,14 @@ Core capabilities:
 - Detects behavioral anomalies and configuration drift from historical tunnel norms, such as cipher downgrades.
 - Exports executive summaries, technical reports, and CycloneDX Cryptographic Bills of Materials (CBOM).
 - Hosts a self-contained local web dashboard for interactive capture analysis.
-- Runs entirely offline and air-gapped without external network requests or third-party cloud models.
+- Runs entirely offline and air-gapped by default: no external network requests, no third-party cloud model, for every finding, verdict, score, and posture judgment the tool makes. One optional, off-by-default feature is the exception (DEC-038): a remediation-drafting backend that calls Google Gemini, enabled only by an operator setting an API key and an explicit switch; it only ever proposes a candidate config edit for the lab, which is independently re-verified before anything runs, exactly like the on-device model it sits beside — see "Honest limits".
 
 ## Honest limits
 
 - The traffic-type model was trained on lab traffic plus real public traffic: 4,702 windows from 82 real OpenVPN tunnels (MIT Lincoln Laboratory's VNAT dataset, EXP-19), 6,069 windows from 994 real IPsec tunnels (USBVPN2022 L2TP-IPsec, EXP-20 — the first real IPsec traffic the project has), and 5,116 windows from 458 real people's WireGuard sessions at home (EXP-20; its "web" class excluded — it mixed in unlabelled video and hurt accuracy). Before real IPsec data, the model scored 0.174 on real IPsec traffic and answered 0% of the time (always "uncertain"); with it, it scores 0.757 on real IPsec capture files it never saw and answers 93.6% of the time at 99.8% accuracy when it does (EXP-20, shipped by owner decision, DEC-037, after passing every accuracy condition but missing one operational bar — see DEC-037). Real OpenVPN traffic alone did not transfer to IPsec (0.378, EXP-19). Traffic unlike its training data can be misread.
 - Tunnel/transport mode, the ESP key length, and how the peers authenticated cannot always be read from a capture. The tool says "unknown" when it cannot tell.
 - Whether a receiver drops replayed packets is not visible from a capture.
+- The remediation generator's local model (on-device, MiniCPM5-2B) failed its pre-registered ship bar (EXP-18: 0 of 16 confirmed fixes) and stays switched off (DEC-035). An optional second backend can call Google Gemini instead (DEC-038, owner override of the offline-only rule): off by default, needs an operator-set API key, and whether it clears the same bar is measured by EXP-18b before it ships.
 - Everything was measured on one lab, two IPsec implementations (strongSwan, Libreswan), no real WAN.
 
 ## How it was validated

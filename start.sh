@@ -8,11 +8,14 @@
 #          --no-history (don't learn tunnels' normal behaviour / no anomaly detection)
 #          --live-follow DIR | --live-interface IFACE [--window S]  (live stream analysis, dashboard "Live" tab)
 # Everything is local: the engine binds 127.0.0.1 only. Logs: ./logs/  State: ./.run/
+# DEC-038: a git-ignored .env file at the repo root, if present, is loaded before the engine starts
+# (e.g. TUNNELSCOPE_GENERATOR_BACKEND=cloud, TUNNELSCOPE_GEMINI_API_KEY=...); see .env.example.
 set -uo pipefail
 cd "$(dirname "$0")"
 ROOT=$PWD LOGS=$ROOT/logs RUN=$ROOT/.run VENV=$ROOT/.venv DASH=$ROOT/fleet-dashboard
 PORT=${TUNNELSCOPE_PORT:-8765}; HIST=$ROOT/.tunnelscope-history; LIVE=();  DEV=0; DETACH=0; BROWSER=1; REBUILD=0; CMD=start
 mkdir -p "$LOGS" "$RUN"
+[ -f "$ROOT/.env" ] && { set -a; . "$ROOT/.env"; set +a; }
 
 if [ -t 1 ]; then B=$'\033[1m'; G=$'\033[32m'; Y=$'\033[33m'; R=$'\033[31m'; D=$'\033[2m'; N=$'\033[0m'; else B= G= Y= R= D= N=; fi
 say()  { printf '%s\n' "$*"; printf '%s %s\n' "$(date '+%F %T')" "$*" | sed $'s/\033\\[[0-9;]*m//g' >> "$LOGS/start.log"; }

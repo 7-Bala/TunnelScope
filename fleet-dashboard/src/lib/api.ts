@@ -307,18 +307,29 @@ export type RemediationPreview = {
 export type RemediationCapabilities = {
   /** the pinned local model can run on this machine (Apple Silicon, model on disk) */
   local_model: boolean
+  /** DEC-038: the optional cloud drafting backend has an API key and its package is installed */
+  cloud_model: boolean
+  /** which backend the operator has selected (server-side setting only, never client-chosen) */
+  backend: "local" | "cloud"
   /** local-model drafts are switched on (off until EXP-18 passes, DEC-034) */
   generator_enabled: boolean
 }
 
+const NO_CAPS: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "local", generator_enabled: false }
+
 export async function remediationCapabilities(): Promise<RemediationCapabilities> {
   try {
     const res = await fetch("/api/remediate/capabilities", { cache: "no-store" })
-    if (!res.ok) return { local_model: false, generator_enabled: false }
+    if (!res.ok) return NO_CAPS
     const b = await res.json()
-    return { local_model: b?.local_model === true, generator_enabled: b?.generator_enabled === true }
+    return {
+      local_model: b?.local_model === true,
+      cloud_model: b?.cloud_model === true,
+      backend: b?.backend === "cloud" ? "cloud" : "local",
+      generator_enabled: b?.generator_enabled === true,
+    }
   } catch {
-    return { local_model: false, generator_enabled: false }
+    return NO_CAPS
   }
 }
 
@@ -334,6 +345,9 @@ export type GeneratedPlan = RemediationPlan & {
   raw_output: string
   model_id: string
   model_revision: string
+  /** DEC-038: which backend actually produced this draft (may differ from the operator's current
+   * setting if it was rechecked later) */
+  backend?: "local" | "cloud"
   self_review: { verdict: "no concerns" | "concerns" | "unavailable"; reason: string | null } | null
   agrees_with_handwritten?: boolean
   handwritten_diff?: Record<string, string> | null
