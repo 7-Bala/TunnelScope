@@ -84,7 +84,7 @@ def check_generator() -> int:
     from tunnelscope.remediate.plan import GENERATABLE_RULES
     bad = 0
     for rule in sorted(GENERATABLE_RULES):
-        r = generate.generate_plan(rule, "sih26-alice-pq", compare_with_handwritten=True, **generate.PRODUCT_SETTINGS)
+        r = generate.generate_plan(rule, "sih26-alice-pq", compare_with_handwritten=True, **generate.SHIPPED_SETTINGS)
         p = r.get("plan") or {}
         raw = (p.get("raw_output") or (r.get("revisions") or [{}])[-1].get("raw_output") or "")
         print(json.dumps({"rule": rule, "ok": r["ok"], "stage": r.get("stage"), "reason": r.get("reason"),

@@ -180,19 +180,45 @@ def test_every_rule_has_a_plain_explanation():
 
 
 def test_no_outside_model_is_used():
-    """Decision 2026-09-20: every model is trained by the project. No LLM client,
-    no model download, no network call anywhere in the package."""
+    """Decision 2026-09-20: every model that decides a finding, verdict, score or applied command
+    is trained by the project. DEC-038 (2026-09-25, owner override) adds one narrow, disclosed
+    exception: remediate/cloud_client.py may call an outside model (Google Gemini) to DRAFT a
+    candidate remediation edit; every draft is still re-verified from scratch by generate.py's own
+    V1-V8 checks, dry run and clone-load check before anything can execute, exactly like a local
+    draft. It is the only file allowed to name a cloud provider or call one; the check below fails
+    if that word appears anywhere else, and test_cloud_client_is_never_imported_by_fact_producing_
+    code (below) keeps it out of every finding/verdict/score/anomaly module."""
     import pathlib
     pkg = pathlib.Path(ex.__file__).parents[1]
     all_files = list(pkg.rglob("*.py"))
     all_src = "\n".join(p.read_text() for p in all_files).lower()
     rephrase_dir = pkg / "rephrase"
+    cloud_client_file = pkg / "remediate" / "cloud_client.py"
+    assert cloud_client_file.is_file()
     no_rephrase_src = "\n".join(
         p.read_text() for p in all_files if not p.is_relative_to(rephrase_dir)
     ).lower()
-    for banned in ("anthropic", "openai", "ollama", "gemini", "urllib.request.urlopen", "transformers", "huggingface"):
+    no_rephrase_or_cloud_src = "\n".join(
+        p.read_text() for p in all_files if not p.is_relative_to(rephrase_dir) and p != cloud_client_file
+    ).lower()
+    for banned in ("anthropic", "openai", "ollama", "urllib.request.urlopen", "transformers", "huggingface"):
         src = no_rephrase_src if banned in ("transformers", "huggingface") else all_src
         assert banned not in src, banned
+    assert "gemini" not in no_rephrase_or_cloud_src, "only remediate/cloud_client.py may name a cloud provider"
+    assert "gemini" in cloud_client_file.read_text().lower()
+
+
+def test_cloud_client_is_never_imported_by_fact_producing_code():
+    """DEC-038's own carve-out, checked the same way DEC-031's rephrase carve-out is: one-directional
+    — a finding, verdict, score or anomaly can never depend on the cloud drafting client."""
+    import pathlib
+    pkg = pathlib.Path(ex.__file__).parents[1]
+    for d in ("assess", "rules", "risk", "leakage", "anomaly", "evidence"):
+        dirpath = pkg / d
+        if not dirpath.exists():
+            continue
+        for p in dirpath.rglob("*.py"):
+            assert "cloud_client" not in p.read_text(), f"{p.name} mentions cloud_client"
 
 
 def test_rephrase_is_never_imported_by_fact_producing_code():

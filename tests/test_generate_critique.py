@@ -103,3 +103,13 @@ def test_model_is_given_the_remaining_budget(monkeypatch, tmp_path):
     m = FakeModel([GOOD, REVIEW_OK]).install(monkeypatch)
     gen.generate_plan("V-207193", A, force=True, critique_rounds=2, self_review_on=True, time_budget_s=30)
     assert 0 < m.calls[0]["timeout_s"] <= 30 and 0 < m.calls[1]["timeout_s"] <= 30
+
+
+def test_shipped_settings_are_faster_than_product_settings_critique_rounds():
+    """2026-09-25 (owner: "make it faster"): the live dashboard/API and the live smoke check use
+    SHIPPED_SETTINGS, not PRODUCT_SETTINGS. EXP-18's own H3 result is why: 2 critique rounds
+    confirmed exactly as many fixes as 0 (both 0/16 on the test set), so the extra round was pure
+    latency for no measured accuracy gain. PRODUCT_SETTINGS itself is untouched (EXP-18's own
+    frozen record, above) — this is a second, separate, newer configuration."""
+    assert gen.SHIPPED_SETTINGS == {"critique_rounds": 0, "self_review_on": True, "time_budget_s": 45.0}
+    assert gen.SHIPPED_SETTINGS != gen.PRODUCT_SETTINGS

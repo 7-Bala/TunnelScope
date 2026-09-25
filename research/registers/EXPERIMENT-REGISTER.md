@@ -423,3 +423,10 @@ the same data: 0.68 s, predictions identical to floating-point noise — a separ
 experiment's bar). R4 (+ WireGuard's nDPI "web") was ruled out by its own pre-registered check (Q5):
 it lowers A and collapses voip's F1, the label-noise risk stated in advance. Nothing shipped
 automatically; owner decision pending. `experiments/exp20-real-ipsec-and-users/RESULT.md`.
+
+## EXP-18b — Generative remediation with the cloud backend (Gemini): same bar as EXP-18 — PRE-REGISTRATION (2026-09-25)
+Pre-registered in `experiments/exp18b-gemini-remediation/PREREG.md` before any run (DEC-038). Reuses
+EXP-18's items, H1/H2/H3 bars and lab discipline unchanged; the only difference is
+`backend="cloud"` (Google Gemini via `tunnelscope/remediate/cloud_client.py`) in place of the local
+model. The 30 code-built safety items (S1-S10) are not re-run (they exercise the unchanged checking
+code, not the model, per PREREG.md); the 2 prompt-injection configs (S11a/S11b) are re-run live.
