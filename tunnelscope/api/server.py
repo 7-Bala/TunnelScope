@@ -197,6 +197,30 @@ def generator_enabled() -> bool:
     return os.environ.get("TUNNELSCOPE_GENERATOR") == "1"
 
 
+_CLOUD_MODEL: list[bool] = []
+
+
+def cloud_model_available() -> bool:
+    """DEC-038: whether the optional cloud backend can be called here (API key set, SDK
+    importable — see remediate/cloud_client.py for which provider). Worked out once per process,
+    like local_model_available()."""
+    if not _CLOUD_MODEL:
+        try:
+            from ..remediate import cloud_client
+            _CLOUD_MODEL.append(bool(cloud_client.available()))
+        except Exception:
+            _CLOUD_MODEL.append(False)
+    return _CLOUD_MODEL[0]
+
+
+def generator_backend() -> str:
+    """DEC-038: which model drafts, chosen only by this server-side setting — never by a client
+    request. "local" (default, on-device) unless an operator sets
+    TUNNELSCOPE_GENERATOR_BACKEND=cloud (see tunnelscope/remediate/cloud_client.py for which provider)."""
+    b = os.environ.get("TUNNELSCOPE_GENERATOR_BACKEND", "local").strip().lower()
+    return b if b == "cloud" else "local"
+
+
 class _Handler(BaseHTTPRequestHandler):
     server_version = "TunnelScope/0.2"
 
@@ -241,7 +265,10 @@ class _Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file(),
                              "history": bool(HISTORY_DIR), "live": LIVE is not None})
         elif path == "/api/remediate/capabilities":
-            self._json(200, {"ok": True, "local_model": local_model_available(), "generator_enabled": generator_enabled()})
+            backend = generator_backend()
+            self._json(200, {"ok": True, "local_model": local_model_available(),
+                             "cloud_model": cloud_model_available(), "backend": backend,
+                             "generator_enabled": generator_enabled()})
         elif path == "/api/history":
             self._json(200, history_summary())
         elif path == "/api/live":
@@ -406,7 +433,8 @@ class _Handler(BaseHTTPRequestHandler):
         try:
             from ..remediate import execute, generate
             res = generate.generate_plan(body["rule_id"], body["target"], body.get("observed"),
-                                         compare_with_handwritten=True, **generate.PRODUCT_SETTINGS)
+                                         compare_with_handwritten=True, backend=generator_backend(),
+                                         **generate.PRODUCT_SETTINGS)
             if res.get("ok"):
                 res["plan_id"] = execute.store_generated_plan(res["plan"], body["target"], HISTORY_DIR)
             plan = res.get("plan") or {}
@@ -414,7 +442,7 @@ class _Handler(BaseHTTPRequestHandler):
                                   "caller": self.address_string(), "rule_id": body["rule_id"], "target": body["target"],
                                   "ok": bool(res.get("ok")), "stage": res.get("stage"), "reason": res.get("reason"),
                                   "plan_id": res.get("plan_id"), "model_revision": plan.get("model_revision"),
-                                  "prompt_sha256": plan.get("prompt_sha256"),
+                                  "backend": plan.get("backend"), "prompt_sha256": plan.get("prompt_sha256"),
                                   "rounds": len(plan.get("revisions") or res.get("revisions") or [])}, HISTORY_DIR)
             self._json(200, res)
         except Exception as e:

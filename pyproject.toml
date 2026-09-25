@@ -19,6 +19,11 @@ dependencies = ["scikit-learn>=1.3", "numpy>=1.24", "PyYAML>=6.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# DEC-038 (2026-09-25, owner override of I9/DEC-031's offline-only rule): the ONLY dependency in the
+# project that makes a network call, and only when an operator both installs this extra AND sets
+# TUNNELSCOPE_GENERATOR_BACKEND=cloud plus an API key (tunnelscope/remediate/cloud_client.py). A
+# base `pip install tunnelscope` stays exactly as offline as before this decision.
+cloud = ["google-genai>=1.0"]
 
 [project.scripts]
 tunnelscope = "tunnelscope.cli:main"
