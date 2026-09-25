@@ -4,7 +4,7 @@ import type { PostureKind } from "@/lib/fleet"
 import { POSTURE_META } from "@/lib/fleet"
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion"
 
-const ORDER: PostureKind[] = ["classical", "downgraded", "pq"]
+const ORDER: PostureKind[] = ["classical", "downgraded", "pq", "unknown"]
 const config = {} satisfies ChartConfig
 
 // shadcn/Recharts donut: fleet posture composition.

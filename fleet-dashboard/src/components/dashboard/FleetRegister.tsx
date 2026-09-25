@@ -189,6 +189,7 @@ function stateChip(g: Gateway): { t: string; cls: string } {
   const k = postureKind(g.posture)
   if (k === "downgraded") return { t: "PQ not selected", cls: "bg-neg-bg text-neg" }
   if (k === "pq") return { t: "PQ hybrid", cls: "bg-pos-bg text-pos" }
+  if (k === "unknown") return { t: "Not seen", cls: "bg-secondary text-muted-foreground" }
   return { t: "Classical", cls: "bg-warn-bg text-warn" }
 }
 
