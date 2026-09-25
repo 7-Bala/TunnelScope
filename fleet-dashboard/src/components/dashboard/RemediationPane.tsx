@@ -541,6 +541,20 @@ export function RemediationControl({
 }
 
 function ApplyOutcome({ result }: { result: RemediationApplyResult }) {
+  if (result.decision === "unknown") {
+    const secs = result.watchdog_timeout_s ?? 180
+    return (
+      <div role="alert" className="mt-2 border-t border-border/50 pt-2 text-[12px] text-warn">
+        <span className="font-semibold">Result not known: </span>
+        {result.error || "the engine did not answer"}.
+        <span className="text-faint">
+          {" "}The change may already have been made in the lab. If it was and was not confirmed, the watchdog inside
+          the container restores the previous configuration by itself within {secs} seconds. Start the engine again,
+          then preview to see the lab's current state before trying again.
+        </span>
+      </div>
+    )
+  }
   if (result.decision === "refused" || (!result.ok && result.decision !== "failed")) {
     return (
       <div className="mt-2 border-t border-border/50 pt-2 text-[12px] text-warn">

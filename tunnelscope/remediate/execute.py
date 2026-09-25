@@ -661,6 +661,29 @@ def rollback_snapshot(target: str, expected: dict[str, str] | None = None) -> di
             "detail": "restored" if verified is not False else "restore could not be verified; snapshot kept for the watchdog"}
 
 
+def _started_entry(token: str, history_dir: str | Path | None) -> dict[str, Any]:
+    """The "started" audit line of the apply this token belongs to, and whether that apply ever wrote
+    its outcome (False means the process stopped mid-apply). {} if the log has no such line."""
+    log = _history_dir(history_dir) / "remediate.jsonl"
+    found: dict[str, Any] = {}
+    finished = False
+    try:
+        for line in log.read_text(encoding="utf-8").splitlines():
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            if e.get("token") != token:
+                continue
+            if e.get("decision") == "started":
+                found = e
+            elif e.get("decision") in ("applied", "failed"):
+                finished = True
+    except OSError:
+        return {}
+    return {**found, "finished": finished} if found else {}
+
+
 def reconcile_watchdog_events(history_dir: str | Path | None = None, compose_path: Path | None = None) -> list[dict]:
     """Record watchdog restores (which happen inside a container, outside this process) in the
     audit log, then clear their markers."""
@@ -673,9 +696,12 @@ def reconcile_watchdog_events(history_dir: str | Path | None = None, compose_pat
             continue
         parts = marker.split()
         now = time.time()
+        started = _started_entry(parts[0], history_dir)
         entry = {
             "timestamp": now, "at": now, "ok": True, "decision": "watchdog_rollback", "stage": "watchdog",
-            "rule_id": "", "target": t, "token": parts[0], "fired_at": parts[1] if len(parts) > 1 else None,
+            "rule_id": started.get("rule_id", ""), "target": t, "token": parts[0],
+            "fired_at": parts[1] if len(parts) > 1 else None,
+            "undid_apply_by": started.get("target"), "apply_finished": started.get("finished"),
             "caller": "watchdog", "confirm": None, "commands_run": [], "verdict_before": None,
             "verdict_after": None, "confirmed_fixed": False, "rolled_back": True,
         }
@@ -1025,6 +1051,12 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
     arm_commit_confirmed_watchdog(target, token, watchdog_timeout_s)
     if peer:
         arm_commit_confirmed_watchdog(peer, token, watchdog_timeout_s)
+    # Written before anything changes: if this process dies mid-apply (found in the 2026-09-25 E2E
+    # test by killing the engine), the log still says which rule, where and which commands the
+    # token stands for; the watchdog's later restore is then matched to it by token.
+    record_audit({**audit_base, "ok": None, "decision": "started", "stage": "apply", "verdict_before": vb,
+                  "planned_commands": list(exec_commands), "peer": peer, "planned_peer_commands": list(peer_commands),
+                  "watchdog_timeout_s": watchdog_timeout_s}, history_dir)
 
     def undo() -> dict[str, Any]:
         rb = {"target": rollback_snapshot(target, originals)}

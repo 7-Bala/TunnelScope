@@ -68,3 +68,51 @@ def test_varied_history_still_reports_z():
     past = [{"esp_rate": v} for v in (2.0, 2.5, 3.0, 3.5, 2.8, 3.1)]
     out = _traffic_layer({"esp_rate": 38.0}, past)
     assert len(out) == 1 and isinstance(out[0]["z"], float) and "robust z" in out[0]["message"]
+
+
+def test_audit_log_names_the_rule_a_watchdog_undid_after_a_crash(tmp_path, monkeypatch):
+    """The 2026-09-25 E2E test killed the engine mid-apply: the watchdog restored the lab, but the audit
+    log could not say which rule or commands its token stood for (no line had been written yet). A
+    "started" line is now written before any change, and the reconciled restore is matched to it."""
+    import json
+    from tunnelscope.remediate import execute
+    log = tmp_path / "remediate.jsonl"
+    execute.record_audit({"token": "abc123", "rule_id": "V-207193", "target": "sih26-alice-pq",
+                          "decision": "started", "planned_commands": ["sed ..."]}, tmp_path)
+    monkeypatch.setattr(execute, "get_allowed_targets", lambda *a, **k: {"sih26-alice-pq"})
+    monkeypatch.setattr(execute, "is_container_running", lambda t: True)
+    monkeypatch.setattr(execute, "read_file", lambda t, p: "abc123 1790313325\n" if p == execute.WATCHDOG_MARKER else None)
+    monkeypatch.setattr(execute, "_exec", lambda *a, **k: None)
+    events = execute.reconcile_watchdog_events(tmp_path)
+    assert len(events) == 1 and events[0]["rule_id"] == "V-207193" and events[0]["apply_finished"] is False
+    last = json.loads(log.read_text().splitlines()[-1])
+    assert last["decision"] == "watchdog_rollback" and last["rule_id"] == "V-207193" and last["token"] == "abc123"
+
+
+def test_started_entry_is_empty_for_an_unknown_token(tmp_path):
+    from tunnelscope.remediate import execute
+    assert execute._started_entry("nope", tmp_path) == {}
+
+
+def test_started_is_logged_before_the_first_change(tmp_path, monkeypatch):
+    import json
+    from tunnelscope.remediate import execute
+    from test_remediation_guardrails import _lab
+    _lab(monkeypatch, tmp_path)
+    history = tmp_path / "h"
+    seen_at_first_change = []
+    real = execute._run_plan_command
+
+    def spy(target, cmd, files):
+        if not seen_at_first_change:
+            log = history / "remediate.jsonl"
+            lines = [json.loads(x) for x in log.read_text().splitlines()] if log.exists() else []
+            seen_at_first_change.append([e for e in lines if e.get("decision") == "started"])
+        return real(target, cmd, files)
+
+    monkeypatch.setattr(execute, "_run_plan_command", spy)
+    res = execute.apply_remediation("V-207193", "sih26-alice-pq", confirm=True, history_dir=history)
+    assert res["confirmed_fixed"] is True
+    started = seen_at_first_change[0]
+    assert len(started) == 1 and started[0]["token"] == res["token"] and started[0]["rule_id"] == "V-207193"
+    assert started[0]["planned_commands"] == res["commands_run"]
