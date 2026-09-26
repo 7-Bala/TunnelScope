@@ -430,3 +430,11 @@ EXP-18's items, H1/H2/H3 bars and lab discipline unchanged; the only difference 
 `backend="cloud"` (Google Gemini via `tunnelscope/remediate/cloud_client.py`) in place of the local
 model. The 30 code-built safety items (S1-S10) are not re-run (they exercise the unchanged checking
 code, not the model, per PREREG.md); the 2 prompt-injection configs (S11a/S11b) are re-run live.
+
+## EXP-26 — A different vendor's IKE stack: MikroTik RouterOS 7.24.4 — PRE-REGISTRATION (2026-09-26)
+Pre-registered in `experiments/exp26-mikrotik-routeros/PREREG.md` before any capture (roadmap T-118
+step 1). Two RouterOS CHR VMs (QEMU, emulated Cortex-A72) on a virtual cable, keyless capture of the
+cable; 8 scored arms (baseline, modern x25519/ChaCha20, ECP, legacy 3DES/modp1024, CBC+HMAC, PFS on
+and off with 30 s rekeys, weak group offered but not selected) plus one exploratory RFC 8784 PPK arm.
+Ground truth from RouterOS's own installed-SA state. Primary bar H1: zero wrong findings; UNKNOWN is
+never wrong. Predicted gap H7: no PPK detector.
