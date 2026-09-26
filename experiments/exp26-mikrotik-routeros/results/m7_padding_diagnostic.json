@@ -1,0 +1,198 @@
+{
+ "what": "EXP-26 post-hoc diagnostic (not scored): M7 configuration (PFS off, 30 s child lifetime) re-run with RouterOS 'ipsec,debug' logging on VM A, to explain the one wrong finding (M7 pfs INFERRED True).",
+ "source": "RouterOS 7.24.4 /log (topics ipsec,debug) read over REST; the plaintext payload sizes are RouterOS's own debug output before encryption",
+ "finding": "CREATE_CHILD_SA rekey requests carry 132 B of plaintext payloads (Nonce 28, Notify REKEY_SA 12, SA 44, TSi 24, TSr 24) and no KE payload, yet the encrypted part is 388-404 B: RouterOS pads encrypted IKE payloads by up to ~255 B (RFC 7296 sec 3.14 allows any pad length). A 12 B delete payload is sent as 304-320 B. TunnelScope's PFS rule (request >= 400 B means a KE payload, calibrated on strongSwan) therefore misreads padding as a KE payload.",
+ "messages": [
+  {
+   "time": "2026-09-26 18:17:38",
+   "sent_bytes": 432,
+   "plaintext_payload_sizes": [
+    48,
+    28,
+    28,
+    28,
+    8
+   ],
+   "encrypted_sk_bytes": 264
+  },
+  {
+   "time": "2026-09-26 18:17:39",
+   "sent_bytes": 240,
+   "plaintext_payload_sizes": [
+    12,
+    40,
+    8,
+    44,
+    24,
+    24,
+    212
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:17:47",
+   "sent_bytes": 144,
+   "plaintext_payload_sizes": [
+    116
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:17:55",
+   "sent_bytes": 128,
+   "plaintext_payload_sizes": [
+    100
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:17:55",
+   "sent_bytes": 160,
+   "plaintext_payload_sizes": [
+    132
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:03",
+   "sent_bytes": 112,
+   "plaintext_payload_sizes": [
+    84
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:03",
+   "sent_bytes": 96,
+   "plaintext_payload_sizes": [
+    68
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:04",
+   "sent_bytes": 432,
+   "plaintext_payload_sizes": [
+    28,
+    12,
+    44,
+    24,
+    24
+   ],
+   "encrypted_sk_bytes": 404
+  },
+  {
+   "time": "2026-09-26 18:18:11",
+   "sent_bytes": 304,
+   "plaintext_payload_sizes": [
+    12
+   ],
+   "encrypted_sk_bytes": 276
+  },
+  {
+   "time": "2026-09-26 18:18:19",
+   "sent_bytes": 144,
+   "plaintext_payload_sizes": [
+    116
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:19",
+   "sent_bytes": 128,
+   "plaintext_payload_sizes": [
+    100
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:27",
+   "sent_bytes": 144,
+   "plaintext_payload_sizes": [
+    116
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:27",
+   "sent_bytes": 128,
+   "plaintext_payload_sizes": [
+    100
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:29",
+   "sent_bytes": 416,
+   "plaintext_payload_sizes": [
+    28,
+    12,
+    44,
+    24,
+    24
+   ],
+   "encrypted_sk_bytes": 388
+  },
+  {
+   "time": "2026-09-26 18:18:33",
+   "sent_bytes": 80,
+   "plaintext_payload_sizes": [
+    12,
+    52
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:41",
+   "sent_bytes": 144,
+   "plaintext_payload_sizes": [
+    116
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:49",
+   "sent_bytes": 96,
+   "plaintext_payload_sizes": [
+    68
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:49",
+   "sent_bytes": 160,
+   "plaintext_payload_sizes": [
+    132
+   ],
+   "encrypted_sk_bytes": null
+  },
+  {
+   "time": "2026-09-26 18:18:54",
+   "sent_bytes": 416,
+   "plaintext_payload_sizes": [
+    28,
+    12,
+    44,
+    24,
+    24
+   ],
+   "encrypted_sk_bytes": 388
+  },
+  {
+   "time": "2026-09-26 18:18:56",
+   "sent_bytes": 320,
+   "plaintext_payload_sizes": [
+    12
+   ],
+   "encrypted_sk_bytes": 292
+  },
+  {
+   "time": "2026-09-26 18:19:04",
+   "sent_bytes": 160,
+   "plaintext_payload_sizes": [
+    132
+   ],
+   "encrypted_sk_bytes": null
+  }
+ ]
+}

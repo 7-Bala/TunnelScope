@@ -430,3 +430,21 @@ EXP-18's items, H1/H2/H3 bars and lab discipline unchanged; the only difference 
 `backend="cloud"` (Google Gemini via `tunnelscope/remediate/cloud_client.py`) in place of the local
 model. The 30 code-built safety items (S1-S10) are not re-run (they exercise the unchanged checking
 code, not the model, per PREREG.md); the 2 prompt-injection configs (S11a/S11b) are re-run live.
+
+## EXP-26 — A different vendor's IKE stack: MikroTik RouterOS 7.24.4 — PRE-REGISTRATION (2026-09-26)
+Pre-registered in `experiments/exp26-mikrotik-routeros/PREREG.md` before any capture (roadmap T-118
+step 1). Two RouterOS CHR VMs (QEMU, emulated Cortex-A72) on a virtual cable, keyless capture of the
+cable; 8 scored arms (baseline, modern x25519/ChaCha20, ECP, legacy 3DES/modp1024, CBC+HMAC, PFS on
+and off with 30 s rekeys, weak group offered but not selected) plus one exploratory RFC 8784 PPK arm.
+Ground truth from RouterOS's own installed-SA state. Primary bar H1: zero wrong findings; UNKNOWN is
+never wrong. Predicted gap H7: no PPK detector.
+
+### EXP-26 — RESULT (2026-09-26)
+97 of 104 scored findings correct, 6 UNKNOWN (PFS without a rekey, correctly), **1 wrong**: M7 (PFS off)
+inferred PFS on. Cause, from RouterOS's own debug log: RouterOS pads encrypted IKE payloads by up to
+~255 B (a 132 B rekey request is sent as 444 B), and `extract_pfs` reads a request >= 400 B as carrying
+a KE payload (strongSwan calibration); M6's correct answer is therefore not evidence. All IKE suite
+fields (incl. x25519, ECP) correct in 8/8 arms. H1, H3, H6 failed; H4/H5 failed as written only
+(TunnelScope's rekey timing matches the wire; no CVE false alarm). PPK arm dropped: RouterOS 7.24.4
+accepts only `ppk=no`. Follow-ups T-135 (padding-aware PFS), T-136 (PPK detection).
+`experiments/exp26-mikrotik-routeros/RESULT.md`.
