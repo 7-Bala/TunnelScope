@@ -1,0 +1,9 @@
+file,arm,implementation,bytes,n_packets,sha256,ground_truth_json
+mt-m1.pcap,M1,mikrotik-routeros-7.24.4,91054,142,2737cce8257355baa4526d0ef93c26cc7daebd749777eb4b0aa0e5fbaf009b44,mt-m1.groundtruth.json
+mt-m2.pcap,M2,mikrotik-routeros-7.24.4,89453,136,86cea815af5dca101269830d1340575c3a969dcb85602e03db3fe0c38defa048,mt-m2.groundtruth.json
+mt-m3.pcap,M3,mikrotik-routeros-7.24.4,118370,177,72bd8dbab12b63f9bd7c387b449003e4a4b7fda746cfb246fcb0418d9dd5bc8c,mt-m3.groundtruth.json
+mt-m4.pcap,M4,mikrotik-routeros-7.24.4,117886,175,192b8273589fc83c09baa4e5f0d416f40e36747af6b5f9988643ae5c49bc8f31,mt-m4.groundtruth.json
+mt-m5.pcap,M5,mikrotik-routeros-7.24.4,120878,179,65293a5687230395fad3cf6768e377b5770f3bbfd44e0e17c294c3d367b1bb81,mt-m5.groundtruth.json
+mt-m6.pcap,M6,mikrotik-routeros-7.24.4,569612,831,0e195ca8f37fb9cd10c898d32cbcf76243854642bc332c1f918131353297db44,mt-m6.groundtruth.json
+mt-m7.pcap,M7,mikrotik-routeros-7.24.4,583304,853,d0e933f12bbd4962faa765b0ec15797cc73555924cf4dcc9d63a916be55821a2,mt-m7.groundtruth.json
+mt-m8.pcap,M8,mikrotik-routeros-7.24.4,118830,179,7b8cffbc97acaa74281aa626a1c7e3f3d6292ec23963aca96841c2fd8e94a73c,mt-m8.groundtruth.json
