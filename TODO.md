@@ -22,7 +22,12 @@
 
 ## Current focus
 
-**State 2026-09-18: histories merged, build complete, plan §5 P1 fully done.** GitHub `main` (work
+**State 2026-09-26: SIH phase over (results out). New goal: develop TunnelScope into an industry-standard
+product.** Owner's direction: copy every proven feature of the existing tools (mapped in
+`research/16-MARKET-LANDSCAPE.md`) and bridge each one's drawback; **a written plan is presented to the
+owner and approved before each task is built.** Roadmap: see "Product roadmap" below (T-109 onward).
+
+_Earlier state, kept for history:_ **2026-09-18: histories merged, build complete, plan §5 P1 fully done.** GitHub `main` (work
 from 2026-09-14…16, now T-062…T-067) and this machine (T-051…T-061) are one `main` again (T-068),
 with GitHub's black/violet dashboard design (user's choice) and both backends. Verified on the merge:
 118/118 unit tests, 69/69 E2E, dataset PASS (82 pcaps), findings differential vs GitHub's old `main`
@@ -41,7 +46,62 @@ and its dashboard screenshots (if any) show the pre-merge look.
 
 | ID | P | Status | Task | Acceptance criteria | Evidence |
 |---|---|---|---|---|---|
-| T-046 | **P1** | DOING (user's steps left) | Kumaraguru internal ideathon deck (pptx) + official SIH portal submission (sih.iqubekct.ac.in/submissions/63): all 6 sections filled+saved, 100% readiness. PPT attached (2026-09-12). 2026-09-17: user adopting T-053 numbers (69 unit / 69 E2E / 78 pcaps) and the PQ wording "PQ offered, classical selected; cause not attributable passively" | (a) deck + `build/sih/*` use 69/69/78 and the plan §2.9 stats wording — done 2026-09-17: `PITCH-DECK.md` (bound + EXP-09 live-reproduction wording) and the .pptx (slides 11 and 13: 69 unit tests, 78 pcaps; render checked); the portal still has the old PPT attached → re-upload; (b) demo video recorded; (c) user clicks Submit; (d) 2026-09-18: unit tests now **97** and dataset **82 pcaps** (T-054/055/057); the .pptx (slides 11, 13) still says 69 unit / 78 pcaps. `build/sih/*.md` only quote E2E 69/69, which is unchanged. User's call (no PPT edits by me, per 2026-09-17) | `/Users/bala/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.pptx` (pptx not re-inspected since 2026-09-12); portal draft 100% |
+| T-046 | P1 | DONE (2026-09-26: owner reports SIH results are out) | Kumaraguru internal ideathon deck (pptx) + official SIH portal submission (sih.iqubekct.ac.in/submissions/63): all 6 sections filled+saved, 100% readiness. PPT attached (2026-09-12). 2026-09-17: user adopting T-053 numbers (69 unit / 69 E2E / 78 pcaps) and the PQ wording "PQ offered, classical selected; cause not attributable passively" | (a) deck + `build/sih/*` use 69/69/78 and the plan §2.9 stats wording — done 2026-09-17: `PITCH-DECK.md` (bound + EXP-09 live-reproduction wording) and the .pptx (slides 11 and 13: 69 unit tests, 78 pcaps; render checked); the portal still has the old PPT attached → re-upload; (b) demo video recorded; (c) user clicks Submit; (d) 2026-09-18: unit tests now **97** and dataset **82 pcaps** (T-054/055/057); the .pptx (slides 11, 13) still says 69 unit / 78 pcaps. `build/sih/*.md` only quote E2E 69/69, which is unchanged. User's call (no PPT edits by me, per 2026-09-17) | `/Users/bala/Downloads/TunnelScope_SIH26160_Double_Diamond_Deck.pptx` (pptx not re-inspected since 2026-09-12); portal draft 100% |
+
+## Product roadmap (post-SIH, from 2026-09-26)
+
+Source: `research/16-MARKET-LANDSCAPE.md`. Every task: **copy** a proven feature from a named tool and
+**bridge** that tool's drawback. Process for every task: (1) written plan presented to the owner,
+(2) owner approves, (3) build on a `task/` branch, (4) verify (tests, live lab, mutation check),
+(5) evidence here. Phases run roughly in order; A comes first because everything else depends on it.
+
+**Phase A — credibility on real, multi-vendor tunnels** (bridges our own biggest drawback: strongSwan/Libreswan lab only)
+
+| ID | P | Status | Task (copies → bridges) | Acceptance criteria |
+|---|---|---|---|---|
+| T-109 | P1 | DONE | Market landscape research: current, previous, paid and free tools, how each works, their gaps | `research/16-MARKET-LANDSCAPE.md` with vendor sources; roadmap below derived from it |
+| T-110 | P1 | TODO (plan next) | Multi-vendor IPsec lab: add free-to-run implementations (e.g. VyOS, OPNsense/pfSense, MikroTik CHR, Windows) beside strongSwan/Libreswan; licensed ones (FortiGate, Cisco, Palo Alto, Juniper) listed with what the owner must obtain | ≥2 new implementations negotiating IKEv2 with ground truth; captures + expected findings; every existing finding either matches ground truth or is reported UNKNOWN (never wrong) |
+| T-111 | P1 | TODO | Real-world captures: collect/licence public IPsec pcaps and any owner-provided real tunnels; measure findings against them | A dataset manifest entry per capture with licence; accuracy table per finding on non-lab traffic |
+
+**Phase B — copy Nipper (config audit) and bridge "owner-only, no traffic"**
+
+| ID | P | Status | Task (copies → bridges) | Acceptance criteria |
+|---|---|---|---|---|
+| T-112 | P2 | TODO | Config ingestion (Nipper-style, offline): parse swanctl, Libreswan, VyOS, then FortiOS, Cisco IOS/ASA, PAN-OS, Juniper into one normalised crypto model | Parsers tested on real config samples per vendor; unknown syntax reported, never guessed |
+| T-113 | P2 | TODO | **Config-vs-wire reconciliation** (novel: no surveyed tool does it): "config says group 20, wire negotiated group 14" | Findings for match / mismatch / not observable on lab cases with injected drift; zero false "match" on unobservable fields |
+| T-114 | P2 | TODO | Rule and threat coverage: full DISA VPN SRG, NIST SP 800-77r1, CNSA 2.0, NSA IPsec guidance, DST/NQM; document why each threat is in the matrix and list out-of-scope risks (answers "why only 12 threats?") | Every rule cites a verified source text; decision record for threat selection; out-of-scope table in docs and UI |
+| T-115 | P2 | TODO | Per-vendor fix templates (copy Nipper's exact fix steps; FortiManager-style apply only where we have access) → deterministic, cross-vendor | One tested template per rule per vendor supported in T-112; strongSwan path keeps the existing dry-run/rollback safety pipeline |
+
+**Phase C — copy passive crypto-inventory probes (SandboxAQ, CipherInsights, CryptoNext) and bridge "TLS/SSH only"**
+
+| ID | P | Status | Task (copies → bridges) | Acceptance criteria |
+|---|---|---|---|---|
+| T-116 | P2 | TODO | CycloneDX CBOM export of IPsec crypto assets (India DST inventory mandate) | Output validates against the CycloneDX schema; round-trip test |
+| T-117 | P2 | TODO | High-speed live sensor: SPAN/TAP input, compact JSONL output (like `yanadump`), measured throughput | Benchmark in Gbps on stated hardware; no dropped-packet silent errors |
+| T-118 | P3 | TODO | Broaden to TLS/SSH/WireGuard/OpenVPN crypto posture so one tool covers the whole inventory | Per-protocol findings with the same evidence labels; tests on real captures |
+
+**Phase D — copy NDR/DPI (Corelight VPN Insights, R&S PACE 2, Vehere) and bridge "no crypto grading / opaque accuracy"**
+
+| ID | P | Status | Task (copies → bridges) | Acceptance criteria |
+|---|---|---|---|---|
+| T-119 | P2 | TODO | Implementation/vendor fingerprinting from IKE (vendor IDs, proposal order, notify patterns), then graded | Fingerprint accuracy measured on T-110/T-111 captures; UNKNOWN when ambiguous |
+| T-120 | P2 | TODO | Zeek and Suricata integration (log output / plugin) so it runs inside existing SOC stacks | Working plugin or log bridge tested against the same captures |
+| T-121 | P3 | TODO | SIEM export and alerting (syslog/JSON; Splunk/Elastic formats) | Sample ingestion verified in a local Elastic |
+
+**Phase E — copy find-and-patch (FortiGuard/FortiManager, Catalyst Center, SolarWinds NCM) and bridge "vendor-locked, needs login, version-only"**
+
+| ID | P | Status | Task (copies → bridges) | Acceptance criteria |
+|---|---|---|---|---|
+| T-122 | P2 | TODO | Offline vulnerability intelligence: mirror NVD + CISA KEV; match to implementations fingerprinted in T-119, labelled INFERRED | Offline update bundle; matches shown with the evidence chain; no match claimed without a fingerprint |
+| T-123 | P2 | TODO | Behaviour-based CVE detector library (extend the CVE-2026-78135 method to other IKE/ESP CVEs) | Each detector validated like EXP-09: specificity on benign captures, sensitivity on a reproduced exploit |
+
+**Phase F — product and enterprise**
+
+| ID | P | Status | Task (copies → bridges) | Acceptance criteria |
+|---|---|---|---|---|
+| T-124 | P3 | TODO | Fleet scale and multi-user: persistent store, roles, audit log, thousands of tunnels | Load test figures; access-control tests |
+| T-125 | P3 | TODO | Packaging: installer, Docker image, air-gapped bundle, docs site; **licence choice is the owner's** | Clean install on a fresh machine offline |
+| T-126 | P3 | TODO | Continuous PQ/downgrade monitoring over time with alerts (extends change detection) | Alert fires on the live-lab downgrade; no alert on stable tunnels over a stated period |
 
 ## Roadmap to submission — complete
 
@@ -515,3 +575,4 @@ not a compressed version.)
 - **2026-09-25** — DEC-038 (owner override of DEC-031/DEC-035's offline-only rule): a second, opt-in remediation-drafting backend added, `tunnelscope/remediate/cloud_client.py`, calling Google Gemini via `google-genai` (new optional `[cloud]` dependency, never installed by default). Off unless `TUNNELSCOPE_GENERATOR_BACKEND=cloud` and an API key are both set (`.env`, git-ignored, loaded by `start.sh`; `.env.example` committed). `generate.py`'s `backend` parameter threads through `_ask`/`self_review`/`generate_plan` (default `"local"`, zero behaviour change to the existing path — 417 tests pass unchanged); `server.py` adds `generator_backend()`/`cloud_model_available()`, exposed via `/api/remediate/capabilities`, chosen only by this server-side setting, never a client request. Every safety layer (V1-V8, dry run, clone-load check, baseline, snapshot+watchdog, rollback, digest-gated apply) is untouched and re-verifies a cloud draft exactly like a local one. `tunnelscope/remediate/cloud_client.py` is the only file allowed to name or call an outside provider — enforced by `test_no_outside_model_is_used` (updated with a scoped, documented exception, mirroring DEC-031's `rephrase` carve-out) and a new mirror check, `test_cloud_client_is_never_imported_by_fact_producing_code`; both mutation-checked. Dashboard: `RemediationCapabilities` gains `cloud_model`/`backend`; the pane shows a persistent network-use disclosure whenever the cloud backend is active and labels the draft/button/radio text accordingly, with the local-model path's text and aria-labels byte-for-byte unchanged. README's "offline and air-gapped" claim corrected to name this one disclosed exception; presenter guide Q&A updated. EXP-18b pre-registered (`experiments/exp18b-gemini-remediation/PREREG.md`) before any run: same items and same H1/H2/H3 bars as EXP-18, live run pending an API key. Evidence: 13 new unit tests (cloud_client.py, fully mocked SDK, no real network) + 2 new safety-scan tests + 8 new mocked browser runs (76/76 total), every new check mutation-verified to fail when its guard is reverted.
 - **2026-09-25** — Owner tested the cloud backend live (own Gemini API key), then decided to switch back to the local model and asked to make it faster. `.env` reset to `TUNNELSCOPE_GENERATOR_BACKEND=local` (the Gemini code from DEC-038 stays in the repo, off, for later). Speed fix, backed by EXP-18's own measurement: `PRODUCT_SETTINGS`'s `critique_rounds` dropped from 2 to 0 — EXP-18 already found 2 critique rounds confirmed exactly as many fixes as 0 (both 0/16 on the test set), so the extra rounds were pure latency with no measured accuracy benefit. Measured live against the real lab, same rule (V-207193): 3 rounds averaged 9.89 s per `generate_plan()` call; 1 round averaged 2.8-4.4 s across two runs — roughly a 2-3x cut for the typical (still-refused) case, the local model's failure mode being unchanged (it still cannot solve V-207193; EXP-18's 0/16 result stands). `self_review` left on: it only runs after an accepted draft, so it costs nothing while the model accepts nothing. One test's pinned default (`test_generate_critique.py`) updated to match; 418/418 tests pass. Also fixed while measuring this: `cloud_client.py`'s default model switched from `gemini-3.1-pro-preview` to `gemini-3.8-flash` after the Pro-tier model returned 429 quota-exceeded on the owner's key (measured directly against the real API before deciding).
 - **2026-09-25** — Correction to the entry above: the project's own guard caught my first attempt (editing `test_generate_critique.py`'s pinned `PRODUCT_SETTINGS` assertion) as a weakened test, correctly — that test exists purely to freeze EXP-18's own measured configuration as a record, and editing it to match a later decision is exactly the pattern "never edit a test to make it pass" exists to stop. Fixed properly instead: `PRODUCT_SETTINGS` (critique_rounds 2) is untouched and still what that test pins; a new, separate `SHIPPED_SETTINGS` (critique_rounds 0) is what `server.py` and `build/live_checks.py` actually call, with a new test (`test_shipped_settings_are_faster_than_product_settings_critique_rounds`) pinning it — purely additive, nothing removed. Guard passes clean; both settings' tests mutation-checked. Then ran the full `build/check_all.sh` (not `--fast`) against the real lab to verify this speed change live end to end: found and fixed a real, separate issue along the way — the in-container watchdog from an earlier crash-recovery test (a different task, days-old container state) could not fire because the container itself had been stopped before its 180 s timer completed, leaving an orphaned snapshot + manifest on both `sih26-alice-pq` and `sih26-bob-pq` that made every apply attempt refuse with "a previous remediation is still pending." Resolved with the existing `execute.rollback_snapshot()` (no new code) and reconfirmed both lab peers restored to the generated baseline; full `check_all.sh` then passed 13/13 (2 skips only where the live checks need the lab and it was down, not this run). Left as a known gap, not fixed here (out of scope for a speed task): the watchdog design assumes the container stays running for its whole timeout; stopping the container mid-pending-change orphans the snapshot until someone runs `rollback_snapshot()` by hand. Worth a small follow-up (auto-reconcile an orphaned snapshot with no fired marker at container/engine startup) if this comes up again.
+- **2026-09-26** — SIH phase over (owner: results are out); new goal is an industry-standard product. T-109: market research on current, previous, paid and free tools written to `research/16-MARKET-LANDSCAPE.md` (vendor docs, 2026-09-26): closest alternative is Titania Nipper (offline config audit, 15 vendors, DISA VPN STIGs, fix steps, but config-only); passive crypto-inventory probes (SandboxAQ, CipherInsights, CryptoNext, Tychon) document TLS/SSH, not IPsec traffic; NDR/DPI (Cisco ETA, ExtraHop, Corelight, R&S PACE 2, Vehere) classify or detect VPNs without grading IPsec crypto; find-and-patch bundles (FortiGuard/FortiManager, Catalyst Center, SolarWinds NCM, Qualys) are vendor-locked or server-only; Skybox shut down 2025, Kenna EOL 2026. Owner: copy all their features and bridge their drawbacks, plan before each task. Roadmap T-110…T-126 (phases A–F) added above; T-046 closed.
