@@ -47,7 +47,7 @@ def main():
     # 2. nothing untracked (exp05 raw pcaps are intentionally excluded/gitignored)
     for p in CAP.rglob("*.pcap"):
         rel = str(p.relative_to(CAP))
-        if rel.startswith(("exp05/", "exp15/traffic/", "exp16/", "exp17/")):
+        if rel.startswith(("exp05/", "exp15/traffic/", "exp16/", "exp17/", "exp26/")):
             continue
         if rel not in manifest_paths:
             fails.append(f"untracked pcap not in manifest: {rel}")

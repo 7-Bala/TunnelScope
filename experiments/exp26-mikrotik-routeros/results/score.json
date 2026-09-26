@@ -1,0 +1,1706 @@
+{
+ "tally": {
+  "correct": 97,
+  "unknown": 6,
+  "wrong": 1
+ },
+ "hypotheses": {
+  "H1_zero_wrong": {
+   "wrong": 1,
+   "pass": false
+  },
+  "H2_ike_suite_observed": {
+   "M1": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "M2": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "M3": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "M4": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "M5": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "M6": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "M7": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "M8": {
+    "ike_encr": "correct",
+    "ike_integ": "correct",
+    "ike_prf": "correct",
+    "ike_dh_group": "correct"
+   },
+   "pass": true
+  },
+  "H3_pfs": {
+   "M6": "correct",
+   "M7": "wrong",
+   "pass": false
+  },
+  "H4_rekey": {
+   "M6": {
+    "n_rekeys": 3,
+    "intervals_s": [
+     31.08,
+     31.09
+    ],
+    "pass": true
+   },
+   "M7": {
+    "n_rekeys": 2,
+    "intervals_s": [
+     38.03
+    ],
+    "pass": false
+   },
+   "pass": false
+  },
+  "H5_cve_specificity": {
+   "literals": [
+    "OBSERVED not-applicable",
+    "OBSERVED not-detected"
+   ],
+   "wrong": 0,
+   "pass_as_written": false
+  },
+  "H6_compliance": {
+   "M4 fails DH-MUST/ENCR/ESP-3DES": [
+    true,
+    true,
+    false
+   ],
+   "M1 passes all three": [
+    true,
+    true,
+    true
+   ],
+   "M8 fails DH-OFFER, passes DH-MUST": [
+    true,
+    true
+   ],
+   "pass": false
+  }
+ },
+ "arms": [
+  {
+   "arm": "M1",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m1.pcap",
+    "n_ike": 8,
+    "n_esp": 116,
+    "n_ah": 0,
+    "exchanges": [
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED AES-CBC-256",
+     "truth": "AES-CBC-256"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA2-256-128",
+     "truth": "HMAC-SHA2-256-128"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA2-256",
+     "truth": "PRF-HMAC-SHA2-256"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED MODP-2048",
+     "truth": "MODP-2048"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['MODP-2048']",
+     "truth": [
+      "MODP-2048"
+     ]
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', 'AES-CTR+HMAC-SHA1-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "AES-GCM-16"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "pfs",
+     "result": "unknown",
+     "tunnelscope": "NOT_OBSERVABLE",
+     "truth": false
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-applicable",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "371785a72797b379_38a0b0d4ed713ec1",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.318,
+       "timing_bits": 2.698,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "FAIL"
+    ],
+    "V-207223": [
+     "FAIL"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "PASS"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "PASS"
+    ],
+    "RFC8247-DH-OFFER": [
+     "PASS"
+    ],
+    "RFC8247-ENCR": [
+     "PASS"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0x3DB9CDEE",
+     "enc-algorithm": "aes-gcm",
+     "auth-algorithm": null,
+     "enc-key-size": "288"
+    },
+    {
+     "spi": "0xFAF59CDF",
+     "enc-algorithm": "aes-gcm",
+     "auth-algorithm": null,
+     "enc-key-size": "288"
+    }
+   ]
+  },
+  {
+   "arm": "M2",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m2.pcap",
+    "n_ike": 12,
+    "n_esp": 120,
+    "n_ah": 0,
+    "exchanges": [
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED AES-CBC-256",
+     "truth": "AES-CBC-256"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA2-512-256",
+     "truth": "HMAC-SHA2-512-256"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA2-512",
+     "truth": "PRF-HMAC-SHA2-512"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED Curve25519",
+     "truth": "Curve25519"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['Curve25519']",
+     "truth": [
+      "Curve25519"
+     ]
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', 'AES-CTR+HMAC-SHA1-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "ChaCha20-Poly1305"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "pfs",
+     "result": "unknown",
+     "tunnelscope": "NOT_OBSERVABLE",
+     "truth": false
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-applicable",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "99a8017fa3e90630_ab0c9b284527fbde",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.322,
+       "timing_bits": 2.744,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "PASS"
+    ],
+    "V-207223": [
+     "PASS"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "PASS"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "PASS"
+    ],
+    "RFC8247-DH-OFFER": [
+     "PASS"
+    ],
+    "RFC8247-ENCR": [
+     "PASS"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0x9B0FDAB5",
+     "enc-algorithm": "chacha20poly1305",
+     "auth-algorithm": null,
+     "enc-key-size": "288"
+    },
+    {
+     "spi": "0x7AF13715",
+     "enc-algorithm": "chacha20poly1305",
+     "auth-algorithm": null,
+     "enc-key-size": "288"
+    }
+   ]
+  },
+  {
+   "arm": "M3",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m3.pcap",
+    "n_ike": 10,
+    "n_esp": 158,
+    "n_ah": 0,
+    "exchanges": [
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED AES-CBC-128",
+     "truth": "AES-CBC-128"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA2-256-128",
+     "truth": "HMAC-SHA2-256-128"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA2-256",
+     "truth": "PRF-HMAC-SHA2-256"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ECP-256",
+     "truth": "ECP-256"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ECP-256']",
+     "truth": [
+      "ECP-256"
+     ]
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', 'AES-CTR+HMAC-SHA1-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "AES-GCM-16"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "pfs",
+     "result": "unknown",
+     "tunnelscope": "NOT_OBSERVABLE",
+     "truth": false
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-applicable",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "0b6bf0e32c668ba8_ad8ba012e5a91157",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.321,
+       "timing_bits": 2.667,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "PASS"
+    ],
+    "V-207223": [
+     "FAIL"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "PASS"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "PASS"
+    ],
+    "RFC8247-DH-OFFER": [
+     "PASS"
+    ],
+    "RFC8247-ENCR": [
+     "PASS"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0xE13A9E62",
+     "enc-algorithm": "aes-gcm",
+     "auth-algorithm": null,
+     "enc-key-size": "160"
+    },
+    {
+     "spi": "0x5AF11B91",
+     "enc-algorithm": "aes-gcm",
+     "auth-algorithm": null,
+     "enc-key-size": "160"
+    }
+   ]
+  },
+  {
+   "arm": "M4",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m4.pcap",
+    "n_ike": 8,
+    "n_esp": 158,
+    "n_ah": 0,
+    "exchanges": [
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED 3DES",
+     "truth": "3DES"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA1-96",
+     "truth": "HMAC-SHA1-96"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA1",
+     "truth": "PRF-HMAC-SHA1"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED MODP-1024",
+     "truth": "MODP-1024"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['MODP-1024']",
+     "truth": [
+      "MODP-1024"
+     ]
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', '3DES-CBC+HMAC-SHA1-96', 'AES-CTR+HMAC-SHA1-96', 'DES-CBC+HMAC-96', 'Blowfish-CBC+HMAC-96', 'CAST-CBC+HMAC-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "3DES-CBC+HMAC-SHA1-96"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "pfs",
+     "result": "unknown",
+     "tunnelscope": "NOT_OBSERVABLE",
+     "truth": false
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-applicable",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "99242798584e43d1_d0ba689c6756c964",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.321,
+       "timing_bits": 2.764,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "FAIL"
+    ],
+    "V-207223": [
+     "FAIL"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "UNKNOWN"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "FAIL"
+    ],
+    "RFC8247-DH-OFFER": [
+     "FAIL"
+    ],
+    "RFC8247-ENCR": [
+     "FAIL"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0xBF9D77BE",
+     "enc-algorithm": "3des",
+     "auth-algorithm": "sha1",
+     "enc-key-size": "192"
+    },
+    {
+     "spi": "0x4283C634",
+     "enc-algorithm": "3des",
+     "auth-algorithm": "sha1",
+     "enc-key-size": "192"
+    }
+   ]
+  },
+  {
+   "arm": "M5",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m5.pcap",
+    "n_ike": 10,
+    "n_esp": 160,
+    "n_ah": 0,
+    "exchanges": [
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED AES-CBC-256",
+     "truth": "AES-CBC-256"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA2-384-192",
+     "truth": "HMAC-SHA2-384-192"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA2-384",
+     "truth": "PRF-HMAC-SHA2-384"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ECP-384",
+     "truth": "ECP-384"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ECP-384']",
+     "truth": [
+      "ECP-384"
+     ]
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CBC+HMAC-SHA256-128', 'AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', 'AES-CBC+HMAC-SHA512-256', 'AES-CTR+HMAC-SHA1-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "AES-CBC+HMAC-SHA256-128"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "pfs",
+     "result": "unknown",
+     "tunnelscope": "NOT_OBSERVABLE",
+     "truth": false
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-applicable",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "18d73e2e1726b30d_9c6b4ac21d285a57",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.322,
+       "timing_bits": 2.416,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "PASS"
+    ],
+    "V-207223": [
+     "PASS"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "PASS"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "PASS"
+    ],
+    "RFC8247-DH-OFFER": [
+     "PASS"
+    ],
+    "RFC8247-ENCR": [
+     "PASS"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0xD1E1FE51",
+     "enc-algorithm": "aes-cbc",
+     "auth-algorithm": "sha256",
+     "enc-key-size": "256"
+    },
+    {
+     "spi": "0x8D241444",
+     "enc-algorithm": "aes-cbc",
+     "auth-algorithm": "sha256",
+     "enc-key-size": "256"
+    }
+   ]
+  },
+  {
+   "arm": "M6",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m6.pcap",
+    "n_ike": 38,
+    "n_esp": 756,
+    "n_ah": 0,
+    "exchanges": [
+     "CREATE_CHILD_SA",
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED AES-CBC-256",
+     "truth": "AES-CBC-256"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA2-256-128",
+     "truth": "HMAC-SHA2-256-128"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA2-256",
+     "truth": "PRF-HMAC-SHA2-256"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED MODP-2048",
+     "truth": "MODP-2048"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['MODP-2048']",
+     "truth": [
+      "MODP-2048"
+     ]
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CBC+HMAC-SHA256-128', 'AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', 'AES-CBC+HMAC-SHA512-256', 'AES-CTR+HMAC-SHA1-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "AES-CBC+HMAC-SHA256-128"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "pfs",
+     "result": "correct",
+     "tunnelscope": "INFERRED True",
+     "truth": true
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-detected",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "c90d1a93b28337b5_75238ba25b68cfb0",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "MEASURED",
+      "value": {
+       "n_rekeys": 3,
+       "intervals_s": [
+        31.08,
+        31.09
+       ],
+       "mean_interval_s": 31.09
+      }
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.322,
+       "timing_bits": 2.509,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "FAIL"
+    ],
+    "V-207223": [
+     "FAIL"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "PASS"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "PASS"
+    ],
+    "RFC8247-DH-OFFER": [
+     "PASS"
+    ],
+    "RFC8247-ENCR": [
+     "PASS"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0x80482226",
+     "enc-algorithm": "aes-cbc",
+     "auth-algorithm": "sha256",
+     "enc-key-size": "256"
+    },
+    {
+     "spi": "0xF0A7CC0B",
+     "enc-algorithm": "aes-cbc",
+     "auth-algorithm": "sha256",
+     "enc-key-size": "256"
+    }
+   ]
+  },
+  {
+   "arm": "M7",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m7.pcap",
+    "n_ike": 42,
+    "n_esp": 778,
+    "n_ah": 0,
+    "exchanges": [
+     "CREATE_CHILD_SA",
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED AES-CBC-256",
+     "truth": "AES-CBC-256"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA2-256-128",
+     "truth": "HMAC-SHA2-256-128"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA2-256",
+     "truth": "PRF-HMAC-SHA2-256"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED MODP-2048",
+     "truth": "MODP-2048"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['MODP-2048']",
+     "truth": [
+      "MODP-2048"
+     ]
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CBC+HMAC-SHA256-128', 'AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', 'AES-CBC+HMAC-SHA512-256', 'AES-CTR+HMAC-SHA1-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "AES-CBC+HMAC-SHA256-128"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "pfs",
+     "result": "wrong",
+     "tunnelscope": "INFERRED True",
+     "truth": false
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-detected",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "8a1699dc63d68408_0e4a2426f46e2140",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "MEASURED",
+      "value": {
+       "n_rekeys": 2,
+       "intervals_s": [
+        38.03
+       ],
+       "mean_interval_s": 38.03
+      }
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.322,
+       "timing_bits": 2.746,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "FAIL"
+    ],
+    "V-207223": [
+     "FAIL"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "PASS"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "PASS"
+    ],
+    "RFC8247-DH-OFFER": [
+     "PASS"
+    ],
+    "RFC8247-ENCR": [
+     "PASS"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0xF2A96B2",
+     "enc-algorithm": "aes-cbc",
+     "auth-algorithm": "sha256",
+     "enc-key-size": "256"
+    },
+    {
+     "spi": "0x3F25CBB0",
+     "enc-algorithm": "aes-cbc",
+     "auth-algorithm": "sha256",
+     "enc-key-size": "256"
+    }
+   ]
+  },
+  {
+   "arm": "M8",
+   "summary": {
+    "pcap": "/Users/bala/Documents/SIH 2026/testbed/captures/exp26/mt-m8.pcap",
+    "n_ike": 10,
+    "n_esp": 158,
+    "n_ah": 0,
+    "exchanges": [
+     "IKE_AUTH",
+     "IKE_SA_INIT",
+     "INFORMATIONAL"
+    ],
+    "has_ike_sa_init": true
+   },
+   "rows": [
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "ike_version",
+     "result": "correct",
+     "tunnelscope": "OBSERVED IKEv2",
+     "truth": "IKEv2"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "ike_encr",
+     "result": "correct",
+     "tunnelscope": "OBSERVED AES-CBC-256",
+     "truth": "AES-CBC-256"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "ike_integ",
+     "result": "correct",
+     "tunnelscope": "OBSERVED HMAC-SHA2-256-128",
+     "truth": "HMAC-SHA2-256-128"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "ike_prf",
+     "result": "correct",
+     "tunnelscope": "OBSERVED PRF-HMAC-SHA2-256",
+     "truth": "PRF-HMAC-SHA2-256"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "ike_dh_group",
+     "result": "correct",
+     "tunnelscope": "OBSERVED MODP-2048",
+     "truth": "MODP-2048"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "ike_offered_dh",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['MODP-1024', 'MODP-2048']",
+     "truth": [
+      "MODP-1024",
+      "MODP-2048"
+     ]
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "pq_key_exchange",
+     "result": "correct",
+     "tunnelscope": "OBSERVED classical-only",
+     "truth": "classical-only"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "ipsec_protocols",
+     "result": "correct",
+     "tunnelscope": "OBSERVED ['ESP']",
+     "truth": [
+      "ESP"
+     ]
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "esp_cipher_family",
+     "result": "correct",
+     "tunnelscope": "INFERRED ['AES-CTR+HMAC-SHA256-128', 'AES-GCM-16', 'AES-CCM-16', 'ChaCha20-Poly1305', 'AES-CTR+HMAC-SHA1-96', 'NULL+HMAC-96', 'NULL+HMAC-SHA256-128']",
+     "truth": "AES-GCM-16"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "pfs",
+     "result": "unknown",
+     "tunnelscope": "NOT_OBSERVABLE",
+     "truth": false
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "negotiation_outcome",
+     "result": "correct",
+     "tunnelscope": "OBSERVED success",
+     "truth": "success"
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "sequence_integrity",
+     "result": "correct",
+     "tunnelscope": "OBSERVED replayed=0",
+     "truth": 0
+    },
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "attribute": "early_childsa_cve",
+     "result": "correct",
+     "tunnelscope": "OBSERVED not-applicable",
+     "truth": "not-detected"
+    }
+   ],
+   "reported": [
+    {
+     "sa": "33695ae2eb09285e_4122fba89644f59a",
+     "mode": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "rekey_cadence": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "traffic_type": {
+      "status": "UNKNOWN",
+      "value": null
+     },
+     "metadata_exposure": {
+      "status": "MEASURED",
+      "value": {
+       "size_bits": 2.321,
+       "timing_bits": 2.737,
+       "tfc_padding_active": false
+      }
+     },
+     "peer_auth_method": {
+      "status": "NOT_OBSERVABLE",
+      "value": null
+     },
+     "responder_cert_capability": {
+      "status": "OBSERVED",
+      "value": true
+     }
+    }
+   ],
+   "rules": {
+    "CVE-2026-78135": [
+     "PASS"
+    ],
+    "V-207205": [
+     "PASS"
+    ],
+    "V-207193": [
+     "FAIL"
+    ],
+    "V-207223": [
+     "FAIL"
+    ],
+    "DST-PQ-KE": [
+     "FAIL"
+    ],
+    "DST-PQ-DOWNGRADE": [
+     "PASS"
+    ],
+    "RFC4301-CONFIDENTIALITY": [
+     "PASS"
+    ],
+    "RFC8221-ESP-3DES": [
+     "PASS"
+    ],
+    "RFC4303-SEQ": [
+     "PASS"
+    ],
+    "RFC8247-DH-MUST": [
+     "PASS"
+    ],
+    "RFC8247-DH-OFFER": [
+     "FAIL"
+    ],
+    "RFC8247-ENCR": [
+     "PASS"
+    ]
+   },
+   "installed_sa": [
+    {
+     "spi": "0x6A709F5",
+     "enc-algorithm": "aes-gcm",
+     "auth-algorithm": null,
+     "enc-key-size": "288"
+    },
+    {
+     "spi": "0xE393A25B",
+     "enc-algorithm": "aes-gcm",
+     "auth-algorithm": null,
+     "enc-key-size": "288"
+    }
+   ]
+  }
+ ]
+}
