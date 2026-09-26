@@ -133,7 +133,7 @@ def main():
     rows = []
     for p in sorted(CAP.rglob("*.pcap")):
         rel = str(p.relative_to(CAP))
-        if rel.startswith(("exp05/", "exp15/traffic/", "exp16/", "exp17/")):   # traffic-class sub-datasets (own manifests)
+        if rel.startswith(("exp05/", "exp15/traffic/", "exp16/", "exp17/", "exp26/")):   # traffic-class sub-datasets (own manifests)
             continue
         if rel.startswith("exp05/"):        # EXP-05 is a separate sub-dataset (traffic-class
             continue                         # ground truth) with its own hash manifest + tables

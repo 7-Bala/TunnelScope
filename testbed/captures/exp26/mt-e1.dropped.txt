@@ -1,0 +1,1 @@
+a PUT ip/ipsec/profile {'name': 'p26', 'enc-algorithm': 'aes-256', 'hash-algorithm': 'sha256', 'prf-algorithm': 'sha256', 'dh-group': 'modp2048', 'ppk': 'yes'}: 400 {"detail":"input does not match any value of ppk","error":400,"message":"Bad Request"}
