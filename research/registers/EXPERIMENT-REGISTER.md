@@ -469,3 +469,11 @@ Pre-registered in `experiments/exp28-config-vs-wire/PREREG.md` before `tunnelsco
 drift arms: copies changed in one field (IKE group, IKE cipher, ESP family, PFS, PPK, ML-KEM); honesty arm:
 ESP key length only (unobservable, F-05). Bars: 0 false mismatches, 100% of observable drift caught,
 key-length changes always "not comparable", no UNKNOWN wire field ever "match".
+
+### EXP-28 — RESULT (2026-09-27)
+H1 PASS: 0 false mismatches on 94 real config/capture pairs (52 initiator, 42 responder configs). H2 FAIL
+(187/207 as first built, 187/206 after a scoring fix): every exactly-observed field caught all drift (IKE group,
+IKE cipher, PFS, PPK, ML-KEM: 161/161), ESP cipher family 26/45; the 19 others are inside the sieve's candidate
+set and cannot be ruled out by geometry. H3 PASS (ESP key length 47/47 not comparable), H4 PASS. Disclosed
+post-result changes: scorer role fix (a-start's initiator is the cloud side) and a label fix: agreement with an
+INFERRED wire finding is "consistent", never "match". `experiments/exp28-config-vs-wire/RESULT.md`.
