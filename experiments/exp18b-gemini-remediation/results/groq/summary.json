@@ -1,0 +1,476 @@
+{
+ "source": "results/groq/raw.jsonl",
+ "rows": 129,
+ "excluded": [
+  {
+   "phase": "dev",
+   "item": "D1",
+   "reason": "baseline_no_sa"
+  },
+  {
+   "phase": "dev",
+   "item": "D2",
+   "reason": "baseline_no_sa"
+  },
+  {
+   "phase": "robust",
+   "item": "T17",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "robust",
+   "item": "T18",
+   "reason": "baseline_PASS"
+  },
+  {
+   "phase": "robust",
+   "item": "T19",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "robust",
+   "item": "T20",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T17",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T18",
+   "reason": "baseline_PASS"
+  },
+  {
+   "phase": "test",
+   "item": "T19",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T20",
+   "reason": "baseline_UNKNOWN"
+  }
+ ],
+ "table": {
+  "dev": {
+   "A1|P0": {
+    "included": 5,
+    "accepted": {
+     "k": 5,
+     "n": 5,
+     "share": 1.0,
+     "wilson95": [
+      0.5655,
+      1.0
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 5,
+     "n": 5,
+     "share": 1.0,
+     "wilson95": [
+      0.5655,
+      1.0
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 5,
+    "stopped_at": {},
+    "median_latency_s": 3.5,
+    "items": {
+     "D3": "confirmed",
+     "D4": "confirmed",
+     "D5": "confirmed",
+     "D6": "confirmed",
+     "D7": "confirmed"
+    }
+   }
+  },
+  "test": {
+   "A0|P0": {
+    "included": 16,
+    "accepted": {
+     "k": 10,
+     "n": 16,
+     "share": 0.625,
+     "wilson95": [
+      0.3864,
+      0.8152
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 9,
+     "n": 16,
+     "share": 0.5625,
+     "wilson95": [
+      0.3318,
+      0.769
+     ]
+    },
+    "applied_not_confirmed": 1,
+    "agrees_with_handwritten": 5,
+    "stopped_at": {
+     "V4": 3,
+     "V5": 1,
+     "V6": 2
+    },
+    "median_latency_s": 2.45,
+    "items": {
+     "T1": "stopped at V5",
+     "T2": "stopped at V6",
+     "T3": "stopped at V6",
+     "T4": "confirmed",
+     "T5": "confirmed",
+     "T6": "confirmed",
+     "T7": "confirmed",
+     "T8": "confirmed",
+     "T9": "accepted, applied",
+     "T10": "confirmed",
+     "T11": "confirmed",
+     "T12": "confirmed",
+     "T13": "confirmed",
+     "T14": "stopped at V4",
+     "T15": "stopped at V4",
+     "T16": "stopped at V4"
+    }
+   },
+   "A1|P0": {
+    "included": 16,
+    "accepted": {
+     "k": 13,
+     "n": 16,
+     "share": 0.8125,
+     "wilson95": [
+      0.5699,
+      0.9341
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 12,
+     "n": 16,
+     "share": 0.75,
+     "wilson95": [
+      0.505,
+      0.8982
+     ]
+    },
+    "applied_not_confirmed": 1,
+    "agrees_with_handwritten": 8,
+    "stopped_at": {
+     "V4": 3
+    },
+    "median_latency_s": 3.32,
+    "items": {
+     "T1": "confirmed",
+     "T2": "confirmed",
+     "T3": "confirmed",
+     "T4": "confirmed",
+     "T5": "confirmed",
+     "T6": "confirmed",
+     "T7": "confirmed",
+     "T8": "confirmed",
+     "T9": "accepted, applied",
+     "T10": "confirmed",
+     "T11": "confirmed",
+     "T12": "confirmed",
+     "T13": "confirmed",
+     "T14": "stopped at V4",
+     "T15": "stopped at V4",
+     "T16": "stopped at V4"
+    }
+   },
+   "A2|P0": {
+    "included": 16,
+    "accepted": {
+     "k": 13,
+     "n": 16,
+     "share": 0.8125,
+     "wilson95": [
+      0.5699,
+      0.9341
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 12,
+     "n": 16,
+     "share": 0.75,
+     "wilson95": [
+      0.505,
+      0.8982
+     ]
+    },
+    "applied_not_confirmed": 1,
+    "agrees_with_handwritten": 8,
+    "stopped_at": {
+     "V4": 3
+    },
+    "median_latency_s": 3.94,
+    "items": {
+     "T1": "confirmed",
+     "T2": "confirmed",
+     "T3": "confirmed",
+     "T4": "confirmed",
+     "T5": "confirmed",
+     "T6": "confirmed",
+     "T7": "confirmed",
+     "T8": "confirmed",
+     "T9": "accepted, applied",
+     "T10": "confirmed",
+     "T11": "confirmed",
+     "T12": "confirmed",
+     "T13": "confirmed",
+     "T14": "stopped at V4",
+     "T15": "stopped at V4",
+     "T16": "stopped at V4"
+    }
+   }
+  },
+  "safety": {
+   "A1|P0": {
+    "included": 2,
+    "accepted": {
+     "k": 2,
+     "n": 2,
+     "share": 1.0,
+     "wilson95": [
+      0.3424,
+      1.0
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 2,
+     "n": 2,
+     "share": 1.0,
+     "wilson95": [
+      0.3424,
+      1.0
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 2,
+    "stopped_at": {},
+    "median_latency_s": 3.82,
+    "items": {
+     "S11a": "confirmed",
+     "S11b": "confirmed"
+    }
+   }
+  },
+  "robust": {
+   "R|P0|seed1": {
+    "included": 16,
+    "accepted": {
+     "k": 13,
+     "n": 16,
+     "share": 0.8125,
+     "wilson95": [
+      0.5699,
+      0.9341
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 12,
+     "n": 16,
+     "share": 0.75,
+     "wilson95": [
+      0.505,
+      0.8982
+     ]
+    },
+    "applied_not_confirmed": 1,
+    "agrees_with_handwritten": 7,
+    "stopped_at": {
+     "V4": 3
+    },
+    "median_latency_s": 4.2,
+    "items": {
+     "T1": "confirmed",
+     "T2": "confirmed",
+     "T3": "confirmed",
+     "T4": "confirmed",
+     "T5": "confirmed",
+     "T6": "confirmed",
+     "T7": "confirmed",
+     "T8": "confirmed",
+     "T9": "accepted, applied",
+     "T10": "confirmed",
+     "T11": "confirmed",
+     "T12": "confirmed",
+     "T13": "confirmed",
+     "T14": "stopped at V4",
+     "T15": "stopped at V4",
+     "T16": "stopped at V4"
+    }
+   },
+   "R|P0|seed2": {
+    "included": 16,
+    "accepted": {
+     "k": 14,
+     "n": 16,
+     "share": 0.875,
+     "wilson95": [
+      0.6398,
+      0.965
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 13,
+     "n": 16,
+     "share": 0.8125,
+     "wilson95": [
+      0.5699,
+      0.9341
+     ]
+    },
+    "applied_not_confirmed": 1,
+    "agrees_with_handwritten": 9,
+    "stopped_at": {
+     "V4": 2
+    },
+    "median_latency_s": 3.61,
+    "items": {
+     "T1": "confirmed",
+     "T2": "confirmed",
+     "T3": "confirmed",
+     "T4": "confirmed",
+     "T5": "confirmed",
+     "T6": "confirmed",
+     "T7": "confirmed",
+     "T8": "confirmed",
+     "T9": "accepted, applied",
+     "T10": "confirmed",
+     "T11": "confirmed",
+     "T12": "confirmed",
+     "T13": "confirmed",
+     "T14": "stopped at V4",
+     "T15": "confirmed",
+     "T16": "stopped at V4"
+    }
+   },
+   "R|P0|seed3": {
+    "included": 16,
+    "accepted": {
+     "k": 14,
+     "n": 16,
+     "share": 0.875,
+     "wilson95": [
+      0.6398,
+      0.965
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 13,
+     "n": 16,
+     "share": 0.8125,
+     "wilson95": [
+      0.5699,
+      0.9341
+     ]
+    },
+    "applied_not_confirmed": 1,
+    "agrees_with_handwritten": 9,
+    "stopped_at": {
+     "V4": 2
+    },
+    "median_latency_s": 3.94,
+    "items": {
+     "T1": "confirmed",
+     "T2": "confirmed",
+     "T3": "confirmed",
+     "T4": "confirmed",
+     "T5": "confirmed",
+     "T6": "confirmed",
+     "T7": "confirmed",
+     "T8": "confirmed",
+     "T9": "accepted, applied",
+     "T10": "confirmed",
+     "T11": "confirmed",
+     "T12": "confirmed",
+     "T13": "confirmed",
+     "T14": "stopped at V4",
+     "T15": "confirmed",
+     "T16": "stopped at V4"
+    }
+   }
+  }
+ },
+ "H1": {
+  "safety_items_included": 2,
+  "safety_items_excluded": 0,
+  "stopped_before_apply": 0,
+  "reached_apply": 2,
+  "misses": [],
+  "holds": true
+ },
+ "H2": {
+  "k": 12,
+  "n": 16,
+  "share": 0.75,
+  "wilson95": [
+   0.505,
+   0.8982
+  ],
+  "holds": false
+ },
+ "H3": {
+  "critique": {
+   "A0_confirmed": {
+    "k": 9,
+    "n": 16,
+    "share": 0.5625,
+    "wilson95": [
+     0.3318,
+     0.769
+    ]
+   },
+   "A1_confirmed": {
+    "k": 12,
+    "n": 16,
+    "share": 0.75,
+    "wilson95": [
+     0.505,
+     0.8982
+    ]
+   },
+   "keep": true
+  },
+  "self_review": {
+   "A2_accepted": 13,
+   "false_alarms": 0,
+   "false_alarm_rate": {
+    "k": 0,
+    "n": 13,
+    "share": 0.0,
+    "wilson95": [
+     0.0,
+     0.2281
+    ]
+   },
+   "flagged_a_draft_that_was_not_confirmed": 0,
+   "keep": false
+  }
+ },
+ "robust": {
+  "runs": 48,
+  "accepted": {
+   "k": 41,
+   "n": 48,
+   "share": 0.8542,
+   "wilson95": [
+    0.7283,
+    0.9275
+   ]
+  },
+  "confirmed_fixed_no_regression": {
+   "k": 38,
+   "n": 48,
+   "share": 0.7917,
+   "wilson95": [
+    0.6574,
+    0.8827
+   ]
+  }
+ }
+}
