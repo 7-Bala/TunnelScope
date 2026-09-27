@@ -1,0 +1,7 @@
+"e7-cbc256" #7: initiating IKEv2 connection to 10.10.2.34 using UDP
+"e7-cbc256" #7: sent IKE_SA_INIT request to 10.10.2.34:UDP/500
+"e7-cbc256" #7: processed IKE_SA_INIT response from 10.10.2.34:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_256_128 prf=HMAC_SHA2_256 ke=MODP2048}, initiating IKE_AUTH
+"e7-cbc256" #7: sent IKE_AUTH request to 10.10.2.34:UDP/500 with shared-key-mac and FQDN '@a-e7-cbc256'; Child SA #8 {ESP <0xee576bad} [10.10.1.34/32===10.10.2.34/32]
+"e7-cbc256" #7: processing IKE_AUTH response from 10.10.2.34:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}
+"e7-cbc256" #7: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-cbc256'
+"e7-cbc256" #8: initiator established Child SA using #7; IPsec tunnel [10.10.1.34/32===10.10.2.34/32] {ESP/ESN=>0x0c26308d <0xee576bad xfrm=AES_CBC_256-HMAC_SHA2_256_128 DPD=passive}

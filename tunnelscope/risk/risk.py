@@ -16,6 +16,30 @@ from dataclasses import asdict, dataclass, field
 
 LEVEL = {1: "low", 2: "medium", 3: "high"}
 
+# T-122 / DEC-039: why the matrix has these threats and not others. A threat is in the matrix only if a rule or
+# measurement can decide it from a capture. These real risks cannot be decided from traffic at all, so they are
+# listed, with where they CAN be checked, instead of being scored (a score would be a guess).
+OUT_OF_SCOPE = [
+    {"name": "Weak or guessable pre-shared key", "why": "the key never crosses the wire; IKEv2 PSK authentication is "
+     "inside encrypted IKE_AUTH", "check_with": "configuration and password-policy audit (tunnelscope config)"},
+    {"name": "Compromised endpoint or stolen keys", "why": "a host compromise leaves the tunnel's traffic unchanged",
+     "check_with": "endpoint security (EDR), key-storage audit"},
+    {"name": "Certificate problems (expired, wrong CA, revocation not checked)", "why": "certificates travel inside "
+     "encrypted IKE_AUTH", "check_with": "endpoint configuration and logs (T2 telemetry, tunnelscope crosstier)"},
+    {"name": "Authentication strength (PSK vs certificate vs ML-DSA)", "why": "the method is negotiated inside "
+     "encrypted IKE_AUTH (EXP-11: not observable)", "check_with": "configuration (tunnelscope config) or T2 telemetry"},
+    {"name": "Over-broad tunnel scope, split tunnelling, firewall policy", "why": "traffic selectors are exchanged "
+     "inside encrypted IKE_AUTH / CREATE_CHILD_SA", "check_with": "configuration audit (tunnelscope config)"},
+    {"name": "Receiver anti-replay window disabled", "why": "a passive capture sees sequence numbers, not whether the "
+     "receiver would drop a replay (see TH-08)", "check_with": "endpoint configuration or an authorised active test"},
+    {"name": "Denial of service against the gateway", "why": "needs gateway-wide volume and state, not one "
+     "tunnel's capture", "check_with": "gateway monitoring"},
+    {"name": "Unknown implementation bugs (zero-days)", "why": "only known exploit patterns have detectors "
+     "(TH-09, CVE-2026-78135)", "check_with": "vendor advisories; offline vulnerability intelligence (roadmap T-130)"},
+    {"name": "Insider or administrator misuse", "why": "authorised configuration changes look like normal traffic",
+     "check_with": "change management and audit logs; configuration drift (tunnelscope reconcile)"},
+]
+
 
 @dataclass
 class Threat:
@@ -190,4 +214,4 @@ def evidence_confidence(record) -> dict:
 def assess_risk(record, verdicts, anomaly: dict | None = None) -> dict:
     ts = threats(record, verdicts, anomaly)
     return {"threats": [t.as_dict() for t in ts], "risk": risk_score(ts),
-            "confidence": evidence_confidence(record)}
+            "confidence": evidence_confidence(record), "out_of_scope": OUT_OF_SCOPE}

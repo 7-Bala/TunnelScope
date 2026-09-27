@@ -82,6 +82,8 @@ export interface RiskResult {
     note: string
   }
   confidence: { score: number; observed: number; inferred: number; not_visible: number; attributes: number; note: string }
+  /** real risks no capture can decide, with where they can be checked (T-122 / DEC-039) */
+  out_of_scope?: { name: string; why: string; check_with: string }[]
 }
 
 export interface LiveWindow {
