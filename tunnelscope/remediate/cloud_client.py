@@ -10,10 +10,14 @@ finding, verdict, score or applied command; `tests/test_ai_layer.py` enforces bo
 scoped exception (this one file may mention a cloud provider; nothing else may, and no
 finding/verdict/risk/anomaly module may import this one).
 
-Off by default, and off unless BOTH:
-  - TUNNELSCOPE_GEMINI_API_KEY is set (never hold this key in a committed file; see .env.example);
-  - the operator has set TUNNELSCOPE_GENERATOR_BACKEND=gemini (generate.py's `backend` argument
-    is never set from an untrusted client request; only from this server-side setting).
+Off by default, and off unless ALL of:
+  - TUNNELSCOPE_NETWORK=on (DEC-040: the single switch for everything that leaves the machine);
+  - a Gemini API key is set (never in a committed file; see .env.example). TUNNELSCOPE_KEY_PURPOSE
+    (e.g. `dev`, `demo`, `experiment`) picks TUNNELSCOPE_GEMINI_API_KEY_<PURPOSE> if set, else
+    TUNNELSCOPE_GEMINI_API_KEY. Keys are separated by job, never rotated to get round a quota
+    (Google APIs Terms 2(d); rate limits are per project);
+  - the operator has chosen the cloud or chain backend (TUNNELSCOPE_GENERATOR_BACKEND; never set
+    from an untrusted client request).
 
 What a call sends to Google's servers: the failing rule's id/title/assertion (public text, from
 tunnelscope/rules/*.yaml), the CURRENT value of the fixed lab connection's (`t-tun`) proposal/
@@ -30,12 +34,17 @@ import threading
 import time
 from typing import Any
 
+from .. import net
+
 # Measured 2026-09-25 against the project's own key: gemini-3.1-pro-preview (the top reasoning
 # model) returned 429 "quota exceeded" on every call (this key's tier has none for it);
 # gemini-3.8-flash answered normally and is Google's own description for this kind of task
 # ("engineered for long-horizon software engineering, autonomous agents"). Override with
 # TUNNELSCOPE_GEMINI_MODEL if a key with Pro-tier quota is used later.
 MODEL_ID = os.environ.get("TUNNELSCOPE_GEMINI_MODEL", "gemini-3.8-flash")
+PROVIDER = "gemini"
+# the fallback chain (chain.py) tries these in order on a rate limit; each model has its own limits
+FALLBACK_MODELS = tuple(dict.fromkeys((MODEL_ID, "gemini-2.5-flash")))
 API_KEY_ENV = "TUNNELSCOPE_GEMINI_API_KEY"
 DEFAULT_TIMEOUT_S = 30.0
 
@@ -43,10 +52,20 @@ _CLIENT_LOCK = threading.Lock()
 _client_cache: list[Any] = []
 
 
+def _api_key() -> tuple[str | None, str]:
+    """(key, the env var it came from). TUNNELSCOPE_KEY_PURPOSE selects a per-job key."""
+    purpose = os.environ.get("TUNNELSCOPE_KEY_PURPOSE", "").strip().upper()
+    if purpose:
+        name = f"{API_KEY_ENV}_{purpose}"
+        if os.environ.get(name):
+            return os.environ[name], name
+    return os.environ.get(API_KEY_ENV), API_KEY_ENV
+
+
 def available() -> bool:
-    """Whether a call can be attempted: the API key is set and the SDK is importable. Never
-    downloads or imports anything on its own initiative — both checks are read-only."""
-    if not os.environ.get(API_KEY_ENV):
+    """Whether a call can be attempted: network on, an API key set and the SDK importable. Never
+    downloads or imports anything on its own initiative — all checks are read-only."""
+    if not net.network_enabled() or not _api_key()[0]:
         return False
     try:
         import google.genai  # noqa: F401
@@ -56,11 +75,12 @@ def available() -> bool:
 
 
 def _client():
+    key = _api_key()[0]
     with _CLIENT_LOCK:
-        if not _client_cache:
+        if not _client_cache or _client_cache[0][0] != key:
             from google import genai
-            _client_cache.append(genai.Client(api_key=os.environ[API_KEY_ENV]))
-        return _client_cache[0]
+            _client_cache[:] = [(key, genai.Client(api_key=key))]
+        return _client_cache[0][1]
 
 
 def reset_client_cache() -> None:
@@ -71,16 +91,24 @@ def reset_client_cache() -> None:
 
 def generate_json(system: str, data_blocks: dict[str, str], max_tokens: int = 256,
                   timeout_s: float = DEFAULT_TIMEOUT_S, temperature: float = 0.0,
-                  seed: int | None = None) -> tuple[str | None, dict[str, Any]]:
+                  seed: int | None = None, model: str | None = None) -> tuple[str | None, dict[str, Any]]:
     """Same contract as tunnelscope.rephrase.runtime.generate_json: (raw text or None, metadata).
+    `model` overrides MODEL_ID (the fallback chain uses it). meta["retryable"] is True for a rate limit
+    or a server-side error, so the chain may back off or move to its next model.
     Never raises. `timeout_s` bounds only this call (the SDK's own per-request timeout); the
     caller's overall time budget (generate.py) is enforced by not calling again once it is spent."""
     from ..rephrase.runtime import build_prompt
     content = build_prompt(system, data_blocks)
-    meta: dict[str, Any] = {"model_id": MODEL_ID, "model_revision": None, "backend": "gemini",
+    model = model or MODEL_ID
+    meta: dict[str, Any] = {"model_id": model, "model_revision": None, "backend": "gemini",
                             "prompt_sha256": hashlib.sha256(content.encode()).hexdigest(),
-                            "temperature": temperature, "seed": seed, "latency_s": None, "reason": None}
-    if not os.environ.get(API_KEY_ENV):
+                            "temperature": temperature, "seed": seed, "latency_s": None, "reason": None,
+                            "retryable": False}
+    if not net.network_enabled():
+        meta["reason"] = f"network is off ({net.ENV}=on allows the cloud model)"
+        return None, meta
+    key, key_env = _api_key()
+    if not key:
         meta["reason"] = f"no Gemini API key set ({API_KEY_ENV})"
         return None, meta
     try:
@@ -102,7 +130,7 @@ def generate_json(system: str, data_blocks: dict[str, str], max_tokens: int = 25
                                       "http_options": types.HttpOptions(timeout=int(timeout_s * 1000))}
         if seed is not None:
             cfg_kwargs["seed"] = seed
-        response = client.models.generate_content(model=MODEL_ID, contents=content,
+        response = client.models.generate_content(model=model, contents=content,
                                                    config=types.GenerateContentConfig(**cfg_kwargs))
         meta["latency_s"] = round(time.monotonic() - t0, 3)
         text = getattr(response, "text", None)
@@ -114,11 +142,12 @@ def generate_json(system: str, data_blocks: dict[str, str], max_tokens: int = 25
         meta["latency_s"] = round(time.monotonic() - t0, 3)
         code = getattr(e, "code", None)
         if code == 429:
-            meta["reason"] = "rate limit or quota exceeded"
+            meta["reason"], meta["retryable"] = "rate limit or quota exceeded", True
         elif code in (401, 403):
-            meta["reason"] = f"authentication failed (check {API_KEY_ENV})"
+            meta["reason"] = f"authentication failed (check {key_env})"
         else:
             meta["reason"] = f"API error (HTTP {code}): {getattr(e, 'message', None) or type(e).__name__}"
+            meta["retryable"] = isinstance(code, int) and code >= 500
         return None, meta
     except Exception as e:
         meta["latency_s"] = round(time.monotonic() - t0, 3)
