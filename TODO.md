@@ -81,6 +81,7 @@ Source: `research/16-MARKET-LANDSCAPE.md`. Every task: **copy** a proven feature
 |---|---|---|---|---|
 | T-124 | P2 | DONE 2026-09-27 | CycloneDX CBOM export (India DST inventory mandate): `tunnelscope cbom` already exists; audit what it covers, validate against the official CycloneDX schema, fill gaps | Output validates against the CycloneDX schema; round-trip test |
 | T-138 | P2 | DONE 2026-09-27 (EXP-31, DEC-042) | Drafting: before the dry run, evaluate every other active rule on the drafted line (`generate.rule_outcome`, observed evidence) and feed a would-fail back through the critique loop (EXP-30: a prompt instruction did not stop the T9 conflict) | Pre-registered re-run of T9-type items: 0 regressions reach the lab; no EXP-18b-confirmed item lost |
+| T-139 | P1 | DOING | Site sensor: passive per-site analysis, signed findings-only reports (no captures leave the site), central collector with per-site freshness and alerts (jury: detection delay / downtime) | EXP-32: 10/10 downgrades detected centrally, median <= W+10 s; 0 false alerts; no report lost; only allow-listed fields leave |
 | T-125 | P2 | TODO | High-speed live sensor: SPAN/TAP input, compact JSONL output (like `yanadump`), measured throughput | Benchmark in Gbps on stated hardware; no dropped-packet silent errors |
 | T-126 | P3 | TODO | Broaden to TLS/SSH/WireGuard/OpenVPN crypto posture so one tool covers the whole inventory | Per-protocol findings with the same evidence labels; tests on real captures |
 
