@@ -219,6 +219,8 @@ REQUIRED_FIELDS = (
     "ip.hdr_len", "ipv6.src", "ipv6.dst", "ipv6.plen", "ipv6.nxt", "udp.length",
     # T-083: AH (RFC 4302), whose header is not encrypted
     "ah.spi", "ah.sequence", "ah.next_header", "ah.icv",
+    # T-135: the SK payload's own next-payload and length (plaintext), to see IKE padding
+    "isakmp.nextpayload", "isakmp.payloadlength",
 )
 
 
@@ -265,13 +267,14 @@ def ike_messages(pcap: str) -> list[dict]:
               "isakmp.messageid", "isakmp.length",
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
               "isakmp.vid_string", "isakmp.certreq.type",
-              "isakmp.tf.id.dh", "isakmp.tf.id.integ", "frame.protocols"]
+              "isakmp.tf.id.dh", "isakmp.tf.id.integ", "frame.protocols",
+              "isakmp.nextpayload", "isakmp.payloadlength"]
     rows = _run_fields(pcap, "isakmp", fields)
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         (fn, t, src, dst, iplen, src6, dst6, plen6, ispi, rspi, exch, flags, mid, ilen,
-         notify, tftype, tfid, vid, certreq, tfdh, tfinteg, protos) = r
+         notify, tftype, tfid, vid, certreq, tfdh, tfinteg, protos, nextp, plens) = r
         if not _outermost(protos, "isakmp"):
             continue                      # quoted inside an ICMP error, not a real message
 
@@ -299,8 +302,18 @@ def ike_messages(pcap: str) -> list[dict]:
             # every KE / INTEG transform in this message's SA payload: for an
             # IKE_SA_INIT request, the groups the initiator would accept
             offered_dh=ints(tfdh), offered_integ=ints(tfinteg),
+            # SK (Encrypted and Authenticated, 46) payload: its next-payload field (0 = the message is
+            # empty inside) and its length are plaintext. None when the message has no SK payload.
+            **_sk_fields(ints(nextp), ints(plens)),
         ))
     return msgs
+
+
+def _sk_fields(next_payloads: list[int], lengths: list[int]) -> dict:
+    """The header's next payload is the first entry; an SK message lists 46 then the SK's own next."""
+    if len(next_payloads) >= 2 and next_payloads[0] == 46 and lengths:
+        return {"sk_next": next_payloads[1], "sk_len": lengths[0]}
+    return {"sk_next": None, "sk_len": None}
 
 
 def _first(s: str) -> str:

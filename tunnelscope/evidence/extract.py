@@ -6,6 +6,7 @@ return a bare value — an absence is a Finding with status NOT_OBSERVABLE/UNKNO
 """
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 
 from .record import EvidenceRecord, Finding, Status, Vantage, EvidencePtr
@@ -226,6 +227,35 @@ def extract_pq_addke(r: EvidenceRecord) -> None:
                       note="initiator offered no additional key exchange (or only NONE)"))
 
 
+def min_empty_sk_len(encr: str | None, integ: str | None) -> int:
+    """Smallest SK payload an EMPTY encrypted IKE message can have (RFC 7296 sec 3.14): 4 B header + IV +
+    one block holding the pad-length byte + ICV. Unknown suite: 68, the largest minimum of any suite we
+    name (AES-CBC IV/block 16 + HMAC-SHA2-512-256 ICV 32)."""
+    if not encr:
+        return 68
+    if any(a in encr for a in ("GCM", "CCM", "ChaCha20")):
+        iv, block, icv = 8, 4, 16                      # AEAD: 8 B IV, 4 B alignment, 16 B tag (RFC 5282/7634)
+    else:
+        block = 8 if "DES" in encr else 16
+        iv = block
+        tag = re.search(r"-(\d+)$", integ or "")
+        icv = int(tag.group(1)) // 8 if tag else 32
+    return 4 + iv + block + icv
+
+
+def ike_extra_padding(ike: list[dict], encr: str | None, integ: str | None) -> str | None:
+    """Evidence that this implementation pads encrypted IKE messages beyond the minimum, or None.
+    Only EMPTY messages (SK next payload = 0, e.g. liveness checks) are used: their plaintext size is known,
+    so any SK larger than the minimum, or two different SK sizes, can only be padding."""
+    empty = sorted({m["sk_len"] for m in ike if m.get("sk_next") == 0 and m.get("sk_len")})
+    if not empty:
+        return None
+    floor = min_empty_sk_len(encr, integ)
+    if len(empty) > 1 or empty[0] > floor:
+        return f"empty encrypted IKE messages of {empty} B against a {floor} B minimum"
+    return None
+
+
 def extract_pfs(r: EvidenceRecord) -> None:
     """R14 PFS. EXP-03: a CREATE_CHILD_SA rekey carrying a KE payload is ~256 B
     larger than one without. Only judgeable when a rekey is observed.
@@ -248,6 +278,17 @@ def extract_pfs(r: EvidenceRecord) -> None:
     req = [m for m in ccsa if not m["is_response"]]
     sizes = sorted(m["ip_len"] for m in req) or sorted(m["ip_len"] for m in ccsa)
     ev = [EvidencePtr(r.source_pcap, ccsa[0]["frame"], "ip.len", str(sizes))]
+
+    # T-135 (EXP-26): the size rule assumes minimal padding. An implementation that pads (RouterOS adds up
+    # to ~255 B; RFC 7296 sec 3.14 allows it) makes a PFS-off rekey look like one carrying a KE payload.
+    val = lambda a: r.findings[a].value if a in r.findings and isinstance(r.findings[a].value, str) else None
+    padded = ike_extra_padding(ike, val("ike_encr"), val("ike_integ"))
+    if padded:
+        r.add(Finding("pfs", Status.UNKNOWN, Vantage.T1, "pfs (EXP-03 length gap)", evidence=ev,
+                      note=f"this implementation adds extra padding to encrypted IKE messages ({padded}), so the "
+                           f"rekey size (requests {sizes}) cannot show whether a KE payload is present; needs T2 "
+                           "endpoint telemetry"))
+        return
 
     dh_f = r.findings.get("ike_dh_group")
     dh_val = dh_f.value if (dh_f and isinstance(dh_f.value, str)) else None
