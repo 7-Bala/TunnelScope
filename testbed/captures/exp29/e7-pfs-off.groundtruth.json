@@ -1,0 +1,22 @@
+{
+  "arm": "e7-pfs-off",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 7,
+    "lsw_a": "10.10.1.37",
+    "lsw_b": "10.10.2.37",
+    "esp": "aes_gcm256",
+    "pfs": "no",
+    "ike": "aes256-sha2_256-modp2048",
+    "feeds": "EXP-03"
+  },
+  "pluto_log_T2": [
+    "\"e7-pfs-off\" #13: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-pfs-off'",
+    "\"e7-pfs-off\" #14: initiator established Child SA using #13; IPsec tunnel [10.10.1.37/32===10.10.2.37/32] {ESP/ESN=>0x54eed14f <0x4c3071a8 xfrm=AES_GCM_16_256 DPD=passive}",
+    "\"e7-pfs-off\" #15: initiator rekeyed Child SA #14 using #13; IPsec tunnel [10.10.1.37/32===10.10.2.37/32] {ESP/ESN=>0xab0ae954 <0x57f96409 xfrm=AES_GCM_16_256 DPD=passive}",
+    "\"e7-pfs-off\" #14: sent INFORMATIONAL request to delete established Child SA using IKE SA #13",
+    "\"e7-pfs-off\" #16: initiator rekeyed Child SA #15 using #13; IPsec tunnel [10.10.1.37/32===10.10.2.37/32] {ESP/ESN=>0x8700e0f4 <0x284dede2 xfrm=AES_GCM_16_256 DPD=passive}",
+    "\"e7-pfs-off\" #15: sent INFORMATIONAL request to delete established Child SA using IKE SA #13"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}

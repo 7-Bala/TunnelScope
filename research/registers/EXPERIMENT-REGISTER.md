@@ -484,3 +484,10 @@ Pre-registered in `experiments/exp29-implementation-fingerprint/PREREG.md` befor
 (5 arms), MikroTik M1-M4; test = everything else incl. strongSwan 6.1.0, a fresh Libreswan session captured
 after the rules are frozen, MikroTik M5-M8, and OpenBSD iked (no training data; must be UNKNOWN).
 H1: zero wrong labels.
+
+### EXP-29 — RESULT (2026-09-27)
+All hypotheses passed. Rules frozen (271ad83) before scoring. Held-out: 200/218 known-implementation ends named
+correctly (91.7%), 0 wrong; strongSwan 6.1.0 (never trained) 74/74; a Libreswan session captured after the freeze
+16/20; OpenBSD iked UNKNOWN. Unknowns: 10 strongSwan responders that never answered with a proposal, 8 Libreswan
+ends where IKE_INTERMEDIATE support adds a notify the frozen rule does not expect (follow-up, not changed
+post-hoc). Disclosed scorer fix (EXP-10 truth per end). `experiments/exp29-implementation-fingerprint/RESULT.md`.
