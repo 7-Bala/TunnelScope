@@ -79,3 +79,12 @@ Nothing above is changed or removed. Implementation details fixed before any run
    record), so if the decision rule adopts P3, the product call sites pass `other_rules=True` from a new,
    separate constant instead of a new key in `SHIPPED_SETTINGS`. Same effect; no test is edited.
 3. Harness `testbed/scripts/run_exp30.py` wraps EXP-18b's `run_exp18b.py` unchanged (results dir + P3 only).
+
+## ADDENDUM B (2026-09-27, before any test-set result exists)
+Nothing above is changed or removed. The first gemini-lite test invocation used EXP-18b's loop unchanged, which
+runs arms A0, A1 and A2; the PREREG says A1 only. It was stopped by hand during the first item (T1, arm A0),
+before any test row was written. Checked afterwards: the watchdogs (180 s) were still armed on both ends but the
+snapshot manifest was already gone (that item had finished its own confirm-or-rollback), so they exited without
+restoring anything; no snapshot files left, `t-tun` ESTABLISHED on both ends. The harness re-seeds before every item.
+`run_exp30.py` now reports test A0/A2 keys as done so only A1 runs; the run then restarts from T1. No outcome
+was seen before this addendum.
