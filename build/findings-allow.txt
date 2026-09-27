@@ -23,3 +23,6 @@ exp26/mt-m7.pcap :: pfs  # T-135: same padding; was INFERRED True for a PFS-off 
 
 # T-136 / EXP-27, 2026-09-27
 * :: pq_ppk  # T-136: new finding, RFC 8784 PPK negotiation from the plaintext USE_PPK notify (never claims PPK use)
+
+# T-127 / EXP-29, 2026-09-27
+* :: implementation  # T-127: new finding, IKE implementation per end from plaintext fingerprints (EXP-29); informational, changes no verdict
