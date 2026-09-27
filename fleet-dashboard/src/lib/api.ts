@@ -426,3 +426,41 @@ export async function applyRemediation(
 }
 
 
+
+// ---- T-130 part 2: known vulnerabilities for a fingerprinted implementation (tunnelscope/intel/lookup.py)
+export interface IntelCve {
+  id: string
+  description: string | null
+  published: string | null
+  cvss: number | string | null
+  severity: string | null
+  kev: boolean
+  kev_added?: string
+  kev_due?: string
+  ransomware?: string
+  epss: string | null
+  sources: string[]
+  /** cpe: NVD lists the product as vulnerable; vendor: EUVD/CISA list it under the vendor; keyword: only mentioned */
+  match: "cpe" | "vendor" | "keyword"
+  ipsec_related: boolean
+}
+
+export interface IntelResult {
+  ok: boolean
+  error?: string
+  implementation: string
+  status?: string
+  cves: IntelCve[]
+  sources: Record<string, { status: string; fetched_at: number | null; reason: string | null }>
+  counts?: { total: number; kev: number; product_listed: number; ipsec_related: number }
+  note?: string
+}
+
+export async function intelLookup(implementation: string): Promise<IntelResult | null> {
+  try {
+    const res = await fetch(`/api/intel?implementation=${encodeURIComponent(implementation)}`, { cache: "no-store" })
+    return (await res.json()) as IntelResult
+  } catch {
+    return null
+  }
+}
