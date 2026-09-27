@@ -90,10 +90,13 @@ class LiveMonitor:
         try:
             a = analyze(str(path))
             anomalies = observe(History(self.history), a["sas"], f"live:{path.name}") if self.history else None
-            if anomalies and self.alerts:
+            if anomalies:
                 from ..anomaly.alerts import alerts_from, write_alerts
-                row["alerts"] = write_alerts(alerts_from(anomalies, f"live:{path.name}", path.stat().st_mtime),
-                                             self.alerts, self.alert_format)
+                items = alerts_from(anomalies, f"live:{path.name}", path.stat().st_mtime)
+                if items:
+                    row["alert_items"] = items             # T-139: the site sensor forwards these
+                if self.alerts:
+                    row["alerts"] = write_alerts(items, self.alerts, self.alert_format)
             j = analysis_json(a, path.name, anomalies)
             row.update(n_sas=j["n_sas"], sas=j["sas"], seconds=round(time.time() - t0, 2))
         except Exception as e:           # one bad window must not stop the monitor
