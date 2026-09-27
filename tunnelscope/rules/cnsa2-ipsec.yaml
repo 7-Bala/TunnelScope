@@ -1,0 +1,44 @@
+baseline: CNSA-2.0-IPsec
+authority: "Commercial National Security Algorithm (CNSA) Suite 2.0 Profile for IPsec, draft-guthrie-cnsa2-ipsec-profile-04 (IETF Internet-Draft, individual submission, 19 July 2026; not an RFC)"
+url: "https://datatracker.ietf.org/doc/html/draft-guthrie-cnsa2-ipsec-profile-04"
+# T-122 (2026-09-27). Every requirement below is quoted from section 6.2 / 8.2 / 8.3 of the draft as fetched on
+# 2026-09-27. Requirements a passive capture cannot judge are kept so reports show them as not observable:
+# ML-DSA-87 authentication (sec 8.3, inside encrypted IKE_AUTH) and the ML-KEM-1024 KE in CREATE_CHILD_SA (sec 9,
+# encrypted). ESP AES-GCM key size 256 cannot be confirmed passively (F-05): that rule can only FAIL or be UNKNOWN.
+rules:
+  - id: CNSA2-IKE-ENCR
+    title: "IKE encryption: ENCR_AES_GCM_16 with a 256-bit key (sec 6.2)"
+    attribute: ike_encr
+    assert: {op: equals, value: "AES-GCM-16-256"}
+    severity: high
+    fail_message: "IKE SA not encrypted with AES-GCM-16-256 as the CNSA 2.0 IPsec profile requires"
+  - id: CNSA2-IKE-PRF
+    title: "IKE PRF: PRF_HMAC_SHA2_512 or PRF_HMAC_SHA2_384 (sec 6.2)"
+    attribute: ike_prf
+    assert: {op: in, value: ["PRF-HMAC-SHA2-384", "PRF-HMAC-SHA2-512"]}
+    severity: high
+    fail_message: "IKE PRF is not HMAC-SHA2-384/512 as the CNSA 2.0 IPsec profile requires"
+  - id: CNSA2-IKE-KE
+    title: "IKE key exchange: 384-bit random ECP, 3072-bit MODP or 4096-bit MODP group (sec 6.2)"
+    attribute: ike_dh_group
+    assert: {op: in, value: ["ECP-384", "MODP-3072", "MODP-4096"]}
+    severity: high
+    fail_message: "IKE_SA_INIT key exchange group is not one the CNSA 2.0 IPsec profile allows"
+  - id: CNSA2-ADDKE
+    title: "Additional key exchange 1: ML-KEM-1024 (sec 6.2)"
+    attribute: pq_key_exchange
+    assert: {op: contains, value: "ML-KEM-1024"}
+    severity: high
+    fail_message: "No ML-KEM-1024 additional key exchange selected, as the CNSA 2.0 IPsec profile requires"
+  - id: CNSA2-ESP-ENCR
+    title: "ESP encryption: ENCR_AES_GCM_16 with a 256-bit key (sec 8.2); key size is not observable"
+    attribute: esp_cipher_family
+    assert: {op: candidate_required, value: "AES-GCM-16"}
+    severity: high
+    fail_message: "The ESP packet geometry rules out AES-GCM-16, which the CNSA 2.0 IPsec profile requires"
+  - id: CNSA2-AUTH
+    title: "Authentication: ML-DSA-87 signatures (sec 8.3)"
+    attribute: peer_auth_method
+    assert: {op: equals, value: "ML-DSA-87"}
+    severity: high
+    fail_message: "Peer authentication is not ML-DSA-87 as the CNSA 2.0 IPsec profile requires"
