@@ -99,3 +99,33 @@ def test_mitre_mapping_matches_the_verified_snapshot():
             assert snap[i] == name, (tid, i)
     assert refs_for("TH-03")[0] == {"id": "T1557", "name": "Adversary-in-the-Middle", "catalogue": "ATT&CK"}
     assert set(THREAT_REFS) == {f"TH-{i:02d}" for i in range(1, 13)}
+
+
+def _serve():
+    import threading
+    from tunnelscope.api import server
+    srv = server.make_server(0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv, f"http://127.0.0.1:{srv.server_address[1]}"
+
+
+def test_api_intel_returns_the_lookup_for_a_fingerprinted_implementation(served):
+    import urllib.request
+    srv, base = _serve()
+    try:
+        r = json.load(urllib.request.urlopen(base + "/api/intel?implementation=strongSwan"))
+        assert r["ok"] and r["status"] == "INFERRED" and r["counts"]["total"] == 4
+    finally:
+        srv.shutdown()
+
+
+def test_api_intel_refuses_anything_but_a_known_implementation(served):
+    import urllib.error
+    import urllib.request
+    srv, base = _serve()
+    try:
+        with pytest.raises(urllib.error.HTTPError) as e:
+            urllib.request.urlopen(base + "/api/intel?implementation=../../etc")
+        assert e.value.code == 400 and served == []          # nothing was looked up
+    finally:
+        srv.shutdown()
