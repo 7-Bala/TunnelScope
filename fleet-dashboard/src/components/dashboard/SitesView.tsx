@@ -2,6 +2,11 @@ import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { type SitesResult, sitesStatus } from "@/lib/api"
 
+function fmt(v: unknown) {
+  if (v === null || v === undefined) return "none"
+  return Array.isArray(v) ? v.join(", ") : String(v)
+}
+
 function ago(s: number) {
   const r = Math.max(0, Math.round(s))
   return r < 60 ? `${r}s ago` : r < 3600 ? `${Math.round(r / 60)} min ago` : `${Math.round(r / 3600)} h ago`
@@ -77,6 +82,18 @@ TUNNELSCOPE_COLLECTOR_STATE=collector/ ./start.sh`}
                 {s.missing_reports > 0 && <span className="text-warn"> · {s.missing_reports} missing</span>}
               </span>
             </div>
+            {(s.recent_alerts ?? []).length > 0 && (
+              <ul className="space-y-1 border-b border-border/60 px-5 py-3 text-[12.5px]">
+                {(s.recent_alerts ?? []).map((a, i) => (
+                  <li key={i} className="text-muted-foreground">
+                    <span className="text-neg">●</span>{" "}
+                    <span className="font-medium text-neg">{a.kind === "downgrade" ? "Downgrade" : "New failure"}</span>{" "}
+                    of {a.attribute} on <span className="font-mono">{a.tunnel}</span>: {fmt(a.usual)} → {fmt(a.now)}
+                    <span className="ml-2 text-[11px] text-faint">{ago(a.age_s)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             {s.note ? (
               <p className="px-5 py-4 text-[13px] text-warn">{s.note}</p>
             ) : s.tunnels.length === 0 ? (
@@ -86,7 +103,14 @@ TUNNELSCOPE_COLLECTOR_STATE=collector/ ./start.sh`}
                 {s.tunnels.map((t) => (
                   <li key={`${t.src}-${t.dst}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3 text-[12.5px]">
                     <span className="font-mono text-foreground/90">{t.src} ↔ {t.dst}</span>
-                    <span className="text-muted-foreground">{t.posture}</span>
+                    <span className="text-muted-foreground">
+                      {t.posture}
+                      {t.last_handshake && t.last_handshake.posture !== t.posture && (
+                        <span className="ml-2 text-faint">
+                          · last handshake seen {ago(t.last_handshake.age_s)}: <span className="text-foreground/85">{t.last_handshake.posture}</span>
+                        </span>
+                      )}
+                    </span>
                     <span className={cn("ml-auto", t.fails.length ? "text-neg" : "text-faint")}>
                       {t.fails.length ? `failing ${t.fails.join(", ")}` : "no failing rule"}
                     </span>
