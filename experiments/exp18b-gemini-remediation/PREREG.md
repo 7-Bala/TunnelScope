@@ -66,3 +66,31 @@ No threshold, item, or arm changes after this commit except the prompt (dev set 
 freeze). `analyze.py` writes `results/summary.json`; `RESULT.md` quotes only that and is not edited
 after. Any owner override of a failed bar is a separate, later decision record, never a change to
 this file.
+
+## ADDENDUM A (2026-09-27, before any EXP-18b run; owner supplied keys the same day)
+
+Written before any dev, test, robust or S11 run of EXP-18b. Nothing above is changed or removed.
+
+1. **A second backend arm, Groq** (DEC-040): `tunnelscope/remediate/open_model_client.py`, model
+   `openai/gpt-oss-120b` (Groq's hosted open-weight GPT-OSS 120B), run through the `chain` backend
+   restricted to that one model (`TUNNELSCOPE_GENERATOR_CHAIN=groq:openai/gpt-oss-120b`, no fallback),
+   so the result is that model's alone. Same items, arms, bars and procedure as the Gemini arm below.
+   Each backend gets its own dev-variant selection and its own freeze file (`FREEZE-gemini.md`,
+   `FREEZE-groq.md`), committed before that backend's test/S11/R runs, exactly as EXP-18 required.
+2. **The Gemini arm** uses `backend="cloud"` as pre-registered: one model, `gemini-3.8-flash`
+   (`cloud_client.MODEL_ID`, unchanged), no fallback chain. The API key used is the owner's
+   "experiment" key (`TUNNELSCOPE_GEMINI_API_KEY`, `TUNNELSCOPE_KEY_PURPOSE` unset).
+3. **A client setting changed after the original pre-registration, before any run:** Gemini 3 models
+   are called with `thinking_level="low"` (`cloud_client.THINKING_LEVEL`). Reason, measured
+   2026-09-27: with default reasoning and the generator's 320-token budget, gemini-3.8-flash returned
+   an EMPTY answer; with "low" it answered in ~2 s. Stated here so it is not mistaken for tuning on
+   results.
+4. **HTTP 503 "model overloaded" is treated like the pre-registered rate limit:** a run whose model
+   call failed with 429 or 503 is recorded as `infrastructure: rate_limited_or_overloaded` (kept in
+   raw.jsonl, excluded from scoring, listed), and that item is re-run later; it is never counted as a
+   model failure and never silently dropped. 503s were common on 2026-09-27 (smoke tests).
+5. **Where results go:** `experiments/exp18b-gemini-remediation/results/{gemini,groq}/raw.jsonl`,
+   scored by EXP-18's own `analyze.py` logic applied to each file (the bars are unchanged, so the same
+   code must score them). EXP-18's own results are never written to.
+6. **Harness:** `testbed/scripts/run_exp18b.py` wraps EXP-18's `run_exp18.py` unchanged (same items,
+   seeding, baseline, preview/apply path), only redirecting its output and passing the backend.
