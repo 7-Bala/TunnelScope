@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from tunnelscope.assess.engine import _assert, assess_record, load_baselines
+from tunnelscope.assess.engine import _assert, assess_record, available_profiles, load_baselines
 from tunnelscope.evidence.extract import build_records
 from tunnelscope.risk.risk import OUT_OF_SCOPE, assess_risk
 
@@ -40,7 +40,20 @@ def test_out_of_scope_never_changes_the_score():
 
 def _cnsa(path):
     r = _rec(path)
-    return {v.rule_id: v.verdict for v in assess_record(r, load_baselines()) if v.rule_id.startswith("CNSA2")}
+    return {v.rule_id: v.verdict for v in assess_record(r, load_baselines(profiles=["cnsa2-ipsec"]))
+            if v.rule_id.startswith("CNSA2")}
+
+
+def test_cnsa2_is_opt_in_so_default_reports_do_not_change():
+    ids = {r["id"] for b in load_baselines() for r in b["rules"]}
+    assert not any(i.startswith("CNSA2") for i in ids)
+    assert "cnsa2-ipsec" in available_profiles()
+
+
+def test_unknown_profile_is_refused():
+    from tunnelscope.errors import DependencyError
+    with pytest.raises(DependencyError):
+        load_baselines(profiles=["nope"])
 
 
 def test_cnsa2_ike_suite_passes_only_on_the_profile_suite():
