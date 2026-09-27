@@ -92,3 +92,23 @@ def test_default_order_is_every_cloud_model_then_local():
 def test_generator_accepts_the_chain_backend():
     from tunnelscope.remediate import generate
     assert "chain" in generate.BACKENDS and generate._backend_module("chain") is chain
+
+
+def test_reasoning_models_get_low_effort_so_small_budgets_still_answer(monkeypatch):
+    """Measured 2026-09-27: default effort spent ~480 reasoning tokens and left no answer at 320 tokens."""
+    seen = {}
+    monkeypatch.setattr(net, "http_json", lambda url, **kw: seen.update(kw) or {"choices": [{"message": {"content": "{}"}}]})
+    _, meta = om.generate_json("s", {"a": "b"}, model="openai/gpt-oss-120b")
+    assert seen["body"]["reasoning_effort"] == "low" and meta["reasoning_effort"] == "low"
+    seen.clear()
+    om.generate_json("s", {"a": "b"}, model="llama-3.3-70b-versatile")
+    assert "reasoning_effort" not in seen["body"]
+
+
+def test_empty_json_rejection_is_a_model_failure_not_retryable(monkeypatch):
+    def fake(url, **kw):
+        raise net.HttpError(400, '{"error":{"code":"json_validate_failed"}}')
+    monkeypatch.setattr(net, "http_json", fake)
+    raw, meta = om.generate_json("s", {"a": "b"})
+    assert raw is None and "no valid JSON" in meta["reason"] and meta["retryable"] is False
+

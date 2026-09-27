@@ -24,6 +24,10 @@ API_KEY_ENV = "TUNNELSCOPE_GROQ_API_KEY"
 URL = "https://api.groq.com/openai/v1/chat/completions"
 DEFAULT_TIMEOUT_S = 30.0
 FALLBACK_MODELS = (MODEL_ID,)
+# GPT-OSS is a reasoning model: at the generator's ~320-token budget and default effort it spent ~480 tokens
+# reasoning, left no answer, and Groq rejected the empty output (HTTP 400 json_validate_failed); with "low" it
+# answered 3/3 using 63-132 reasoning tokens (measured 2026-09-27). Override with TUNNELSCOPE_GROQ_REASONING.
+REASONING_EFFORT = os.environ.get("TUNNELSCOPE_GROQ_REASONING", "low")
 
 
 def available() -> bool:
@@ -53,6 +57,9 @@ def generate_json(system: str, data_blocks: dict[str, str], max_tokens: int = 25
                             "messages": [{"role": "user", "content": content}]}
     if seed is not None:
         body["seed"] = seed
+    if REASONING_EFFORT and "gpt-oss" in model:
+        body["reasoning_effort"] = REASONING_EFFORT
+        meta["reasoning_effort"] = REASONING_EFFORT
     t0 = time.monotonic()
     try:
         d = net.http_json(URL, method="POST", headers={"Authorization": f"Bearer {key}"}, body=body, timeout=timeout_s)
@@ -68,6 +75,8 @@ def generate_json(system: str, data_blocks: dict[str, str], max_tokens: int = 25
             meta["reason"], meta["retryable"] = "rate limit or quota exceeded", True
         elif e.status in (401, 403):
             meta["reason"] = f"authentication failed (check {API_KEY_ENV})"
+        elif e.status == 400 and "json_validate_failed" in str(e):
+            meta["reason"] = "the model produced no valid JSON (json_validate_failed)"
         else:
             meta["reason"], meta["retryable"] = f"API error (HTTP {e.status})", e.status >= 500
         return None, meta

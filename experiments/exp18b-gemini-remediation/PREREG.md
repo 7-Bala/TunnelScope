@@ -94,3 +94,13 @@ Written before any dev, test, robust or S11 run of EXP-18b. Nothing above is cha
    code must score them). EXP-18's own results are never written to.
 6. **Harness:** `testbed/scripts/run_exp18b.py` wraps EXP-18's `run_exp18.py` unchanged (same items,
    seeding, baseline, preview/apply path), only redirecting its output and passing the backend.
+
+## ADDENDUM B (2026-09-27, after the first Groq dev run, before any Groq test/S11/R run)
+
+The first Groq dev run (7 rows) is **invalid**: every included item failed with HTTP 400
+`json_validate_failed`. Cause (reproduced): GPT-OSS is a reasoning model; at the generator's 320-token
+budget and default effort it spent ~480 tokens reasoning and returned no answer, which Groq rejects.
+That measures a client bug, not the model. Fix: `open_model_client.REASONING_EFFORT="low"` for GPT-OSS
+models (3/3 answered at 320 tokens, 63-132 reasoning tokens; "medium" still failed 0/3). The invalid
+rows are kept, unedited, in `results/groq/raw-invalid-client-bug.jsonl` and are not scored; the Groq arm
+restarts from its dev phase. The Gemini arm is unaffected (its equivalent setting was in ADDENDUM A).
