@@ -206,8 +206,8 @@ def cloud_model_available() -> bool:
     like local_model_available()."""
     if not _CLOUD_MODEL:
         try:
-            from ..remediate import cloud_client
-            _CLOUD_MODEL.append(bool(cloud_client.available()))
+            from ..remediate import cloud_client, open_model_client     # DEC-040: either cloud client counts
+            _CLOUD_MODEL.append(bool(cloud_client.available() or open_model_client.available()))
         except Exception:
             _CLOUD_MODEL.append(False)
     return _CLOUD_MODEL[0]
@@ -218,7 +218,7 @@ def generator_backend() -> str:
     request. "local" (default, on-device) unless an operator sets
     TUNNELSCOPE_GENERATOR_BACKEND=cloud (see tunnelscope/remediate/cloud_client.py for which provider)."""
     b = os.environ.get("TUNNELSCOPE_GENERATOR_BACKEND", "local").strip().lower()
-    return b if b == "cloud" else "local"
+    return b if b in ("cloud", "chain") else "local"
 
 
 class _Handler(BaseHTTPRequestHandler):

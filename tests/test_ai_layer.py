@@ -181,31 +181,36 @@ def test_every_rule_has_a_plain_explanation():
 
 def test_no_outside_model_is_used():
     """Decision 2026-09-20: every model that decides a finding, verdict, score or applied command
-    is trained by the project. DEC-038 (2026-09-25, owner override) adds one narrow, disclosed
-    exception: remediate/cloud_client.py may call an outside model (Google Gemini) to DRAFT a
-    candidate remediation edit; every draft is still re-verified from scratch by generate.py's own
-    V1-V8 checks, dry run and clone-load check before anything can execute, exactly like a local
-    draft. It is the only file allowed to name a cloud provider or call one; the check below fails
-    if that word appears anywhere else, and test_cloud_client_is_never_imported_by_fact_producing_
-    code (below) keeps it out of every finding/verdict/score/anomaly module."""
+    is trained by the project. DEC-038 (2026-09-25) and DEC-040 (2026-09-27, owner overrides) allow
+    optional, off-by-default extras that leave the machine, each confined to ONE file:
+    remediate/cloud_client.py (Gemini) and remediate/open_model_client.py (Groq) may DRAFT a candidate
+    remediation edit, which generate.py's own V1-V8 checks, dry run and clone-load check re-verify from
+    scratch; net/__init__.py is the only place that opens a connection, and only when
+    TUNNELSCOPE_NETWORK=on. No provider SDK other than Google's (cloud extra) may be imported, and no
+    provider may be named outside its own file. test_network_code_is_never_imported_by_fact_producing_code
+    (below) keeps all of it out of every finding/verdict/score/anomaly module."""
     import pathlib
+    import re
     pkg = pathlib.Path(ex.__file__).parents[1]
-    all_files = list(pkg.rglob("*.py"))
-    all_src = "\n".join(p.read_text() for p in all_files).lower()
+    files = list(pkg.rglob("*.py"))
+    src = {p: p.read_text() for p in files}
     rephrase_dir = pkg / "rephrase"
-    cloud_client_file = pkg / "remediate" / "cloud_client.py"
-    assert cloud_client_file.is_file()
-    no_rephrase_src = "\n".join(
-        p.read_text() for p in all_files if not p.is_relative_to(rephrase_dir)
-    ).lower()
-    no_rephrase_or_cloud_src = "\n".join(
-        p.read_text() for p in all_files if not p.is_relative_to(rephrase_dir) and p != cloud_client_file
-    ).lower()
-    for banned in ("anthropic", "openai", "ollama", "urllib.request.urlopen", "transformers", "huggingface"):
-        src = no_rephrase_src if banned in ("transformers", "huggingface") else all_src
-        assert banned not in src, banned
-    assert "gemini" not in no_rephrase_or_cloud_src, "only remediate/cloud_client.py may name a cloud provider"
-    assert "gemini" in cloud_client_file.read_text().lower()
+    only_in = {"urllib.request.urlopen": {pkg / "net" / "__init__.py"},
+               "gemini": {pkg / "remediate" / "cloud_client.py"},
+               "groq": {pkg / "remediate" / "open_model_client.py"},
+               "openai": {pkg / "remediate" / "open_model_client.py"}}   # Groq's model id / endpoint path only
+    for word, allowed in only_in.items():
+        where = sorted(str(p.relative_to(pkg)) for p, s in src.items() if word in s.lower() and p not in allowed)
+        assert not where, f"{word!r} may appear only in {sorted(str(a.relative_to(pkg)) for a in allowed)}: {where}"
+        for a in allowed:
+            assert a.is_file()
+            if word in ("gemini", "groq"):
+                assert word in src[a].lower(), f"{a.name} must actually be the {word} client"
+    for p, s in src.items():
+        assert not re.search(r"^\s*(import|from)\s+(openai|anthropic|ollama)\b", s, re.M), p
+        assert "anthropic" not in s.lower() and "ollama" not in s.lower(), p
+        if not p.is_relative_to(rephrase_dir):
+            assert "transformers" not in s.lower() and "huggingface" not in s.lower(), p
 
 
 def test_cloud_client_is_never_imported_by_fact_producing_code():
@@ -283,3 +288,21 @@ def test_mixed_note_quotes_only_the_measured_exp16_numbers():
     assert "92.9% caught, 8.3% wrongly flagged" in result
     assert "92.9%" in MIXED_NOTE and "8.3%" in MIXED_NOTE
     assert "96%" not in MIXED_NOTE
+
+
+def test_network_code_is_never_imported_by_fact_producing_code():
+    """DEC-040: findings, verdicts, the risk score and anomaly detection never depend on anything that
+    leaves the machine (the network layer, threat intel, or a cloud drafting client)."""
+    import pathlib
+    pkg = pathlib.Path(ex.__file__).parents[1]
+    banned = ("tunnelscope.net", "from .. import net", "from ..net", "tunnelscope.intel", "from ..intel",
+              "cloud_client", "open_model_client", "from . import chain", "remediate.chain")
+    for d in ("assess", "rules", "risk", "leakage", "anomaly", "evidence", "ingest", "live"):
+        dirpath = pkg / d
+        if not dirpath.exists():
+            continue
+        for p in dirpath.rglob("*.py"):
+            s = p.read_text()
+            hit = [b for b in banned if b in s]
+            assert not hit, f"{p.relative_to(pkg)} imports {hit}"
+

@@ -1,0 +1,24 @@
+{
+ "source": "ATT&CK Enterprise v19.2 (mitre-attack/attack-stix-data) and CAPEC STIX 2.1 (mitre/cti), fetched 2026-09-27",
+ "notice": "\u00a9 The MITRE Corporation. Reproduced under the ATT&CK and CAPEC terms of use.",
+ "names": {
+  "CAPEC-115": "Authentication Bypass",
+  "CAPEC-157": "Sniffing Attacks",
+  "CAPEC-192": "Protocol Analysis",
+  "CAPEC-20": "Encryption Brute Forcing",
+  "CAPEC-220": "Client-Server Protocol Manipulation",
+  "CAPEC-49": "Password Brute Forcing",
+  "CAPEC-55": "Rainbow Table Password Cracking",
+  "CAPEC-60": "Reusing Session IDs (aka Session Replay)",
+  "CAPEC-620": "Drop Encryption Level",
+  "CAPEC-94": "Adversary in the Middle (AiTM)",
+  "CAPEC-97": "Cryptanalysis",
+  "T1040": "Network Sniffing",
+  "T1110.002": "Password Cracking",
+  "T1190": "Exploit Public-Facing Application",
+  "T1557": "Adversary-in-the-Middle",
+  "T1565.002": "Transmitted Data Manipulation",
+  "T1600": "Weaken Encryption",
+  "T1600.001": "Reduce Key Space"
+ }
+}

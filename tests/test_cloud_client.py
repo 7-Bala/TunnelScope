@@ -13,6 +13,8 @@ from tunnelscope.remediate import cloud_client as cc
 @pytest.fixture(autouse=True)
 def _clean(monkeypatch):
     monkeypatch.delenv(cc.API_KEY_ENV, raising=False)
+    monkeypatch.delenv("TUNNELSCOPE_KEY_PURPOSE", raising=False)
+    monkeypatch.setenv("TUNNELSCOPE_NETWORK", "on")      # DEC-040: the cloud client runs only with the network on
     cc.reset_client_cache()
     yield
     cc.reset_client_cache()
@@ -200,3 +202,41 @@ def test_prompt_reuses_the_same_data_is_data_framing_as_the_local_model(monkeypa
     _fake_sdk(monkeypatch, text="{}", capture=cap)
     cc.generate_json("SYS", {"rule": "R", "current_lines": "L"})
     assert cap["contents"] == build_prompt("SYS", {"rule": "R", "current_lines": "L"})
+
+
+def test_network_off_means_no_call_even_with_a_key(monkeypatch):
+    """DEC-040: TUNNELSCOPE_NETWORK is the single switch for anything leaving the machine."""
+    monkeypatch.setenv("TUNNELSCOPE_NETWORK", "off")
+    monkeypatch.setenv(cc.API_KEY_ENV, "k")
+    cap: dict = {}
+    _fake_sdk(monkeypatch, text="{}", capture=cap)
+    out, meta = cc.generate_json("s", {"a": "b"})
+    assert out is None and "network is off" in meta["reason"] and "contents" not in cap
+    assert cc.available() is False
+
+
+def test_key_purpose_selects_its_own_key(monkeypatch):
+    monkeypatch.setenv(cc.API_KEY_ENV, "general")
+    monkeypatch.setenv(cc.API_KEY_ENV + "_DEMO", "demo-key")
+    monkeypatch.setenv("TUNNELSCOPE_KEY_PURPOSE", "demo")
+    made = _counting_sdk(monkeypatch)
+    cc.generate_json("s", {"a": "b"})
+    assert made == ["demo-key"]
+
+
+def test_rate_limit_is_retryable_auth_is_not(monkeypatch):
+    monkeypatch.setenv(cc.API_KEY_ENV, "k")
+    _fake_sdk(monkeypatch, raise_error=_APIError(429))
+    assert cc.generate_json("s", {"a": "b"})[1]["retryable"] is True
+    cc.reset_client_cache()
+    _fake_sdk(monkeypatch, raise_error=_APIError(401))
+    assert cc.generate_json("s", {"a": "b"})[1]["retryable"] is False
+
+
+def test_model_argument_overrides_the_default(monkeypatch):
+    monkeypatch.setenv(cc.API_KEY_ENV, "k")
+    cap: dict = {}
+    _fake_sdk(monkeypatch, text="{}", capture=cap)
+    _, meta = cc.generate_json("s", {"a": "b"}, model="gemini-2.5-flash")
+    assert cap["model"] == "gemini-2.5-flash" and meta["model_id"] == "gemini-2.5-flash"
+

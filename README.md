@@ -17,6 +17,7 @@ it's judged against and admits what it couldn't see.
 .venv/bin/tunnelscope report <capture.pcap>     # after ./start.sh has created the .venv
 .venv/bin/tunnelscope config <swanctl.conf|ipsec.conf>   # read a config file offline: its crypto in the same names as the wire findings
 .venv/bin/tunnelscope reconcile <capture.pcap> <config> --conn <name>   # does the traffic match the config? (exit 3 on a mismatch)
+TUNNELSCOPE_NETWORK=on .venv/bin/tunnelscope intel <capture.pcap>   # known CVEs (NVD, EUVD, CISA KEV) for the VPN software seen
 ```
 
 ## Repository map
@@ -48,7 +49,7 @@ Core capabilities:
 - Detects behavioral anomalies and configuration drift from historical tunnel norms, such as cipher downgrades.
 - Exports executive summaries, technical reports, and CycloneDX Cryptographic Bills of Materials (CBOM).
 - Hosts a self-contained local web dashboard for interactive capture analysis.
-- Runs entirely offline and air-gapped by default: no external network requests, no third-party cloud model, for every finding, verdict, score, and posture judgment the tool makes. One optional, off-by-default feature is the exception (DEC-038): a remediation-drafting backend that calls Google Gemini, enabled only by an operator setting an API key and an explicit switch; it only ever proposes a candidate config edit for the lab, which is independently re-verified before anything runs, exactly like the on-device model it sits beside — see "Honest limits".
+- Runs entirely offline and air-gapped by default: every finding, verdict, score and posture judgment is made on your machine with no network access. Optional online extras (DEC-038, DEC-040) are all off until you set `TUNNELSCOPE_NETWORK=on`: threat intelligence for the fingerprinted VPN software (NVD, ENISA EUVD, CISA KEV, with MITRE ATT&CK/CAPEC names on each threat; `tunnelscope intel`, offline via `tunnelscope intel-bundle`) and remediation drafting by outside models (Gemini, then Groq, then the on-device model), whose drafts are re-verified before anything runs. Only software names and lab rule/config text leave the machine, never a capture. See `.env.example`.
 
 ## Honest limits
 
