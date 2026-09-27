@@ -18,11 +18,11 @@ const VIDEO_URL = ""; // demo video, on a host that does not sleep
 const REPO_URL = "";  // only if the repository is public or shared with the evaluators
 
 // SOURCES (checked 2026-09-27)
-//   531 unit tests pass ........ `.venv/bin/python -m pytest -q` -> "531 passed, 1 skipped"
+//   543 unit tests pass ........ `.venv/bin/python -m pytest -q` -> "543 passed, 1 skipped"
 //   ~1.6 s per capture ......... `tunnelscope report` on 4 lab captures: 1.58-1.67 s wall time each
 //   124 lab captures ........... testbed/captures/**/*.groundtruth.json (endpoint ground truth)
 //   0.174 -> 0.757, 99.8% ...... experiments/exp20-real-ipsec-and-users/RESULT.md (R3), DEC-037
-//   20 experiments ............. experiments/*/RESULT.md
+//   22 experiments ............. experiments/*/RESULT.md (22 files)
 //   4 implementations .......... strongSwan, Libreswan (EXP-07), OpenBSD iked (EXP-10), MikroTik RouterOS (EXP-26)
 //   pq-downgrade verdicts ...... `tunnelscope report testbed/captures/pq-downgrade.pcap`
 //   32/32 unsafe drafts ........ experiments/exp18-generative-remediation/RESULT.md (H1), DEC-035
@@ -30,6 +30,9 @@ const REPO_URL = "";  // only if the repository is public or shared with the eva
 //                                13/16, local 0/16; 11/11 regressions rolled back and verified), DEC-041
 //   fix loop steps ............. DEC-033 (allowlist, dry run on copies, human approval, baseline, snapshot, verify
 //                                or roll back byte for byte), tunnelscope/remediate/generate.py (V1-V8)
+//   live gateways, 22/22 ....... testbed/live-gateway/e2e.py on two strongSwan gateways over SSH: 22 of 22 checks
+//                                pass (both ends fixed and verified in 34.2 s; rollback byte for byte; watchdog
+//                                restore), DEC-042. Test network on one host (network namespaces, userspace ESP)
 //   screenshot ................. img/threats.jpg (dashboard, lab capture a-tra-sha1.pcap), cropped to img/tunnel-view.jpg
 
 const C = { INK: "000000", TEXT: "1A1A1A", GREY: "595959", LINE: "7F7F7F", NAVY: "1F3864", BLUE: "2E75B6",
@@ -142,7 +145,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       ["AI models trained by us ", "(Random Forest) tell the type of traffic inside (web, video, VoIP…) from packet size and timing."],
       ["Checks every setting ", "against security standards (RFC 8247, RFC 8221, DISA, India’s post-quantum report)."],
       ["Gives a risk score (0–100), threats and a fix ", "for each problem, in a report and a dashboard."],
-      ["Fixes safely: ", "AI can draft the fix, a person approves it, and if the fix breaks anything it is rolled back automatically (test lab only)."],
+      ["Fixes safely: ", "AI can draft the fix, a person approves it, and if the fix breaks anything it is rolled back automatically. Works on real strongSwan gateways over SSH after the operator accepts the terms and risks."],
     ]), { x: LX + 0.15, y: top + 0.78, w: LW - 0.3, h: 3.3, fontSize: 12, paraSpaceAfter: 4 });
     t(s, "Unique Value Propositions:", { x: LX + 0.15, y: top + 3.95, w: LW - 0.3, h: 0.3, fontSize: 14, color: C.BLUE });
     t(s, bullets(["Detects a post-quantum downgrade (safe option offered, weaker one used).", "Every verdict names the rule it is based on.",
@@ -211,16 +214,16 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       line(s, cx + DW / 2, y.d + 0.36, SX, y.d + 0.36); tag(s, "No", cx + DW / 2 + 0.03, y.d + 0.12);
       node(s, P, SX, y.d - 0.02, SW, 0.76, "Automatic rollback: old files restored byte for byte, checked again", "FBE5D6", "C55A11", 9.5);
       t(s, [{ text: "Proven in our test lab: ", options: { bold: true } },
-        { text: "32 of 32 unsafe AI drafts blocked; 11 of 11 fixes that broke another rule rolled back automatically. " },
-        { text: "Being built: ", options: { bold: true } },
-        { text: "the same steps on real strongSwan gateways over SSH, after the operator accepts the terms and risks." }],
+        { text: "32 of 32 unsafe AI drafts blocked; 11 of 11 bad fixes rolled back. " },
+        { text: "Proven on real gateways: ", options: { bold: true } },
+        { text: "2 strongSwan gateways over SSH, 22 of 22 checks passed, terms and risks accepted first." }],
         { x: 6.95, y: 5.46, w: 5.9, h: 0.62, fontSize: 10, italic: true, color: C.GREY });
     }
 
     // technologies, one strip under both flows
     frame(s, 0.5, 6.14, W - 1.0, 0.86);
     t(s, [{ text: "Technologies Used: ", options: { bold: true, color: C.NAVY } },
-      { text: "Python 3.11 · tshark (Wireshark) · scikit-learn (Random Forest, Isolation Forest) · YAML rule files · React + TypeScript dashboard · test lab on Docker and VMs (strongSwan, Libreswan, OpenBSD iked, MikroTik) · optional AI fix drafting (Groq, Gemini)" }],
+      { text: "Python 3.11 · tshark (Wireshark) · scikit-learn (Random Forest, Isolation Forest) · YAML rule files · React + TypeScript dashboard · test lab on Docker and VMs (strongSwan, Libreswan, OpenBSD iked, MikroTik) · OpenSSH for live fixes · optional AI fix drafting (Groq, Gemini)" }],
       { x: 0.65, y: 6.2, w: W - 1.3, h: 0.74, fontSize: 11.5, valign: "middle" });
   }
 
@@ -230,12 +233,12 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     frame(s, LX, top, LW, bot - top); frame(s, 6.3, top, W - 0.5 - 6.3, bot - top);
     heading(s, "Feasibility of the Idea:", LX + 0.15, top + 0.12, LW - 0.3);
     t(s, bullets([
-      ["Technical Feasibility: ", "already built and working. 531 automatic tests pass; one capture is checked in about 1.6 seconds."],
+      ["Technical Feasibility: ", "already built and working. 543 automatic tests pass; one capture is checked in about 1.6 seconds."],
       ["Proven on real traffic: ", "on real IPsec traffic the traffic-type model improved from 0.174 to 0.757 (F1 score) and is right 99.8% of the time when it answers."],
       ["Operational Feasibility: ", "runs on one laptop, offline by default. Uses tshark, a tool analysts already know."],
       ["Economic Feasibility: ", "built only on free, open-source software; no licence cost."],
       ["AI fix drafting: ", "cloud AI models (Groq, Gemini) drafted working fixes for 12–13 of 16 test problems (a small local model: 0 of 16). It stays optional until it passes our 80% bar."],
-      ["Methodology: ", "our own VPN lab, 124 captures checked against the VPNs’ own logs, 20 experiments."],
+      ["Methodology: ", "our own VPN lab, 124 captures checked against the VPNs’ own logs, 22 experiments."],
       ["Users: ", "NTRO analysts, security operations teams, VPN administrators, auditors."],
     ]), { x: LX + 0.15, y: top + 0.5, w: LW - 0.3, h: bot - top - 0.6, fontSize: 12.5, paraSpaceAfter: 8 });
 
@@ -245,7 +248,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       ["Encrypted data: ", "the encryption of the data part is hidden.", "Show the few possible options, clearly marked as a best guess."],
       ["AI can be wrong: ", "mixed traffic can confuse the model.", "The model says “uncertain” instead of guessing wrong."],
       ["Lab vs real world: ", "most testing used open-source VPNs.", "Tested on 4 VPN programs and real public traffic; vendor devices next."],
-      ["A fix could break the VPN: ", "a wrong change could cut the connection.", "Only allowed edits, a person approves, lab only; automatic rollback if anything gets worse."],
+      ["A fix could break the VPN: ", "a wrong change could cut the connection.", "Only allowed edits; terms and risks accepted per gateway; the exact change typed to confirm; automatic rollback, and a watchdog if the connection drops."],
       ["Hidden risks: ", "weak passwords or a hacked device cannot be seen in traffic.", "Listed separately as “not checked”, never scored."],
       ["Sensitive data: ", "traffic must not leave the site.", "Works offline by default; nothing is uploaded unless an operator turns online extras on."],
     ];
@@ -265,7 +268,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     const items = [
       ["Faster checks for analysts:", "Impact: a VPN is checked in seconds instead of reading packets by hand.", "Benefit: more VPNs checked, fewer missed problems."],
       ["Quantum-safe readiness:", "Impact: finds VPNs that still use old key exchange, or were pushed down from a quantum-safe one.", "Benefit: supports India’s post-quantum migration."],
-      ["Safe fixes for administrators:", "Impact: each failed rule gets a fix; AI can draft it, a person approves, and a bad fix is undone automatically (proven in our lab; live gateways next).", "Benefit: problems get fixed, not just reported, without risking the VPN."],
+      ["Safe fixes for administrators:", "Impact: each failed rule gets a fix; AI can draft it, a person approves, and a bad fix is undone automatically (proven in our lab and on real strongSwan gateways over SSH).", "Benefit: problems get fixed, not just reported, without risking the VPN."],
       ["Evidence for auditors:", "Impact: each verdict cites its standard (RFC, DISA, DST).", "Benefit: supports DPDP Rules 2025 and CERT-In audits."],
       ["Secure by design:", "Impact: works offline by default; nothing leaves the site.", "Benefit: suitable for sensitive government networks."],
     ];
@@ -293,7 +296,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     t(s, "The same VPN can pass one standard and fail another, so TunnelScope shows each standard separately.",
       { x: RX, y: top + 3.02, w: RW, h: 0.7, fontSize: 11, italic: true, color: C.GREY });
     heading(s, "Future scope:", RX, top + 3.85, RW);
-    t(s, bullets(["Automatic fixing on real VPN gateways (SSH), with terms-and-risks consent and the same rollback", "Testing on vendor VPN devices", "Direct feeds from network sensors", "More real-world traffic for training"]),
+    t(s, bullets(["Live fixing for more VPN software (today: strongSwan)", "Testing on vendor VPN devices", "Direct feeds from network sensors", "More real-world traffic for training"]),
       { x: RX, y: top + 4.22, w: RW, h: 1.5, fontSize: 12, paraSpaceAfter: 4 });
   }
 
