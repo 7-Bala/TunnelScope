@@ -2,7 +2,6 @@
 ~255 B, allowed by RFC 7296 sec 3.14) defeats the size-based PFS rule. PFS must then be UNKNOWN, never
 a guess; implementations that pad minimally (strongSwan) keep their measured answers."""
 import os
-import shutil
 
 import pytest
 
@@ -10,7 +9,6 @@ from tunnelscope.evidence.extract import build_records, ike_extra_padding, min_e
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CAP = os.path.join(ROOT, "testbed", "captures")
-needs_tshark = pytest.mark.skipif(not shutil.which("tshark"), reason="tshark not installed")
 
 
 def _pfs(path):
@@ -18,7 +16,6 @@ def _pfs(path):
     return [r.findings["pfs"] for r in recs]
 
 
-@needs_tshark
 @pytest.mark.parametrize("arm", ["mt-m6", "mt-m7"])
 def test_padding_implementation_gives_unknown_pfs_never_a_guess(arm):
     """M7 has PFS off and was read as PFS on (EXP-26's one wrong finding); M6's right answer was luck."""
@@ -27,7 +24,6 @@ def test_padding_implementation_gives_unknown_pfs_never_a_guess(arm):
     assert "padding" in f.note
 
 
-@needs_tshark
 @pytest.mark.parametrize("path,want", [("rekey-cs-pfs-on-aes256gcm16-run2.pcap", True),
                                        ("rekey-cs-pfs-off-aes256gcm16-run2.pcap", False),
                                        ("exp07/e7-pfs-off.pcap", False)])
