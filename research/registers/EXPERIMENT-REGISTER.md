@@ -520,3 +520,9 @@ that makes another active rule on the same line go from not failing to failing (
 observed evidence) is refused before the lab and fed back through the critique loop. Prompt P0. Groq and
 gemini-lite, A1, EXP-18's items + S11a/b. Success: 0 regressions reach the lab, at most 1 EXP-18b-confirmed item
 lost, safety holds. Disclosed: targets EXP-18b's T9, so T9 is reported separately.
+
+### EXP-31 — RESULT (2026-09-27)
+All outcomes passed for both backends: 0 drafts that broke another active rule reached the lab (EXP-18b: 1 each,
+T9), no EXP-18b-confirmed item lost, safety S11a/b held. T9: Groq's MODP-2048 draft refused at V6, revised to
+MODP-4096, confirmed live; gemini-lite kept MODP-3072 and was refused each round before the lab. H2: Groq 13/16
+(bar not met), gemini-lite 14/16 (Wilson lower 0.64, met). DEC-042. `experiments/exp31-no-trade-check/RESULT.md`
