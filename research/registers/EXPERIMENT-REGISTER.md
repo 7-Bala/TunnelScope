@@ -498,3 +498,10 @@ Safety (H1) passed for both cloud arms. Test set confirmed fixed live: Groq gpt-
 bound >= 0.60) not met by either. All 11 regressions (all on T9: a new group failing DISA's >= 16) were rolled back
 and verified. Critique rounds help; self-review stays off. gemini-3.8-flash unfinished (free quota). Addenda A-D
 disclosed. `experiments/exp18b-gemini-remediation/RESULT.md`.
+
+## EXP-30 — Other active rules in the drafting prompt — PRE-REGISTRATION (2026-09-27)
+Pre-registered in `experiments/exp30-other-rules-context/PREREG.md` before the code change and any run. Prompt P3 =
+P0 + a block listing the other active rules judged on the same line + one system-prompt sentence (do not make any
+of them fail). Groq gpt-oss-120b and gemini-3.1-flash-lite, arm A1, EXP-18's dev/test items and S11a/b, scored by
+EXP-18's analyze.py. Success: 0 regressions (EXP-18b: 1 per backend, T9), at most 1 EXP-18b-confirmed item lost,
+H1 safety holds. Disclosed: motivated by EXP-18b's T9 test failures, so T9 is reported separately.
