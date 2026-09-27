@@ -532,3 +532,9 @@ Pre-registered in `experiments/exp32-site-sensor/PREREG.md` before the code and 
 post-quantum -> classical changes. Bars: 10/10 detected centrally; median latency <= 20 s, max <= 35 s; 0 false
 alerts; every report sequence accepted exactly once across a collector outage; 100% of reports pass the strict
 allow-list (no packet bytes); tampered / unknown-site / replayed reports rejected (unit tests).
+
+### EXP-32 — RESULT (2026-09-27)
+All bars held. 10/10 PQ downgrades on the live lab tunnel reached the central collector: median 8.9 s, max 10.3 s
+(W = 10 s); 0 false alerts; 56 reports, each accepted exactly once across a 30 s collector outage; 56/56 passed the
+strict allow-list. Disclosed harness logging bug (H4 scored from the collector's state, a PREREG-named source).
+DEC-043. `experiments/exp32-site-sensor/RESULT.md`

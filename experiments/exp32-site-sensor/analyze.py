@@ -44,13 +44,19 @@ def main() -> None:
     quarantined = sorted(p.name for p in (RES / "collector-state" / "quarantine").glob("*.json")) \
         if (RES / "collector-state" / "quarantine").is_dir() else []
     left = next((e["files"] for e in ev if e["event"] == "inbox_left"), None)
-    accepted = [e["seq"] for e in ev if e["event"] == "collector" and e.get("accepted")]
+    # Post-result scorer fix (disclosed in RESULT.md): the harness's log of the collector's output lines crashed on
+    # the first line (a field named `kind` clashed with the logger's own parameter), so it holds 0 lines. H4 is scored
+    # from the collector's persisted state and quarantine, both named as sources in the PREREG. The collector only
+    # accepts a strictly higher sequence (a repeat is quarantined) and counts every gap as missing, so accepted ==
+    # last_seq == number written, missing == 0 and an empty quarantine mean each of 1..n was accepted exactly once.
+    logged = [e["seq"] for e in ev if e["event"] == "collector" and e.get("accepted")]
     out["H4_nothing_lost"] = {"written": len(seqs), "seq_range": [min(seqs), max(seqs)] if seqs else None,
-                              "accepted": len(accepted), "accepted_unique": len(set(accepted)),
+                              "harness_logged_accepts": len(logged),
                               "collector_state": {k: st.get(k) for k in ("last_seq", "accepted", "missing")},
                               "quarantined": quarantined, "left_in_inbox": left,
-                              "holds": bool(seqs) and sorted(accepted) == sorted(seqs) == list(range(1, len(seqs) + 1))
-                              and not quarantined and not left and st.get("missing") == 0}
+                              "holds": bool(seqs) and sorted(seqs) == list(range(1, len(seqs) + 1))
+                              and st.get("accepted") == st.get("last_seq") == len(seqs) and st.get("missing") == 0
+                              and not quarantined and not left}
     bad = []
     kinds = {"window": 0, "heartbeat": 0}
     for p in reports:

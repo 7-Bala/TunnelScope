@@ -44,8 +44,9 @@ EVENTS = RES / "raw.jsonl"
 _lock = threading.Lock()
 
 
-def event(kind: str, **kw) -> dict:
-    rec = {"event": kind, "t": time.time(), **kw}
+def event(event_name: str, **kw) -> dict:
+    # (named event_name, not kind: collector result lines carry a `kind` field; the first run's log of them crashed)
+    rec = {"event": event_name, "t": time.time(), **kw}
     with _lock, EVENTS.open("a") as fh:
         fh.write(json.dumps(rec) + "\n")
     print(json.dumps(rec), flush=True)

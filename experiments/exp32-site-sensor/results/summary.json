@@ -1,0 +1,59 @@
+{
+ "window_s": 10,
+ "changes": 10,
+ "H1_detection": {
+  "detected": 10,
+  "of": 10,
+  "holds": true
+ },
+ "H2_latency_s": {
+  "all": [
+   10.34,
+   8.89,
+   8.88,
+   8.94,
+   7.6,
+   10.15,
+   7.58,
+   10.13,
+   7.61,
+   7.57
+  ],
+  "median": 8.885000000000002,
+  "max": 10.34,
+  "holds": true
+ },
+ "H3_false_alerts": {
+  "alerts_total": 11,
+  "outside_change_windows": 0,
+  "examples": [],
+  "holds": true
+ },
+ "H4_nothing_lost": {
+  "written": 56,
+  "seq_range": [
+   1,
+   56
+  ],
+  "harness_logged_accepts": 0,
+  "collector_state": {
+   "last_seq": 56,
+   "accepted": 56,
+   "missing": 0
+  },
+  "quarantined": [],
+  "left_in_inbox": [],
+  "holds": true
+ },
+ "H5_allow_list": {
+  "reports": 56,
+  "kinds": {
+   "window": 56,
+   "heartbeat": 0
+  },
+  "failing": [],
+  "max_report_bytes": 6279,
+  "holds": true
+ },
+ "ping_summary": "64 bytes from 10.10.2.210: icmp_seq=1112 ttl=64 time=0.163 ms\n64 bytes from 10.10.2.210: icmp_seq=1113 ttl=64 time=0.209 ms\nTerminated"
+}
