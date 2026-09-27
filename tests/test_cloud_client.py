@@ -240,3 +240,27 @@ def test_model_argument_overrides_the_default(monkeypatch):
     _, meta = cc.generate_json("s", {"a": "b"}, model="gemini-2.5-flash")
     assert cap["model"] == "gemini-2.5-flash" and meta["model_id"] == "gemini-2.5-flash"
 
+
+def test_gemini_3_models_get_low_thinking_so_small_budgets_still_answer(monkeypatch):
+    """Measured 2026-09-27: with default reasoning, a ~320-token budget came back empty on gemini-3.8-flash."""
+    monkeypatch.setenv(cc.API_KEY_ENV, "k")
+    cap: dict = {}
+    _fake_sdk(monkeypatch, text="{}", capture=cap)
+    import sys
+    seen = {}
+
+    class ThinkingConfig:
+        def __init__(self, **kw):
+            seen.update(kw)
+    sys.modules["google.genai.types"].ThinkingConfig = ThinkingConfig
+    _, meta = cc.generate_json("s", {"a": "b"}, model="gemini-3.8-flash")
+    assert seen == {"thinking_level": "low"} and "thinking_config" in cap["config"] and meta["thinking_level"] == "low"
+    seen.clear()
+    cap.clear()
+    cc.generate_json("s", {"a": "b"}, model="gemini-2.5-flash")
+    assert seen == {} and "thinking_config" not in cap["config"]
+
+
+def test_fallback_models_are_ones_the_keys_could_use():
+    assert "gemini-2.5-flash" not in cc.FALLBACK_MODELS and cc.FALLBACK_MODELS[0] == cc.MODEL_ID
+
