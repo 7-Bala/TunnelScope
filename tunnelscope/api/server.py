@@ -278,6 +278,16 @@ class _Handler(BaseHTTPRequestHandler):
                 st = LIVE.status()
                 st["windows"] = st["windows"][:20]
                 self._json(200, {"ok": True, **st})
+        elif path == "/api/sites":
+            # T-139: per-site freshness from a collector's state directory (server-side setting only; a stale site
+            # is shown with posture UNKNOWN, never its last posture)
+            state = os.environ.get("TUNNELSCOPE_COLLECTOR_STATE")
+            if not state:
+                self._json(200, {"ok": True, "enabled": False})
+            else:
+                from ..sensor.collector import STALE_WINDOWS, sites_status
+                self._json(200, {"ok": True, "enabled": True, "stale_after_windows": STALE_WINDOWS,
+                                 "sites": sites_status(state)})
         elif path == "/api/intel":
             # T-130 part 2: known vulnerabilities for a fingerprinted implementation, only when the dashboard asks
             # (a button, never automatic). Online only with TUNNELSCOPE_NETWORK=on; otherwise the cache/bundle.
