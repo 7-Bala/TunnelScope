@@ -1,0 +1,65 @@
+{
+ "dev_gate": {
+  "exp18b_A1_confirmed": 5,
+  "exp30_P3_confirmed": 5,
+  "items": {
+   "D3": "confirmed",
+   "D4": "confirmed",
+   "D5": "confirmed",
+   "D6": "confirmed",
+   "D7": "confirmed"
+  },
+  "passes": true
+ },
+ "O1_regressions": {
+  "exp18b_A1": [
+   "T9"
+  ],
+  "exp30_P3": [
+   "T9"
+  ],
+  "passes": false
+ },
+ "O2_items_lost": {
+  "lost": [],
+  "missing_rows": [],
+  "passes": true
+ },
+ "O3_T9": "regression: V-207193",
+ "test_items": {
+  "T1": "confirmed",
+  "T2": "confirmed",
+  "T3": "confirmed",
+  "T4": "confirmed",
+  "T5": "confirmed",
+  "T6": "confirmed",
+  "T7": "confirmed",
+  "T8": "confirmed",
+  "T9": "regression: V-207193",
+  "T10": "confirmed",
+  "T11": "confirmed",
+  "T12": "confirmed",
+  "T13": "confirmed",
+  "T14": "confirmed",
+  "T15": "confirmed",
+  "T16": "confirmed"
+ },
+ "exp18b_A1_test_items": {
+  "T1": "confirmed",
+  "T2": "confirmed",
+  "T3": "confirmed",
+  "T4": "stopped at V1",
+  "T5": "stopped at V1",
+  "T6": "confirmed",
+  "T7": "confirmed",
+  "T8": "confirmed",
+  "T9": "accepted, applied",
+  "T10": "confirmed",
+  "T11": "confirmed",
+  "T12": "confirmed",
+  "T13": "confirmed",
+  "T14": "confirmed",
+  "T16": "confirmed",
+  "T15": "confirmed"
+ }
+}

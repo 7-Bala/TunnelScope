@@ -6,6 +6,7 @@ import { type Gateway, type Finding, postureKind } from "@/lib/fleet"
 import { type AnalyzedSA, type FindingStatus, type VerdictResult, formatValue } from "@/lib/api"
 import { AttackerPane, ChangesPane, ExplainedPane } from "@/components/dashboard/TunnelAI"
 import { RiskBadge, ThreatPane } from "@/components/dashboard/ThreatMatrix"
+import { IntelPane } from "@/components/dashboard/IntelPane"
 import { RemediationControl } from "@/components/dashboard/RemediationPane"
 
 const FILTERS = [
@@ -44,7 +45,7 @@ const RESULT: Record<VerdictResult, { t: string; cls: string; order: number }> =
   PASS: { t: "Pass", cls: "text-pos", order: 4 },
 }
 
-type Pane = "explained" | "threats" | "attacker" | "changes" | "verdicts" | "evidence" | "blind"
+type Pane = "explained" | "threats" | "vulns" | "attacker" | "changes" | "verdicts" | "evidence" | "blind"
 
 function Detail({ sa }: { sa: AnalyzedSA }) {
   const [pane, setPane] = useState<Pane>("explained")
@@ -54,6 +55,7 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
   const panes: { key: Pane; label: string; n?: number }[] = [
     { key: "explained", label: "Explained" },
     { key: "threats", label: "Threats", n: sa.risk?.risk.present },
+    { key: "vulns", label: "Known vulnerabilities" },
     { key: "attacker", label: "Traffic & exposure" },
     { key: "changes", label: "Changes", n: sa.anomaly ? nAnom : undefined },
     { key: "verdicts", label: "Verdicts", n: verdicts.length },
@@ -95,6 +97,7 @@ function Detail({ sa }: { sa: AnalyzedSA }) {
 
       {pane === "explained" && <ExplainedPane sa={sa} />}
       {pane === "threats" && sa.risk && <ThreatPane risk={sa.risk} />}
+      {pane === "vulns" && <IntelPane sa={sa} />}
       {pane === "attacker" && <AttackerPane sa={sa} />}
       {pane === "changes" && <ChangesPane sa={sa} />}
 
