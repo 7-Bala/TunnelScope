@@ -57,14 +57,16 @@ def score(backend: str) -> None:
     ref_rows = [json.loads(line) for line in (EXP18B / backend / "raw.jsonl").read_text().splitlines() if line.strip()]
     ref_regress = [r["item"] for r in ref_rows
                    if r["phase"] == "test" and r.get("included") and r["arm"] == "A1" and r.get("regressions")]
-    lost = sorted(i for i, v in ref_test.items() if v == "confirmed" and test.get(i) != "confirmed")
+    # Post-result scorer fix (disclosed in RESULT.md): an item with no EXP-30 row was not run (the backend stopped
+    # at the dev gate); it is listed as missing, never counted as lost, and a backend with no test rows is "not run".
+    lost = sorted(i for i, v in ref_test.items() if v == "confirmed" and i in test and test[i] != "confirmed")
     out = {
         "dev_gate": {"exp18b_A1_confirmed": ref_dev_k, "exp30_P3_confirmed": dev_k, "items": dev,
                      "passes": bool(dev) and dev_k >= ref_dev_k},
         "O1_regressions": {"exp18b_A1": ref_regress, "exp30_P3": regress,
-                           "passes": bool(test) and len(regress) < len(ref_regress)},
+                           "passes": (len(regress) < len(ref_regress)) if test else "not run"},
         "O2_items_lost": {"lost": lost, "missing_rows": sorted(set(ref_test) - set(test)),
-                          "passes": bool(test) and len(lost) <= 1},
+                          "passes": (len(lost) <= 1) if test else "not run"},
         "O3_T9": test.get("T9"),
         "test_items": test,
         "exp18b_A1_test_items": ref_test,

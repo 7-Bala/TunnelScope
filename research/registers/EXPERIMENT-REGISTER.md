@@ -505,3 +505,11 @@ P0 + a block listing the other active rules judged on the same line + one system
 of them fail). Groq gpt-oss-120b and gemini-3.1-flash-lite, arm A1, EXP-18's dev/test items and S11a/b, scored by
 EXP-18's analyze.py. Success: 0 regressions (EXP-18b: 1 per backend, T9), at most 1 EXP-18b-confirmed item lost,
 H1 safety holds. Disclosed: motivated by EXP-18b's T9 test failures, so T9 is reported separately.
+
+### EXP-30 — RESULT (2026-09-27)
+Primary outcome failed. gemini-3.1-flash-lite, shown V-207193 (group >= 16), still fixed T9 with modp3072 (group
+15): regression caught live, rolled back, verified (O1 fail). No EXP-18b-confirmed item lost (O2 pass); safety
+S11a/b held; one run under P3 confirmed 15/16 (0.9375, Wilson [0.717, 0.989]), gains on items whose EXP-18b failures
+were answer shape, not attributable to P3. Groq stopped at the pre-registered dev gate (4/5 vs 5/5, a V5 formatting
+slip). P3 not adopted; default stays P0. Next: check the other active rules in code before the dry run. Addenda A-B
+and one post-result scorer fix disclosed. `experiments/exp30-other-rules-context/RESULT.md`
