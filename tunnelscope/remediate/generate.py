@@ -63,7 +63,7 @@ CHECK_NAMES = {
     "V3": "each edit is allowed for that line and matches what is on it",
     "V4": "every new algorithm keyword is one the lab's strongSwan accepts, of the same kind",
     "V5": "the edits produce exactly the line the draft claims",
-    "V6": "the rule itself passes on what TunnelScope observed for the new algorithms",
+    "V6": "the rule itself passes on what TunnelScope observed for the new algorithms, and no other active rule on the line newly fails",
     "V7": "the change is not empty and repeats no keyword",
     "V8": "the compiled command passes the command allowlist",
     "DRY": "dry run on copies, and strongSwan loads the result in a clone (both ends)",
@@ -161,9 +161,9 @@ _JUDGED_TYPES = {
 
 
 class _Stop(Exception):
-    def __init__(self, check: str, reason: str):
+    def __init__(self, check: str, reason: str, conflicts: tuple[str, ...] = ()):
         super().__init__(reason)
-        self.check, self.reason = check, reason
+        self.check, self.reason, self.conflicts = check, reason, conflicts
 
 
 # ------------------------------------------------------------------ rule and context
@@ -179,16 +179,34 @@ def _rule_text(rule_id: str) -> str | None:
     return None
 
 
+def _rules_on_lines(rule_id: str, line_keys) -> list[tuple[dict[str, Any], str]]:
+    """Every rule in the default active baselines judging an attribute carried on one of these lines, except
+    rule_id itself, with its baseline name."""
+    carried = [_LINE_ATTRIBUTES[k] for k in line_keys]
+    return [(r, b.get("baseline", "")) for b in load_baselines() for r in b["rules"]
+            if r["id"] != rule_id and any(c(r["attribute"]) for c in carried)]
+
+
 def other_active_rules(rule_id: str) -> list[str]:
     """EXP-30: every rule in the default active baselines that judges an attribute carried on a line this
     rule may edit, except the rule itself; one line each, as the model is shown them."""
-    carried = [_LINE_ATTRIBUTES[k] for k in GENERATABLE_RULES[rule_id]["line_keys"]]
+    return [f"{r['id']} ({base}): {r.get('title', '')}. Requirement (as judged by the tool): {json.dumps(r['assert'])}"
+            for r, base in _rules_on_lines(rule_id, GENERATABLE_RULES[rule_id]["line_keys"])]
+
+
+def other_rule_conflicts(rule_id: str, key: str, old: str, new: str) -> list[tuple[str, str]]:
+    """T-138 / EXP-31 (part of V6): the other active rules on this line that do NOT fail on the current value
+    and WOULD fail on the drafted one, each judged by rule_outcome on observed evidence, as (rule id, why).
+    A rule whose attribute cannot be judged from a proposals line (ike_offered_dh) is left to the live
+    re-assessment after apply, as before; it is never counted as passing here."""
     out = []
-    for b in load_baselines():
-        for r in b["rules"]:
-            if r["id"] != rule_id and any(c(r["attribute"]) for c in carried):
-                out.append(f"{r['id']} ({b.get('baseline', '')}): {r.get('title', '')}. "
-                           f"Requirement (as judged by the tool): {json.dumps(r['assert'])}")
+    for r, _ in _rules_on_lines(rule_id, (key,)):
+        if key == "proposals" and r["attribute"] not in _JUDGED_TYPES:
+            continue
+        before, _why = rule_outcome(r["id"], key, old)
+        after, why = rule_outcome(r["id"], key, new)
+        if after is False and before is not False:
+            out.append((r["id"], why))
     return out
 
 
@@ -351,6 +369,10 @@ def check_meaning(rule_id: str, ans: dict[str, Any], lines: dict[str, str]) -> t
     if not edits_touch_judged(rule_id, key, ans["edits"]):
         raise _Stop("V6", f"none of the edits changes an algorithm that {rule_id} judges")
     check_rule(rule_id, key, new)
+    conflicts = other_rule_conflicts(rule_id, key, lines[key], new)
+    if conflicts:
+        raise _Stop("V6", f"{rule_id} would pass, but the change makes other rules fail that do not fail now: "
+                    + "; ".join(why for _, why in conflicts), tuple(i for i, _ in conflicts))
     return key, new
 
 
@@ -531,10 +553,14 @@ def feedback_for(stop: _Stop, rule_id: str, key: str | None) -> str:
     msg = f"Check {stop.check} failed ({CHECK_NAMES[stop.check]}). " + _FEEDBACK[stop.check].format(
         keys=", ".join(spec["line_keys"]), ops=", ".join(spec["ops"]), rule=rule_id)
     k = key if key in spec["line_keys"] else spec["line_keys"][0]
+    if stop.conflicts:                          # T-138: rule ids are ours, never model or config text
+        msg += f" It must also not make {', '.join(stop.conflicts)} fail, which do not fail now."
     if stop.check in ("V4", "V6", "DRY"):
-        ok = satisfying_keywords(rule_id, k)
+        ok = [t for t in satisfying_keywords(rule_id, k)
+              if all(rule_outcome(o, k, t)[0] is not False for o in stop.conflicts)]
         if ok:
-            msg += f" Values the lab's strongSwan accepts for {k} that satisfy {rule_id}: {', '.join(ok[:12])}."
+            also = f" and {', '.join(stop.conflicts)}" if stop.conflicts else ""
+            msg += f" Values the lab's strongSwan accepts for {k} that satisfy {rule_id}{also}: {', '.join(ok[:12])}."
     return msg
 
 
