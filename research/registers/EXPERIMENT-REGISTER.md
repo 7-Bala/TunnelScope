@@ -491,3 +491,10 @@ correctly (91.7%), 0 wrong; strongSwan 6.1.0 (never trained) 74/74; a Libreswan 
 16/20; OpenBSD iked UNKNOWN. Unknowns: 10 strongSwan responders that never answered with a proposal, 8 Libreswan
 ends where IKE_INTERMEDIATE support adds a notify the frozen rule does not expect (follow-up, not changed
 post-hoc). Disclosed scorer fix (EXP-10 truth per end). `experiments/exp29-implementation-fingerprint/RESULT.md`.
+
+### EXP-18b — RESULT (2026-09-27)
+Safety (H1) passed for both cloud arms. Test set confirmed fixed live: Groq gpt-oss-120b 12/16 (0.75, Wilson
+[0.505, 0.898]), gemini-3.1-flash-lite 13/16 (0.8125, [0.570, 0.934]) vs local 0/16; ship bar (>= 0.80 and lower
+bound >= 0.60) not met by either. All 11 regressions (all on T9: a new group failing DISA's >= 16) were rolled back
+and verified. Critique rounds help; self-review stays off. gemini-3.8-flash unfinished (free quota). Addenda A-D
+disclosed. `experiments/exp18b-gemini-remediation/RESULT.md`.
