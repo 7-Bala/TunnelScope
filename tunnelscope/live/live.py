@@ -29,10 +29,12 @@ EXTS = (".pcap", ".pcapng")
 
 class LiveMonitor:
     def __init__(self, interface: str | None = None, follow: str | None = None, window: int = 30,
-                 history: str | None = None, keep: bool = False, max_windows: int = 50, workdir: str | None = None):
+                 history: str | None = None, keep: bool = False, max_windows: int = 50, workdir: str | None = None,
+                 alerts: str | None = None, alert_format: str = "jsonl"):
         if bool(interface) == bool(follow):
             raise InputError("live: give exactly one of --interface or --follow")
         self.interface, self.window, self.history, self.keep = interface, max(5, int(window)), history, keep
+        self.alerts, self.alert_format = alerts, alert_format      # T-134: high-severity changes -> alert lines
         self.dir = Path(follow or workdir or Path.home() / ".tunnelscope-live")
         self.windows: collections.deque = collections.deque(maxlen=max_windows)
         self.errors: collections.deque = collections.deque(maxlen=20)
@@ -88,6 +90,10 @@ class LiveMonitor:
         try:
             a = analyze(str(path))
             anomalies = observe(History(self.history), a["sas"], f"live:{path.name}") if self.history else None
+            if anomalies and self.alerts:
+                from ..anomaly.alerts import alerts_from, write_alerts
+                row["alerts"] = write_alerts(alerts_from(anomalies, f"live:{path.name}", path.stat().st_mtime),
+                                             self.alerts, self.alert_format)
             j = analysis_json(a, path.name, anomalies)
             row.update(n_sas=j["n_sas"], sas=j["sas"], seconds=round(time.time() - t0, 2))
         except Exception as e:           # one bad window must not stop the monitor
