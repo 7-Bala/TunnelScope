@@ -448,3 +448,17 @@ fields (incl. x25519, ECP) correct in 8/8 arms. H1, H3, H6 failed; H4/H5 failed 
 (TunnelScope's rekey timing matches the wire; no CVE false alarm). PPK arm dropped: RouterOS 7.24.4
 accepts only `ppk=no`. Follow-ups T-135 (padding-aware PFS), T-136 (PPK detection).
 `experiments/exp26-mikrotik-routeros/RESULT.md`.
+
+## EXP-27 — RFC 8784 PPK: negotiation is visible, use is not — PRE-REGISTRATION (2026-09-27)
+Pre-registered in `experiments/exp27-ppk-detection/PREREG.md` before any capture (roadmap T-136).
+strongSwan 6.1.0 lab, five arms: no PPK, PPK optional, PPK required, responder without PPK, and a
+fallback arm where both sides announce PPK but the responder holds it under another id (PPK not used).
+New finding `pq_ppk` (negotiated / offered-not-negotiated / not-offered) must never claim PPK use;
+H2 is the honesty test on the fallback arm.
+
+### EXP-27 — RESULT (2026-09-27)
+All hypotheses passed. New finding `pq_ppk` read the plaintext USE_PPK notify correctly in every arm
+(not-offered / negotiated / offered-not-negotiated) and never claims use. The fallback arm K5 (added after
+K4, declared) is the proof: USE_PPK both ways, tunnel up, strongSwan logs "using NO_PPK_AUTH". K4 deviated
+from the RFC-based prediction: strongSwan rejects an unexpected PPK_ID (AUTH_FAILED) instead of falling
+back. IKE suite fields 0 wrong. Rules and risk score unchanged. `experiments/exp27-ppk-detection/RESULT.md`.

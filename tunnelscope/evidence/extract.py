@@ -227,6 +227,43 @@ def extract_pq_addke(r: EvidenceRecord) -> None:
                       note="initiator offered no additional key exchange (or only NONE)"))
 
 
+USE_PPK = 16435   # RFC 8784 notify, IANA IKEv2 Notify Message Status Types
+
+
+def extract_ppk(r: EvidenceRecord) -> None:
+    """T-136 / EXP-27: RFC 8784 post-quantum preshared key. USE_PPK in IKE_SA_INIT is plaintext, so support
+    and negotiation are OBSERVED. Whether the PPK was then used is decided inside encrypted IKE_AUTH
+    (PPK_IDENTITY / NO_PPK_AUTH): EXP-27 K5 announced USE_PPK both ways and came up WITHOUT the PPK.
+    So this finding never says "used", and nothing here credits a tunnel with PQ protection."""
+    init = [m for m in getattr(r, "_ike", []) if m["exchange"] == 34]
+    if not init:
+        r.add(Finding("pq_ppk", Status.UNKNOWN, Vantage.T0, "ppk_notify", note="no IKE_SA_INIT visible"))
+        return
+    offered = [m for m in init if not m["is_response"] and USE_PPK in m["notify_types"]]
+    # an answering response selects a proposal (carries transforms) or at least is not error-only; after an
+    # INVALID_KE_PAYLOAD retry the last response stands
+    answers = [m for m in init if m["is_response"] and (m.get("transform_types") or USE_PPK in m["notify_types"])]
+    last = answers[-1] if answers else None
+    unseen = "whether the PPK was actually used is decided in encrypted IKE_AUTH and is not visible passively"
+    if not offered:
+        req = next((m for m in init if not m["is_response"]), init[0])
+        r.add(Finding("pq_ppk", Status.OBSERVED, Vantage.T1, "ppk_notify", value="not-offered",
+                      evidence=[EvidencePtr(r.source_pcap, req["frame"], "isakmp.notify.msgtype", "no USE_PPK")],
+                      note="the initiator did not announce RFC 8784 PPK support (no USE_PPK notify)"))
+    elif last is None:
+        r.add(Finding("pq_ppk", Status.UNKNOWN, Vantage.T1, "ppk_notify",
+                      evidence=[EvidencePtr(r.source_pcap, offered[0]["frame"], "isakmp.notify.msgtype", "USE_PPK")],
+                      note="the initiator offered PPK (USE_PPK) but no answering IKE_SA_INIT response is visible"))
+    elif USE_PPK in last["notify_types"]:
+        r.add(Finding("pq_ppk", Status.OBSERVED, Vantage.T1, "ppk_notify", value="negotiated",
+                      evidence=[EvidencePtr(r.source_pcap, last["frame"], "isakmp.notify.msgtype", "USE_PPK")],
+                      note=f"both peers announced RFC 8784 PPK support (USE_PPK in both IKE_SA_INIT messages); {unseen}"))
+    else:
+        r.add(Finding("pq_ppk", Status.OBSERVED, Vantage.T1, "ppk_notify", value="offered-not-negotiated",
+                      evidence=[EvidencePtr(r.source_pcap, last["frame"], "isakmp.notify.msgtype", "no USE_PPK")],
+                      note="the initiator offered PPK but the responder did not announce support: no PPK in use"))
+
+
 def min_empty_sk_len(encr: str | None, integ: str | None) -> int:
     """Smallest SK payload an EMPTY encrypted IKE message can have (RFC 7296 sec 3.14): 4 B header + IV +
     one block holding the pad-length byte + ICV. Unknown suite: 68, the largest minimum of any suite we
@@ -636,7 +673,7 @@ def extract_offered_dh(r: EvidenceRecord) -> None:
                   note=f"groups {who} offered in IKE_SA_INIT; the responder's acceptable set is not visible"))
 
 
-ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke, extract_ipsec_protocols, extract_ah,
+ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke, extract_ppk, extract_ipsec_protocols, extract_ah,
                   extract_cipher_sieve, extract_pfs, extract_sa_lifecycle, extract_mode, extract_sequence,
                   extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_offered_dh,
                   extract_leakage, extract_attacker]

@@ -20,3 +20,6 @@
 * :: esp_cipher_family  # T-085: sieve gained DES/Blowfish/Twofish/CAST/NULL/AES-CTR-SHA1 families after third-party captures used them
 exp26/mt-m6.pcap :: pfs  # T-135: MikroTik pads encrypted IKE messages, so the size-based PFS rule cannot judge; UNKNOWN instead of a guess (was right by luck)
 exp26/mt-m7.pcap :: pfs  # T-135: same padding; was INFERRED True for a PFS-off tunnel (EXP-26's one wrong finding), now UNKNOWN
+
+# T-136 / EXP-27, 2026-09-27
+* :: pq_ppk  # T-136: new finding, RFC 8784 PPK negotiation from the plaintext USE_PPK notify (never claims PPK use)
