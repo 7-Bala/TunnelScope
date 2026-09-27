@@ -70,3 +70,12 @@ Per backend: dev <= 7 items + test <= 20 + S11 2, each up to 3 model calls (A1) 
 No threshold, item, arm or prompt text changes after this commit. `RESULT.md` quotes only the summaries
 written by `analyze.py` and is not edited after. Deviations are added as dated addenda below, before the
 runs they govern.
+
+## ADDENDUM A (2026-09-27, after the code, before any EXP-30 run)
+Nothing above is changed or removed. Implementation details fixed before any run:
+1. When a rule has no other active rule on its line (V-207205 `version`, RFC8221-ESP-3DES `esp_proposals`),
+   there is nothing to show, so no block and no extra sentence are sent: the prompt is P0 for that item.
+2. Decision-rule mechanism: `SHIPPED_SETTINGS` is pinned by `tests/test_generate_critique.py` (EXP-18's
+   record), so if the decision rule adopts P3, the product call sites pass `other_rules=True` from a new,
+   separate constant instead of a new key in `SHIPPED_SETTINGS`. Same effect; no test is edited.
+3. Harness `testbed/scripts/run_exp30.py` wraps EXP-18b's `run_exp18b.py` unchanged (results dir + P3 only).
