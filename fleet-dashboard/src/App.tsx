@@ -9,6 +9,7 @@ import { Intake, type QueueItem } from "@/components/dashboard/Intake"
 import { Insights } from "@/components/dashboard/Insights"
 import { FleetThreats } from "@/components/dashboard/FleetThreats"
 import { LiveView } from "@/components/dashboard/LiveView"
+import { SitesView } from "@/components/dashboard/SitesView"
 import type { TunnelState } from "@/components/tunnel/BackgroundTunnel"
 import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
 import { analyzeCapture, engineHealth, ENGINE_OFFLINE } from "@/lib/api"
@@ -134,7 +135,7 @@ function App() {
   }, [addFiles])
 
   const uploads = useMemo(() => queue.flatMap((q) => results[q.key] ?? []), [queue, results])
-  const gateways = view === "sample" ? GATEWAYS : view === "live" ? [] : uploads
+  const gateways = view === "sample" ? GATEWAYS : view === "live" || view === "sites" ? [] : uploads
   const s = fleetStats(gateways)
   const busy = queue.some((q) => q.status === "queued" || q.status === "analysing")
   const tunnel: TunnelState = dragging ? "over" : busy ? "busy" : (flash ?? "idle")
@@ -209,7 +210,7 @@ function App() {
           </div>
         )}
 
-        <div className={cn("mb-8", view === "live" && "hidden")}>
+        <div className={cn("mb-8", (view === "live" || view === "sites") && "hidden")}>
           <Intake
             queue={queue}
             tunnel={tunnel}
@@ -231,6 +232,8 @@ function App() {
 
         {view === "live" ? (
           <LiveView />
+        ) : view === "sites" ? (
+          <SitesView />
         ) : h ? (
           <>
             <section className="mb-5">

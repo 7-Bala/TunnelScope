@@ -100,3 +100,23 @@ def test_a_missing_report_is_counted_and_a_silent_site_is_unknown(tmp_path):
     assert st["status"] == "reporting" and st["missing_reports"] == 1 and st["tunnels"]
     late = sites_status(str(tmp_path / "cstate"), now=1000.0 + STALE_WINDOWS * 5 + 1)[0]
     assert late["status"] == "stale" and late["tunnels"] == [] and "UNKNOWN" in late["note"]
+
+
+def test_api_sites_is_off_without_a_collector_and_shows_stale_sites(tmp_path, monkeypatch):
+    import threading
+    import urllib.request
+    from tunnelscope.api import server
+    s, c = _site(tmp_path, names=["pq-mlkem768.pcap"])
+    s.tick()
+    c.process_once(now=time.time() - 3600)                             # reported an hour ago, 5 s windows
+    srv = server.make_server(0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}/api/sites"
+    try:
+        monkeypatch.delenv("TUNNELSCOPE_COLLECTOR_STATE", raising=False)
+        assert json.load(urllib.request.urlopen(url)) == {"ok": True, "enabled": False}
+        monkeypatch.setenv("TUNNELSCOPE_COLLECTOR_STATE", str(tmp_path / "cstate"))
+        site = json.load(urllib.request.urlopen(url))["sites"][0]
+        assert site["site"] == "lab1" and site["status"] == "stale" and site["tunnels"] == []
+    finally:
+        srv.shutdown()
