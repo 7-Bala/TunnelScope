@@ -120,3 +120,24 @@ def test_api_sites_is_off_without_a_collector_and_shows_stale_sites(tmp_path, mo
         assert site["site"] == "lab1" and site["status"] == "stale" and site["tunnels"] == []
     finally:
         srv.shutdown()
+
+
+def test_a_quiet_window_keeps_the_last_handshake_and_the_alert_visible(tmp_path):
+    """Found in the end-to-end run: after a downgrade the next windows hold only ESP (posture unknown), and the
+    Sites view lost the downgrade. The last observed handshake and recent alerts are kept, with their times."""
+    import subprocess
+    from tunnelscope.ingest.tshark import tshark_bin
+    esp = tmp_path / "esp-only.pcap"                                   # the same tunnel, no handshake: a quiet window
+    subprocess.run([tshark_bin(), "-r", str(CAP / "pq-downgrade.pcap"), "-Y", "esp", "-w", str(esp)], check=True,
+                   capture_output=True)
+    s, c = _site(tmp_path, names=SEQUENCE + [str(esp)])
+    assert len(s.tick()) == 4
+    c.process_once(now=2000.0)
+    st = sites_status(str(tmp_path / "cstate"), now=2001.0)[0]
+    assert st["recent_alerts"] and st["recent_alerts"][0]["attribute"] in ("pq", "fails")
+    assert any(a["kind"] == "downgrade" and a["attribute"] == "pq" for a in st["recent_alerts"])
+    rep = json.loads((tmp_path / "cstate" / "sites" / "lab1.json").read_text())
+    assert rep["tunnels"][0]["posture"].startswith("unknown")          # now: the quiet window says unknown
+    hs = rep["last_handshake"]["10.10.1.20 <-> 10.10.2.20"]
+    assert hs["posture"].startswith("DOWNGRADED")                     # the last handshake seen, with its time
+    assert st["tunnels"][0]["last_handshake"]["posture"].startswith("DOWNGRADED")

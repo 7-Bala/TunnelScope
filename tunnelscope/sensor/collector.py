@@ -62,16 +62,27 @@ class Collector:
                   tool_version=rep["tool_version"], missing=st.get("missing", 0) + gap)
         if rep["kind"] == "window":
             st.update(last_window_end=rep["window_end"], last_window_ok=rep["ok"], tunnels=rep["tunnels"])
+            # A window without a handshake says nothing new about the key exchange ("unknown"); the last handshake
+            # that WAS observed is kept with its time, so a downgrade stays visible as a dated fact.
+            hs = st.setdefault("last_handshake", {})
+            for t in rep["tunnels"]:
+                if t.get("posture") and not str(t["posture"]).startswith("unknown"):
+                    hs[f"{t['src']} <-> {t['dst']}"] = {"posture": t["posture"], "observed_at": rep["window_end"],
+                                                        "fails": [f["rule_id"] for f in t["fails"]]}
         else:
             st["last_heartbeat"] = rep["sent_at"]
-        tmp = sf.with_suffix(".tmp")
-        tmp.write_text(json.dumps(st, sort_keys=True))
-        os.replace(tmp, sf)
+        if rep["alerts"]:
+            st["recent_alerts"] = (st.get("recent_alerts", []) + [
+                {k: a.get(k) for k in ("kind", "attribute", "usual", "now", "tunnel", "time")} | {"received": now}
+                for a in rep["alerts"]])[-20:]
         if rep["alerts"] and self.alerts:
             from ..anomaly.alerts import write_alerts
             write_alerts([{**a, "site": site, "message": f"{site}: {a['kind']} of {a['attribute']} on {a['tunnel']}",
                            "source": f"sensor:{site}#{rep['seq']}", "received": now} for a in rep["alerts"]],
                          self.alerts, self.alert_format)
+        tmp = sf.with_suffix(".tmp")
+        tmp.write_text(json.dumps(st, sort_keys=True))
+        os.replace(tmp, sf)
         p.unlink()
         return {"file": p.name, "accepted": True, "site": site, "seq": rep["seq"], "alerts": len(rep["alerts"]),
                 "kind": rep["kind"]}
@@ -99,13 +110,22 @@ def sites_status(state: str, now: float | None = None) -> list[dict]:
         st = json.loads(sf.read_text())
         age = now - st.get("last_seen", 0)
         stale = age > STALE_WINDOWS * st.get("window_s", 30)
+        hs = st.get("last_handshake", {})
+
+        def handshake(key):
+            h = hs.get(key)
+            return None if h is None else {**h, "age_s": round(now - (h.get("observed_at") or now), 1)}
         tunnels = [] if stale else [{"src": t["src"], "dst": t["dst"], "posture": t["posture"],
                                      "fails": [f["rule_id"] for f in t["fails"]],
-                                     "risk": (t.get("risk") or {}).get("band")} for t in st.get("tunnels") or []]
+                                     "risk": (t.get("risk") or {}).get("band"),
+                                     "last_handshake": handshake(f"{t['src']} <-> {t['dst']}")}
+                                    for t in st.get("tunnels") or []]
         out.append({"site": st["site"], "status": "stale" if stale else "reporting", "last_seen": st.get("last_seen"),
                     "age_s": round(age, 1), "window_s": st.get("window_s"), "reports": st.get("accepted"),
                     "missing_reports": st.get("missing", 0), "last_window_ok": st.get("last_window_ok"),
                     "tunnels": tunnels,
+                    "recent_alerts": [{**a, "age_s": round(now - a["received"], 1)}
+                                      for a in reversed(st.get("recent_alerts", [])[-5:])],
                     "note": (f"no report for {age:.0f} s (> {STALE_WINDOWS} windows): posture UNKNOWN until it reports"
                              if stale else None)})
     return out

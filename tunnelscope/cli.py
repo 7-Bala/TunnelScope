@@ -390,6 +390,12 @@ def cmd_sites(args):
             print(f"    {r['note']}")
         for t in r["tunnels"]:
             print(f"    {t['src']} <-> {t['dst']}: {t['posture']}; failing {', '.join(t['fails']) or 'none'}")
+            h = t.get("last_handshake")
+            if h and h["posture"] != t["posture"]:
+                print(f"        last handshake seen {h['age_s']:.0f} s ago: {h['posture']}")
+        for a in r.get("recent_alerts") or []:
+            print(f"    ALERT {a['age_s']:.0f} s ago: {a['kind']} of {a['attribute']} on {a['tunnel']} "
+                  f"({a.get('usual')} -> {a.get('now')})")
     return 1 if any(r["status"] == "stale" for r in rows) else 0
 
 

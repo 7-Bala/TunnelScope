@@ -126,6 +126,17 @@ export interface SiteTunnel {
   posture: string
   fails: string[]
   risk?: string | null
+  last_handshake?: { posture: string; observed_at?: number | null; age_s: number; fails: string[] } | null
+}
+
+export interface SiteAlert {
+  kind: string
+  attribute: string
+  usual?: unknown
+  now?: unknown
+  tunnel: string
+  received: number
+  age_s: number
 }
 
 export interface SiteStatus {
@@ -138,6 +149,7 @@ export interface SiteStatus {
   missing_reports: number
   last_window_ok?: boolean | null
   tunnels: SiteTunnel[]
+  recent_alerts?: SiteAlert[]
   note?: string | null
 }
 
