@@ -1,0 +1,6850 @@
+{
+ "hypotheses": {
+  "H1_no_false_alarms": {
+   "control_pairs": 94,
+   "initiator_files": 52,
+   "responder_files": 42,
+   "mismatches": 0,
+   "pass": true
+  },
+  "H2_catches_drift": {
+   "observable_changes": 207,
+   "detected": 187,
+   "missed": [
+    {
+     "arm": "D3",
+     "connection": "cs-aes128cbc-sha256",
+     "capture": "cs-aes128cbc-sha256.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "cs-aes256cbc-sha256",
+     "capture": "cs-aes256cbc-sha256.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "cs-aes128ctr-sha256",
+     "capture": "cs-aes128ctr-sha256.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "cs-chacha20poly1305",
+     "capture": "cs-chacha20poly1305.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D6",
+     "connection": "a-start",
+     "capture": "a-start.pcap",
+     "field": "pq_key_exchange",
+     "outcome": "not comparable",
+     "config": [
+      "ML-KEM-768"
+     ],
+     "wire": "classical-only",
+     "note": "no ADDKE selected; a responder config that offers ADDKE may still accept a classical proposal",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "a-start",
+     "capture": "a-start.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "c-w",
+     "capture": "c-w.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "Twofish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "c-m",
+     "capture": "c-m.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "c-v1",
+     "capture": "c-v1.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "Twofish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "encap-udp-aes128cbc-sha256",
+     "capture": "encap-udp-aes128cbc-sha256.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "ipv6-aes128cbc-sha256",
+     "capture": "ipv6-aes128cbc-sha256.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "e7-cbc128",
+     "capture": "e7-cbc128.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "e7-cbc256",
+     "capture": "e7-cbc256.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "e7-chacha",
+     "capture": "e7-chacha.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "e7-ctr128",
+     "capture": "e7-ctr128.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "s-modp1024",
+     "capture": "s-modp1024.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "Twofish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "s-modp1536",
+     "capture": "s-modp1536.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "s-modp3072",
+     "capture": "s-modp3072.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CBC+HMAC-SHA256-128",
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CBC+HMAC-SHA512-256",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "s-x25519",
+     "capture": "s-x25519.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "AES-CTR+HMAC-SHA1-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    },
+    {
+     "arm": "D3",
+     "connection": "s-3des",
+     "capture": "s-3des.pcap",
+     "field": "esp_cipher_family",
+     "outcome": "match",
+     "config": [
+      "AES-GCM-16"
+     ],
+     "wire": [
+      "AES-CTR+HMAC-SHA256-128",
+      "AES-GCM-16",
+      "AES-CCM-16",
+      "ChaCha20-Poly1305",
+      "3DES-CBC+HMAC-SHA1-96",
+      "AES-CTR+HMAC-SHA1-96",
+      "DES-CBC+HMAC-96",
+      "Blowfish-CBC+HMAC-96",
+      "CAST-CBC+HMAC-96",
+      "NULL+HMAC-96",
+      "NULL+HMAC-SHA256-128"
+     ],
+     "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+     "wire_shows_field": true
+    }
+   ],
+   "not_comparable_changes": 49,
+   "by_arm": {
+    "D1": {
+     "n": 52,
+     "outcomes": {
+      "mismatch": 49,
+      "not comparable": 3
+     },
+     "observable": 49,
+     "observable_detected": 49
+    },
+    "D2": {
+     "n": 52,
+     "outcomes": {
+      "mismatch": 49,
+      "not comparable": 3
+     },
+     "observable": 49,
+     "observable_detected": 49
+    },
+    "D3": {
+     "n": 47,
+     "outcomes": {
+      "mismatch": 26,
+      "match": 19,
+      "not comparable": 2
+     },
+     "observable": 45,
+     "observable_detected": 26
+    },
+    "D4": {
+     "n": 47,
+     "outcomes": {
+      "not comparable": 38,
+      "mismatch": 9
+     },
+     "observable": 9,
+     "observable_detected": 9
+    },
+    "D5": {
+     "n": 6,
+     "outcomes": {
+      "mismatch": 6
+     },
+     "observable": 6,
+     "observable_detected": 6
+    },
+    "D6": {
+     "n": 52,
+     "outcomes": {
+      "mismatch": 48,
+      "not comparable": 4
+     },
+     "observable": 49,
+     "observable_detected": 48
+    },
+    "K": {
+     "n": 47,
+     "outcomes": {
+      "not comparable": 47
+     },
+     "observable": 0,
+     "observable_detected": 0
+    }
+   },
+   "pass": false
+  },
+  "H3_key_length_honesty": {
+   "n": 47,
+   "outcomes": {
+    "not comparable": 47
+   },
+   "pass": true
+  },
+  "H4_unobservable_never_match": {
+   "violations": [],
+   "pass": true
+  }
+ },
+ "controls": [
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "outcomes": {
+    "ike_version": "not comparable",
+    "ike_encr": "not comparable",
+    "ike_integ": "not comparable",
+    "ike_prf": "not comparable",
+    "ike_dh_group": "not comparable",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "not comparable",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not comparable",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "outcomes": {
+    "ike_version": "not comparable",
+    "ike_encr": "not comparable",
+    "ike_integ": "not comparable",
+    "ike_prf": "not comparable",
+    "ike_dh_group": "not comparable",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "not comparable",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not comparable",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice-pq/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/alice-pq/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "outcomes": {
+    "ike_version": "not comparable",
+    "ike_encr": "not comparable",
+    "ike_integ": "not comparable",
+    "ike_prf": "not comparable",
+    "ike_dh_group": "not comparable",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "not comparable",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not comparable",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "outcomes": {
+    "ike_version": "not comparable",
+    "ike_encr": "not comparable",
+    "ike_integ": "not comparable",
+    "ike_prf": "not comparable",
+    "ike_dh_group": "not comparable",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "not comparable",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not comparable",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob-pq/swanctl.conf",
+   "side": "responder-file",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/bob-pq/swanctl.conf",
+   "side": "responder-file",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/alice/a-start-only.conf",
+   "side": "initiator-file",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "not configured",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "not comparable",
+    "ike_integ": "not comparable",
+    "ike_prf": "not comparable",
+    "ike_dh_group": "not comparable",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "not comparable",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "not comparable",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "not comparable",
+    "ike_integ": "not comparable",
+    "ike_prf": "not comparable",
+    "ike_dh_group": "not comparable",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "not comparable",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/cloud/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/alice/swanctl.conf",
+   "side": "initiator-file",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/encap/bob/swanctl.conf",
+   "side": "responder-file",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-gcm128",
+   "capture": "e7-gcm128.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-gcm256",
+   "capture": "e7-gcm256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-cbc128",
+   "capture": "e7-cbc128.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-cbc256",
+   "capture": "e7-cbc256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-chacha",
+   "capture": "e7-chacha.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-ctr128",
+   "capture": "e7-ctr128.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-pfs-off",
+   "capture": "e7-pfs-off.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-pfs-on",
+   "capture": "e7-pfs-on.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-classical",
+   "capture": "e7-classical.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp07/ipsec.conf",
+   "side": "initiator-file",
+   "connection": "e7-pq",
+   "capture": "e7-pq.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "not configured",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "not configured",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "a-tun-sha256",
+   "capture": "a-tun-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "a-tra-sha256",
+   "capture": "a-tra-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "a-tra-sha1",
+   "capture": "a-tra-sha1.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "a-tun-sha384",
+   "capture": "a-tun-sha384.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/alice.conf",
+   "side": "initiator-file",
+   "connection": "a-tra-sha512",
+   "capture": "a-tra-sha512.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "not configured",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "not configured",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "a-tun-sha256",
+   "capture": "a-tun-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "a-tra-sha256",
+   "capture": "a-tra-sha256.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "a-tra-sha1",
+   "capture": "a-tra-sha1.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "a-tun-sha384",
+   "capture": "a-tun-sha384.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp15/bob.conf",
+   "side": "responder-file",
+   "connection": "a-tra-sha512",
+   "capture": "a-tra-sha512.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "not configured",
+    "esp_key_length": "not comparable",
+    "pfs": "match",
+    "mode": "match"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/alice-k0.conf",
+   "side": "initiator-file",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/alice-k1.conf",
+   "side": "initiator-file",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/alice-k2.conf",
+   "side": "initiator-file",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/alice-k3.conf",
+   "side": "initiator-file",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/alice-k4.conf",
+   "side": "initiator-file",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/alice-k5.conf",
+   "side": "initiator-file",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "match",
+    "pq_key_exchange": "match",
+    "pq_ppk": "match",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/bob-k0.conf",
+   "side": "responder-file",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/bob-k1.conf",
+   "side": "responder-file",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/bob-k2.conf",
+   "side": "responder-file",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/bob-k3.conf",
+   "side": "responder-file",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/bob-k4.conf",
+   "side": "responder-file",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  },
+  {
+   "config": "testbed/configs/exp27/bob-k5.conf",
+   "side": "responder-file",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "outcomes": {
+    "ike_version": "match",
+    "ike_encr": "match",
+    "ike_integ": "match",
+    "ike_prf": "match",
+    "ike_dh_group": "match",
+    "ike_offered_dh": "not comparable",
+    "pq_key_exchange": "match",
+    "pq_ppk": "not comparable",
+    "esp_cipher_family": "match",
+    "esp_key_length": "not comparable",
+    "pfs": "not comparable",
+    "mode": "not comparable"
+   },
+   "mismatches": [],
+   "unobservable_as_match": []
+  }
+ ],
+ "drift": [
+  {
+   "arm": "D1",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-aes128gcm16",
+   "capture": "cs-aes128gcm16.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-aes256gcm16",
+   "capture": "cs-aes256gcm16.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-aes128cbc-sha256",
+   "capture": "cs-aes128cbc-sha256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-aes256cbc-sha256",
+   "capture": "cs-aes256cbc-sha256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-aes128ctr-sha256",
+   "capture": "cs-aes128ctr-sha256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": null,
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-chacha20poly1305",
+   "capture": "cs-chacha20poly1305.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-transport-aes256gcm16",
+   "capture": "cs-transport-aes256gcm16.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "cs-pfs-off-aes256gcm16.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "field": "ike_dh_group",
+   "outcome": "not comparable",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "field": "ike_encr",
+   "outcome": "not comparable",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "not comparable",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "not comparable",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "K",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-pfs-off-aes256gcm16",
+   "capture": "rekey-cs-pfs-off-aes256gcm16-run2.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": true,
+   "wire": false,
+   "note": "the config says PFS on, the wire's rekey says off",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "cs-pfs-on-aes256gcm16.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": false,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "field": "ike_dh_group",
+   "outcome": "not comparable",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D2",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "field": "ike_encr",
+   "outcome": "not comparable",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D6",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "not comparable",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D3",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "not comparable",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "K",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "cs-pfs-on-aes256gcm16",
+   "capture": "rekey-cs-pfs-on-aes256gcm16-run2.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": false,
+   "wire": true,
+   "note": "the config says PFS off, the wire's rekey says on",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "classical-baseline",
+   "capture": "classical-baseline.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [],
+   "wire": [
+    "ML-KEM-768"
+   ],
+   "note": "selected ['ML-KEM-768'], which this config does not offer",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "pq-mlkem768",
+   "capture": "pq-mlkem768.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "not comparable",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "no ADDKE selected; a responder config that offers ADDKE may still accept a classical proposal",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "a-start",
+   "capture": "a-start.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": false,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-1024",
+   "note": "the wire shows MODP-1024, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-256"
+   ],
+   "wire": "AES-CBC-128",
+   "note": "the wire shows AES-CBC-128, which this config does not offer ['AES-CBC-256']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "3DES-CBC+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA1-96",
+    "DES-CBC+HMAC-96",
+    "Blowfish-CBC+HMAC-96",
+    "Twofish-CBC+HMAC-96",
+    "CAST-CBC+HMAC-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "c-w",
+   "capture": "c-w.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": false,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "c-m",
+   "capture": "c-m.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": false,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "MODP-3072"
+   ],
+   "wire": "ECP-384",
+   "note": "the wire shows ECP-384, which this config does not offer ['MODP-3072']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-GCM-16-256",
+   "note": "the wire shows AES-GCM-16-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "c-s",
+   "capture": "c-s.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": false,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "field": "ike_dh_group",
+   "outcome": "not comparable",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D2",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "field": "ike_encr",
+   "outcome": "not comparable",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D6",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "not comparable",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": null,
+   "note": "wire finding is UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D3",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "3DES-CBC+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA1-96",
+    "DES-CBC+HMAC-96",
+    "Blowfish-CBC+HMAC-96",
+    "Twofish-CBC+HMAC-96",
+    "CAST-CBC+HMAC-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "c-v1",
+   "capture": "c-v1.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": false,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "encap-udp-aes256gcm16",
+   "capture": "encap-udp-aes256gcm16.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "encap-udp-aes128cbc-sha256",
+   "capture": "encap-udp-aes128cbc-sha256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ipv6-aes256gcm16",
+   "capture": "ipv6-aes256gcm16.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ipv6-aes128cbc-sha256",
+   "capture": "ipv6-aes128cbc-sha256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-gcm128",
+   "capture": "e7-gcm128.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-gcm128",
+   "capture": "e7-gcm128.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-gcm128",
+   "capture": "e7-gcm128.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-gcm128",
+   "capture": "e7-gcm128.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-gcm128",
+   "capture": "e7-gcm128.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-gcm128",
+   "capture": "e7-gcm128.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-gcm256",
+   "capture": "e7-gcm256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-gcm256",
+   "capture": "e7-gcm256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-gcm256",
+   "capture": "e7-gcm256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-gcm256",
+   "capture": "e7-gcm256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-gcm256",
+   "capture": "e7-gcm256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-gcm256",
+   "capture": "e7-gcm256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-cbc128",
+   "capture": "e7-cbc128.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-cbc128",
+   "capture": "e7-cbc128.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-cbc128",
+   "capture": "e7-cbc128.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-cbc128",
+   "capture": "e7-cbc128.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-cbc128",
+   "capture": "e7-cbc128.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-cbc128",
+   "capture": "e7-cbc128.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-cbc256",
+   "capture": "e7-cbc256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-cbc256",
+   "capture": "e7-cbc256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-cbc256",
+   "capture": "e7-cbc256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-cbc256",
+   "capture": "e7-cbc256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-cbc256",
+   "capture": "e7-cbc256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-cbc256",
+   "capture": "e7-cbc256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-chacha",
+   "capture": "e7-chacha.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-chacha",
+   "capture": "e7-chacha.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-chacha",
+   "capture": "e7-chacha.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-chacha",
+   "capture": "e7-chacha.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-chacha",
+   "capture": "e7-chacha.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": null,
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-chacha",
+   "capture": "e7-chacha.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-ctr128",
+   "capture": "e7-ctr128.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-ctr128",
+   "capture": "e7-ctr128.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-ctr128",
+   "capture": "e7-ctr128.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-ctr128",
+   "capture": "e7-ctr128.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-ctr128",
+   "capture": "e7-ctr128.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-ctr128",
+   "capture": "e7-ctr128.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-pfs-off",
+   "capture": "e7-pfs-off.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-pfs-off",
+   "capture": "e7-pfs-off.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-pfs-off",
+   "capture": "e7-pfs-off.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-pfs-off",
+   "capture": "e7-pfs-off.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-pfs-off",
+   "capture": "e7-pfs-off.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-pfs-off",
+   "capture": "e7-pfs-off.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": true,
+   "wire": false,
+   "note": "the config says PFS on, the wire's rekey says off",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-pfs-on",
+   "capture": "e7-pfs-on.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-pfs-on",
+   "capture": "e7-pfs-on.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-pfs-on",
+   "capture": "e7-pfs-on.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-pfs-on",
+   "capture": "e7-pfs-on.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-pfs-on",
+   "capture": "e7-pfs-on.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-pfs-on",
+   "capture": "e7-pfs-on.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": false,
+   "wire": true,
+   "note": "the config says PFS off, the wire's rekey says on",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-classical",
+   "capture": "e7-classical.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-classical",
+   "capture": "e7-classical.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-classical",
+   "capture": "e7-classical.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-classical",
+   "capture": "e7-classical.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-classical",
+   "capture": "e7-classical.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-classical",
+   "capture": "e7-classical.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "e7-pq",
+   "capture": "e7-pq.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "e7-pq",
+   "capture": "e7-pq.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "e7-pq",
+   "capture": "e7-pq.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [],
+   "wire": [
+    "ML-KEM-768"
+   ],
+   "note": "selected ['ML-KEM-768'], which this config does not offer",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "e7-pq",
+   "capture": "e7-pq.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "e7-pq",
+   "capture": "e7-pq.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "e7-pq",
+   "capture": "e7-pq.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-1024",
+   "note": "the wire shows MODP-1024, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-256"
+   ],
+   "wire": "AES-CBC-128",
+   "note": "the wire shows AES-CBC-128, which this config does not offer ['AES-CBC-256']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "3DES-CBC+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA1-96",
+    "DES-CBC+HMAC-96",
+    "Blowfish-CBC+HMAC-96",
+    "Twofish-CBC+HMAC-96",
+    "CAST-CBC+HMAC-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-modp1024",
+   "capture": "s-modp1024.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": true,
+   "wire": false,
+   "note": "the config says PFS on, the wire's rekey says off",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-1536",
+   "note": "the wire shows MODP-1536, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-256"
+   ],
+   "wire": "AES-CBC-128",
+   "note": "the wire shows AES-CBC-128, which this config does not offer ['AES-CBC-256']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-modp1536",
+   "capture": "s-modp1536.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": true,
+   "wire": false,
+   "note": "the config says PFS on, the wire's rekey says off",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-3072",
+   "note": "the wire shows MODP-3072, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CBC+HMAC-SHA256-128",
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CBC+HMAC-SHA512-256",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-modp3072",
+   "capture": "s-modp3072.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": false,
+   "wire": true,
+   "note": "the config says PFS off, the wire's rekey says on",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-4096",
+   "note": "the wire shows MODP-4096, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-modp4096",
+   "capture": "s-modp4096.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": false,
+   "wire": true,
+   "note": "the config says PFS off, the wire's rekey says on",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "ECP-256",
+   "note": "the wire shows ECP-256, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-GCM-16-128",
+   "note": "the wire shows AES-GCM-16-128, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "256"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-ecp256",
+   "capture": "s-ecp256.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "MODP-3072"
+   ],
+   "wire": "ECP-384",
+   "note": "the wire shows ECP-384, which this config does not offer ['MODP-3072']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-GCM-16-256",
+   "note": "the wire shows AES-GCM-16-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-ecp384",
+   "capture": "s-ecp384.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": false,
+   "wire": null,
+   "note": "wire UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "Curve25519",
+   "note": "the wire shows Curve25519, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": null,
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-x25519",
+   "capture": "s-x25519.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-1024",
+   "note": "the wire shows MODP-1024, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "3DES",
+   "note": "the wire shows 3DES, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "match",
+   "config": [
+    "AES-GCM-16"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "3DES-CBC+HMAC-SHA1-96",
+    "AES-CTR+HMAC-SHA1-96",
+    "DES-CBC+HMAC-96",
+    "Blowfish-CBC+HMAC-96",
+    "CAST-CBC+HMAC-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "configured family ['AES-GCM-16'] is within the wire's candidate set",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": null,
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-3des",
+   "capture": "s-3des.pcap",
+   "field": "pfs",
+   "outcome": "mismatch",
+   "config": true,
+   "wire": false,
+   "note": "the config says PFS on, the wire's rekey says off",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "Curve25519",
+   "note": "the wire shows Curve25519, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [],
+   "wire": [
+    "ML-KEM-768"
+   ],
+   "note": "selected ['ML-KEM-768'], which this config does not offer",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "s-mlkem",
+   "capture": "s-mlkem.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire UNKNOWN",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D1",
+   "connection": "a-tun-sha256",
+   "capture": "a-tun-sha256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "a-tun-sha256",
+   "capture": "a-tun-sha256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "a-tun-sha256",
+   "capture": "a-tun-sha256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "a-tra-sha256",
+   "capture": "a-tra-sha256.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "a-tra-sha256",
+   "capture": "a-tra-sha256.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "a-tra-sha256",
+   "capture": "a-tra-sha256.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "a-tra-sha1",
+   "capture": "a-tra-sha1.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "a-tra-sha1",
+   "capture": "a-tra-sha1.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "a-tra-sha1",
+   "capture": "a-tra-sha1.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "a-tun-sha384",
+   "capture": "a-tun-sha384.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "a-tun-sha384",
+   "capture": "a-tun-sha384.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "a-tun-sha384",
+   "capture": "a-tun-sha384.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "a-tra-sha512",
+   "capture": "a-tra-sha512.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "a-tra-sha512",
+   "capture": "a-tra-sha512.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "a-tra-sha512",
+   "capture": "a-tra-sha512.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D5",
+   "connection": "ppk-k0",
+   "capture": "ppk-k0.pcap",
+   "field": "pq_ppk",
+   "outcome": "mismatch",
+   "config": {
+    "id": "drift",
+    "required": false
+   },
+   "wire": "not-offered",
+   "note": "the config sets a PPK but the wire's request carried no USE_PPK",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D5",
+   "connection": "ppk-k1",
+   "capture": "ppk-k1.pcap",
+   "field": "pq_ppk",
+   "outcome": "mismatch",
+   "config": null,
+   "wire": "negotiated",
+   "note": "the wire's request announced PPK; this config sets none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D5",
+   "connection": "ppk-k2",
+   "capture": "ppk-k2.pcap",
+   "field": "pq_ppk",
+   "outcome": "mismatch",
+   "config": null,
+   "wire": "negotiated",
+   "note": "the wire's request announced PPK; this config sets none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D5",
+   "connection": "ppk-k3",
+   "capture": "ppk-k3.pcap",
+   "field": "pq_ppk",
+   "outcome": "mismatch",
+   "config": null,
+   "wire": "offered-not-negotiated",
+   "note": "the wire's request announced PPK; this config sets none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D5",
+   "connection": "ppk-k4",
+   "capture": "ppk-k4.pcap",
+   "field": "pq_ppk",
+   "outcome": "mismatch",
+   "config": null,
+   "wire": "negotiated",
+   "note": "the wire's request announced PPK; this config sets none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D1",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "field": "ike_dh_group",
+   "outcome": "mismatch",
+   "config": [
+    "ECP-384"
+   ],
+   "wire": "MODP-2048",
+   "note": "the wire shows MODP-2048, which this config does not offer ['ECP-384']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D2",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "field": "ike_encr",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC-128"
+   ],
+   "wire": "AES-CBC-256",
+   "note": "the wire shows AES-CBC-256, which this config does not offer ['AES-CBC-128']",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D6",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "field": "pq_key_exchange",
+   "outcome": "mismatch",
+   "config": [
+    "ML-KEM-768"
+   ],
+   "wire": "classical-only",
+   "note": "the config offers ADDKE but the wire's offer had none",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "D3",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "field": "esp_cipher_family",
+   "outcome": "mismatch",
+   "config": [
+    "AES-CBC+HMAC-SHA256-128"
+   ],
+   "wire": [
+    "AES-CTR+HMAC-SHA256-128",
+    "AES-GCM-16",
+    "AES-CCM-16",
+    "ChaCha20-Poly1305",
+    "AES-CTR+HMAC-SHA1-96",
+    "NULL+HMAC-96",
+    "NULL+HMAC-SHA256-128"
+   ],
+   "note": "no configured ESP family is possible given the wire's packet geometry",
+   "wire_shows_field": true
+  },
+  {
+   "arm": "K",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "field": "esp_key_length",
+   "outcome": "not comparable",
+   "config": [
+    "128"
+   ],
+   "wire": null,
+   "note": "ESP key length is not observable on the wire (F-05: same block size, IV, ICV, alignment)",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D4",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "field": "pfs",
+   "outcome": "not comparable",
+   "config": true,
+   "wire": null,
+   "note": "wire NOT_OBSERVABLE",
+   "wire_shows_field": false
+  },
+  {
+   "arm": "D5",
+   "connection": "ppk-k5",
+   "capture": "ppk-k5.pcap",
+   "field": "pq_ppk",
+   "outcome": "mismatch",
+   "config": null,
+   "wire": "negotiated",
+   "note": "the wire's request announced PPK; this config sets none",
+   "wire_shows_field": true
+  }
+ ]
+}
