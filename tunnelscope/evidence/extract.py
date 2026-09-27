@@ -264,6 +264,51 @@ def extract_ppk(r: EvidenceRecord) -> None:
                       note="the initiator offered PPK but the responder did not announce support: no PPK in use"))
 
 
+# T-127 / EXP-29: implementation fingerprints, written from the TRAIN split only (strongSwan 5.9.8 EXP-01/02,
+# Libreswan 5.4 EXP-07 x5, MikroTik RouterOS 7.24.4 EXP-26 M1-M4). Notify type ORDER in the sender's own
+# IKE_SA_INIT message (plaintext). NAT_D 16388/16389, IKEV2_FRAGMENTATION_SUPPORTED 16430,
+# SIGNATURE_HASH_ALGORITHMS 16431. None of the training captures carries a Vendor ID.
+IMPL_RULES = (
+    ("strongSwan", "notifies start NAT_D, NAT_D, FRAG, HASH_ALG", lambda seq, m, pad: seq[:4] == [16388, 16389, 16430, 16431]),
+    ("Libreswan", "notifies start FRAG, NAT_D, NAT_D", lambda seq, m, pad: seq[:3] == [16430, 16388, 16389]),
+    ("MikroTik RouterOS", "notifies exactly NAT_D, NAT_D, FRAG and extra padding on its empty encrypted messages",
+     lambda seq, m, pad: seq == [16388, 16389, 16430] and pad),
+)
+
+
+def extract_implementation(r: EvidenceRecord) -> None:
+    """Which IKE implementation sent each end's IKE_SA_INIT (initiator / responder), or None for that end.
+    Informational: it never changes a verdict. Error-only responses (no proposal selected) are ignored."""
+    ike = getattr(r, "_ike", [])
+    init = [m for m in ike if m["exchange"] == 34]
+    req = next((m for m in init if not m["is_response"]), None)
+    resp = [m for m in init if m["is_response"] and m["transform_types"]]
+    ends = {"initiator": req, "responder": resp[-1] if resp else None}
+    if not req and not resp:
+        r.add(Finding("implementation", Status.UNKNOWN, Vantage.T0, "fingerprint (EXP-29)", note="no IKE_SA_INIT visible"))
+        return
+    val = lambda a: r.findings[a].value if a in r.findings and isinstance(r.findings[a].value, str) else None
+    labels, why, ev = {}, [], []
+    for end, m in ends.items():
+        labels[end] = None
+        if m is None:
+            continue
+        sent = [x for x in ike if x.get("src") == m["src"]]
+        pad = ike_extra_padding(sent, val("ike_encr"), val("ike_integ")) is not None
+        hits = [(name, desc) for name, desc, rule in IMPL_RULES if rule(m["notify_types"], m, pad)]
+        ev.append(EvidencePtr(r.source_pcap, m["frame"], "isakmp.notify.msgtype", str(m["notify_types"])))
+        if len(hits) == 1:
+            labels[end] = hits[0][0]
+            why.append(f"{end}: {hits[0][0]} ({hits[0][1]})")
+        else:
+            why.append(f"{end}: no single fingerprint matches (notifies {m['notify_types']})")
+    status = Status.INFERRED if any(labels.values()) else Status.UNKNOWN
+    r.add(Finding("implementation", status, Vantage.T1, "fingerprint (EXP-29)",
+                  value=labels if status is Status.INFERRED else None, confidence=0.8 if labels else 1.0,
+                  evidence=ev, note="; ".join(why) + ". Fingerprints from 3 implementations only (EXP-29); an "
+                  "implementation never seen reads as UNKNOWN or, if it copies another's notify order, could be mislabeled"))
+
+
 def min_empty_sk_len(encr: str | None, integ: str | None) -> int:
     """Smallest SK payload an EMPTY encrypted IKE message can have (RFC 7296 sec 3.14): 4 B header + IV +
     one block holding the pad-length byte + ICV. Unknown suite: 68, the largest minimum of any suite we
@@ -674,7 +719,7 @@ def extract_offered_dh(r: EvidenceRecord) -> None:
 
 
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke, extract_ppk, extract_ipsec_protocols, extract_ah,
-                  extract_cipher_sieve, extract_pfs, extract_sa_lifecycle, extract_mode, extract_sequence,
+                  extract_cipher_sieve, extract_pfs, extract_implementation, extract_sa_lifecycle, extract_mode, extract_sequence,
                   extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_offered_dh,
                   extract_leakage, extract_attacker]
 

@@ -54,7 +54,7 @@ def _version() -> str:
 
 
 def cmd_assess(args):
-    baselines = load_baselines()
+    baselines = load_baselines(profiles=args.profile)
     recs = build_records(args.pcap)
     all_v = []
     for r in recs:
@@ -127,8 +127,11 @@ def cmd_serve(args):
 def cmd_live(args):
     """Analyse a live stream window by window (interface ring buffer or a sensor's rotating files)."""
     from .live.live import LiveMonitor
+    if args.alerts and not args.history:
+        print("--alerts needs --history (alerts compare each window with the tunnel's learned normal)", file=sys.stderr)
+        return 2
     mon = LiveMonitor(interface=args.interface, follow=args.follow, window=args.window,
-                      history=args.history, keep=args.keep)
+                      history=args.history, keep=args.keep, alerts=args.alerts, alert_format=args.alert_format)
     mon.start_capture()
     print(f"live: {mon.status()['source']}, {mon.window}s windows"
           + (f", learning into {args.history}" if args.history else "") + " (Ctrl-C stops)", file=sys.stderr)
@@ -173,7 +176,11 @@ def cmd_watch(args):
     out, worst = [], 0
     for f in _captures(args.target):
         a = analyze(f)
-        for res in observe(h, a["sas"], f, record=not args.no_record):
+        results = observe(h, a["sas"], f, record=not args.no_record)
+        if args.alerts:
+            from .anomaly.alerts import alerts_from, write_alerts
+            write_alerts(alerts_from(results, f, os.path.getmtime(f)), args.alerts, args.alert_format)
+        for res in results:
             out.append({"source": f, **res})
             worst = max(worst, 1 if res["status"] == "anomalous" else 0)
     if args.json:
@@ -297,6 +304,7 @@ def main(argv=None):
     s.add_argument("pcap"); s.add_argument("--json", action="store_true")
     s.add_argument("--fail-on-findings", action="store_true",
                    help="exit 1 if any FAIL verdict is present (for CI/monitoring gates)")
+    s.add_argument("--profile", action="append", help="also assess against an opt-in rules profile (e.g. cnsa2-ipsec); repeatable")
     s.set_defaults(func=cmd_assess)
     cb = sub.add_parser("cbom", help="emit a CycloneDX CBOM for a pcap")
     cb.add_argument("pcap")
@@ -328,6 +336,8 @@ def main(argv=None):
     lv.add_argument("--keep", action="store_true", help="keep analysed window files (default: delete them)")
     lv.add_argument("--json", action="store_true", help="one JSON object per window")
     lv.add_argument("--max-windows", type=int, help="stop after N windows (testing)")
+    lv.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
+    lv.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl", help="alert line format (syslog = RFC 5424)")
     lv.set_defaults(func=cmd_live)
     wt = sub.add_parser("watch", help="anomaly detection: compare each tunnel with its learned normal, then record it (role D)")
     wt.add_argument("target", help="a capture, or a directory of captures (processed in name order)")
@@ -335,6 +345,8 @@ def main(argv=None):
     wt.add_argument("--no-record", action="store_true", help="compare only; don't add these captures to the history")
     wt.add_argument("--json", action="store_true")
     wt.add_argument("--fail-on-anomaly", action="store_true", help="exit 1 if any tunnel is anomalous")
+    wt.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
+    wt.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl", help="alert line format (syslog = RFC 5424)")
     wt.set_defaults(func=cmd_watch)
     ex = sub.add_parser("explain", help="plain-English explanation of a capture's verdicts, for non-experts")
     ex.add_argument("pcap")

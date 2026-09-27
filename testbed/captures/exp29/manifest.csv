@@ -1,0 +1,11 @@
+file,arm,implementation,bytes,n_packets,sha256,ground_truth_json
+e7-cbc128.pcap,e7-cbc128,libreswan-5.4,43456,136,e902447628213f87804e317867bd6b4876cfc149f88d4575c4a722ca30b29890,e7-cbc128.groundtruth.json
+e7-cbc256.pcap,e7-cbc256,libreswan-5.4,43456,136,58647c7aa45180a4a8b70ffad667ab097b812890d24ead0966ee2a49749c5579,e7-cbc256.groundtruth.json
+e7-chacha.pcap,e7-chacha,libreswan-5.4,41856,136,0b1b919abf27b8d165388783bbd3ccfa592503337a677905c7136eb43d251cd7,e7-chacha.groundtruth.json
+e7-classical.pcap,e7-classical,libreswan-5.4,41904,136,e80768499544168c1b847e02f68ff7199609ea75f35463b35badbd8e9f591acd,e7-classical.groundtruth.json
+e7-ctr128.pcap,e7-ctr128,libreswan-5.4,41888,136,8e96b25860113b0f5fd47cca4ddcf34841bd60949a6ac78224c7911f9ecc6acb,e7-ctr128.groundtruth.json
+e7-gcm128.pcap,e7-gcm128,libreswan-5.4,41856,136,810ac23f3d454475db0b09679068eb100c255b50d3e65b5aaef02dc18108521a,e7-gcm128.groundtruth.json
+e7-gcm256.pcap,e7-gcm256,libreswan-5.4,41856,136,4a24c61ee7dc57c3bdbfd28937a200943fa4083ff0014b755cad6e21124a23db,e7-gcm256.groundtruth.json
+e7-pfs-off.pcap,e7-pfs-off,libreswan-5.4,43456,144,496ea2f916781b386b7cdbf88cda8853f496a5a2a2136e07f9cb2eca59dcfd12,e7-pfs-off.groundtruth.json
+e7-pfs-on.pcap,e7-pfs-on,libreswan-5.4,44528,144,a21fcac98230cae95231239f496ac72e2174952ebfafe39a5b73fe001e821836,e7-pfs-on.groundtruth.json
+e7-pq.pcap,e7-pq,libreswan-5.4,44948,142,bc199abc347f7cd4476866e0380a839654a0e3c28c07aebc97ba4df00d2592d1,e7-pq.groundtruth.json

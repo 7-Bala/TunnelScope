@@ -1,0 +1,17 @@
+"e7-pfs-on" #17: initiating IKEv2 connection to 10.10.2.38 using UDP
+"e7-pfs-on" #17: sent IKE_SA_INIT request to 10.10.2.38:UDP/500
+"e7-pfs-on" #17: processed IKE_SA_INIT response from 10.10.2.38:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_256_128 prf=HMAC_SHA2_256 ke=MODP2048}, initiating IKE_AUTH
+"e7-pfs-on" #17: sent IKE_AUTH request to 10.10.2.38:UDP/500 with shared-key-mac and FQDN '@a-e7-pfs-on'; Child SA #18 {ESP <0xd0d3b8e4} [10.10.1.38/32===10.10.2.38/32]
+"e7-pfs-on" #17: processing IKE_AUTH response from 10.10.2.38:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}
+"e7-pfs-on" #17: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-e7-pfs-on'
+"e7-pfs-on" #18: initiator established Child SA using #17; IPsec tunnel [10.10.1.38/32===10.10.2.38/32] {ESP/ESN=>0x51aa2e3d <0xd0d3b8e4 xfrm=AES_GCM_16_256 DPD=passive}
+"e7-pfs-on" #19: initiating rekey to replace Child SA #18 using IKE SA #17
+"e7-pfs-on" #19: sent CREATE_CHILD_SA request to rekey Child SA #18 using IKE SA #17 {ESP <0xe76f8c0b} [10.10.1.38/32===10.10.2.38/32]
+"e7-pfs-on" #19: initiator rekeyed Child SA #18 using #17; IPsec tunnel [10.10.1.38/32===10.10.2.38/32] {ESP/ESN=>0xe710203b <0xe76f8c0b xfrm=AES_GCM_16_256-MODP2048 DPD=passive}
+"e7-pfs-on" #18: sent INFORMATIONAL request to delete established Child SA using IKE SA #17
+"e7-pfs-on" #18: ESP traffic information: in=14KiB out=14KiB
+"e7-pfs-on" #20: initiating rekey to replace Child SA #19 using IKE SA #17
+"e7-pfs-on" #20: sent CREATE_CHILD_SA request to rekey Child SA #19 using IKE SA #17 {ESP <0x2783d29f} [10.10.1.38/32===10.10.2.38/32]
+"e7-pfs-on" #20: initiator rekeyed Child SA #19 using #17; IPsec tunnel [10.10.1.38/32===10.10.2.38/32] {ESP/ESN=>0x30e60104 <0x2783d29f xfrm=AES_GCM_16_256-MODP2048 DPD=passive}
+"e7-pfs-on" #19: sent INFORMATIONAL request to delete established Child SA using IKE SA #17
+"e7-pfs-on" #19: ESP traffic information: in=0B out=0B

@@ -477,3 +477,17 @@ IKE cipher, PFS, PPK, ML-KEM: 161/161), ESP cipher family 26/45; the 19 others a
 set and cannot be ruled out by geometry. H3 PASS (ESP key length 47/47 not comparable), H4 PASS. Disclosed
 post-result changes: scorer role fix (a-start's initiator is the cloud side) and a label fix: agreement with an
 INFERRED wire finding is "consistent", never "match". `experiments/exp28-config-vs-wire/RESULT.md`.
+
+## EXP-29 — IKE implementation fingerprinting from plaintext — PRE-REGISTRATION (2026-09-27)
+Pre-registered in `experiments/exp29-implementation-fingerprint/PREREG.md` before any feature was looked at
+(roadmap T-127, Batch A). Split by session and version: train = strongSwan 5.9.8 EXP-01/02, Libreswan EXP-07
+(5 arms), MikroTik M1-M4; test = everything else incl. strongSwan 6.1.0, a fresh Libreswan session captured
+after the rules are frozen, MikroTik M5-M8, and OpenBSD iked (no training data; must be UNKNOWN).
+H1: zero wrong labels.
+
+### EXP-29 — RESULT (2026-09-27)
+All hypotheses passed. Rules frozen (271ad83) before scoring. Held-out: 200/218 known-implementation ends named
+correctly (91.7%), 0 wrong; strongSwan 6.1.0 (never trained) 74/74; a Libreswan session captured after the freeze
+16/20; OpenBSD iked UNKNOWN. Unknowns: 10 strongSwan responders that never answered with a proposal, 8 Libreswan
+ends where IKE_INTERMEDIATE support adds a notify the frozen rule does not expect (follow-up, not changed
+post-hoc). Disclosed scorer fix (EXP-10 truth per end). `experiments/exp29-implementation-fingerprint/RESULT.md`.
