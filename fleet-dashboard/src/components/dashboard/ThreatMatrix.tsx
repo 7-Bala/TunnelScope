@@ -115,6 +115,15 @@ export function ThreatPane({ risk }: { risk: RiskResult }) {
                 <td className="py-2 pr-3">
                   <span className="font-mono text-[11px] text-faint">{t.id}</span>{" "}
                   <span className="text-foreground/90">{t.name}</span>
+                  {t.refs && t.refs.length > 0 && (
+                    <div className="mt-0.5 flex flex-wrap gap-1" aria-label="MITRE ATT&CK and CAPEC references">
+                      {t.refs.map((r) => (
+                        <span key={r.id} title={`${r.catalogue}: ${r.name}`} className="rounded border border-border/60 px-1 font-mono text-[10px] text-faint">
+                          {r.id}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </td>
                 <td className="py-2 pr-3">
                   <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS[t.status].c)}>{STATUS[t.status].t}</span>

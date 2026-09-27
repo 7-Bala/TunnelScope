@@ -274,6 +274,40 @@ def cmd_reconcile(args):
     return 3 if any(c.outcome == MISMATCH for c in comps) else 0
 
 
+def cmd_intel(args):
+    """T-130: known vulnerabilities for the IKE implementations fingerprinted in a capture (INFERRED: version unknown)."""
+    from .intel.lookup import lookup
+    impls = sorted({v for r in build_records(args.pcap) if "implementation" in r.findings
+                    for v in (r.findings["implementation"].value or {}).values() if v})
+    out = [lookup(i) for i in impls]
+    if args.json:
+        print(json.dumps({"pcap": args.pcap, "implementations": out}, indent=2, default=str))
+        return 0
+    if not impls:
+        print("no implementation could be fingerprinted from this capture (see `analyze`: implementation)")
+        return 0
+    for r in out:
+        c = r["counts"]
+        print(f"\n{r['implementation']}: {c['total']} known CVEs ({c['kev']} actively exploited, CISA KEV; "
+              f"{c['product_listed']} with the product listed; {c['ipsec_related']} mention IKE/IPsec)")
+        for name, st in r["sources"].items():
+            print(f"  source {name}: {st['status']}" + (f" ({st['reason']})" if st["reason"] else ""))
+        for e in r["cves"][:args.top]:
+            flags = " ".join(x for x in ("KEV" if e["kev"] else "", "IPsec" if e["ipsec_related"] else "") if x)
+            print(f"  {e['id']:16} {str(e['cvss'] or '-'):>4} {e['match']:8} {flags:10} {' '.join((e['description'] or '').split())[:80]}")
+        print(f"  note: {r['note']}")
+    return 0
+
+
+def cmd_intel_bundle(args):
+    """T-130: fill a directory with the intel sources for an air-gapped install (needs TUNNELSCOPE_NETWORK=on here)."""
+    from .intel.lookup import bundle
+    m = bundle(args.out)
+    print(json.dumps(m["report"], indent=2))
+    print(f"wrote {args.out}/MANIFEST.json; on the air-gapped machine set TUNNELSCOPE_INTEL_DIR={args.out}")
+    return 0
+
+
 def cmd_fleet(args):
     scanned = fleet_scan(args.directory)          # walk the directory exactly once
     f = fleet_json(args.directory, scanned)
@@ -360,6 +394,14 @@ def main(argv=None):
     fl.add_argument("--fail-on-findings", action="store_true",
                     help="exit 1 if any FAIL verdict, or any capture that failed to parse")
     fl.set_defaults(func=cmd_fleet)
+    it = sub.add_parser("intel", help="known vulnerabilities (NVD, EUVD, CISA KEV) for the implementations fingerprinted in a capture")
+    it.add_argument("pcap")
+    it.add_argument("--top", type=int, default=10)
+    it.add_argument("--json", action="store_true")
+    it.set_defaults(func=cmd_intel)
+    ib = sub.add_parser("intel-bundle", help="download the threat-intel sources into a directory for an air-gapped install")
+    ib.add_argument("out")
+    ib.set_defaults(func=cmd_intel_bundle)
     rc = sub.add_parser("reconcile", help="does a capture's traffic match a configuration file? (exit 3 on any mismatch)")
     rc.add_argument("pcap")
     rc.add_argument("config")
@@ -377,7 +419,7 @@ def main(argv=None):
     try:
         # Verify the stack before trusting anything derived from it. Cached per
         # process, so a 70-capture fleet scan pays this once, not per capture.
-        if args.func not in (cmd_doctor, cmd_config) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
+        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
             preflight()
         return args.func(args) or 0
     except TunnelScopeError as e:

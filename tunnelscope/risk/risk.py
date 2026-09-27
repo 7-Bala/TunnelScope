@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 
+from .refs import refs_for
+
 LEVEL = {1: "low", 2: "medium", 3: "high"}
 
 # T-122 / DEC-039: why the matrix has these threats and not others. A threat is in the matrix only if a rule or
@@ -56,6 +58,7 @@ class Threat:
         d = asdict(self)
         d["likelihood_label"] = LEVEL.get(self.likelihood, "-")
         d["impact_label"] = LEVEL[self.impact]
+        d["refs"] = refs_for(self.id)          # MITRE ATT&CK / CAPEC names for this threat (never changes a score)
         return d
 
 
