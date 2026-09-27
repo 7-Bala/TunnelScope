@@ -41,10 +41,19 @@ from .. import net
 # gemini-3.8-flash answered normally and is Google's own description for this kind of task
 # ("engineered for long-horizon software engineering, autonomous agents"). Override with
 # TUNNELSCOPE_GEMINI_MODEL if a key with Pro-tier quota is used later.
-MODEL_ID = os.environ.get("TUNNELSCOPE_GEMINI_MODEL", "gemini-3.8-flash")
+# DEC-041 (EXP-18b, 2026-09-27): gemini-3.1-flash-lite confirmed 13/16 test fixes live (gemini-3.8-flash could not
+# finish: its free daily quota ran out after 3/5 dev items). "Good, not the top model" (owner).
+MODEL_ID = os.environ.get("TUNNELSCOPE_GEMINI_MODEL", "gemini-3.1-flash-lite")
 PROVIDER = "gemini"
-# the fallback chain (chain.py) tries these in order on a rate limit; each model has its own limits
-FALLBACK_MODELS = tuple(dict.fromkeys((MODEL_ID, "gemini-2.5-flash")))
+# The fallback chain (chain.py) tries these in order on a rate limit or overload; each model has its own limits.
+# Measured 2026-09-27 on the owner's three keys: gemini-3.7-flash and gemini-3.1-flash-lite answered on all three
+# (flash-lite in ~1.5 s); gemini-2.5-flash returns 404 "no longer available to new users" on two of them;
+# gemini-3.5-flash works but took ~17 s. 503 "high demand" was common on 3.8/3.7-flash that day.
+FALLBACK_MODELS = tuple(dict.fromkeys((MODEL_ID, "gemini-3.7-flash")))
+# Gemini 3 models spend output tokens on internal reasoning first: with the generator's small budgets (~320
+# tokens) and default reasoning, gemini-3.8-flash returned an EMPTY answer; with thinking_level "low" it answered
+# in ~2 s (measured 2026-09-27). Override with TUNNELSCOPE_GEMINI_THINKING (e.g. "high"), or "" to leave default.
+THINKING_LEVEL = os.environ.get("TUNNELSCOPE_GEMINI_THINKING", "low")
 API_KEY_ENV = "TUNNELSCOPE_GEMINI_API_KEY"
 DEFAULT_TIMEOUT_S = 30.0
 
@@ -130,6 +139,10 @@ def generate_json(system: str, data_blocks: dict[str, str], max_tokens: int = 25
                                       "http_options": types.HttpOptions(timeout=int(timeout_s * 1000))}
         if seed is not None:
             cfg_kwargs["seed"] = seed
+        thinking = getattr(types, "ThinkingConfig", None)
+        if THINKING_LEVEL and model.startswith("gemini-3") and thinking is not None:
+            cfg_kwargs["thinking_config"] = thinking(thinking_level=THINKING_LEVEL)
+            meta["thinking_level"] = THINKING_LEVEL
         response = client.models.generate_content(model=model, contents=content,
                                                    config=types.GenerateContentConfig(**cfg_kwargs))
         meta["latency_s"] = round(time.monotonic() - t0, 3)
