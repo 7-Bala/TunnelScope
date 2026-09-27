@@ -104,3 +104,13 @@ That measures a client bug, not the model. Fix: `open_model_client.REASONING_EFF
 models (3/3 answered at 320 tokens, 63-132 reasoning tokens; "medium" still failed 0/3). The invalid
 rows are kept, unedited, in `results/groq/raw-invalid-client-bug.jsonl` and are not scored; the Groq arm
 restarts from its dev phase. The Gemini arm is unaffected (its equivalent setting was in ADDENDUM A).
+
+## ADDENDUM C (2026-09-27, Gemini arm, after its dev runs D3/D4/D7, before any Gemini test/S11/R run)
+
+The experiment key reached its free-tier quota for gemini-3.8-flash (HTTP 429 on every call, even a trivial
+probe). The owner decided the Gemini arm continues on another of the owner's keys, from a different Google
+account ("the api keys are from different accounts ... use the other api keys properly"). I had advised that
+Google's API terms (2(d)) prohibit circumventing usage limits; the owner made the call. The model, prompt,
+items, arms and bars are unchanged (gemini-3.8-flash only); every row records `key_purpose` (which of the
+owner's keys, never the key itself). If the second key also runs out, the arm pauses; nothing is scored as a
+model failure because of quota.

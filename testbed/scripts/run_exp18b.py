@@ -38,11 +38,13 @@ INFRA = "infrastructure: rate_limited_or_overloaded"
 _LAST_PLAN: dict = {}
 
 
-def configure(name: str) -> tuple[str, str]:
+def configure(name: str, key_purpose: str | None = None) -> tuple[str, str]:
     backend, mod, model = BACKENDS[name]
     if name == "groq":
         os.environ["TUNNELSCOPE_GENERATOR_CHAIN"] = f"groq:{model}"   # that one model, no fallback
     os.environ.pop("TUNNELSCOPE_KEY_PURPOSE", None)                  # the plain key = the experiment key
+    if key_purpose:                                                    # ADDENDUM C: owner's other account key
+        os.environ["TUNNELSCOPE_KEY_PURPOSE"] = key_purpose
     base.EXP = EXP
     base.RAW = EXP / "results" / name / "raw.jsonl"
     # dev prompt variants P1/P2 call `runtime.generate_json` in run_exp18: point that at the backend under test
@@ -75,7 +77,8 @@ def done_keys() -> set[tuple]:
 
 def run(phase, item, rule, lines, arm, prompt, name, model, **kw):
     rec = base.run_one(phase, item, rule, lines, arm, prompt, **kw)
-    rec.update(backend=name, model_id=_LAST_PLAN.get("model_id") or model)
+    rec.update(backend=name, model_id=_LAST_PLAN.get("model_id") or model,
+               key_purpose=os.environ.get("TUNNELSCOPE_KEY_PURPOSE") or "experiment")
     if rec.get("included") and infra(rec):
         rec.update(included=False, excluded=INFRA)
     base.append(rec)
@@ -87,8 +90,9 @@ def main() -> None:
     ap.add_argument("backend", choices=list(BACKENDS))
     ap.add_argument("phase", choices=["dev", "test", "s11", "robust"])
     ap.add_argument("--prompt", default=None)
+    ap.add_argument("--key-purpose", default=None, help="Gemini only: use TUNNELSCOPE_GEMINI_API_KEY_<PURPOSE>")
     args = ap.parse_args()
-    backend, model = configure(args.backend)
+    backend, model = configure(args.backend, args.key_purpose)
     if not base.runtime.model_available():
         raise SystemExit(f"{args.backend} is not available (network switch and API key)")
     freeze = EXP / f"FREEZE-{args.backend}.md"
