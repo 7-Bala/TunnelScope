@@ -20,7 +20,7 @@ const VIDEO_URL = ""; // demo video, on a host that does not sleep
 const REPO_URL = "";  // only if the repository is public or shared with the evaluators
 
 // SOURCES (checked 2026-09-27)
-//   511 unit tests pass ........ `.venv/bin/python -m pytest -q` -> "511 passed, 1 skipped"
+//   516 unit tests pass ........ `.venv/bin/python -m pytest -q` -> "516 passed, 1 skipped"
 //   ~1.6 s per capture ......... `tunnelscope report` on 4 lab captures: 1.58-1.67 s wall time each
 //   124 lab captures ........... testbed/captures/**/*.groundtruth.json (endpoint ground truth)
 //   0.174 -> 0.757, 99.8% ...... experiments/exp20-real-ipsec-and-users/RESULT.md (R3), DEC-037
@@ -237,7 +237,7 @@ function sectionHead(s, str, x, y, w, color = C.VIOLET) {
   { const s = pres.addSlide(); chrome(s, 4, "FEASIBILITY AND VIABILITY");
     const X = 0.5, LW = 4.0;
     sectionHead(s, "Feasibility: already built and tested", X, 1.1, LW);
-    const stats = [["511", "unit tests pass"], ["1.6 s", "to assess one capture, end to end"], ["124", "lab captures checked against endpoint ground truth"], ["0.757", "traffic-type F1 on real IPsec traffic (was 0.174)"]];
+    const stats = [["516", "unit tests pass"], ["1.6 s", "to assess one capture, end to end"], ["124", "lab captures checked against endpoint ground truth"], ["0.757", "traffic-type F1 on real IPsec traffic (was 0.174)"]];
     stats.forEach(([n, l], i) => { const x = X + (i % 2) * 2.05, y = 1.5 + Math.floor(i / 2) * 1.3;
       box(s, x, y, 1.95, 1.18, { fill: C.TINT, line: C.TINT });
       t(s, n, { x: x + 0.14, y: y + 0.1, w: 1.7, h: 0.5, fontSize: 24, bold: true, color: C.VIOLET, valign: "middle" });
