@@ -98,6 +98,12 @@ def _assert(op: str, want, value) -> bool | None:
     if op == "seq_clean":
         return isinstance(value, dict) and value.get("replayed", 0) == 0 and value.get("resets", 0) == 0
     if op == "pq_present":   return isinstance(value, list) and any("ML-KEM" in str(v) for v in value)
+    if op == "candidate_required":
+        # T-122: FAIL if the wire rules the required family out; otherwise the rule cannot confirm it (the sieve
+        # narrows families but never sees key length, F-05), so UNKNOWN, never PASS
+        if not isinstance(value, list) or not value:
+            return None
+        return False if want not in value else None
     raise ValueError(f"unknown assert op: {op}")
 
 

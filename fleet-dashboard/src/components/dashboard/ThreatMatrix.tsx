@@ -131,6 +131,23 @@ export function ThreatPane({ risk }: { risk: RiskResult }) {
           </tbody>
         </table>
       </div>
+
+      {risk.out_of_scope && risk.out_of_scope.length > 0 && (
+        <details className="mt-5 rounded-md border border-border/60 px-3 py-2">
+          <summary className="cursor-pointer text-[12.5px] text-muted-foreground">
+            Not assessable from any capture ({risk.out_of_scope.length}): real risks this matrix does not score, and where to check them
+          </summary>
+          <ul className="mt-2 space-y-1.5 text-[12px] leading-snug">
+            {risk.out_of_scope.map((o) => (
+              <li key={o.name}>
+                <span className="text-foreground/90">{o.name}</span>
+                <span className="text-muted-foreground">: {o.why}.</span>{" "}
+                <span className="text-faint">Check with: {o.check_with}.</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   )
 }
