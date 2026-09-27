@@ -416,7 +416,7 @@ def _diff_new_lines(diffs: dict[str, str]) -> list[str]:
 
 # ------------------------------------------------------------------ the whole draft
 
-BACKENDS = ("local", "cloud")
+BACKENDS = ("local", "cloud", "chain")
 
 
 def _backend_module(backend: str):
@@ -427,6 +427,9 @@ def _backend_module(backend: str):
     if backend == "cloud":
         from . import cloud_client
         return cloud_client
+    if backend == "chain":        # DEC-040: cloud models in order, falling back to the local model
+        from . import chain
+        return chain
     return runtime
 
 

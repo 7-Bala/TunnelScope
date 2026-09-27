@@ -67,6 +67,8 @@ export interface Threat {
   status: "present" | "not_seen" | "mitigated" | "not_assessable"
   evidence: string[]
   reason: string
+  /** MITRE ATT&CK / CAPEC names for this threat (tunnelscope/risk/refs.py); never changes a score */
+  refs?: { id: string; name: string; catalogue: "ATT&CK" | "CAPEC" }[]
 }
 
 export interface RiskResult {
