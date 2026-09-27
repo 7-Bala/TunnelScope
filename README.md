@@ -15,6 +15,7 @@ it's judged against and admits what it couldn't see.
 ./start.sh --live-follow DIR   # also analyse a live stream (files a sensor rotates into DIR)
 ./start.sh logs     # live logs (also in ./logs/)   ·   ./start.sh stop   ·   ./start.sh status   ·   ./start.sh test
 .venv/bin/tunnelscope report <capture.pcap>     # after ./start.sh has created the .venv
+.venv/bin/tunnelscope config <swanctl.conf|ipsec.conf>   # read a config file offline: its crypto in the same names as the wire findings
 ```
 
 ## Repository map
