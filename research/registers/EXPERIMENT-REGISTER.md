@@ -513,3 +513,28 @@ S11a/b held; one run under P3 confirmed 15/16 (0.9375, Wilson [0.717, 0.989]), g
 were answer shape, not attributable to P3. Groq stopped at the pre-registered dev gate (4/5 vs 5/5, a V5 formatting
 slip). P3 not adopted; default stays P0. Next: check the other active rules in code before the dry run. Addenda A-B
 and one post-result scorer fix disclosed. `experiments/exp30-other-rules-context/RESULT.md`
+
+## EXP-31 — Code check for other-rule conflicts before the dry run (T-138) — PRE-REGISTRATION (2026-09-27)
+Pre-registered in `experiments/exp31-no-trade-check/PREREG.md` before the code and any run. V6 extended: a draft
+that makes another active rule on the same line go from not failing to failing (judged by `rule_outcome` on
+observed evidence) is refused before the lab and fed back through the critique loop. Prompt P0. Groq and
+gemini-lite, A1, EXP-18's items + S11a/b. Success: 0 regressions reach the lab, at most 1 EXP-18b-confirmed item
+lost, safety holds. Disclosed: targets EXP-18b's T9, so T9 is reported separately.
+
+### EXP-31 — RESULT (2026-09-27)
+All outcomes passed for both backends: 0 drafts that broke another active rule reached the lab (EXP-18b: 1 each,
+T9), no EXP-18b-confirmed item lost, safety S11a/b held. T9: Groq's MODP-2048 draft refused at V6, revised to
+MODP-4096, confirmed live; gemini-lite kept MODP-3072 and was refused each round before the lab. H2: Groq 13/16
+(bar not met), gemini-lite 14/16 (Wilson lower 0.64, met). DEC-042. `experiments/exp31-no-trade-check/RESULT.md`
+
+## EXP-32 — Site sensor: detection latency and what leaves the site (T-139) — PRE-REGISTRATION (2026-09-27)
+Pre-registered in `experiments/exp32-site-sensor/PREREG.md` before the code and any run. Live lab, W = 10 s, 10
+post-quantum -> classical changes. Bars: 10/10 detected centrally; median latency <= 20 s, max <= 35 s; 0 false
+alerts; every report sequence accepted exactly once across a collector outage; 100% of reports pass the strict
+allow-list (no packet bytes); tampered / unknown-site / replayed reports rejected (unit tests).
+
+### EXP-32 — RESULT (2026-09-27)
+All bars held. 10/10 PQ downgrades on the live lab tunnel reached the central collector: median 8.9 s, max 10.3 s
+(W = 10 s); 0 false alerts; 56 reports, each accepted exactly once across a 30 s collector outage; 56/56 passed the
+strict allow-list. Disclosed harness logging bug (H4 scored from the collector's state, a PREREG-named source).
+DEC-043. `experiments/exp32-site-sensor/RESULT.md`

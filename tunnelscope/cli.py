@@ -326,6 +326,79 @@ def cmd_fleet(args):
     return 0
 
 
+def cmd_sensor_key(args):
+    """Create a site key file (0600). The same file goes to the site's sensor and to the collector's keys dir."""
+    from pathlib import Path
+    from .sensor.report import write_key
+    try:
+        p = write_key(Path(args.out) / f"{args.site}.key")
+    except FileExistsError:
+        print(f"{args.site}.key already exists in {args.out}; not overwritten", file=sys.stderr)
+        return 2
+    print(f"wrote {p} (keep it secret; copy it to the site's sensor and to the collector's --keys directory)")
+    return 0
+
+
+def cmd_sensor(args):
+    """Site sensor: live analysis at the site; only signed findings reports leave it (T-139)."""
+    from .sensor.sensor import Sensor
+    s = Sensor(args.site, args.key, args.outbox, args.state, window=args.window, interface=args.interface,
+               follow=args.follow, keep=args.keep)
+    print(f"sensor {args.site}: {s.monitor.status()['source']}, {s.window}s windows, reports -> {args.outbox} "
+          "(Ctrl-C stops)", file=sys.stderr)
+    try:
+        s.run(max_reports=args.max_reports, on_report=lambda p: print(p.name, flush=True))
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
+def cmd_collect(args):
+    """Central collector: accept signed site reports from an inbox directory (T-139)."""
+    from .sensor.collector import Collector
+    c = Collector(args.inbox, args.state, args.keys, alerts=args.alerts, alert_format=args.alert_format)
+
+    def show(r):
+        print(json.dumps(r) if args.json else
+              (f"{r['file']}: accepted ({r['kind']}, {r['alerts']} alert(s))" if r["accepted"]
+               else f"{r['file']}: REJECTED, {r['reason']}"), flush=True)
+    if args.once:
+        rows = c.process_once()
+        for r in rows:
+            show(r)
+        return 1 if any(not r["accepted"] for r in rows) else 0
+    try:
+        c.run(poll_s=args.poll, on_result=show)
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
+def cmd_sites(args):
+    """Per-site freshness and posture from the collector's state."""
+    from .sensor.collector import sites_status
+    rows = sites_status(args.state)
+    if args.json:
+        print(json.dumps(rows, indent=2))
+        return 0
+    if not rows:
+        print("no site has reported yet")
+    for r in rows:
+        print(f"{r['site']}: {r['status'].upper()}, last report {r['age_s']:.0f} s ago, {r['reports']} reports"
+              + (f", {r['missing_reports']} missing" if r["missing_reports"] else ""))
+        if r["note"]:
+            print(f"    {r['note']}")
+        for t in r["tunnels"]:
+            print(f"    {t['src']} <-> {t['dst']}: {t['posture']}; failing {', '.join(t['fails']) or 'none'}")
+            h = t.get("last_handshake")
+            if h and h["posture"] != t["posture"]:
+                print(f"        last handshake seen {h['age_s']:.0f} s ago: {h['posture']}")
+        for a in r.get("recent_alerts") or []:
+            print(f"    ALERT {a['age_s']:.0f} s ago: {a['kind']} of {a['attribute']} on {a['tunnel']} "
+                  f"({a.get('usual')} -> {a.get('now')})")
+    return 1 if any(r["status"] == "stale" for r in rows) else 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tunnelscope")
     ap.add_argument("--version", action="version", version=f"tunnelscope {_version()}")
@@ -412,6 +485,36 @@ def main(argv=None):
     cf.add_argument("file")
     cf.add_argument("--json", action="store_true")
     cf.set_defaults(func=cmd_config)
+    sk = sub.add_parser("sensor-key", help="create a site key for a sensor and the collector (T-139)")
+    sk.add_argument("--site", required=True)
+    sk.add_argument("--out", required=True, metavar="DIR", help="directory for <site>.key")
+    sk.set_defaults(func=cmd_sensor_key)
+    sn = sub.add_parser("sensor", help="site sensor: live analysis here, only signed findings reports leave the site")
+    ssrc = sn.add_mutually_exclusive_group(required=True)
+    ssrc.add_argument("--interface", "-i", help="network interface (mirror/SPAN port) to capture on")
+    ssrc.add_argument("--follow", metavar="DIR", help="directory a tap or router rotates capture files into")
+    sn.add_argument("--site", required=True, help="site name (letters, digits, - _ .)")
+    sn.add_argument("--key", required=True, metavar="FILE", help="the site's key file (tunnelscope sensor-key)")
+    sn.add_argument("--outbox", required=True, metavar="DIR", help="where signed reports are written for transfer")
+    sn.add_argument("--state", required=True, metavar="DIR", help="sensor state: sequence number, tunnel history")
+    sn.add_argument("--window", type=int, default=30, help="seconds per window (default 30)")
+    sn.add_argument("--keep", action="store_true", help="keep capture files after analysis (default: delete)")
+    sn.add_argument("--max-reports", type=int, help="stop after N reports (testing)")
+    sn.set_defaults(func=cmd_sensor)
+    co = sub.add_parser("collect", help="central collector: accept signed site reports from an inbox directory")
+    co.add_argument("--inbox", required=True, metavar="DIR")
+    co.add_argument("--state", required=True, metavar="DIR", help="per-site state and quarantine")
+    co.add_argument("--keys", required=True, metavar="DIR", help="directory of <site>.key files")
+    co.add_argument("--alerts", metavar="FILE", help="append each site's alerts, tagged with the site")
+    co.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl")
+    co.add_argument("--poll", type=float, default=1.0, help="seconds between inbox checks (default 1)")
+    co.add_argument("--once", action="store_true", help="process the inbox once and exit (1 if anything was rejected)")
+    co.add_argument("--json", action="store_true")
+    co.set_defaults(func=cmd_collect)
+    si = sub.add_parser("sites", help="per-site freshness and posture from the collector (exit 1 if any site is stale)")
+    si.add_argument("--state", required=True, metavar="DIR")
+    si.add_argument("--json", action="store_true")
+    si.set_defaults(func=cmd_sites)
     dr = sub.add_parser("doctor", help="check the analysis stack (tshark present, fields intact)")
     dr.set_defaults(func=cmd_doctor)
     args = ap.parse_args(argv)
@@ -419,7 +522,7 @@ def main(argv=None):
     try:
         # Verify the stack before trusting anything derived from it. Cached per
         # process, so a 70-capture fleet scan pays this once, not per capture.
-        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
+        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_sensor_key, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
             preflight()
         return args.func(args) or 0
     except TunnelScopeError as e:
