@@ -18,3 +18,5 @@
 
 # T-085 external validation, 2026-09-20
 * :: esp_cipher_family  # T-085: sieve gained DES/Blowfish/Twofish/CAST/NULL/AES-CTR-SHA1 families after third-party captures used them
+exp26/mt-m6.pcap :: pfs  # T-135: MikroTik pads encrypted IKE messages, so the size-based PFS rule cannot judge; UNKNOWN instead of a guess (was right by luck)
+exp26/mt-m7.pcap :: pfs  # T-135: same padding; was INFERRED True for a PFS-off tunnel (EXP-26's one wrong finding), now UNKNOWN
