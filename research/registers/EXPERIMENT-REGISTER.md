@@ -526,3 +526,9 @@ All outcomes passed for both backends: 0 drafts that broke another active rule r
 T9), no EXP-18b-confirmed item lost, safety S11a/b held. T9: Groq's MODP-2048 draft refused at V6, revised to
 MODP-4096, confirmed live; gemini-lite kept MODP-3072 and was refused each round before the lab. H2: Groq 13/16
 (bar not met), gemini-lite 14/16 (Wilson lower 0.64, met). DEC-042. `experiments/exp31-no-trade-check/RESULT.md`
+
+## EXP-32 — Site sensor: detection latency and what leaves the site (T-139) — PRE-REGISTRATION (2026-09-27)
+Pre-registered in `experiments/exp32-site-sensor/PREREG.md` before the code and any run. Live lab, W = 10 s, 10
+post-quantum -> classical changes. Bars: 10/10 detected centrally; median latency <= 20 s, max <= 35 s; 0 false
+alerts; every report sequence accepted exactly once across a collector outage; 100% of reports pass the strict
+allow-list (no packet bytes); tampered / unknown-site / replayed reports rejected (unit tests).
