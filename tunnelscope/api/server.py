@@ -278,6 +278,16 @@ class _Handler(BaseHTTPRequestHandler):
                 st = LIVE.status()
                 st["windows"] = st["windows"][:20]
                 self._json(200, {"ok": True, **st})
+        elif path == "/api/intel":
+            # T-130 part 2: known vulnerabilities for a fingerprinted implementation, only when the dashboard asks
+            # (a button, never automatic). Online only with TUNNELSCOPE_NETWORK=on; otherwise the cache/bundle.
+            from ..intel.lookup import lookup
+            from ..intel.sources import PRODUCTS
+            impl = (parse_qs(urlparse(self.path).query).get("implementation") or [""])[0]
+            if impl not in PRODUCTS:
+                self._json(400, {"ok": False, "error": f"unknown implementation; one of {sorted(PRODUCTS)}"})
+            else:
+                self._json(200, {"ok": True, **lookup(impl)})
         elif path == "/api/remediate/targets":
             from ..remediate.execute import lab_targets
             self._json(200, {"ok": True, "targets": lab_targets(), "recommended": "sih26-alice-pq"})

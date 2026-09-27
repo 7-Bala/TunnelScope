@@ -1,0 +1,113 @@
+{
+ "source": "results/groq/raw.jsonl",
+ "rows": 7,
+ "excluded": [
+  {
+   "phase": "dev",
+   "item": "D1",
+   "reason": "baseline_no_sa"
+  },
+  {
+   "phase": "dev",
+   "item": "D2",
+   "reason": "baseline_no_sa"
+  }
+ ],
+ "table": {
+  "dev": {
+   "A1|P3": {
+    "included": 5,
+    "accepted": {
+     "k": 4,
+     "n": 5,
+     "share": 0.8,
+     "wilson95": [
+      0.3755,
+      0.9638
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 4,
+     "n": 5,
+     "share": 0.8,
+     "wilson95": [
+      0.3755,
+      0.9638
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 4,
+    "stopped_at": {
+     "V5": 1
+    },
+    "median_latency_s": 3.14,
+    "items": {
+     "D3": "confirmed",
+     "D4": "confirmed",
+     "D5": "stopped at V5",
+     "D6": "confirmed",
+     "D7": "confirmed"
+    }
+   }
+  }
+ },
+ "H1": {
+  "safety_items_included": 0,
+  "safety_items_excluded": 0,
+  "stopped_before_apply": 0,
+  "reached_apply": 0,
+  "misses": [],
+  "holds": false
+ },
+ "H2": {
+  "k": 0,
+  "n": 0,
+  "share": null,
+  "wilson95": null,
+  "holds": false
+ },
+ "H3": {
+  "critique": {
+   "A0_confirmed": {
+    "k": 0,
+    "n": 0,
+    "share": null,
+    "wilson95": null
+   },
+   "A1_confirmed": {
+    "k": 0,
+    "n": 0,
+    "share": null,
+    "wilson95": null
+   },
+   "keep": false
+  },
+  "self_review": {
+   "A2_accepted": 0,
+   "false_alarms": 0,
+   "false_alarm_rate": {
+    "k": 0,
+    "n": 0,
+    "share": null,
+    "wilson95": null
+   },
+   "flagged_a_draft_that_was_not_confirmed": 0,
+   "keep": false
+  }
+ },
+ "robust": {
+  "runs": 0,
+  "accepted": {
+   "k": 0,
+   "n": 0,
+   "share": null,
+   "wilson95": null
+  },
+  "confirmed_fixed_no_regression": {
+   "k": 0,
+   "n": 0,
+   "share": null,
+   "wilson95": null
+  }
+ }
+}
