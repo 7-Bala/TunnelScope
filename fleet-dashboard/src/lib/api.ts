@@ -120,6 +120,56 @@ export async function liveStatus(): Promise<LiveStatus | null> {
   }
 }
 
+export interface SiteTunnel {
+  src: string
+  dst: string
+  posture: string
+  fails: string[]
+  risk?: string | null
+  last_handshake?: { posture: string; observed_at?: number | null; age_s: number; fails: string[] } | null
+}
+
+export interface SiteAlert {
+  kind: string
+  attribute: string
+  usual?: unknown
+  now?: unknown
+  tunnel: string
+  received: number
+  age_s: number
+}
+
+export interface SiteStatus {
+  site: string
+  status: "reporting" | "stale"
+  last_seen?: number
+  age_s: number
+  window_s?: number
+  reports?: number
+  missing_reports: number
+  last_window_ok?: boolean | null
+  tunnels: SiteTunnel[]
+  recent_alerts?: SiteAlert[]
+  note?: string | null
+}
+
+export interface SitesResult {
+  ok: boolean
+  enabled: boolean
+  stale_after_windows?: number
+  sites?: SiteStatus[]
+}
+
+export async function sitesStatus(): Promise<SitesResult | null> {
+  try {
+    const res = await fetch("/api/sites", { cache: "no-store" })
+    if (!res.ok) return null
+    return (await res.json()) as SitesResult
+  } catch {
+    return null
+  }
+}
+
 export interface Anomaly {
   layer: "posture" | "traffic" | "model"
   kind: "downgrade" | "upgrade" | "change" | "new_failure" | "shift" | "outlier" | "fleet_outlier"
