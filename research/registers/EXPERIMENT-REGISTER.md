@@ -513,3 +513,10 @@ S11a/b held; one run under P3 confirmed 15/16 (0.9375, Wilson [0.717, 0.989]), g
 were answer shape, not attributable to P3. Groq stopped at the pre-registered dev gate (4/5 vs 5/5, a V5 formatting
 slip). P3 not adopted; default stays P0. Next: check the other active rules in code before the dry run. Addenda A-B
 and one post-result scorer fix disclosed. `experiments/exp30-other-rules-context/RESULT.md`
+
+## EXP-31 — Code check for other-rule conflicts before the dry run (T-138) — PRE-REGISTRATION (2026-09-27)
+Pre-registered in `experiments/exp31-no-trade-check/PREREG.md` before the code and any run. V6 extended: a draft
+that makes another active rule on the same line go from not failing to failing (judged by `rule_outcome` on
+observed evidence) is refused before the lab and fed back through the critique loop. Prompt P0. Groq and
+gemini-lite, A1, EXP-18's items + S11a/b. Success: 0 regressions reach the lab, at most 1 EXP-18b-confirmed item
+lost, safety holds. Disclosed: targets EXP-18b's T9, so T9 is reported separately.
