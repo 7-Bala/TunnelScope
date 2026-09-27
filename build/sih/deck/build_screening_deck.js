@@ -162,7 +162,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
   // ============ 3  Technical approach: two flowcharts (checking, fixing) + technologies
   { const s = pres.addSlide(); chrome(s, 3, "TECHNICAL APPROACH");
     const sub = (str, x, w) => t(s, str, { x, y: 1.02, w, h: 0.36, fontFace: HEAD, fontSize: 17, bold: true, color: C.INK });
-    sub("Flow 1: Checking a VPN", 0.5, 6.0); sub("Flow 2: Fixing it safely (test lab only)", 6.95, 5.9);
+    sub("Flow 1: Checking a VPN", 0.5, 6.0); sub("Flow 2: Fixing it safely", 6.95, 5.9);
     s.addShape(pres.shapes.LINE, { x: 6.78, y: 1.05, w: 0, h: 4.95, line: { color: "A6A6A6", width: 1, dashType: "dash" } });
     const P = pres.shapes.FLOWCHART_PROCESS, D = pres.shapes.FLOWCHART_DECISION, T = pres.shapes.FLOWCHART_TERMINATOR;
 
@@ -210,8 +210,11 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       node(s, T, cx - 0.9, y.keep, 1.8, 0.32, "Fix kept", C.TERM, C.TERM_L, 10.5);
       line(s, cx + DW / 2, y.d + 0.36, SX, y.d + 0.36); tag(s, "No", cx + DW / 2 + 0.03, y.d + 0.12);
       node(s, P, SX, y.d - 0.02, SW, 0.76, "Automatic rollback: old files restored byte for byte, checked again", "FBE5D6", "C55A11", 9.5);
-      t(s, "In our tests: 32 of 32 unsafe AI drafts were blocked before running; 11 of 11 fixes that broke another rule were rolled back automatically.",
-        { x: 6.95, y: 5.5, w: 5.9, h: 0.5, fontSize: 10.5, italic: true, color: C.GREY });
+      t(s, [{ text: "Proven in our test lab: ", options: { bold: true } },
+        { text: "32 of 32 unsafe AI drafts blocked; 11 of 11 fixes that broke another rule rolled back automatically. " },
+        { text: "Being built: ", options: { bold: true } },
+        { text: "the same steps on real strongSwan gateways over SSH, after the operator accepts the terms and risks." }],
+        { x: 6.95, y: 5.46, w: 5.9, h: 0.62, fontSize: 10, italic: true, color: C.GREY });
     }
 
     // technologies, one strip under both flows
@@ -262,7 +265,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     const items = [
       ["Faster checks for analysts:", "Impact: a VPN is checked in seconds instead of reading packets by hand.", "Benefit: more VPNs checked, fewer missed problems."],
       ["Quantum-safe readiness:", "Impact: finds VPNs that still use old key exchange, or were pushed down from a quantum-safe one.", "Benefit: supports India’s post-quantum migration."],
-      ["Safe fixes for administrators:", "Impact: each failed rule gets a fix; AI can draft it, a person approves, and a bad fix is undone automatically.", "Benefit: problems get fixed, not just reported, without risking the VPN."],
+      ["Safe fixes for administrators:", "Impact: each failed rule gets a fix; AI can draft it, a person approves, and a bad fix is undone automatically (proven in our lab; live gateways next).", "Benefit: problems get fixed, not just reported, without risking the VPN."],
       ["Evidence for auditors:", "Impact: each verdict cites its standard (RFC, DISA, DST).", "Benefit: supports DPDP Rules 2025 and CERT-In audits."],
       ["Secure by design:", "Impact: works offline by default; nothing leaves the site.", "Benefit: suitable for sensitive government networks."],
     ];
@@ -290,7 +293,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     t(s, "The same VPN can pass one standard and fail another, so TunnelScope shows each standard separately.",
       { x: RX, y: top + 3.02, w: RW, h: 0.7, fontSize: 11, italic: true, color: C.GREY });
     heading(s, "Future scope:", RX, top + 3.85, RW);
-    t(s, bullets(["Testing on vendor VPN devices", "Direct feeds from network sensors", "More real-world traffic for training"]),
+    t(s, bullets(["Automatic fixing on real VPN gateways (SSH), with terms-and-risks consent and the same rollback", "Testing on vendor VPN devices", "Direct feeds from network sensors", "More real-world traffic for training"]),
       { x: RX, y: top + 4.22, w: RW, h: 1.5, fontSize: 12, paraSpaceAfter: 4 });
   }
 
