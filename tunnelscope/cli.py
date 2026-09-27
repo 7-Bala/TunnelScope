@@ -210,6 +210,35 @@ def cmd_doctor(args):
     return 0
 
 
+def cmd_config(args):
+    """T-120: read an IPsec configuration file (offline) into the normalised crypto model."""
+    from .config import parse_file
+    d = parse_file(args.file)
+    if args.json:
+        print(json.dumps(d, indent=2))
+        return 0 if d["format"] else 1
+    if not d["format"]:
+        print(f"{args.file}: " + "; ".join(d["unknown"]))
+        return 1
+    def one(p):
+        parts = [", ".join(p[k]) for k in ("encr", "integ", "prf", "ke") if p.get(k)]
+        parts += [f"ADDKE{n} {', '.join(v)}" for n, v in sorted(p["addke"].items())]
+        return " / ".join(parts) + f"  ({p['text']})" + (f"  [NOT UNDERSTOOD: {', '.join(p['unknown'])}]" if p["unknown"] else "")
+    fmt = lambda props: " | ".join(one(p) for p in props) or "(implementation default, not known to TunnelScope)"
+    print(f"{args.file}: {d['format']}, {len(d['tunnels'])} connection(s)")
+    for t in d["tunnels"]:
+        print(f"\n  {t['name']}  {t['ike_version'] or 'IKE version not set'}  {t['local_addrs'] or '?'} -> {t['remote_addrs'] or '?'}")
+        print(f"    IKE: {fmt(t['ike_proposals'])}")
+        if t["ppk"]:
+            print(f"    PPK: id {t['ppk']['id']}, {'required' if t['ppk']['required'] else 'optional'}")
+        for c in t["children"]:
+            pfs = {True: "PFS on", False: "PFS off", None: "PFS not set"}[c["pfs"]]
+            print(f"    child {c['name']} ({c['mode']}, {pfs}): {fmt(c['esp_proposals'] + c['ah_proposals'])}")
+        for u in t["unknown"]:
+            print(f"    NOT UNDERSTOOD: {u}")
+    return 0
+
+
 def cmd_fleet(args):
     scanned = fleet_scan(args.directory)          # walk the directory exactly once
     f = fleet_json(args.directory, scanned)
@@ -291,6 +320,10 @@ def main(argv=None):
     fl.add_argument("--fail-on-findings", action="store_true",
                     help="exit 1 if any FAIL verdict, or any capture that failed to parse")
     fl.set_defaults(func=cmd_fleet)
+    cf = sub.add_parser("config", help="read an IPsec configuration file (swanctl.conf, ipsec.conf) offline: normalised crypto model")
+    cf.add_argument("file")
+    cf.add_argument("--json", action="store_true")
+    cf.set_defaults(func=cmd_config)
     dr = sub.add_parser("doctor", help="check the analysis stack (tshark present, fields intact)")
     dr.set_defaults(func=cmd_doctor)
     args = ap.parse_args(argv)
@@ -298,7 +331,7 @@ def main(argv=None):
     try:
         # Verify the stack before trusting anything derived from it. Cached per
         # process, so a 70-capture fleet scan pays this once, not per capture.
-        if args.func is not cmd_doctor and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
+        if args.func not in (cmd_doctor, cmd_config) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
             preflight()
         return args.func(args) or 0
     except TunnelScopeError as e:
