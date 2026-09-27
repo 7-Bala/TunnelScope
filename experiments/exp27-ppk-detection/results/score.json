@@ -1,0 +1,215 @@
+{
+ "hypotheses": {
+  "H1": {
+   "K0": true,
+   "K1": true,
+   "K2": true,
+   "K3": true,
+   "pass": true
+  },
+  "H2": {
+   "K5_value": "negotiated",
+   "K5_ppk_used_truth": false,
+   "any_arm_claims_use": false,
+   "pass": true
+  },
+  "H3": {
+   "K0": [],
+   "K1": [],
+   "K2": [],
+   "K3": [],
+   "K4": [],
+   "K5": [],
+   "pass": true
+  }
+ },
+ "arms": [
+  {
+   "arm": "K0",
+   "truth": {
+    "established": true,
+    "ppk_used": false,
+    "use_ppk_request": false,
+    "use_ppk_response": false,
+    "expected_pq_ppk": "not-offered",
+    "log_evidence": []
+   },
+   "tunnelscope": {
+    "pq_ppk": {
+     "status": "OBSERVED",
+     "value": "not-offered",
+     "note": "the initiator did not announce RFC 8784 PPK support (no USE_PPK notify)"
+    },
+    "pq_key_exchange": "classical-only",
+    "negotiation_outcome": "success",
+    "suite": {
+     "ike_encr": "AES-CBC-256",
+     "ike_integ": "HMAC-SHA2-256-128",
+     "ike_prf": "PRF-HMAC-SHA2-256",
+     "ike_dh_group": "MODP-2048"
+    }
+   },
+   "pq_ppk_correct": true,
+   "claims_ppk_use": false,
+   "suite_wrong": []
+  },
+  {
+   "arm": "K1",
+   "truth": {
+    "established": true,
+    "ppk_used": true,
+    "use_ppk_request": true,
+    "use_ppk_response": true,
+    "expected_pq_ppk": "negotiated",
+    "log_evidence": [
+     "02[CFG] using PPK for PPK_ID 'ppk27'",
+     "06[CFG] using PPK for PPK_ID 'ppk27'"
+    ]
+   },
+   "tunnelscope": {
+    "pq_ppk": {
+     "status": "OBSERVED",
+     "value": "negotiated",
+     "note": "both peers announced RFC 8784 PPK support (USE_PPK in both IKE_SA_INIT messages); whether the PPK was actually used is decided in encrypted IKE_AUTH and is not visible passively"
+    },
+    "pq_key_exchange": "classical-only",
+    "negotiation_outcome": "success",
+    "suite": {
+     "ike_encr": "AES-CBC-256",
+     "ike_integ": "HMAC-SHA2-256-128",
+     "ike_prf": "PRF-HMAC-SHA2-256",
+     "ike_dh_group": "MODP-2048"
+    }
+   },
+   "pq_ppk_correct": true,
+   "claims_ppk_use": false,
+   "suite_wrong": []
+  },
+  {
+   "arm": "K2",
+   "truth": {
+    "established": true,
+    "ppk_used": true,
+    "use_ppk_request": true,
+    "use_ppk_response": true,
+    "expected_pq_ppk": "negotiated",
+    "log_evidence": [
+     "08[CFG] using PPK for PPK_ID 'ppk27'",
+     "04[CFG] using PPK for PPK_ID 'ppk27'"
+    ]
+   },
+   "tunnelscope": {
+    "pq_ppk": {
+     "status": "OBSERVED",
+     "value": "negotiated",
+     "note": "both peers announced RFC 8784 PPK support (USE_PPK in both IKE_SA_INIT messages); whether the PPK was actually used is decided in encrypted IKE_AUTH and is not visible passively"
+    },
+    "pq_key_exchange": "classical-only",
+    "negotiation_outcome": "success",
+    "suite": {
+     "ike_encr": "AES-CBC-256",
+     "ike_integ": "HMAC-SHA2-256-128",
+     "ike_prf": "PRF-HMAC-SHA2-256",
+     "ike_dh_group": "MODP-2048"
+    }
+   },
+   "pq_ppk_correct": true,
+   "claims_ppk_use": false,
+   "suite_wrong": []
+  },
+  {
+   "arm": "K3",
+   "truth": {
+    "established": true,
+    "ppk_used": false,
+    "use_ppk_request": true,
+    "use_ppk_response": false,
+    "expected_pq_ppk": "offered-not-negotiated",
+    "log_evidence": []
+   },
+   "tunnelscope": {
+    "pq_ppk": {
+     "status": "OBSERVED",
+     "value": "offered-not-negotiated",
+     "note": "the initiator offered PPK but the responder did not announce support: no PPK in use"
+    },
+    "pq_key_exchange": "classical-only",
+    "negotiation_outcome": "success",
+    "suite": {
+     "ike_encr": "AES-CBC-256",
+     "ike_integ": "HMAC-SHA2-256-128",
+     "ike_prf": "PRF-HMAC-SHA2-256",
+     "ike_dh_group": "MODP-2048"
+    }
+   },
+   "pq_ppk_correct": true,
+   "claims_ppk_use": false,
+   "suite_wrong": []
+  },
+  {
+   "arm": "K4",
+   "truth": {
+    "established": false,
+    "ppk_used": false,
+    "use_ppk_request": true,
+    "use_ppk_response": true,
+    "expected_pq_ppk": "negotiated",
+    "log_evidence": [
+     "16[ENC] parsed IKE_AUTH response 1 [ N(AUTH_FAILED) ]",
+     "16[CFG] received PPK_ID 'ppk27', but require 'other27'",
+     "16[ENC] generating IKE_AUTH response 1 [ N(AUTH_FAILED) ]"
+    ]
+   },
+   "tunnelscope": {
+    "pq_ppk": {
+     "status": "OBSERVED",
+     "value": "negotiated",
+     "note": "both peers announced RFC 8784 PPK support (USE_PPK in both IKE_SA_INIT messages); whether the PPK was actually used is decided in encrypted IKE_AUTH and is not visible passively"
+    },
+    "pq_key_exchange": "classical-only",
+    "negotiation_outcome": "auth-or-child-failure",
+    "suite": {
+     "ike_encr": "AES-CBC-256",
+     "ike_integ": "HMAC-SHA2-256-128",
+     "ike_prf": "PRF-HMAC-SHA2-256",
+     "ike_dh_group": "MODP-2048"
+    }
+   },
+   "pq_ppk_correct": true,
+   "claims_ppk_use": false,
+   "suite_wrong": []
+  },
+  {
+   "arm": "K5",
+   "truth": {
+    "established": true,
+    "ppk_used": false,
+    "use_ppk_request": true,
+    "use_ppk_response": true,
+    "expected_pq_ppk": "negotiated",
+    "log_evidence": [
+     "09[CFG] peer didn't use PPK for PPK_ID 'ppk27'",
+     "16[IKE] no PPK available, using NO_PPK_AUTH notify"
+    ]
+   },
+   "tunnelscope": {
+    "pq_ppk": {
+     "status": "OBSERVED",
+     "value": "negotiated",
+     "note": "both peers announced RFC 8784 PPK support (USE_PPK in both IKE_SA_INIT messages); whether the PPK was actually used is decided in encrypted IKE_AUTH and is not visible passively"
+    },
+    "pq_key_exchange": "classical-only",
+    "negotiation_outcome": "success",
+    "suite": {
+     "ike_encr": "AES-CBC-256",
+     "ike_integ": "HMAC-SHA2-256-128",
+     "ike_prf": "PRF-HMAC-SHA2-256",
+     "ike_dh_group": "MODP-2048"
+    }
+   },
+   "pq_ppk_correct": true,
+   "claims_ppk_use": false,
+   "suite_wrong": []
+  }
+ ]
+}
