@@ -239,6 +239,34 @@ def cmd_config(args):
     return 0
 
 
+def cmd_reconcile(args):
+    """T-121: does the traffic match the configuration? Exit 3 if any field mismatches, 1 if no connection fits."""
+    from .config import parse_file
+    from .config.reconcile import MISMATCH, as_dicts, pick_tunnel, reconcile
+    cfg = parse_file(args.config)
+    recs = [r for r in build_records(args.pcap) if getattr(r, "_ike", [])]
+    if not cfg["tunnels"] or not recs:
+        print("nothing to compare: " + ("no IKE in the capture" if not recs else "; ".join(cfg.get("unknown", ["no connections"]))))
+        return 1
+    rec = recs[0]
+    tunnel, why = pick_tunnel(cfg["tunnels"], rec, args.conn)
+    if tunnel is None:
+        print(f"no matching connection: {why}")
+        return 1
+    comps = reconcile(tunnel, rec)
+    if args.json:
+        print(json.dumps({"pcap": args.pcap, "config": args.config, "connection": tunnel["name"],
+                          "comparisons": as_dicts(comps)}, indent=2, default=str))
+    else:
+        glyph = {"match": "=", "consistent": "~", "mismatch": "X", "not comparable": "?", "not configured": "-"}
+        print(f"# config vs wire: {args.config} [{tunnel['name']}]  x  {args.pcap}")
+        for c in comps:
+            print(f"  [{glyph.get(c.outcome, '?')}] {c.outcome:15} {c.field:18} {c.note}")
+        n = sum(c.outcome == MISMATCH for c in comps)
+        print(f"\n  {n} mismatch(es)" + ("  -> the traffic does not match this configuration" if n else ""))
+    return 3 if any(c.outcome == MISMATCH for c in comps) else 0
+
+
 def cmd_fleet(args):
     scanned = fleet_scan(args.directory)          # walk the directory exactly once
     f = fleet_json(args.directory, scanned)
@@ -320,6 +348,12 @@ def main(argv=None):
     fl.add_argument("--fail-on-findings", action="store_true",
                     help="exit 1 if any FAIL verdict, or any capture that failed to parse")
     fl.set_defaults(func=cmd_fleet)
+    rc = sub.add_parser("reconcile", help="does a capture's traffic match a configuration file? (exit 3 on any mismatch)")
+    rc.add_argument("pcap")
+    rc.add_argument("config")
+    rc.add_argument("--conn", help="connection name, when several use the capture's addresses")
+    rc.add_argument("--json", action="store_true")
+    rc.set_defaults(func=cmd_reconcile)
     cf = sub.add_parser("config", help="read an IPsec configuration file (swanctl.conf, ipsec.conf) offline: normalised crypto model")
     cf.add_argument("file")
     cf.add_argument("--json", action="store_true")
