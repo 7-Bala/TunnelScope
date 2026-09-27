@@ -114,3 +114,15 @@ Google's API terms (2(d)) prohibit circumventing usage limits; the owner made th
 items, arms and bars are unchanged (gemini-3.8-flash only); every row records `key_purpose` (which of the
 owner's keys, never the key itself). If the second key also runs out, the arm pauses; nothing is scored as a
 model failure because of quota.
+
+## ADDENDUM D (2026-09-27, before any gemini-3.1-flash-lite run)
+
+gemini-3.8-flash's free-tier daily quota ran out on the experiment key and then on the second account's key
+(HTTP 429 on every call, largely spent by same-day smoke tests) after 3 of its 5 dev items; one arm needs
+~140 runs x 2-3 calls. Owner direction the same day: "use the best model for our usecase ... use what is good",
+not the top model. So a **new Gemini arm, `gemini-lite` = gemini-3.1-flash-lite** (answered on all three keys in
+~1.5 s on 2026-09-27; its limits are separate), on the **experiment key** (no account switching needed), run with
+the full procedure: dev P0 (P1/P2 only if P0 is not 5/5), its own `FREEZE-gemini-lite.md` committed before
+test/S11/R, same items, arms and bars, thinking_level low (Gemini 3). Results: `results/gemini-lite/`. The
+gemini-3.8-flash rows (`results/gemini/`, 3 of 5 dev items confirmed fixed, 2 never run) stay as a partial,
+unscored record.

@@ -33,6 +33,7 @@ from tunnelscope.remediate import chain, cloud_client, generate as gen, open_mod
 
 EXP = ROOT / "experiments" / "exp18b-gemini-remediation"
 BACKENDS = {"gemini": ("cloud", cloud_client, cloud_client.MODEL_ID),
+            "gemini-lite": ("cloud", cloud_client, "gemini-3.1-flash-lite"),        # ADDENDUM D
             "groq": ("chain", chain, "openai/gpt-oss-120b")}
 INFRA = "infrastructure: rate_limited_or_overloaded"
 _LAST_PLAN: dict = {}
@@ -42,6 +43,8 @@ def configure(name: str, key_purpose: str | None = None) -> tuple[str, str]:
     backend, mod, model = BACKENDS[name]
     if name == "groq":
         os.environ["TUNNELSCOPE_GENERATOR_CHAIN"] = f"groq:{model}"   # that one model, no fallback
+    if name.startswith("gemini"):
+        cloud_client.MODEL_ID = model                                  # the cloud backend's one model
     os.environ.pop("TUNNELSCOPE_KEY_PURPOSE", None)                  # the plain key = the experiment key
     if key_purpose:                                                    # ADDENDUM C: owner's other account key
         os.environ["TUNNELSCOPE_KEY_PURPOSE"] = key_purpose
@@ -50,7 +53,7 @@ def configure(name: str, key_purpose: str | None = None) -> tuple[str, str]:
     # dev prompt variants P1/P2 call `runtime.generate_json` in run_exp18: point that at the backend under test
     base.runtime = types.SimpleNamespace(
         generate_json=mod.generate_json, DEFAULT_TIMEOUT_S=30.0, MODEL_REVISION=model,
-        model_available=(lambda: cloud_client.available()) if name == "gemini" else (lambda: open_model_client.available()))
+        model_available=(lambda: cloud_client.available()) if name.startswith("gemini") else (lambda: open_model_client.available()))
     orig = gen.generate_plan
 
     @functools.wraps(orig)
