@@ -107,9 +107,21 @@ def _assert(op: str, want, value) -> bool | None:
     raise ValueError(f"unknown assert op: {op}")
 
 
-def load_baselines(rules_dir: str = RULES_DIR) -> list[dict]:
+def available_profiles(rules_dir: str = RULES_DIR) -> list[str]:
+    """Opt-in baselines in rules/profiles/ (T-122: e.g. CNSA 2.0, a national-security profile that would make
+    every ordinary tunnel FAIL if it were a default)."""
+    return sorted(os.path.splitext(os.path.basename(f))[0] for f in glob.glob(os.path.join(rules_dir, "profiles", "*.yaml")))
+
+
+def load_baselines(rules_dir: str = RULES_DIR, profiles: list[str] | None = None) -> list[dict]:
     out = []
-    for f in sorted(glob.glob(os.path.join(rules_dir, "*.yaml"))):
+    files = sorted(glob.glob(os.path.join(rules_dir, "*.yaml")))
+    for name in profiles or []:
+        path = os.path.join(rules_dir, "profiles", f"{name}.yaml")
+        if not os.path.isfile(path):
+            raise DependencyError(f"unknown rules profile {name!r}; available: {', '.join(available_profiles(rules_dir)) or 'none'}")
+        files.append(path)
+    for f in files:
         with open(f) as fh:
             out.append(yaml.safe_load(fh))
     if not out:

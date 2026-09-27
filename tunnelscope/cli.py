@@ -54,7 +54,7 @@ def _version() -> str:
 
 
 def cmd_assess(args):
-    baselines = load_baselines()
+    baselines = load_baselines(profiles=args.profile)
     recs = build_records(args.pcap)
     all_v = []
     for r in recs:
@@ -297,6 +297,7 @@ def main(argv=None):
     s.add_argument("pcap"); s.add_argument("--json", action="store_true")
     s.add_argument("--fail-on-findings", action="store_true",
                    help="exit 1 if any FAIL verdict is present (for CI/monitoring gates)")
+    s.add_argument("--profile", action="append", help="also assess against an opt-in rules profile (e.g. cnsa2-ipsec); repeatable")
     s.set_defaults(func=cmd_assess)
     cb = sub.add_parser("cbom", help="emit a CycloneDX CBOM for a pcap")
     cb.add_argument("pcap")
