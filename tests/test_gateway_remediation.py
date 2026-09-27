@@ -1,4 +1,4 @@
-"""DEC-042: fixes on real strongSwan gateways over SSH, with terms-and-risks consent.
+"""DEC-044: fixes on real strongSwan gateways over SSH, with terms-and-risks consent.
 
 A fake SSH gateway (built on the fake lab) answers the `ssh` calls execute.py makes: it parses the
 remote command line back into arguments (so quoting is exercised) and plays the gateway's files,

@@ -10,7 +10,7 @@ function Wordmark() {
   )
 }
 
-export type View = "uploads" | "sample" | "live"
+export type View = "uploads" | "sample" | "live" | "sites"
 export type Engine = "checking" | "online" | "offline"
 
 export function Topbar({
@@ -29,6 +29,7 @@ export function Topbar({
   const tabs: { key: View; label: string; count?: number }[] = [
     { key: "uploads", label: "Your captures", count: uploadCount },
     { key: "live", label: "Live" },
+    { key: "sites", label: "Sites" },
     { key: "sample", label: "Sample fleet", count: sampleCount },
   ]
 

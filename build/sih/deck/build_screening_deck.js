@@ -18,11 +18,11 @@ const VIDEO_URL = ""; // demo video, on a host that does not sleep
 const REPO_URL = "";  // only if the repository is public or shared with the evaluators
 
 // SOURCES (checked 2026-09-27)
-//   543 unit tests pass ........ `.venv/bin/python -m pytest -q` -> "543 passed, 1 skipped"
+//   555 unit tests pass ........ `.venv/bin/python -m pytest -q` -> "555 passed, 1 skipped"
 //   ~1.6 s per capture ......... `tunnelscope report` on 4 lab captures: 1.58-1.67 s wall time each
 //   124 lab captures ........... testbed/captures/**/*.groundtruth.json (endpoint ground truth)
 //   0.174 -> 0.757, 99.8% ...... experiments/exp20-real-ipsec-and-users/RESULT.md (R3), DEC-037
-//   22 experiments ............. experiments/*/RESULT.md (22 files)
+//   24 experiments ............. experiments/*/RESULT.md (24 files)
 //   4 implementations .......... strongSwan, Libreswan (EXP-07), OpenBSD iked (EXP-10), MikroTik RouterOS (EXP-26)
 //   pq-downgrade verdicts ...... `tunnelscope report testbed/captures/pq-downgrade.pcap`
 //   32/32 unsafe drafts ........ experiments/exp18-generative-remediation/RESULT.md (H1), DEC-035
@@ -32,7 +32,7 @@ const REPO_URL = "";  // only if the repository is public or shared with the eva
 //                                or roll back byte for byte), tunnelscope/remediate/generate.py (V1-V8)
 //   live gateways, 22/22 ....... testbed/live-gateway/e2e.py on two strongSwan gateways over SSH: 22 of 22 checks
 //                                pass (both ends fixed and verified in 34.2 s; rollback byte for byte; watchdog
-//                                restore), DEC-042. Test network on one host (network namespaces, userspace ESP)
+//                                restore), DEC-044. Test network on one host (network namespaces, userspace ESP)
 //   screenshot ................. img/threats.jpg (dashboard, lab capture a-tra-sha1.pcap), cropped to img/tunnel-view.jpg
 
 const C = { INK: "000000", TEXT: "1A1A1A", GREY: "595959", LINE: "7F7F7F", NAVY: "1F3864", BLUE: "2E75B6",
@@ -233,12 +233,12 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     frame(s, LX, top, LW, bot - top); frame(s, 6.3, top, W - 0.5 - 6.3, bot - top);
     heading(s, "Feasibility of the Idea:", LX + 0.15, top + 0.12, LW - 0.3);
     t(s, bullets([
-      ["Technical Feasibility: ", "already built and working. 543 automatic tests pass; one capture is checked in about 1.6 seconds."],
+      ["Technical Feasibility: ", "already built and working. 555 automatic tests pass; one capture is checked in about 1.6 seconds."],
       ["Proven on real traffic: ", "on real IPsec traffic the traffic-type model improved from 0.174 to 0.757 (F1 score) and is right 99.8% of the time when it answers."],
       ["Operational Feasibility: ", "runs on one laptop, offline by default. Uses tshark, a tool analysts already know."],
       ["Economic Feasibility: ", "built only on free, open-source software; no licence cost."],
       ["AI fix drafting: ", "cloud AI models (Groq, Gemini) drafted working fixes for 12–13 of 16 test problems (a small local model: 0 of 16). It stays optional until it passes our 80% bar."],
-      ["Methodology: ", "our own VPN lab, 124 captures checked against the VPNs’ own logs, 22 experiments."],
+      ["Methodology: ", "our own VPN lab, 124 captures checked against the VPNs’ own logs, 24 experiments."],
       ["Users: ", "NTRO analysts, security operations teams, VPN administrators, auditors."],
     ]), { x: LX + 0.15, y: top + 0.5, w: LW - 0.3, h: bot - top - 0.6, fontSize: 12.5, paraSpaceAfter: 8 });
 
