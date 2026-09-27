@@ -25,6 +25,11 @@ const REPO_URL = "";  // only if the repository is public or shared with the eva
 //   20 experiments ............. experiments/*/RESULT.md
 //   4 implementations .......... strongSwan, Libreswan (EXP-07), OpenBSD iked (EXP-10), MikroTik RouterOS (EXP-26)
 //   pq-downgrade verdicts ...... `tunnelscope report testbed/captures/pq-downgrade.pcap`
+//   32/32 unsafe drafts ........ experiments/exp18-generative-remediation/RESULT.md (H1), DEC-035
+//   12-13/16 fixes, 11/11 ...... experiments/exp18b-gemini-remediation/RESULT.md (Groq 12/16, gemini-3.1-flash-lite
+//                                13/16, local 0/16; 11/11 regressions rolled back and verified), DEC-041
+//   fix loop steps ............. DEC-033 (allowlist, dry run on copies, human approval, baseline, snapshot, verify
+//                                or roll back byte for byte), tunnelscope/remediate/generate.py (V1-V8)
 //   screenshot ................. img/threats.jpg (dashboard, lab capture a-tra-sha1.pcap), cropped to img/tunnel-view.jpg
 
 const C = { INK: "000000", TEXT: "1A1A1A", GREY: "595959", LINE: "7F7F7F", NAVY: "1F3864", BLUE: "2E75B6",
@@ -137,11 +142,12 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       ["AI models trained by us ", "(Random Forest) tell the type of traffic inside (web, video, VoIP…) from packet size and timing."],
       ["Checks every setting ", "against security standards (RFC 8247, RFC 8221, DISA, India’s post-quantum report)."],
       ["Gives a risk score (0–100), threats and a fix ", "for each problem, in a report and a dashboard."],
-    ]), { x: LX + 0.15, y: top + 0.82, w: LW - 0.3, h: 3.25, fontSize: 12, paraSpaceAfter: 5 });
-    t(s, "Unique Value Propositions:", { x: LX + 0.15, y: top + 3.85, w: LW - 0.3, h: 0.3, fontSize: 14, color: C.BLUE });
+      ["Fixes safely: ", "AI can draft the fix, a person approves it, and if the fix breaks anything it is rolled back automatically (test lab only)."],
+    ]), { x: LX + 0.15, y: top + 0.78, w: LW - 0.3, h: 3.3, fontSize: 12, paraSpaceAfter: 4 });
+    t(s, "Unique Value Propositions:", { x: LX + 0.15, y: top + 3.95, w: LW - 0.3, h: 0.3, fontSize: 14, color: C.BLUE });
     t(s, bullets(["Detects a post-quantum downgrade (safe option offered, weaker one used).", "Every verdict names the rule it is based on.",
-      "Never guesses: what cannot be seen is marked “unknown”, never “safe”.", "Works offline by default."]),
-      { x: LX + 0.15, y: top + 4.2, w: LW - 0.3, h: 1.2, fontSize: 12.5, bold: true, paraSpaceAfter: 5 });
+      "Never guesses: what cannot be seen is marked “unknown”, never “safe”.", "AI-drafted fixes with human approval and automatic rollback.", "Works offline by default."]),
+      { x: LX + 0.15, y: top + 4.27, w: LW - 0.3, h: 1.15, fontSize: 11.5, bold: true, paraSpaceAfter: 2 });
 
     const RX = 8.1, RW = W - 0.5 - RX;
     frame(s, RX, top, RW, 1.3);
@@ -153,54 +159,66 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     t(s, "Our working prototype: risk score, threats and the rule behind each one", { x: RX, y: iy + ih + 0.03, w: RW, h: 0.24, fontSize: 9.5, italic: true, color: C.GREY, align: "center" });
   }
 
-  // ============ 3  Technical approach: technologies + flowchart
+  // ============ 3  Technical approach: two flowcharts (checking, fixing) + technologies
   { const s = pres.addSlide(); chrome(s, 3, "TECHNICAL APPROACH");
-    const LX = 0.5, LW = 3.95, top = 1.1, bot = 7.0;
-    frame(s, LX, top, LW, bot - top);
-    heading(s, "Technologies Used:", LX + 0.15, top + 0.1, LW - 0.3);
-    t(s, bullets([
-      ["Language: ", "Python 3.11"],
-      ["Packet reading: ", "tshark (Wireshark)"],
-      ["AI / ML: ", "scikit-learn – Random Forest, Isolation Forest"],
-      ["Security rules: ", "YAML files, one per standard"],
-      ["Dashboard: ", "React + TypeScript"],
-      ["Test lab: ", "Docker and VMs: strongSwan, Libreswan, OpenBSD iked, MikroTik"],
-    ]), { x: LX + 0.15, y: top + 0.48, w: LW - 0.3, h: 2.9, fontSize: 12, paraSpaceAfter: 6 });
-    heading(s, "Methodology:", LX + 0.15, top + 3.45, LW - 0.3);
-    t(s, bullets([
-      "Built our own VPN lab and recorded 124 captures, checked against the VPNs’ own logs.",
-      "Tested each feature in an experiment (20 so far) before adding it.",
-      "Tested on real public IPsec traffic, not only lab traffic.",
-    ]), { x: LX + 0.15, y: top + 3.82, w: LW - 0.3, h: 2.0, fontSize: 12, paraSpaceAfter: 6 });
+    const sub = (str, x, w) => t(s, str, { x, y: 1.02, w, h: 0.36, fontFace: HEAD, fontSize: 17, bold: true, color: C.INK });
+    sub("Flow 1: Checking a VPN", 0.5, 6.0); sub("Flow 2: Fixing it safely (test lab only)", 6.95, 5.9);
+    s.addShape(pres.shapes.LINE, { x: 6.78, y: 1.05, w: 0, h: 4.95, line: { color: "A6A6A6", width: 1, dashType: "dash" } });
+    const P = pres.shapes.FLOWCHART_PROCESS, D = pres.shapes.FLOWCHART_DECISION, T = pres.shapes.FLOWCHART_TERMINATOR;
 
-    // flowchart, top to bottom, "no" branches to the right
-    t(s, "Work Flow", { x: 9.45, y: 1.15, w: 3.35, h: 0.45, align: "center", fontFace: HEAD, fontSize: 22, bold: true, color: C.INK });
-    const cx = 6.95, NW = 3.5, SX = 9.45, SW = 3.35;
-    const X = cx - NW / 2, R = cx + NW / 2;
-    const y = { start: 1.15, input: 1.7, read: 2.35, d1: 2.98, set: 3.86, ai: 4.46, d2: 5.08, rep: 5.96, end: 6.62 };
-    node(s, pres.shapes.FLOWCHART_TERMINATOR, cx - 0.8, y.start, 1.6, 0.38, "Start", C.TERM, C.TERM_L, 11.5);
-    line(s, cx, y.start + 0.38, cx, y.input);
-    node(s, pres.shapes.FLOWCHART_DATA, X, y.input, NW, 0.46, "Input: VPN traffic capture (.pcap) or live feed", C.PROC, C.PROC_L);
-    line(s, cx, y.input + 0.46, cx, y.read);
-    node(s, pres.shapes.FLOWCHART_PROCESS, X, y.read, NW, 0.44, "Read packet headers with tshark (nothing is decrypted)", C.PROC, C.PROC_L);
-    line(s, cx, y.read + 0.44, cx, y.d1);
-    node(s, pres.shapes.FLOWCHART_DECISION, cx - 1.35, y.d1, 2.7, 0.7, "Is the VPN handshake in the capture?", C.DEC, C.DEC_L, 10.5);
-    line(s, cx, y.d1 + 0.7, cx, y.set); tag(s, "Yes", cx + 0.08, y.d1 + 0.66);
-    node(s, pres.shapes.FLOWCHART_PROCESS, X, y.set, NW, 0.44, "Read the settings: encryption, key exchange, quantum-safe or not", C.PROC, C.PROC_L);
-    line(s, cx + 1.35, y.d1 + 0.35, SX, y.d1 + 0.35); tag(s, "No", cx + 1.45, y.d1 + 0.1);
-    node(s, pres.shapes.FLOWCHART_PROCESS, SX, y.d1 + 0.13, SW, 0.44, "Mark those settings “unknown” (never guessed)", C.SIDE, C.SIDE_L);
-    line(s, SX + SW / 2, y.d1 + 0.57, SX + SW / 2, y.ai + 0.22, false); line(s, SX + SW / 2, y.ai + 0.22, R, y.ai + 0.22);
-    line(s, cx, y.set + 0.44, cx, y.ai);
-    node(s, pres.shapes.FLOWCHART_PROCESS, X, y.ai, NW, 0.44, "AI models: type of traffic and tunnel mode, with a confidence", C.PROC, C.PROC_L);
-    line(s, cx, y.ai + 0.44, cx, y.d2);
-    node(s, pres.shapes.FLOWCHART_DECISION, cx - 1.35, y.d2, 2.7, 0.7, "Meets the security standards?", C.DEC, C.DEC_L, 10.5);
-    line(s, cx, y.d2 + 0.7, cx, y.rep); tag(s, "Yes", cx + 0.08, y.d2 + 0.66);
-    line(s, cx + 1.35, y.d2 + 0.35, SX, y.d2 + 0.35); tag(s, "No", cx + 1.45, y.d2 + 0.1);
-    node(s, pres.shapes.FLOWCHART_PROCESS, SX, y.d2 + 0.1, SW, 0.5, "Flag the threat, raise the risk score, suggest a fix", C.SIDE, C.SIDE_L);
-    line(s, SX + SW / 2, y.d2 + 0.6, SX + SW / 2, y.rep + 0.23, false); line(s, SX + SW / 2, y.rep + 0.23, R, y.rep + 0.23);
-    node(s, pres.shapes.FLOWCHART_DOCUMENT, X, y.rep, NW, 0.5, "Report + dashboard: risk score, threats, fixes", C.PROC, C.PROC_L);
-    line(s, cx, y.rep + 0.5, cx, y.end);
-    node(s, pres.shapes.FLOWCHART_TERMINATOR, cx - 0.8, y.end, 1.6, 0.36, "End", C.TERM, C.TERM_L, 11.5);
+    // flow 1: "no" branches go right and rejoin
+    { const cx = 2.6, NW = 3.1, X = cx - NW / 2, R = cx + NW / 2, SX = 4.5, SW = 2.1, DW = 2.5;
+      const y = { start: 1.45, input: 1.9, read: 2.44, d1: 2.98, set: 3.74, d2: 4.3, rep: 5.06, end: 5.64 };
+      node(s, T, cx - 0.75, y.start, 1.5, 0.3, "Start", C.TERM, C.TERM_L, 10.5);
+      line(s, cx, y.start + 0.3, cx, y.input);
+      node(s, pres.shapes.FLOWCHART_DATA, X, y.input, NW, 0.4, "Input: VPN traffic capture or live feed", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.input + 0.4, cx, y.read);
+      node(s, P, X, y.read, NW, 0.4, "Read packet headers (nothing decrypted)", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.read + 0.4, cx, y.d1);
+      node(s, D, cx - DW / 2, y.d1, DW, 0.62, "Handshake in the capture?", C.DEC, C.DEC_L, 9.5);
+      line(s, cx, y.d1 + 0.62, cx, y.set); tag(s, "Yes", cx + 0.07, y.d1 + 0.58);
+      line(s, cx + DW / 2, y.d1 + 0.31, SX, y.d1 + 0.31); tag(s, "No", cx + DW / 2 + 0.05, y.d1 + 0.07);
+      node(s, P, SX, y.d1 + 0.1, SW, 0.42, "Mark “unknown” (never guessed)", C.SIDE, C.SIDE_L, 9.5);
+      line(s, SX + SW / 2, y.d1 + 0.52, SX + SW / 2, y.set + 0.2, false); line(s, SX + SW / 2, y.set + 0.2, R, y.set + 0.2);
+      node(s, P, X, y.set, NW, 0.4, "Read settings; AI finds traffic type and mode", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.set + 0.4, cx, y.d2);
+      node(s, D, cx - DW / 2, y.d2, DW, 0.62, "Meets the standards?", C.DEC, C.DEC_L, 9.5);
+      line(s, cx, y.d2 + 0.62, cx, y.rep); tag(s, "Yes", cx + 0.07, y.d2 + 0.58);
+      line(s, cx + DW / 2, y.d2 + 0.31, SX, y.d2 + 0.31); tag(s, "No", cx + DW / 2 + 0.05, y.d2 + 0.07);
+      node(s, P, SX, y.d2 + 0.06, SW, 0.5, "Flag threat, raise risk score (go to Flow 2)", C.SIDE, C.SIDE_L, 9.5);
+      line(s, SX + SW / 2, y.d2 + 0.56, SX + SW / 2, y.rep + 0.21, false); line(s, SX + SW / 2, y.rep + 0.21, R, y.rep + 0.21);
+      node(s, pres.shapes.FLOWCHART_DOCUMENT, X, y.rep, NW, 0.44, "Report + dashboard", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.rep + 0.44, cx, y.end);
+      node(s, T, cx - 0.75, y.end, 1.5, 0.3, "End", C.TERM, C.TERM_L, 10.5);
+    }
+
+    // flow 2: the fix loop; a failed check means automatic rollback
+    { const cx = 8.85, NW = 3.3, X = cx - NW / 2, SX = 10.8, SW = 2.05, DW = 2.7;
+      const y = { start: 1.45, draft: 1.9, check: 2.48, ok: 3.06, apply: 3.58, d: 4.16, keep: 5.08 };
+      node(s, T, cx - 0.9, y.start, 1.8, 0.3, "A rule failed", C.TERM, C.TERM_L, 10.5);
+      line(s, cx, y.start + 0.3, cx, y.draft);
+      node(s, P, X, y.draft, NW, 0.44, "Draft a fix: written by us, or by AI (optional)", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.draft + 0.44, cx, y.check);
+      node(s, P, X, y.check, NW, 0.44, "Safety checks + preview the change on a copy", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.check + 0.44, cx, y.ok);
+      node(s, pres.shapes.FLOWCHART_MANUAL_OPERATION, X, y.ok, NW, 0.38, "A person approves the exact change", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.ok + 0.38, cx, y.apply);
+      node(s, P, X, y.apply, NW, 0.44, "Save a backup, apply, capture traffic again", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.apply + 0.44, cx, y.d);
+      node(s, D, cx - DW / 2, y.d, DW, 0.72, "Rule passes and nothing else broke?", C.DEC, C.DEC_L, 9.5);
+      line(s, cx, y.d + 0.72, cx, y.keep); tag(s, "Yes", cx + 0.07, y.d + 0.68);
+      node(s, T, cx - 0.9, y.keep, 1.8, 0.32, "Fix kept", C.TERM, C.TERM_L, 10.5);
+      line(s, cx + DW / 2, y.d + 0.36, SX, y.d + 0.36); tag(s, "No", cx + DW / 2 + 0.03, y.d + 0.12);
+      node(s, P, SX, y.d - 0.02, SW, 0.76, "Automatic rollback: old files restored byte for byte, checked again", "FBE5D6", "C55A11", 9.5);
+      t(s, "In our tests: 32 of 32 unsafe AI drafts were blocked before running; 11 of 11 fixes that broke another rule were rolled back automatically.",
+        { x: 6.95, y: 5.5, w: 5.9, h: 0.5, fontSize: 10.5, italic: true, color: C.GREY });
+    }
+
+    // technologies, one strip under both flows
+    frame(s, 0.5, 6.14, W - 1.0, 0.86);
+    t(s, [{ text: "Technologies Used: ", options: { bold: true, color: C.NAVY } },
+      { text: "Python 3.11 · tshark (Wireshark) · scikit-learn (Random Forest, Isolation Forest) · YAML rule files · React + TypeScript dashboard · test lab on Docker and VMs (strongSwan, Libreswan, OpenBSD iked, MikroTik) · optional AI fix drafting (Groq, Gemini)" }],
+      { x: 0.65, y: 6.2, w: W - 1.3, h: 0.74, fontSize: 11.5, valign: "middle" });
   }
 
   // ============ 4  Feasibility and viability
@@ -213,8 +231,10 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       ["Proven on real traffic: ", "on real IPsec traffic the traffic-type model improved from 0.174 to 0.757 (F1 score) and is right 99.8% of the time when it answers."],
       ["Operational Feasibility: ", "runs on one laptop, offline by default. Uses tshark, a tool analysts already know."],
       ["Economic Feasibility: ", "built only on free, open-source software; no licence cost."],
+      ["AI fix drafting: ", "cloud AI models (Groq, Gemini) drafted working fixes for 12–13 of 16 test problems (a small local model: 0 of 16). It stays optional until it passes our 80% bar."],
+      ["Methodology: ", "our own VPN lab, 124 captures checked against the VPNs’ own logs, 20 experiments."],
       ["Users: ", "NTRO analysts, security operations teams, VPN administrators, auditors."],
-    ]), { x: LX + 0.15, y: top + 0.55, w: LW - 0.3, h: bot - top - 0.65, fontSize: 15, paraSpaceAfter: 16 });
+    ]), { x: LX + 0.15, y: top + 0.5, w: LW - 0.3, h: bot - top - 0.6, fontSize: 12.5, paraSpaceAfter: 8 });
 
     const RX = 6.45, RW = W - 0.65 - RX;
     heading(s, "Potential Challenges, Risks and its Overcomings:", RX, top + 0.12, RW);
@@ -222,6 +242,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       ["Encrypted data: ", "the encryption of the data part is hidden.", "Show the few possible options, clearly marked as a best guess."],
       ["AI can be wrong: ", "mixed traffic can confuse the model.", "The model says “uncertain” instead of guessing wrong."],
       ["Lab vs real world: ", "most testing used open-source VPNs.", "Tested on 4 VPN programs and real public traffic; vendor devices next."],
+      ["A fix could break the VPN: ", "a wrong change could cut the connection.", "Only allowed edits, a person approves, lab only; automatic rollback if anything gets worse."],
       ["Hidden risks: ", "weak passwords or a hacked device cannot be seen in traffic.", "Listed separately as “not checked”, never scored."],
       ["Sensitive data: ", "traffic must not leave the site.", "Works offline by default; nothing is uploaded unless an operator turns online extras on."],
     ];
@@ -232,7 +253,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       runs.push({ text: "Solution: ", options: { bold: true, bullet: { code: "2756" }, indentLevel: 1 } });
       runs.push({ text: fix, options: i === pairs.length - 1 ? {} : { breakLine: true } });
     });
-    t(s, runs, { x: RX, y: top + 0.55, w: RW, h: bot - top - 0.65, fontSize: 14, paraSpaceAfter: 9 });
+    t(s, runs, { x: RX, y: top + 0.5, w: RW, h: bot - top - 0.6, fontSize: 12.5, paraSpaceAfter: 5 });
   }
 
   // ============ 5  Impact and benefits
@@ -241,7 +262,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     const items = [
       ["Faster checks for analysts:", "Impact: a VPN is checked in seconds instead of reading packets by hand.", "Benefit: more VPNs checked, fewer missed problems."],
       ["Quantum-safe readiness:", "Impact: finds VPNs that still use old key exchange, or were pushed down from a quantum-safe one.", "Benefit: supports India’s post-quantum migration."],
-      ["Clear fixes for administrators:", "Impact: every failed rule comes with a plain-language fix.", "Benefit: problems get fixed, not just reported."],
+      ["Safe fixes for administrators:", "Impact: each failed rule gets a fix; AI can draft it, a person approves, and a bad fix is undone automatically.", "Benefit: problems get fixed, not just reported, without risking the VPN."],
       ["Evidence for auditors:", "Impact: each verdict cites its standard (RFC, DISA, DST).", "Benefit: supports DPDP Rules 2025 and CERT-In audits."],
       ["Secure by design:", "Impact: works offline by default; nothing leaves the site.", "Benefit: suitable for sensitive government networks."],
     ];
