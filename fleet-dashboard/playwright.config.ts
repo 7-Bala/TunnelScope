@@ -26,7 +26,7 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], baseURL: process.env.E2E_BASE_URL ?? "http://127.0.0.1:8766" },
     },
     {
-      // DEC-042: two real strongSwan gateways over SSH (testbed/live-gateway), local only, as root
+      // DEC-044: two real strongSwan gateways over SSH (testbed/live-gateway), local only, as root
       name: "gateway",
       testMatch: /gateway\.live\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"], baseURL: process.env.E2E_BASE_URL ?? "http://127.0.0.1:8767" },

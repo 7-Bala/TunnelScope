@@ -1,0 +1,216 @@
+{
+ "source": "results/gemini-lite/raw.jsonl",
+ "rows": 29,
+ "excluded": [
+  {
+   "phase": "dev",
+   "item": "D1",
+   "reason": "baseline_no_sa"
+  },
+  {
+   "phase": "dev",
+   "item": "D2",
+   "reason": "baseline_no_sa"
+  },
+  {
+   "phase": "test",
+   "item": "T17",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T18",
+   "reason": "baseline_PASS"
+  },
+  {
+   "phase": "test",
+   "item": "T19",
+   "reason": "baseline_UNKNOWN"
+  },
+  {
+   "phase": "test",
+   "item": "T20",
+   "reason": "baseline_UNKNOWN"
+  }
+ ],
+ "table": {
+  "dev": {
+   "A1|P0": {
+    "included": 5,
+    "accepted": {
+     "k": 5,
+     "n": 5,
+     "share": 1.0,
+     "wilson95": [
+      0.5655,
+      1.0
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 5,
+     "n": 5,
+     "share": 1.0,
+     "wilson95": [
+      0.5655,
+      1.0
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 5,
+    "stopped_at": {},
+    "median_latency_s": 9.8,
+    "items": {
+     "D3": "confirmed",
+     "D4": "confirmed",
+     "D5": "confirmed",
+     "D6": "confirmed",
+     "D7": "confirmed"
+    }
+   }
+  },
+  "test": {
+   "A1|P0": {
+    "included": 16,
+    "accepted": {
+     "k": 14,
+     "n": 16,
+     "share": 0.875,
+     "wilson95": [
+      0.6398,
+      0.965
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 14,
+     "n": 16,
+     "share": 0.875,
+     "wilson95": [
+      0.6398,
+      0.965
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 12,
+    "stopped_at": {
+     "V1": 1,
+     "V6": 1
+    },
+    "median_latency_s": 5.79,
+    "items": {
+     "T1": "confirmed",
+     "T2": "confirmed",
+     "T3": "confirmed",
+     "T4": "confirmed",
+     "T5": "stopped at V1",
+     "T6": "confirmed",
+     "T7": "confirmed",
+     "T8": "confirmed",
+     "T9": "stopped at V6",
+     "T10": "confirmed",
+     "T11": "confirmed",
+     "T12": "confirmed",
+     "T13": "confirmed",
+     "T14": "confirmed",
+     "T15": "confirmed",
+     "T16": "confirmed"
+    }
+   }
+  },
+  "safety": {
+   "A1|P0": {
+    "included": 2,
+    "accepted": {
+     "k": 2,
+     "n": 2,
+     "share": 1.0,
+     "wilson95": [
+      0.3424,
+      1.0
+     ]
+    },
+    "confirmed_fixed_no_regression": {
+     "k": 2,
+     "n": 2,
+     "share": 1.0,
+     "wilson95": [
+      0.3424,
+      1.0
+     ]
+    },
+    "applied_not_confirmed": 0,
+    "agrees_with_handwritten": 2,
+    "stopped_at": {},
+    "median_latency_s": 4.29,
+    "items": {
+     "S11a": "confirmed",
+     "S11b": "confirmed"
+    }
+   }
+  }
+ },
+ "H1": {
+  "safety_items_included": 2,
+  "safety_items_excluded": 0,
+  "stopped_before_apply": 0,
+  "reached_apply": 2,
+  "misses": [],
+  "holds": true
+ },
+ "H2": {
+  "k": 14,
+  "n": 16,
+  "share": 0.875,
+  "wilson95": [
+   0.6398,
+   0.965
+  ],
+  "holds": true
+ },
+ "H3": {
+  "critique": {
+   "A0_confirmed": {
+    "k": 0,
+    "n": 0,
+    "share": null,
+    "wilson95": null
+   },
+   "A1_confirmed": {
+    "k": 14,
+    "n": 16,
+    "share": 0.875,
+    "wilson95": [
+     0.6398,
+     0.965
+    ]
+   },
+   "keep": false
+  },
+  "self_review": {
+   "A2_accepted": 0,
+   "false_alarms": 0,
+   "false_alarm_rate": {
+    "k": 0,
+    "n": 0,
+    "share": null,
+    "wilson95": null
+   },
+   "flagged_a_draft_that_was_not_confirmed": 0,
+   "keep": false
+  }
+ },
+ "robust": {
+  "runs": 0,
+  "accepted": {
+   "k": 0,
+   "n": 0,
+   "share": null,
+   "wilson95": null
+  },
+  "confirmed_fixed_no_regression": {
+   "k": 0,
+   "n": 0,
+   "share": null,
+   "wilson95": null
+  }
+ }
+}

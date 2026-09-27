@@ -1,0 +1,52 @@
+{"event": "start", "t": 1790517753.1748412, "window_s": 10, "cycles": 10, "git_head": "3d5f4678d29aa92871ee29cdbaaf60ee273f31a2"}
+{"event": "state", "t": 1790517753.503618, "state": "A", "initiate_t": 1790517753.46155}
+{"event": "sensor_started", "t": 1790517753.560108}
+{"event": "collector_started", "t": 1790517753.561696}
+{"event": "state", "t": 1790517773.919461, "state": "A", "initiate_t": 1790517773.87631}
+{"event": "state", "t": 1790517794.272444, "state": "A", "initiate_t": 1790517794.2222311}
+{"event": "state", "t": 1790517814.639379, "state": "B", "initiate_t": 1790517814.5997949}
+{"event": "change", "t": 1790517825.2227242, "cycle": 1, "t_change": 1790517814.5997949, "detected": true, "latency_s": 10.34, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#7"}}
+{"event": "state", "t": 1790517825.6032588, "state": "A", "initiate_t": 1790517825.559233}
+{"event": "state", "t": 1790517845.9567292, "state": "A", "initiate_t": 1790517845.9142249}
+{"event": "state", "t": 1790517866.330584, "state": "B", "initiate_t": 1790517866.2909849}
+{"event": "change", "t": 1790517875.42181, "cycle": 2, "t_change": 1790517866.2909849, "detected": true, "latency_s": 8.89, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#12"}}
+{"event": "state", "t": 1790517875.801452, "state": "A", "initiate_t": 1790517875.7582421}
+{"event": "state", "t": 1790517896.174793, "state": "A", "initiate_t": 1790517896.131362}
+{"event": "state", "t": 1790517916.554424, "state": "B", "initiate_t": 1790517916.515014}
+{"event": "change", "t": 1790517925.6344981, "cycle": 3, "t_change": 1790517916.515014, "detected": true, "latency_s": 8.88, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#17"}}
+{"event": "state", "t": 1790517925.99491, "state": "A", "initiate_t": 1790517925.950911}
+{"event": "state", "t": 1790517946.364636, "state": "A", "initiate_t": 1790517946.3218062}
+{"event": "state", "t": 1790517966.7049909, "state": "B", "initiate_t": 1790517966.665819}
+{"event": "change", "t": 1790517975.7816541, "cycle": 4, "t_change": 1790517966.665819, "detected": true, "latency_s": 8.94, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#22"}}
+{"event": "state", "t": 1790517976.155904, "state": "A", "initiate_t": 1790517976.114132}
+{"event": "collector_stopped", "t": 1790517976.1741178}
+{"event": "collector_started", "t": 1790518006.1856399}
+{"event": "state", "t": 1790518006.5246122, "state": "A", "initiate_t": 1790518006.482475}
+{"event": "state", "t": 1790518026.9025972, "state": "B", "initiate_t": 1790518026.8633192}
+{"event": "change", "t": 1790518034.4767349, "cycle": 5, "t_change": 1790518026.8633192, "detected": true, "latency_s": 7.6, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#28"}}
+{"event": "state", "t": 1790518034.818696, "state": "A", "initiate_t": 1790518034.776093}
+{"event": "state", "t": 1790518055.197192, "state": "A", "initiate_t": 1790518055.154273}
+{"event": "state", "t": 1790518075.5623941, "state": "B", "initiate_t": 1790518075.5218382}
+{"event": "change", "t": 1790518086.152309, "cycle": 6, "t_change": 1790518075.5218382, "detected": true, "latency_s": 10.15, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#33"}}
+{"event": "state", "t": 1790518086.537079, "state": "A", "initiate_t": 1790518086.4943879}
+{"event": "state", "t": 1790518106.933563, "state": "A", "initiate_t": 1790518106.890741}
+{"event": "state", "t": 1790518127.327262, "state": "B", "initiate_t": 1790518127.288405}
+{"event": "change", "t": 1790518134.8919811, "cycle": 7, "t_change": 1790518127.288405, "detected": true, "latency_s": 7.58, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#38"}}
+{"event": "state", "t": 1790518135.273003, "state": "A", "initiate_t": 1790518135.229868}
+{"event": "state", "t": 1790518155.664664, "state": "A", "initiate_t": 1790518155.621113}
+{"event": "state", "t": 1790518176.0113971, "state": "B", "initiate_t": 1790518175.9721038}
+{"event": "change", "t": 1790518186.600592, "cycle": 8, "t_change": 1790518175.9721038, "detected": true, "latency_s": 10.13, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#43"}}
+{"event": "state", "t": 1790518186.9666739, "state": "A", "initiate_t": 1790518186.9237828}
+{"event": "state", "t": 1790518207.354592, "state": "A", "initiate_t": 1790518207.311548}
+{"event": "state", "t": 1790518227.740155, "state": "B", "initiate_t": 1790518227.699852}
+{"event": "change", "t": 1790518235.8126879, "cycle": 9, "t_change": 1790518227.699852, "detected": true, "latency_s": 7.61, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#48"}}
+{"event": "state", "t": 1790518236.20499, "state": "A", "initiate_t": 1790518236.1587079}
+{"event": "state", "t": 1790518256.6262841, "state": "A", "initiate_t": 1790518256.577373}
+{"event": "state", "t": 1790518276.9920661, "state": "B", "initiate_t": 1790518276.9480991}
+{"event": "change", "t": 1790518284.556959, "cycle": 10, "t_change": 1790518276.9480991, "detected": true, "latency_s": 7.57, "alert": {"kind": "downgrade", "attribute": "pq", "usual": "ML-KEM-768", "now": "classical-only", "source": "sensor:lab#53"}}
+{"event": "state", "t": 1790518284.926189, "state": "A", "initiate_t": 1790518284.882859}
+{"event": "sensor_stopped", "t": 1790518315.0578492}
+{"event": "collector_stopped", "t": 1790518319.181546}
+{"event": "ping_summary", "t": 1790518319.236773, "text": "64 bytes from 10.10.2.210: icmp_seq=1112 ttl=64 time=0.163 ms\n64 bytes from 10.10.2.210: icmp_seq=1113 ttl=64 time=0.209 ms\nTerminated"}
+{"event": "inbox_left", "t": 1790518319.2385821, "files": []}
+{"event": "end", "t": 1790518319.57405}
