@@ -3,7 +3,7 @@ off, no key) or rate limited (after one short backoff on the same model), ending
 drafting degrades instead of stopping. It never switches API keys to get round a quota: rate limits are per project
 and the Google APIs Terms 2(d) forbid circumventing them; different MODELS have their own limits.
 
-Order: every cloud client's FALLBACK_MODELS in CLIENTS order, then the local model. TUNNELSCOPE_GENERATOR_CHAIN
+Order (DEC-041): every cloud client's FALLBACK_MODELS in CLIENTS order, then the local model. TUNNELSCOPE_GENERATOR_CHAIN
 overrides it, e.g. "<provider>:<model>,<provider>:<model>,local", provider names being each client's PROVIDER.
 Same generate_json contract as every backend; meta["attempts"] lists every try, meta["backend"] the one used."""
 from __future__ import annotations
@@ -15,7 +15,9 @@ from typing import Any
 from ..rephrase import runtime
 from . import cloud_client, open_model_client
 
-CLIENTS = (cloud_client, open_model_client)
+# DEC-041 (EXP-18b): the hosted open-weight model first (12/16 test fixes, median 3.3 s per draft, free tier does not
+# train on inputs), then cloud_client's model (13/16, 13.3 s); fix rates are within each other's 95% intervals.
+CLIENTS = (open_model_client, cloud_client)
 BACKOFF_S = 2.0
 
 

@@ -112,3 +112,8 @@ def test_empty_json_rejection_is_a_model_failure_not_retryable(monkeypatch):
     raw, meta = om.generate_json("s", {"a": "b"})
     assert raw is None and "no valid JSON" in meta["reason"] and meta["retryable"] is False
 
+
+
+def test_dec041_default_order_is_open_model_then_gemini_lite_then_local():
+    o = chain.order()
+    assert o[0] == (om, om.MODEL_ID) and o[1] == (cloud_client, "gemini-3.1-flash-lite") and o[-1][0] is runtime
