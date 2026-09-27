@@ -2,7 +2,6 @@
 the PPK was actually used is decided in encrypted IKE_AUTH (K5: both sides announce it, the tunnel comes up
 without it). The finding must say "negotiated", never "used"."""
 import os
-import shutil
 
 import pytest
 
@@ -11,7 +10,6 @@ from tunnelscope.evidence.record import EvidenceRecord
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CAP = os.path.join(ROOT, "testbed", "captures", "exp27")
-needs_tshark = pytest.mark.skipif(not shutil.which("tshark"), reason="tshark not installed")
 USE_PPK = 16435
 
 
@@ -20,7 +18,6 @@ def _f(arm, attr="pq_ppk"):
     return r.findings[attr]
 
 
-@needs_tshark
 @pytest.mark.parametrize("arm,want", [("k0", "not-offered"), ("k1", "negotiated"), ("k2", "negotiated"),
                                       ("k3", "offered-not-negotiated"), ("k4", "negotiated"),
                                       ("k5", "negotiated")])
@@ -29,7 +26,6 @@ def test_ppk_negotiation_read_from_the_wire(arm, want):
     assert f.status.value == "OBSERVED" and f.value == want, (f.status, f.value)
 
 
-@needs_tshark
 @pytest.mark.parametrize("arm", ["k1", "k2", "k4", "k5"])
 def test_negotiated_never_claims_the_ppk_was_used(arm):
     """K5 is the proof: USE_PPK both ways, tunnel up, PPK not used (strongSwan: 'using NO_PPK_AUTH')."""
@@ -37,7 +33,6 @@ def test_negotiated_never_claims_the_ppk_was_used(arm):
     assert "IKE_AUTH" in f.note and "not visible" in f.note, f.note
 
 
-@needs_tshark
 @pytest.mark.parametrize("arm", ["k0", "k1", "k2", "k3", "k4", "k5"])
 def test_ppk_notifies_do_not_disturb_the_rfc9370_finding(arm):
     assert _f(arm, "pq_key_exchange").value == "classical-only"
