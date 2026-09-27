@@ -20,7 +20,7 @@ from .errors import TunnelScopeError
 from .evidence.extract import build_records
 from .ingest.tshark import capture_summary, preflight, REQUIRED_FIELDS
 from .assess.engine import assess_record, load_baselines
-from .pq.cbom import build_cbom
+from .pq.cbom import to_cyclonedx
 from .report.report import analyze, executive_report, technical_report
 from .report.dashboard import render as render_dashboard
 from .report.fleet import render as render_fleet, render_json as fleet_json, scan as fleet_scan
@@ -81,7 +81,7 @@ def cmd_assess(args):
 
 def cmd_cbom(args):
     import json as _j
-    print(_j.dumps(build_cbom(build_records(args.pcap), source=args.pcap), indent=2))
+    print(_j.dumps(to_cyclonedx(build_records(args.pcap), source=args.pcap), indent=2))
 
 
 def cmd_report(args):
