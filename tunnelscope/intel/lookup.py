@@ -31,12 +31,25 @@ def _path(key: str) -> Path:
     return cache_dir() / (re.sub(r"[^a-z0-9_.-]+", "_", key.lower()) + ".json")
 
 
+# Per-call network timeout (seconds). CLI lookups keep the long default; the automatic lookup on every analysis
+# (DEC-045) passes a short one so a slow source never holds an analysis up.
+_TIMEOUT = [60.0]
+# After a failed fetch, the same source is not retried for RETRY_AFTER_S (served stale/unavailable meanwhile), so a
+# source that is down costs one timeout, not one per analysis.
+RETRY_AFTER_S = 300
+_FAILED: dict[str, float] = {}
+
+
 def _cached(key: str, fetch):
     """-> (data, status, fetched_at, reason). Fresh cache wins; else fetch if the network is on; else stale cache."""
     p = _path(key)
     old = json.loads(p.read_text()) if p.is_file() else None
     if old and time.time() - old["fetched_at"] < TTL_S:
         return old["data"], "cached", old["fetched_at"], None
+    recent = _FAILED.get(key)
+    if recent and time.time() - recent < RETRY_AFTER_S and net.network_enabled():
+        why = f"the last attempt failed {time.time() - recent:.0f} s ago; retrying after {RETRY_AFTER_S} s"
+        return ((old["data"], "stale-error", old["fetched_at"], why) if old else (None, "unavailable", None, why))
     try:
         if not net.network_enabled():         # decided here, not left to the network layer to refuse
             raise net.NetworkDisabled(f"network is off ({net.ENV}=on fetches fresh data)")
@@ -44,8 +57,10 @@ def _cached(key: str, fetch):
     except net.NetworkDisabled as e:
         return ((old["data"], "stale-offline", old["fetched_at"], str(e)) if old else (None, "unavailable", None, str(e)))
     except (net.HttpError, OSError, ValueError) as e:
+        _FAILED[key] = time.time()
         reason = f"{type(e).__name__}: {e}"[:200]
         return ((old["data"], "stale-error", old["fetched_at"], reason) if old else (None, "unavailable", None, reason))
+    _FAILED.pop(key, None)
     p.parent.mkdir(parents=True, exist_ok=True)
     now = time.time()
     p.write_text(json.dumps({"fetched_at": now, "key": key, "data": data}))
@@ -58,7 +73,7 @@ def _nvd(keyword: str):
     headers = {SOURCES["nvd"]["key_header"]: key} if key else {}
     while True:
         q = urllib.parse.urlencode({"keywordSearch": keyword, "resultsPerPage": 2000, "startIndex": start})
-        d = net.http_json(f"{SOURCES['nvd']['api']}?{q}", headers=headers, timeout=60)
+        d = net.http_json(f"{SOURCES['nvd']['api']}?{q}", headers=headers, timeout=_TIMEOUT[0])
         for v in d.get("vulnerabilities", []):
             c = v["cve"]
             desc = next((x["value"] for x in c.get("descriptions", []) if x.get("lang") == "en"), "")
@@ -80,7 +95,7 @@ def _euvd(vendor: str):
     items, page = [], 0
     while True:
         q = urllib.parse.urlencode({"vendor": vendor, "size": 100, "page": page})
-        d = net.http_json(f"{SOURCES['euvd']['api']}/search?{q}", timeout=60)
+        d = net.http_json(f"{SOURCES['euvd']['api']}/search?{q}", timeout=_TIMEOUT[0])
         for it in d.get("items", []):
             cves = [a for a in (it.get("aliases") or "").split() if a.startswith("CVE-")]
             items.append({"euvd_id": it.get("id"), "cves": cves, "epss": it.get("epss"),
@@ -91,14 +106,15 @@ def _euvd(vendor: str):
 
 
 def _kev():
-    d = net.http_json(SOURCES["cisa_kev"]["api"], timeout=60)
+    d = net.http_json(SOURCES["cisa_kev"]["api"], timeout=_TIMEOUT[0])
     return [{"cve": v["cveID"], "vendor": v["vendorProject"], "product": v["product"], "added": v.get("dateAdded"),
              "due": v.get("dueDate"), "ransomware": v.get("knownRansomwareCampaignUse"), "name": v.get("vulnerabilityName")}
             for v in d.get("vulnerabilities", [])]
 
 
-def lookup(implementation: str) -> dict:
+def lookup(implementation: str, timeout: float | None = None) -> dict:
     """Known vulnerabilities for one fingerprinted implementation, merged by CVE across NVD, EUVD and CISA KEV."""
+    _TIMEOUT[0] = timeout or 60.0
     prod = PRODUCTS.get(implementation)
     if not prod:
         return {"implementation": implementation, "cves": [], "sources": {},
@@ -167,3 +183,43 @@ def bundle(out_dir: str) -> dict:
                            "their terms before giving this bundle to anyone else."}
     Path(out_dir, "MANIFEST.json").write_text(json.dumps(manifest, indent=1))
     return manifest
+
+
+# ------------------------------------------------------------------ DEC-045: on every analysis
+
+AUTO_TIMEOUT_S = float(os.environ.get("TUNNELSCOPE_INTEL_TIMEOUT", "8"))
+TOP_N = 10
+
+
+def known_vulnerabilities(findings: dict) -> dict:
+    """The known-vulnerability block attached to every analysed tunnel (DEC-045), next to the rule verdicts; it
+    never changes a verdict or the risk score. `findings` maps attribute -> {"status", "value"} (or Finding)."""
+    f = findings.get("implementation")
+    if isinstance(f, dict):
+        status, value = f.get("status"), f.get("value")
+    elif f is not None:
+        status, value = getattr(f.status, "value", f.status), f.value
+    else:
+        status = value = None
+    if status not in ("OBSERVED", "INFERRED") or not isinstance(value, dict):
+        return {"status": "UNKNOWN", "products": [],
+                "note": "the VPN software was not identified from this capture, so no vulnerability lookup was made"}
+    ends: dict[str, list[str]] = {}
+    for end, impl in value.items():
+        if isinstance(impl, str) and impl in PRODUCTS:
+            ends.setdefault(impl, []).append(end)
+    products = []
+    for impl, where in ends.items():
+        r = lookup(impl, timeout=AUTO_TIMEOUT_S)
+        products.append({"implementation": impl, "ends": sorted(where), "counts": r.get("counts", {}),
+                         "sources": {k: v["status"] for k, v in r.get("sources", {}).items()},
+                         "top": [{k: e.get(k) for k in ("id", "cvss", "severity", "kev", "match", "ipsec_related")}
+                                 | {"description": (e.get("description") or "")[:200]} for e in r.get("cves", [])[:TOP_N]],
+                         "note": r.get("note")})
+    if not products:
+        return {"status": "UNKNOWN", "products": [],
+                "note": "the identified software has no product mapping for vulnerability lookups yet"}
+    return {"status": "INFERRED", "products": products,
+            "note": "Known vulnerabilities in some version of the identified software (NVD, ENISA EUVD, CISA KEV). "
+                    "The version is not visible in traffic, so none is confirmed on this tunnel; verdicts and the risk "
+                    "score do not use them."}

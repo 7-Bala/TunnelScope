@@ -59,7 +59,8 @@ class Collector:
             return self._quarantine(p, f"replayed or out-of-order sequence {rep['seq']} (last accepted {st['last_seq']})")
         gap = rep["seq"] - st["last_seq"] - 1
         st.update(last_seq=rep["seq"], accepted=st["accepted"] + 1, last_seen=now, window_s=rep["window_s"],
-                  tool_version=rep["tool_version"], missing=st.get("missing", 0) + gap)
+                  tool_version=rep["tool_version"], missing=st.get("missing", 0) + gap,
+                  addresses=rep.get("addresses", "clear"))
         if rep["kind"] == "window":
             st.update(last_window_end=rep["window_end"], last_window_ok=rep["ok"], tunnels=rep["tunnels"])
             # A window without a handshake says nothing new about the key exchange ("unknown"); the last handshake
@@ -123,6 +124,7 @@ def sites_status(state: str, now: float | None = None) -> list[dict]:
         out.append({"site": st["site"], "status": "stale" if stale else "reporting", "last_seen": st.get("last_seen"),
                     "age_s": round(age, 1), "window_s": st.get("window_s"), "reports": st.get("accepted"),
                     "missing_reports": st.get("missing", 0), "last_window_ok": st.get("last_window_ok"),
+                    "addresses": st.get("addresses", "clear"),
                     "tunnels": tunnels,
                     "recent_alerts": [{**a, "age_s": round(now - a["received"], 1)}
                                       for a in reversed(st.get("recent_alerts", [])[-5:])],

@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import ipaddress
 import json
+import re
 import os
 import secrets
 import time
@@ -24,7 +26,8 @@ MAX_STRING = 300          # longest string a report may carry (rule titles are n
 MAX_VALUE_JSON = 2000     # a finding value (algorithm names, counts) is small; anything bigger is refused
 
 REPORT_KEYS = {"schema", "site", "seq", "kind", "window_s", "window_end", "sent_at", "tool_version", "ok",
-               "error", "tunnels", "alerts", "sig"}
+               "error", "tunnels", "alerts", "addresses", "sig"}
+OPTIONAL_KEYS = {"addresses"}         # T-142: "masked" or "clear"; reports written before it had no such field
 TUNNEL_KEYS = {"src", "dst", "ike_spi", "posture", "fails", "verdict_counts", "gaps", "findings", "anomaly", "risk"}
 FAIL_KEYS = {"rule_id", "baseline", "severity"}
 GAP_KEYS = {"attribute", "status"}
@@ -88,7 +91,7 @@ def _tunnel(sa: dict) -> dict:
 
 
 def build_report(site: str, seq: int, window_s: int, row: dict | None, tool_version: str,
-                 now: float | None = None) -> dict:
+                 now: float | None = None, mask_key: bytes | None = None) -> dict:
     """One report from one live window row (LiveMonitor.process), or a heartbeat when row is None."""
     now = time.time() if now is None else now
     rep: dict[str, Any] = {"schema": SCHEMA, "site": site, "seq": seq, "window_s": window_s, "sent_at": now,
@@ -100,8 +103,43 @@ def build_report(site: str, seq: int, window_s: int, row: dict | None, tool_vers
                    error=(row.get("error") or "")[:MAX_STRING] or None,
                    tunnels=[_tunnel(sa) for sa in row.get("sas") or []],
                    alerts=[_pick(a, ALERT_KEYS) for a in row.get("alert_items") or []])
+    rep["addresses"] = "clear"
+    if mask_key is not None:
+        rep["tunnels"], rep["alerts"] = mask_addresses(rep["tunnels"], mask_key), mask_addresses(rep["alerts"], mask_key)
+        rep["error"] = mask_addresses(rep["error"], mask_key)
+        rep["addresses"] = "masked"
     validate(rep, signed=False)
     return rep
+
+
+# ------------------------------------------------------------------ mask (T-142)
+
+_ADDR_TOKEN = re.compile(r"[0-9A-Fa-f:.]{3,}")
+
+
+def pseudonym(key: bytes, address: str) -> str:
+    """A keyed, stable pseudonym for one IP address: the same address gives the same pseudonym at this site, and
+    without the site's mask key it cannot be turned back into the address."""
+    return "ip-" + hmac.new(key, ipaddress.ip_address(address).compressed.encode(), hashlib.sha256).hexdigest()[:12]
+
+
+def mask_addresses(obj: Any, key: bytes) -> Any:
+    """Replace every IPv4/IPv6 literal anywhere in a report (tunnel ends, alert tunnel names, any text) with its
+    pseudonym. Tokens that are not valid addresses (versions, SPIs, times) are left alone."""
+    if isinstance(obj, str):
+        def sub(m: re.Match) -> str:
+            tok = m.group(0).strip(".:")
+            try:
+                ipaddress.ip_address(tok)
+            except ValueError:
+                return m.group(0)
+            return m.group(0).replace(tok, pseudonym(key, tok))
+        return _ADDR_TOKEN.sub(sub, obj)
+    if isinstance(obj, list):
+        return [mask_addresses(x, key) for x in obj]
+    if isinstance(obj, dict):
+        return {k: mask_addresses(v, key) for k, v in obj.items()}
+    return obj
 
 
 # ------------------------------------------------------------------ validate
@@ -132,9 +170,11 @@ def _only(d: Any, keys: set, where: str) -> None:
 def validate(rep: Any, signed: bool = True) -> None:
     """Strict allow-list check. Raises ReportError."""
     _only(rep, REPORT_KEYS if signed else REPORT_KEYS - {"sig"}, "report")
-    missing = (REPORT_KEYS - {"sig"} if not signed else REPORT_KEYS) - set(rep)
+    missing = (REPORT_KEYS - {"sig"} if not signed else REPORT_KEYS) - set(rep) - OPTIONAL_KEYS
     if missing:
         raise ReportError(f"report: missing field(s): {', '.join(sorted(missing))}")
+    if rep.get("addresses", "clear") not in ("clear", "masked"):
+        raise ReportError("report: addresses must be 'clear' or 'masked'")
     if rep["schema"] != SCHEMA or rep["kind"] not in KINDS:
         raise ReportError("report: unknown schema or kind")
     if not isinstance(rep["seq"], int) or isinstance(rep["seq"], bool) or rep["seq"] < 1:
