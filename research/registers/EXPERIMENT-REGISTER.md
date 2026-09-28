@@ -555,3 +555,9 @@ plaintext IKEv2 (RFC 7296 violations matching CVE triggers from NVD): malformed 
 IKE_AUTH, IKE_SA_INIT request missing SA/KE/Nonce. Bars: 0 detections on every benign capture; 18/18 crafted attacks
 sent at real strongSwan and Libreswan responders detected by the right detector; UNKNOWN (never PASS) without the
 handshake.
+
+### EXP-34 — RESULT (2026-09-28)
+Three plaintext-IKEv2 attack-pattern detectors (malformed KE, INFORMATIONAL before IKE_AUTH, IKE_SA_INIT missing
+SA/KE/Nonce). H1 specificity: 0 false detections over 695 captures / 668 SAs (159 PASS, 509 UNKNOWN). H2 sensitivity:
+decision-function unit tests (ADDENDUM A -- no crafted attack traffic). H3 vantage: UNKNOWN without the handshake. 4
+mutation checks caught. DEC-048. `experiments/exp34-cve-detectors/RESULT.md`
