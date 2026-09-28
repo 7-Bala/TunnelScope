@@ -28,6 +28,8 @@ const REPO_URL = "";  // only if the repository is public or shared with the eva
 //   DPDP / CERT-In ............. build/06-INDIA-REGULATORY-MAPPING.md: Rule 6(1)(a) encryption, in force
 //                                13 May 2027, penalty up to Rs 250 crore (PIB 17 Nov 2025); CERT-In 2023 s3.4
 //                                internal audit at least every 6 months
+//   lab vs real traffic ........ experiments/exp20-real-ipsec-and-users/RESULT.md, DEC-037: the lab-only model failed on
+//                                real IPsec traffic and was retrained on USBVPN2022 + WireGuard (no numbers on the slide)
 //   data leaving the site ...... remediate/gateways.py terms (rule text + proposal line to the AI provider when
 //                                cloud drafting is on), intel/lookup.py (only product names), README
 
@@ -151,19 +153,18 @@ function iconItem(s, name, xc, y, label, sub, o = {}) {
     });
 
     const by = 3.5, bh = 3.45, bw = 6.05;
-    const box = (x, iconName, title, items) => {
+    const box = (x, title, items) => {
       frame(s, x, by, bw, bh, C.WHITE);
-      icon(s, iconName, x + 0.18, by + 0.16, 0.46);
-      t(s, title, { x: x + 0.78, y: by + 0.2, w: bw - 1, h: 0.4, fontSize: 15, bold: true, color: C.NAVY, valign: "middle" });
-      t(s, bullets(items), { x: x + 0.2, y: by + 0.8, w: bw - 0.4, h: bh - 0.95, fontSize: 13.5, paraSpaceAfter: 9 });
+      t(s, title, { x: x + 0.22, y: by + 0.2, w: bw - 0.4, h: 0.4, fontSize: 15, bold: true, color: C.NAVY, valign: "middle" });
+      t(s, bullets(items), { x: x + 0.2, y: by + 0.75, w: bw - 0.4, h: bh - 0.95, fontSize: 13.5, paraSpaceAfter: 9 });
     };
-    box(0.5, "problem", "The problem today", [
+    box(0.5, "The problem today", [
       ["Slow and manual: ", "an expert reads VPN packet captures by hand."],
       ["Post-quantum blind spot: ", "VPNs now negotiate quantum-safe keys, but packet tools cannot decode them yet, so a downgrade goes unnoticed."],
       ["Config is not reality: ", "existing tools such as Titania Nipper audit configuration files, not what the VPN actually negotiates."],
       ["Found but not fixed: ", "changing a live VPN is risky, so weak settings stay for years."],
     ]);
-    box(6.78, "unique", "What makes it unique", [
+    box(6.78, "What makes it unique", [
       "Detects a post-quantum downgrade: safe option offered, weaker one used.",
       "Every verdict names the rule and the evidence behind it.",
       "Never guesses: what cannot be seen is marked “unknown”, never “safe”.",
@@ -200,8 +201,8 @@ function iconItem(s, name, xc, y, label, sub, o = {}) {
       line(s, cx + DW / 2, y.d2 + 0.31, SX, y.d2 + 0.31); tag(s, "No", cx + DW / 2 + 0.05, y.d2 + 0.07);
       node(s, P, SX, y.d2 + 0.06, SW, 0.5, "Flag threat, raise risk score (go to Flow 2)", C.SIDE, C.SIDE_L, 9.5);
       line(s, SX + SW / 2, y.d2 + 0.56, SX + SW / 2, y.rep + 0.21, false); line(s, SX + SW / 2, y.rep + 0.21, R, y.rep + 0.21);
-      node(s, pres.shapes.FLOWCHART_DOCUMENT, X, y.rep, NW, 0.44, "Report + dashboard", C.PROC, C.PROC_L, 10);
-      line(s, cx, y.rep + 0.44, cx, y.end);
+      node(s, P, X, y.rep, NW, 0.42, "Report + dashboard", C.PROC, C.PROC_L, 10);
+      line(s, cx, y.rep + 0.42, cx, y.end);
       node(s, T, cx - 0.75, y.end, 1.5, 0.3, "End", C.TERM, C.TERM_L, 10.5);
     }
 
@@ -223,8 +224,6 @@ function iconItem(s, name, xc, y, label, sub, o = {}) {
       node(s, T, cx - 0.9, y.keep, 1.8, 0.32, "Fix kept", C.TERM, C.TERM_L, 10.5);
       line(s, cx + DW / 2, y.d + 0.36, SX, y.d + 0.36); tag(s, "No", cx + DW / 2 + 0.03, y.d + 0.12);
       node(s, P, SX, y.d - 0.02, SW, 0.76, "Automatic rollback: old files restored byte for byte, checked again", "FBE5D6", "C55A11", 9.5);
-      t(s, "Works on our test lab and on real strongSwan gateways over SSH. Before any live change, the operator accepts written terms and risks.",
-        { x: 6.95, y: 5.5, w: 5.9, h: 0.5, fontSize: 10, italic: true, color: C.GREY });
     }
 
     // technology stack: a few logos, not everything
@@ -242,31 +241,40 @@ function iconItem(s, name, xc, y, label, sub, o = {}) {
     });
   }
 
-  // ============ 4  Feasibility (icons around a hub) and viability (a tree), challenges below the tree
+  // ============ 4  Feasibility (a grid of cards) and viability (a tree), challenges below the tree
   { const s = pres.addSlide(); chrome(s, 4, "FEASIBILITY AND VIABILITY");
-    // left: feasibility
-    const cxs = [1.25, 3.55, 5.85], ys = [1.12, 3.3, 5.5];
-    const items = [
-      [0, 0, "technical", "Technical", "Working prototype, tested end to end"],
-      [1, 0, "speed", "Speed", "About 1.6 s to check one capture"],
-      [2, 0, "operational", "Operational", "Runs on one laptop; uses tshark"],
-      [0, 1, "security", "Security", "Captures stay on the local machine"],
-      [2, 1, "economic", "Economic", "Free open-source stack, no licence fee"],
-      [0, 2, "rollback", "Safe fixing", "Backup, verify, automatic rollback"],
-      [1, 2, "scalability", "Scalability", "Fleet scans and live site sensors"],
-      [2, 2, "integration", "Integration", "Reports, CBOM, syslog alerts, API"],
+    const CARD = "F7F9FC", EDGE = "D6DEEA";
+    const pill = (label, xc, y) => s.addText(label, { shape: pres.shapes.ROUNDED_RECTANGLE, x: xc - 1.05, y, w: 2.1, h: 0.36, rectRadius: 0.18,
+      fill: { color: C.NAVY }, line: { color: C.NAVY, width: 0 }, fontFace: F, fontSize: 12.5, bold: true, color: C.WHITE, align: "center", valign: "middle", charSpacing: 2 });
+    const card = (x, y, w, h) => s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.07, fill: { color: CARD }, line: { color: EDGE, width: 0.75 } });
+
+    // left: feasibility, eight cards in two columns
+    pill("FEASIBILITY", 3.55, 1.05);
+    const feas = [
+      ["technical", "Technical", "Complete pipeline built and working: capture, verdict, fix."],
+      ["speed", "Speed", "A saved capture is analysed in under 2 seconds on a laptop."],
+      ["security", "Security", "Reads packet headers only; never decrypts VPN traffic."],
+      ["operational", "Operational", "Works from a saved capture or a live feed; no login to the VPN devices."],
+      ["economic", "Economic", "Built on free, open-source software; no licence fee."],
+      ["rollback", "Safe fixing", "Backup first; every fix is verified or rolled back automatically."],
+      ["scalability", "Scalability", "Scans folders of captures and collects findings from site sensors."],
+      ["integration", "Integration", "Exports reports, a CycloneDX CBOM, syslog alerts and a local API."],
     ];
-    s.addShape(pres.shapes.OVAL, { x: 3.55 - 0.85, y: 3.85 - 0.85, w: 1.7, h: 1.7, fill: { color: C.SOFT }, line: { color: C.NAVY, width: 2 } });
-    t(s, "FEASIBILITY", { x: 3.55 - 0.85, y: 3.85 - 0.25, w: 1.7, h: 0.5, fontSize: 14, bold: true, color: C.NAVY, align: "center", valign: "middle" });
-    items.forEach(([c, r, ic, label, sub]) => iconItem(s, ic, cxs[c], ys[r], label, sub));
-    line(s, 6.85, 1.15, 6.85, 6.95, false, "A6A6A6", "dash");
+    const cw = 2.98, chh = 1.2, gx = 0.14, gy = 0.13, x0 = 0.5, y0 = 1.55;
+    feas.forEach(([ic, label, text], i) => {
+      const x = x0 + (i % 2) * (cw + gx), y = y0 + Math.floor(i / 2) * (chh + gy);
+      card(x, y, cw, chh);
+      icon(s, ic, x + 0.14, y + 0.16, 0.58);
+      t(s, label, { x: x + 0.86, y: y + 0.13, w: cw - 0.98, h: 0.3, fontSize: 12.5, bold: true, color: C.INK });
+      t(s, text, { x: x + 0.86, y: y + 0.44, w: cw - 0.98, h: 0.7, fontSize: 10, color: C.GREY });
+    });
+    line(s, 6.85, 1.1, 6.85, 6.95, false, "BFBFBF", "dash");
 
     // right: viability tree
     const rc = 9.95, kids = [7.75, 9.2, 10.65, 12.1];
-    icon(s, "viability", rc - 0.3, 1.1, 0.6);
-    t(s, "VIABILITY", { x: rc - 1, y: 1.74, w: 2, h: 0.28, fontSize: 13, bold: true, align: "center", color: C.NAVY });
-    line(s, rc, 2.04, rc, 2.22, false, C.BLUE);
-    line(s, kids[0], 2.22, kids[3], 2.22, false, C.BLUE);
+    pill("VIABILITY", rc, 1.05);
+    line(s, rc, 1.41, rc, 1.58, false, C.NAVY);
+    line(s, kids[0], 1.58, kids[3], 1.58, false, C.NAVY);
     const tree = [
       ["cost", "Cost effective", "No licence fee; runs on existing laptops"],
       ["ease", "Easy to use", "Plain-English reports and a dashboard"],
@@ -274,24 +282,24 @@ function iconItem(s, name, xc, y, label, sub, o = {}) {
       ["adoption", "Adoption", "Works with strongSwan and tshark"],
     ];
     tree.forEach(([ic, label, sub], i) => {
-      line(s, kids[i], 2.22, kids[i], 2.38, false, C.BLUE);
-      iconItem(s, ic, kids[i], 2.38, label, sub, { d: 0.5, w: 1.42, fs: 10.5, sfs: 9 });
+      line(s, kids[i], 1.58, kids[i], 1.72, false, C.NAVY);
+      iconItem(s, ic, kids[i], 1.72, label, sub, { d: 0.52, w: 1.42, fs: 10.5, sfs: 9 });
     });
 
     // right, below: challenges and how we handle them
-    const cx0 = 7.1, cy0 = 3.95, cw = 5.75, ch = 3.0;
-    frame(s, cx0, cy0, cw, ch);
-    t(s, "Challenges and how we handle them", { x: cx0 + 0.18, y: cy0 + 0.1, w: cw - 0.3, h: 0.34, fontSize: 13, bold: true, color: C.NAVY });
+    const cx0 = 7.1, cy0 = 3.3, cwid = 5.75, ch = 3.65;
+    card(cx0, cy0, cwid, ch);
+    t(s, "Challenges and how we handle them", { x: cx0 + 0.2, y: cy0 + 0.12, w: cwid - 0.4, h: 0.34, fontSize: 13, bold: true, color: C.NAVY });
     const risks = [
       ["encrypted", "Encrypted data: ", "part of the settings is hidden, so the few possible options are shown, clearly marked as a best guess."],
-      ["vendor", "Vendor devices: ", "tested on four open-source VPN programs and real public traffic; vendor devices come next."],
-      ["hidden", "Hidden risks: ", "weak passwords or a hacked device cannot be seen in traffic, so they are listed as “not checked”, never scored."],
-      ["privacy", "Data privacy: ", "captures stay on the machine. Fix drafting uses cloud AI APIs for now (limited resources); a client can run its own models on-site."],
+      ["dataset", "Limited datasets: ", "few labelled public IPsec traffic datasets exist, so we combine our own lab captures with the public ones we found."],
+      ["lesson", "Lab vs real traffic: ", "our first model, trained only on lab traffic, failed on real VPN traffic; we retrained it on real public IPsec traffic."],
+      ["privacy", "Data privacy: ", "fix drafting uses cloud AI APIs for now (limited resources); a client can run its own models on-site so nothing leaves."],
     ];
     risks.forEach(([ic, lead, rest], i) => {
-      const ry = cy0 + 0.52 + i * 0.61;
-      icon(s, ic, cx0 + 0.2, ry + 0.04, 0.36);
-      t(s, [{ text: lead, options: { bold: true } }, { text: rest }], { x: cx0 + 0.68, y: ry, w: cw - 0.85, h: 0.56, fontSize: 10.5, valign: "middle" });
+      const ry = cy0 + 0.58 + i * 0.75;
+      icon(s, ic, cx0 + 0.2, ry + 0.08, 0.46);
+      t(s, [{ text: lead, options: { bold: true, color: C.INK } }, { text: rest }], { x: cx0 + 0.8, y: ry, w: cwid - 1.0, h: 0.62, fontSize: 10.5, valign: "middle" });
     });
   }
 
