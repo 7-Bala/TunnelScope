@@ -116,6 +116,10 @@ export interface LiveWindow {
 export interface LiveStatus {
   ok: boolean
   enabled: boolean
+  /** the public site refuses this view (server.py public_demo, HTTP 403) */
+  off_here?: boolean
+  /** the engine did not answer */
+  unreachable?: boolean
   source?: string
   window_s?: number
   started?: number
@@ -125,13 +129,14 @@ export interface LiveStatus {
   capturing?: boolean | null
 }
 
-export async function liveStatus(): Promise<LiveStatus | null> {
+export async function liveStatus(): Promise<LiveStatus> {
   try {
     const res = await fetch("/api/live", { cache: "no-store" })
-    if (!res.ok) return null
+    if (res.status === 403) return { ok: false, enabled: false, off_here: true }
+    if (!res.ok) return { ok: false, enabled: false, unreachable: true }
     return (await res.json()) as LiveStatus
   } catch {
-    return null
+    return { ok: false, enabled: false, unreachable: true }
   }
 }
 
@@ -173,17 +178,22 @@ export interface SiteStatus {
 export interface SitesResult {
   ok: boolean
   enabled: boolean
+  /** the public site refuses this view (server.py public_demo, HTTP 403) */
+  off_here?: boolean
+  /** the engine did not answer */
+  unreachable?: boolean
   stale_after_windows?: number
   sites?: SiteStatus[]
 }
 
-export async function sitesStatus(): Promise<SitesResult | null> {
+export async function sitesStatus(): Promise<SitesResult> {
   try {
     const res = await fetch("/api/sites", { cache: "no-store" })
-    if (!res.ok) return null
+    if (res.status === 403) return { ok: false, enabled: false, off_here: true }
+    if (!res.ok) return { ok: false, enabled: false, unreachable: true }
     return (await res.json()) as SitesResult
   } catch {
-    return null
+    return { ok: false, enabled: false, unreachable: true }
   }
 }
 
@@ -219,6 +229,14 @@ export interface EngineInfo {
   live: boolean
   /** the public demo deployment: analyses captures only (server.py public_demo) */
   public_demo: boolean
+}
+
+// Asked once per page: is this the public site (server.py public_demo)? Views that the public site refuses check this
+// first, so they never send a request the server will refuse.
+let demoOnce: Promise<boolean> | null = null
+export function isPublicDemo(): Promise<boolean> {
+  demoOnce ??= engineInfo().then((i) => !!i?.public_demo)
+  return demoOnce
 }
 
 export async function engineInfo(): Promise<EngineInfo | null> {

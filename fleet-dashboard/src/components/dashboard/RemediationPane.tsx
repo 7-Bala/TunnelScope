@@ -8,7 +8,7 @@ import {
   previewRemediation,
   remediationCapabilities,
   draftingModel,
-  engineInfo,
+  isPublicDemo,
   remediationTargets,
   type GatewayTerms,
   type GenerateResult,
@@ -124,13 +124,6 @@ function DiffBlock({ diff }: { diff: string }) {
       })}
     </pre>
   )
-}
-
-// Asked once per page, not once per rule row: is this the public site (server.py public_demo)?
-let demoOnce: Promise<boolean> | null = null
-function isPublicDemo(): Promise<boolean> {
-  demoOnce ??= engineInfo().then((i) => !!i?.public_demo)
-  return demoOnce
 }
 
 /** On the public site fixing is switched off; say why, where the fix would be (DEC-046). */
