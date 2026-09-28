@@ -54,6 +54,21 @@ export interface AnalyzedSA {
   explanation: Explanation
   /** threat matrix, overall risk score and evidence confidence (tunnelscope/risk/risk.py) */
   risk: RiskResult
+  /** DEC-045: known vulnerabilities for the identified software, attached to every analysis; never a verdict */
+  known_vulnerabilities?: KnownVulnerabilities
+}
+
+export interface KnownVulnerabilities {
+  status: "INFERRED" | "UNKNOWN"
+  note: string
+  products: {
+    implementation: string
+    ends: string[]
+    counts: { total?: number; kev?: number; product_listed?: number; ipsec_related?: number }
+    sources: Record<string, string>
+    top: { id: string; cvss: number | null; severity: string | null; kev: boolean; match: "cpe" | "vendor" | "keyword"; ipsec_related: boolean; description: string }[]
+    note?: string
+  }[]
 }
 
 export interface Threat {

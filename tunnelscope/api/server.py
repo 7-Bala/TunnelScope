@@ -166,6 +166,9 @@ def analysis_json(a: dict, source: str, anomalies: list[dict] | None = None) -> 
         sas[-1]["anomaly"] = anomalies[i] if anomalies else None
         sas[-1]["risk"] = assess_risk(r, sa["verdicts"], sas[-1]["anomaly"]) if anomalies else sa["risk"]
         sas[-1]["explanation"] = explain_sa(sas[-1], sas[-1]["anomaly"])
+        # DEC-045: known vulnerabilities for the identified software, on every analysis, next to the verdicts
+        from ..intel.lookup import known_vulnerabilities
+        sas[-1]["known_vulnerabilities"] = known_vulnerabilities(r.findings)
     return {"ok": True, "filename": source, "n_sas": len(sas), "sas": sas}
 
 
