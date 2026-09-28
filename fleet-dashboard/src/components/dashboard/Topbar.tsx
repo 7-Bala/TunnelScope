@@ -10,27 +10,24 @@ function Wordmark() {
   )
 }
 
-export type View = "uploads" | "sample" | "live" | "sites"
+export type View = "uploads" | "live" | "sites"
 export type Engine = "checking" | "online" | "offline"
 
 export function Topbar({
   view,
   onView,
   uploadCount,
-  sampleCount,
   lastAnalysed,
 }: {
   view: View
   onView: (v: View) => void
   uploadCount: number
-  sampleCount: number
   lastAnalysed: Date | null
 }) {
   const tabs: { key: View; label: string; count?: number }[] = [
     { key: "uploads", label: "Your captures", count: uploadCount },
     { key: "live", label: "Live" },
     { key: "sites", label: "Sites" },
-    { key: "sample", label: "Sample fleet", count: sampleCount },
   ]
 
   return (

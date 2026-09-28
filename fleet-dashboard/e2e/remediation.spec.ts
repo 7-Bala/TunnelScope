@@ -35,7 +35,12 @@ async function mockEngine(page: Page, engine: Engine): Promise<Seen> {
     json(r, { ok: true, dashboard: true, history: false, live: false, ...(engine.publicDemo ? { public_demo: true } : {}) }),
   )
   await page.route("**/api/analyze**", (r) => json(r, ANALYZE))
-  await page.route("**/api/live", (r) => json(r, { ok: true, enabled: false }))
+  await page.route("**/api/live", (r) =>
+    engine.publicDemo ? json(r, { ok: false, error: "disabled in the public demo" }, 403) : json(r, { ok: true, enabled: false }),
+  )
+  await page.route("**/api/sites", (r) =>
+    engine.publicDemo ? json(r, { ok: false, error: "disabled in the public demo" }, 403) : json(r, { ok: true, enabled: false }),
+  )
   await page.route("**/api/history", (r) => json(r, { ok: true, tunnels: [] }))
   await page.route("**/api/remediate/plan", (r) => {
     seen.plan++
@@ -285,6 +290,7 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
       test("B1-27 public site: fixing is off, the reasons are shown, and no fix request is ever sent", async ({ page }) => {
         const seen = await mockEngine(page, { caps: CAPS_ON, publicDemo: true })
         await page.goto("/")
+        await page.getByRole("button", { name: "I agree" }).click()
         await page.locator("input[type=file]").setInputFiles(CAPTURE)
         await page.locator("[data-state][aria-expanded]").first().click()
         await page.getByRole("tab", { name: /Verdicts/ }).click()
@@ -301,6 +307,48 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         expect(seen.apply).toEqual([])
         expect(seen.generate).toBe(0)
         expect(seen.consoleErrors).toEqual([])
+      })
+
+      test("B1-28 public site: uploads wait for the demo terms; a held file goes through after I agree; not asked again", async ({ page }) => {
+        const seen = await mockEngine(page, { caps: CAPS_ON, publicDemo: true })
+        let analyses = 0
+        page.on("request", (r) => r.url().includes("/api/analyze") && analyses++)
+        await page.goto("/")
+        const dialog = page.getByRole("dialog", { name: "Before you use the public demo" })
+        await expect(dialog).toBeVisible()
+        await dialog.getByRole("button", { name: "Not now" }).click()
+        await page.locator("input[type=file]").setInputFiles(CAPTURE)       // held: the dialog comes back, nothing is sent
+        await expect(dialog).toBeVisible()
+        expect(analyses).toBe(0)
+        await dialog.getByRole("button", { name: "I agree" }).click()
+        await expect(page.getByText("10.10.1.220 → 10.10.2.220").first()).toBeVisible()
+        expect(analyses).toBe(1)
+        await page.reload()
+        await expect(page.getByRole("dialog")).toHaveCount(0)
+        expect(seen.consoleErrors).toEqual([])
+      })
+
+      test("B1-29 public site: Sites and Live say why they are off instead of waiting forever", async ({ page }) => {
+        const seen = await mockEngine(page, { caps: CAPS_ON, publicDemo: true })
+        const refused: string[] = []
+        page.on("request", (r) => /\/api\/(sites|live)$/.test(new URL(r.url()).pathname) && refused.push(r.url()))
+        await page.goto("/")
+        await page.getByRole("button", { name: "I agree" }).click()
+        await page.getByRole("tab", { name: "Sites" }).click()
+        await expect(page.getByText("Site views are switched off on this public site")).toBeVisible()
+        await expect(page.getByText("Checking the engine…")).toHaveCount(0)
+        await page.getByRole("tab", { name: "Live" }).click()
+        await expect(page.getByText("Live analysis is switched off on this public site")).toBeVisible()
+        expect(refused).toEqual([])                                     // never asked: no refused request, no polling
+        expect(seen.consoleErrors).toEqual([])
+      })
+
+      test("B1-30 local install: no terms dialog, no sample fleet", async ({ page }) => {
+        await mockEngine(page, { caps: CAPS_ON })
+        await page.goto("/")
+        await expect(page.getByRole("dialog")).toHaveCount(0)
+        await expect(page.getByRole("tab", { name: /Sample fleet/ })).toHaveCount(0)
+        await expect(page.getByRole("tab", { name: "Sites" })).toBeVisible()
       })
 
       test("B1-07 model unavailable: a plain line, no draft button", async ({ page }) => {
