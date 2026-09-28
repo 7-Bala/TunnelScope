@@ -93,6 +93,7 @@ export function IntelPane({ sa }: { sa: AnalyzedSA }) {
         software: traffic does not show the version, so none is confirmed on this tunnel, and no verdict or risk score
         uses them.
       </p>
+      <p className="text-[11.5px] text-faint">This product uses data from the NVD API but is not endorsed or certified by the NVD.</p>
       {views.length === 0 && (
         <p className="text-[13px] text-muted-foreground">{kv?.note ?? "No vulnerability data for this analysis."}</p>
       )}

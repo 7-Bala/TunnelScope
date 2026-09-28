@@ -10,8 +10,9 @@ import { Insights } from "@/components/dashboard/Insights"
 import { FleetThreats } from "@/components/dashboard/FleetThreats"
 import { LiveView } from "@/components/dashboard/LiveView"
 import { SitesView } from "@/components/dashboard/SitesView"
+import { DemoTerms, demoTermsAgreed } from "@/components/dashboard/DemoTerms"
 import type { TunnelState } from "@/components/tunnel/BackgroundTunnel"
-import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
+import { fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
 import { analyzeCapture, engineHealth, engineInfo, ENGINE_OFFLINE } from "@/lib/api"
 import { Intro } from "@/components/intro/Intro"
 import { cn } from "@/lib/utils"
@@ -39,6 +40,11 @@ function App() {
   const [results, setResults] = useState<Record<string, Gateway[]>>({})
   const [engine, setEngine] = useState<Engine>("checking")
   const [publicDemo, setPublicDemo] = useState(false)
+  // public site only: uploads wait until the visitor agrees to the demo terms (DemoTerms)
+  const [termsOk, setTermsOk] = useState(demoTermsAgreed)
+  const [showTerms, setShowTerms] = useState(false)
+  const gate = useRef({ demo: false, ok: demoTermsAgreed() })
+  const pending = useRef<File[]>([])
   const [dragging, setDragging] = useState(false)
   const [flash, setFlash] = useState<TunnelState | null>(null)
   // the background tunnel holds the intro's lit frame until the intro leaves
@@ -51,7 +57,12 @@ function App() {
 
   useEffect(() => {
     engineHealth().then((ok) => setEngine(ok ? "online" : "offline"))
-    engineInfo().then((i) => setPublicDemo(!!i?.public_demo))
+    engineInfo().then((i) => {
+      const demo = !!i?.public_demo
+      gate.current.demo = demo
+      setPublicDemo(demo)
+      if (demo && !gate.current.ok) setShowTerms(true)
+    })
   }, [])
 
   // Captures are analysed one at a time, in the order they were added.
@@ -96,6 +107,11 @@ function App() {
 
   const addFiles = useCallback((files: File[]) => {
     if (!files.length) return
+    if (gate.current.demo && !gate.current.ok) {
+      pending.current = files
+      setShowTerms(true)
+      return
+    }
     setView("uploads")
     setQueue((q) => [...q, ...files.map((file) => ({ key: `f${++seq}`, file, status: "queued" as const }))])
   }, [])
@@ -137,7 +153,7 @@ function App() {
   }, [addFiles])
 
   const uploads = useMemo(() => queue.flatMap((q) => results[q.key] ?? []), [queue, results])
-  const gateways = view === "sample" ? GATEWAYS : view === "live" || view === "sites" ? [] : uploads
+  const gateways = view === "live" || view === "sites" ? [] : uploads
   const s = fleetStats(gateways)
   const busy = queue.some((q) => q.status === "queued" || q.status === "analysing")
   const tunnel: TunnelState = dragging ? "over" : busy ? "busy" : (flash ?? "idle")
@@ -157,7 +173,7 @@ function App() {
   }
 
   const readouts = [
-    { label: view === "sample" ? "Gateways" : "Tunnels", value: s.total, foot: view === "sample" ? "lab captures" : "security associations" },
+    { label: "Tunnels", value: s.total, foot: "security associations" },
     { label: "PQ-ready", value: s.counts.pq, tone: "pos" as const, foot: "hybrid ML-KEM selected" },
     (() => {
       const rs = gateways.flatMap((g) => (g.detail?.risk ? [g.detail.risk.risk] : []))
@@ -200,7 +216,6 @@ function App() {
           view={view}
           onView={setView}
           uploadCount={uploads.length}
-          sampleCount={GATEWAYS.length}
           lastAnalysed={lastAnalysed}
         />
 
@@ -213,11 +228,36 @@ function App() {
           </div>
         )}
 
+        {showTerms && (
+          <DemoTerms
+            onAgree={() => {
+              gate.current.ok = true
+              setTermsOk(true)
+              setShowTerms(false)
+              const files = pending.current
+              pending.current = []
+              if (files.length) addFiles(files)
+            }}
+            onDecline={() => {
+              pending.current = []
+              setShowTerms(false)
+            }}
+          />
+        )}
+        {publicDemo && !termsOk && !showTerms && (
+          <p role="status" className="mb-4 text-[13px] text-muted-foreground">
+            Uploads are off until you agree to the demo terms.{" "}
+            <button type="button" onClick={() => setShowTerms(true)} className="font-medium text-violet underline-offset-4 hover:underline">
+              Read the terms
+            </button>
+          </p>
+        )}
+
         {engine === "offline" && (
           <div role="status" className="mb-4 rounded-2xl border border-neg/30 bg-neg-bg px-4 py-3 text-[13px] text-foreground/90">
             The analysis engine isn't reachable. Run{" "}
             <code className="rounded bg-background/60 px-1.5 py-0.5 font-mono text-[12px] text-foreground">tunnelscope serve</code>{" "}
-            and reload this page. The sample fleet still works without it.
+            and reload this page.
           </div>
         )}
 
@@ -234,13 +274,6 @@ function App() {
             publicDemo={publicDemo}
           />
         </div>
-
-        {view === "sample" && (
-          <p className="mb-5 max-w-[80ch] text-[12.5px] leading-relaxed text-faint">
-            Sample fleet: 10 captures from the TunnelScope lab testbed, run through <code className="font-mono">tunnelscope fleet</code>.
-            Gateway names are illustrative; the findings are real output for those captures.
-          </p>
-        )}
 
         {view === "live" ? (
           <LiveView />
@@ -293,7 +326,7 @@ function App() {
                 <Insights gateways={gateways} />
               </div>
 
-              <FleetRegister gateways={gateways} title={view === "sample" ? "Sample fleet register" : "Analysed captures"} />
+              <FleetRegister gateways={gateways} title="Analysed captures" />
             </div>
           </>
         ) : (
@@ -301,12 +334,7 @@ function App() {
             <section className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
               <h2 className="text-[16px] font-semibold text-foreground">No captures analysed yet</h2>
               <p className="mx-auto mt-2 max-w-[56ch] text-[13.5px] leading-relaxed text-muted-foreground">
-                Posture, failed checks and the evidence behind each verdict appear here once a capture is analysed. To see what
-                a result looks like first, open the{" "}
-                <button type="button" onClick={() => setView("sample")} className="font-medium text-violet underline-offset-4 hover:underline">
-                  sample fleet
-                </button>
-                .
+                Posture, failed checks and the evidence behind each verdict appear here once a capture is analysed.
               </p>
             </section>
           )
@@ -318,6 +346,9 @@ function App() {
             vantage cannot see is labelled as such.
           </p>
           <p className="text-faint">{publicDemo ? "TunnelScope · public demo server" : "TunnelScope · local engine on 127.0.0.1"}</p>
+          <p className="w-full text-[11.5px] text-faint">
+            This product uses data from the NVD API but is not endorsed or certified by the NVD. Known-exploited data: CISA KEV; European data: ENISA EUVD.
+          </p>
         </footer>
       </main>
     </div>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { type LiveStatus, liveStatus } from "@/lib/api"
+import { isPublicDemo, type LiveStatus, liveStatus } from "@/lib/api"
 import { RiskBadge } from "@/components/dashboard/ThreatMatrix"
+import { OffHere, Unreachable } from "@/components/dashboard/OffHere"
 
 function ago(now: number, t?: number | null) {
   if (!t) return "never"
@@ -19,7 +20,14 @@ export function LiveView() {
       const s = await liveStatus()
       if (on) setSt(s)
     }
-    poll()
+    // on the public site this view is refused: say so without asking the server (no refused requests, no polling)
+    isPublicDemo().then((demo) => {
+      if (!on) return
+      if (demo) {
+        setSt({ ok: false, enabled: false, off_here: true })
+        clearInterval(a)
+      } else poll()
+    })
     const a = setInterval(poll, 3000)
     const b = setInterval(() => setNow(Date.now()), 1000)
     return () => {
@@ -30,6 +38,17 @@ export function LiveView() {
   }, [])
 
   if (!st) return <p className="text-[13px] text-muted-foreground">Checking the engine…</p>
+  if (st.off_here)
+    return (
+      <OffHere
+        title="Live analysis is switched off on this public site"
+        reasons={[
+          { label: "What it does:", text: "captures VPN traffic on a network interface (or reads a sensor's capture folder) and analyses each window as it closes." },
+          { label: "Why not here:", text: "this server sees none of your VPN traffic, and a capture of your network belongs on your own machine, not a public server." },
+        ]}
+      />
+    )
+  if (st.unreachable) return <Unreachable />
   if (!st.enabled)
     return (
       <section className="glass rounded-2xl px-6 py-8">

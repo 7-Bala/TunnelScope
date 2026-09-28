@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { type SitesResult, sitesStatus } from "@/lib/api"
+import { isPublicDemo, type SitesResult, sitesStatus } from "@/lib/api"
+import { OffHere, Unreachable } from "@/components/dashboard/OffHere"
 
 function fmt(v: unknown) {
   if (v === null || v === undefined) return "none"
@@ -22,7 +23,14 @@ export function SitesView() {
       const s = await sitesStatus()
       if (on) setSt(s)
     }
-    poll()
+    // on the public site this view is refused: say so without asking the server (no refused requests, no polling)
+    isPublicDemo().then((demo) => {
+      if (!on) return
+      if (demo) {
+        setSt({ ok: false, enabled: false, off_here: true })
+        clearInterval(a)
+      } else poll()
+    })
     const a = setInterval(poll, 5000)
     return () => {
       on = false
@@ -31,6 +39,17 @@ export function SitesView() {
   }, [])
 
   if (!st) return <p className="text-[13px] text-muted-foreground">Checking the engine…</p>
+  if (st.off_here)
+    return (
+      <OffHere
+        title="Site views are switched off on this public site"
+        reasons={[
+          { label: "What it shows:", text: "which VPN sites your organisation has, each site's tunnels and their posture, and recent downgrade alerts, from a collector that receives your site sensors' signed reports." },
+          { label: "Why not here:", text: "that is private to your organisation, it needs each site's key on the collector, and this site has no login, so anyone could read it." },
+        ]}
+      />
+    )
+  if (st.unreachable) return <Unreachable />
   if (!st.enabled)
     return (
       <section className="glass rounded-2xl px-6 py-8">
