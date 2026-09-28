@@ -1,0 +1,15 @@
+TunnelScope
+Copyright 2026 Bala
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party data and material used at run time (not bundled unless stated):
+- This product uses data from the NVD API but is not endorsed or certified by the NVD.
+- Known Exploited Vulnerabilities catalog, CISA (CC0 1.0).
+- European Vulnerability Database (EUVD), ENISA.
+- MITRE ATT&CK and CAPEC names: (c) The MITRE Corporation. This work is reproduced and distributed with the
+  permission of The MITRE Corporation.
+- tests/fixtures/cyclonedx/bom-1.6.schema.json: CycloneDX specification, OWASP Foundation / Ecma TC54,
+  Apache License 2.0 (unmodified).
+
+TunnelScope runs tshark (Wireshark, GPL-2.0) as a separate program; it does not link to or include it.

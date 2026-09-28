@@ -85,3 +85,8 @@ The project's core idea isn't guessing what's inside an encrypted tunnel — it'
 what can actually be seen from each vantage point (passive capture, IKE visibility, endpoint
 telemetry, keys, authorized active probing), and building a real assessment on top of only that.
 "Scope" names the instrument; the tiers are the discipline behind it.
+
+## Licence
+
+Apache License 2.0: see [LICENSE](LICENSE) and [NOTICE](NOTICE) (copyright and the attributions for the vulnerability
+and ATT&CK/CAPEC data TunnelScope uses).

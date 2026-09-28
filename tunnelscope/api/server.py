@@ -477,9 +477,10 @@ class _Handler(BaseHTTPRequestHandler):
             return
         try:
             from ..remediate import execute, generate
+            backend = generator_backend()
             res = generate.generate_plan(body["rule_id"], body["target"], body.get("observed"),
-                                         compare_with_handwritten=True, backend=generator_backend(),
-                                         **generate.SHIPPED_SETTINGS)
+                                         compare_with_handwritten=True, backend=backend,
+                                         **generate.shipped_settings(backend))
             if res.get("ok"):
                 res["plan_id"] = execute.store_generated_plan(res["plan"], body["target"], HISTORY_DIR)
             plan = res.get("plan") or {}
