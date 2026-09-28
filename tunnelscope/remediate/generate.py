@@ -672,7 +672,7 @@ def generate_plan(rule_id: str, target: str, observed: Any = None, *, compare_wi
             return {**base, "ok": False, "stage": "scope",
                     "reason": "a hand-written, tested fix exists for this rule; use it, or ask for a side-by-side draft"}
         if gwmod.is_gateway(target):
-            # DEC-044: a real gateway, only if it allows AI drafts and its terms are accepted. The
+            # DEC-047: a real gateway, only if it allows AI drafts and its terms are accepted. The
             # keyword list is the lab's strongSwan; the load check on the gateway itself decides.
             execute._CTX.history_dir = history_dir
             hd = execute._history_dir(history_dir)

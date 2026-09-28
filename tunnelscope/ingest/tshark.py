@@ -12,6 +12,8 @@ import os
 import re
 import shutil
 import subprocess
+import sys
+import tempfile
 from collections import OrderedDict
 from pathlib import Path
 
@@ -111,18 +113,90 @@ def _float(s, default=0.0):
         return default
 
 
+# --------------------------------------------------------------------------- #
+# T-143: tshark reads untrusted files, so it runs isolated. A hostile capture   #
+# aimed at a dissector bug must not reach the network, fill the disk, or hold   #
+# the machine; and results must not depend on this user's Wireshark settings.   #
+#   - network denied: macOS sandbox-exec, Linux `unshare -rn` (each used only   #
+#     if a probe shows it works here; `tunnelscope doctor` says which);          #
+#   - limits: CPU time, written file size, open files, no core dumps, and       #
+#     address space on Linux (macOS does not enforce RLIMIT_AS);                #
+#   - a minimal environment and an empty Wireshark profile directory;           #
+#   - -n: no name resolution (no DNS lookups while reading).                     #
+# TUNNELSCOPE_TSHARK_SANDBOX=off disables only the network sandbox.             #
+# --------------------------------------------------------------------------- #
+_MAC_PROFILE = "(version 1)(allow default)(deny network*)"
+_FSIZE = 256 * 1024 * 1024
+_AS_LINUX = 4 * 1024 * 1024 * 1024
+
+
+@functools.lru_cache(maxsize=1)
+def sandbox_prefix() -> tuple[str, ...]:
+    """The command prefix that denies tshark the network, or () with nothing usable. Probed once."""
+    if os.environ.get("TUNNELSCOPE_TSHARK_SANDBOX", "").lower() == "off":
+        return ()
+    if sys.platform == "darwin" and Path("/usr/bin/sandbox-exec").exists():
+        cand: tuple[str, ...] = ("/usr/bin/sandbox-exec", "-p", _MAC_PROFILE)
+    elif sys.platform.startswith("linux") and shutil.which("unshare"):
+        cand = (shutil.which("unshare") or "unshare", "-rn")
+    else:
+        return ()
+    try:
+        ok = subprocess.run([*cand, "/bin/sh", "-c", "exit 0"], capture_output=True, timeout=10).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        ok = False
+    return cand if ok else ()
+
+
+def isolation_status() -> dict:
+    pre = sandbox_prefix()
+    return {"network": ("denied by sandbox-exec" if pre and "sandbox-exec" in pre[0] else
+                        "denied by unshare -rn" if pre else "not isolated (no sandbox available here)"),
+            "limits": "cpu, file size, open files, no core" + (", address space" if sys.platform.startswith("linux") else ""),
+            "profile": "empty Wireshark profile directory", "name_resolution": "off (-n)"}
+
+
+@functools.lru_cache(maxsize=1)
+def _empty_profile() -> str:
+    return tempfile.mkdtemp(prefix="tunnelscope-wireshark-profile-")
+
+
+def _limits(cpu_s: int):
+    def apply():  # runs in the child between fork and exec
+        import resource
+        for lim, val in ((resource.RLIMIT_CPU, cpu_s), (resource.RLIMIT_FSIZE, _FSIZE),
+                         (resource.RLIMIT_NOFILE, 256), (resource.RLIMIT_CORE, 0)):
+            try:
+                resource.setrlimit(lim, (val, val))
+            except (ValueError, OSError):
+                pass
+        if sys.platform.startswith("linux"):
+            try:
+                resource.setrlimit(resource.RLIMIT_AS, (_AS_LINUX, _AS_LINUX))
+            except (ValueError, OSError):
+                pass
+    return apply
+
+
+def run_isolated(args: list[str], timeout: int) -> subprocess.CompletedProcess:
+    """Run a tshark command (or, in tests, any command) under the T-143 isolation."""
+    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LANG": "C", "LC_ALL": "C",
+           "WIRESHARK_CONFIG_DIR": _empty_profile(), "HOME": _empty_profile(), "TMPDIR": tempfile.gettempdir()}
+    return subprocess.run([*sandbox_prefix(), *args], capture_output=True, text=True, timeout=timeout, env=env,
+                          preexec_fn=_limits(timeout + 5), stdin=subprocess.DEVNULL)
+
+
 def _run_fields(pcap: str, display_filter: str, fields: list[str],
                 timeout: int | None = None) -> list[list[str]]:
     p = Path(pcap)
     if not p.exists():
         raise InputError(f"capture not found: {pcap}")
-    args = [tshark_bin(), "-r", str(pcap), "-Y", display_filter, "-T", "fields",
+    args = [tshark_bin(), "-n", "-r", str(pcap), "-Y", display_filter, "-T", "fields",
             "-E", "occurrence=a"]
     for f in fields:
         args += ["-e", f]
     try:
-        proc = subprocess.run(args, capture_output=True, text=True,
-                              timeout=timeout or DEFAULT_TIMEOUT_S)
+        proc = run_isolated(args, timeout or DEFAULT_TIMEOUT_S)
     except subprocess.TimeoutExpired:
         raise InputError(
             f"tshark timed out after {timeout or DEFAULT_TIMEOUT_S}s on {pcap} — "
@@ -133,6 +207,8 @@ def _run_fields(pcap: str, display_filter: str, fields: list[str],
         # Swallowing it into a CalledProcessError leaves the caller guessing.
         why = (proc.stderr or "").strip().splitlines()
         detail = why[-1] if why else f"tshark exited {proc.returncode}"
+        if proc.returncode < 0:          # killed by a signal: a CPU/memory limit, or a crash in a dissector
+            detail = f"tshark was stopped by signal {-proc.returncode} (a resource limit, or a crash on this file)"
         raise InputError(f"tshark could not read {pcap}: {detail}")
     return [line.split("\t") for line in proc.stdout.splitlines() if line.strip()]
 

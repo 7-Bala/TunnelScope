@@ -1,9 +1,10 @@
 """DEC-040: the ONE place in TunnelScope that opens a network connection, and only when the operator turns the
-network on (TUNNELSCOPE_NETWORK=on). Everything that reads captures and produces findings, verdicts and scores
-never imports this module (tests/test_ai_layer.py checks that); only the optional extras do: threat intelligence
-lookups (tunnelscope.intel) and remediation drafting by an outside model (tunnelscope.remediate.*_client).
-Off by default, so a client install never contacts anything unless configured; an air-gapped install leaves it off
-and uses an offline intel bundle and the local model instead."""
+network is on. Everything that reads captures and produces findings, verdicts and scores never imports this module
+(tests/test_ai_layer.py checks that); only the extras do: threat intelligence lookups (tunnelscope.intel) and
+remediation drafting by an outside model (tunnelscope.remediate.*_client, which also needs TUNNELSCOPE_GENERATOR=1).
+DEC-045 (owner, 2026-09-28): ON by default, so known-vulnerability data is looked up on every analysis and stays
+current; only the software name is ever sent. An air-gapped install sets TUNNELSCOPE_NETWORK=off and uses the
+offline intel bundle (tunnelscope intel-bundle)."""
 from __future__ import annotations
 
 import functools
@@ -42,7 +43,9 @@ def _ssl_context() -> ssl.SSLContext:
 
 
 def network_enabled() -> bool:
-    return os.environ.get(ENV, "off").strip().lower() in ("on", "1", "true", "yes")
+    # DEC-045 (owner, 2026-09-28): on by default so vulnerability data stays current; air-gapped installs set
+    # TUNNELSCOPE_NETWORK=off and use the offline intel bundle.
+    return os.environ.get(ENV, "on").strip().lower() in ("on", "1", "true", "yes")
 
 
 def http_json(url: str, *, method: str = "GET", headers: dict | None = None, body: dict | None = None,

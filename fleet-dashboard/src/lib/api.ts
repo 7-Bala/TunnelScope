@@ -54,6 +54,21 @@ export interface AnalyzedSA {
   explanation: Explanation
   /** threat matrix, overall risk score and evidence confidence (tunnelscope/risk/risk.py) */
   risk: RiskResult
+  /** DEC-045: known vulnerabilities for the identified software, attached to every analysis; never a verdict */
+  known_vulnerabilities?: KnownVulnerabilities
+}
+
+export interface KnownVulnerabilities {
+  status: "INFERRED" | "UNKNOWN"
+  note: string
+  products: {
+    implementation: string
+    ends: string[]
+    counts: { total?: number; kev?: number; product_listed?: number; ipsec_related?: number }
+    sources: Record<string, string>
+    top: { id: string; cvss: number | null; severity: string | null; kev: boolean; match: "cpe" | "vendor" | "keyword"; ipsec_related: boolean; description: string }[]
+    note?: string
+  }[]
 }
 
 export interface Threat {
@@ -150,6 +165,8 @@ export interface SiteStatus {
   last_window_ok?: boolean | null
   tunnels: SiteTunnel[]
   recent_alerts?: SiteAlert[]
+  /** T-142: "masked" = the site replaced every IP address with a keyed pseudonym (the key stays at the site) */
+  addresses?: "clear" | "masked"
   note?: string | null
 }
 
@@ -200,6 +217,8 @@ export interface EngineInfo {
   ok: boolean
   history: boolean
   live: boolean
+  /** the public demo deployment: analyses captures only (server.py public_demo) */
+  public_demo: boolean
 }
 
 export async function engineInfo(): Promise<EngineInfo | null> {
@@ -207,7 +226,7 @@ export async function engineInfo(): Promise<EngineInfo | null> {
     const res = await fetch("/health", { cache: "no-store" })
     if (!res.ok) return null
     const b = await res.json()
-    return b?.ok ? { ok: true, history: !!b.history, live: !!b.live } : null
+    return b?.ok ? { ok: true, history: !!b.history, live: !!b.live, public_demo: b.public_demo === true } : null
   } catch {
     return null
   }
@@ -356,7 +375,7 @@ export type RemediationPreview = {
   digest?: string
   source?: "hand-written" | "generated"
   plan_id?: string | null
-  /** DEC-044: present only for a real gateway. Apply needs `ack_phrase` typed back exactly. */
+  /** DEC-047: present only for a real gateway. Apply needs `ack_phrase` typed back exactly. */
   live?: {
     gateway: string
     host: string
@@ -373,10 +392,20 @@ export type RemediationCapabilities = {
   local_model: boolean
   /** DEC-038: the optional cloud drafting backend has an API key and its package is installed */
   cloud_model: boolean
-  /** which backend the operator has selected (server-side setting only, never client-chosen) */
-  backend: "local" | "cloud"
+  /** which backend the operator has selected (server-side setting only, never client-chosen); "chain" = the
+   * DEC-041 fallback chain: cloud models first, then the local model */
+  backend: "local" | "cloud" | "chain"
   /** local-model drafts are switched on (off until EXP-18 passes, DEC-034) */
   generator_enabled: boolean
+}
+
+/** Which model family drafts, and whether any drafting model is available, for the operator's backend. With the
+ * chain, cloud models come first; the local model is only the last fallback. */
+export function draftingModel(caps: RemediationCapabilities): { noun: "cloud model" | "local model"; available: boolean } {
+  if (caps.backend === "cloud") return { noun: "cloud model", available: caps.cloud_model }
+  if (caps.backend === "chain")
+    return { noun: caps.cloud_model ? "cloud model" : "local model", available: caps.cloud_model || caps.local_model }
+  return { noun: "local model", available: caps.local_model }
 }
 
 const NO_CAPS: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "local", generator_enabled: false }
@@ -389,7 +418,7 @@ export async function remediationCapabilities(): Promise<RemediationCapabilities
     return {
       local_model: b?.local_model === true,
       cloud_model: b?.cloud_model === true,
-      backend: b?.backend === "cloud" ? "cloud" : "local",
+      backend: b?.backend === "cloud" || b?.backend === "chain" ? b.backend : "local",
       generator_enabled: b?.generator_enabled === true,
     }
   } catch {
@@ -411,7 +440,7 @@ export type GeneratedPlan = RemediationPlan & {
   model_revision: string
   /** DEC-038: which backend actually produced this draft (may differ from the operator's current
    * setting if it was rechecked later) */
-  backend?: "local" | "cloud"
+  backend?: "local" | "cloud" | "chain"
   self_review: { verdict: "no concerns" | "concerns" | "unavailable"; reason: string | null } | null
   agrees_with_handwritten?: boolean
   handwritten_diff?: Record<string, string> | null
@@ -438,7 +467,7 @@ export async function generateRemediation(ruleId: string, target: string, observ
 export type LabTarget = {
   name: string
   running: boolean
-  /** DEC-044: a real gateway reached over SSH, not a lab container */
+  /** DEC-047: a real gateway reached over SSH, not a lab container */
   live?: boolean
   host?: string
   connection?: string

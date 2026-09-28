@@ -24,17 +24,37 @@ from pathlib import Path
 from ..errors import DependencyError, InputError
 
 CAPTURE_FILTER = "udp port 500 or udp port 4500 or ip proto 50 or ip proto 51 or ip6 proto 50 or ip6 proto 51"
+# T-141 / EXP-33: headers-only capture. The same interface is opened twice: IKE (incl. IKE on 4500, whose first 4
+# UDP payload bytes are the zero non-ESP marker) at full length; ESP/AH (incl. ESP-in-UDP) stored to ESP_SNAPLEN
+# bytes: Ethernet + IPv6 + UDP + the 8-byte ESP header fit (78). The original length of every packet is still
+# recorded, which is all the analysis uses from ESP/AH. NAT-T keepalives match neither filter.
+IKE_FILTER = "udp port 500 or (udp port 4500 and udp[8:4] = 0)"
+ESP_FILTER = "ip proto 50 or ip proto 51 or ip6 proto 50 or ip6 proto 51 or (udp port 4500 and udp[8:4] != 0)"
+ESP_SNAPLEN = 80
+
+
+def capture_command(dumpcap: str, interface: str, out: str, window: int, headers_only: bool,
+                    ring_files: int = 20) -> list[str]:
+    """The dumpcap command live mode and the site sensor run (also used by EXP-33's harness, so what was measured
+    is what ships)."""
+    if headers_only:
+        src = ["-i", interface, "-f", IKE_FILTER, "-s", "0", "-i", interface, "-f", ESP_FILTER, "-s", str(ESP_SNAPLEN)]
+    else:
+        src = ["-i", interface, "-f", CAPTURE_FILTER]
+    ring = ["-b", f"duration:{window}", "-b", f"files:{ring_files}"] if window else []
+    return [dumpcap, "-q", *src, *ring, "-w", out]
 EXTS = (".pcap", ".pcapng")
 
 
 class LiveMonitor:
     def __init__(self, interface: str | None = None, follow: str | None = None, window: int = 30,
                  history: str | None = None, keep: bool = False, max_windows: int = 50, workdir: str | None = None,
-                 alerts: str | None = None, alert_format: str = "jsonl"):
+                 alerts: str | None = None, alert_format: str = "jsonl", headers_only: bool = False):
         if bool(interface) == bool(follow):
             raise InputError("live: give exactly one of --interface or --follow")
         self.interface, self.window, self.history, self.keep = interface, max(5, int(window)), history, keep
         self.alerts, self.alert_format = alerts, alert_format      # T-134: high-severity changes -> alert lines
+        self.headers_only = headers_only                           # T-141: store ESP/AH headers only
         self.dir = Path(follow or workdir or Path.home() / ".tunnelscope-live")
         self.windows: collections.deque = collections.deque(maxlen=max_windows)
         self.errors: collections.deque = collections.deque(maxlen=20)
@@ -54,8 +74,7 @@ class LiveMonitor:
         if not dumpcap:
             raise DependencyError("live --interface needs dumpcap (it ships with Wireshark/tshark)")
         self.dir.mkdir(parents=True, exist_ok=True)
-        cmd = [dumpcap, "-q", "-i", self.interface, "-f", CAPTURE_FILTER,
-               "-b", f"duration:{self.window}", "-b", "files:20", "-w", str(self.dir / "live.pcapng")]
+        cmd = capture_command(dumpcap, self.interface, str(self.dir / "live.pcapng"), self.window, self.headers_only)
         self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         time.sleep(1.0)
         if self.proc.poll() is not None:

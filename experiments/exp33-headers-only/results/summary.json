@@ -1,0 +1,26 @@
+{
+ "sas": {
+  "reference": 11,
+  "headers": 11
+ },
+ "H1_same_findings": {
+  "differences": [],
+  "n_differences": 0,
+  "holds": true
+ },
+ "H2_headers_only": {
+  "ike_records": 75,
+  "esp_ah_records": 732,
+  "violations": 0,
+  "max_esp_stored": 80,
+  "holds": true
+ },
+ "H3_size": {
+  "reference_bytes": 171064,
+  "headers_bytes": 115668,
+  "reference_packets": 807,
+  "headers_packets": 807,
+  "esp_payload_bytes_stored_reference": 112728,
+  "esp_payload_bytes_stored_headers": 58560
+ }
+}

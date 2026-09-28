@@ -129,3 +129,57 @@ def test_api_intel_refuses_anything_but_a_known_implementation(served):
         assert e.value.code == 400 and served == []          # nothing was looked up
     finally:
         srv.shutdown()
+
+
+# ------------------------------------------------------------------ DEC-045: on every analysis
+
+def _json(path):
+    from tunnelscope.api.server import analysis_json
+    from tunnelscope.report.report import analyze
+    return analysis_json(analyze(str(path)), path.name)
+
+
+def test_the_network_is_on_by_default(monkeypatch):
+    monkeypatch.delenv(net.ENV, raising=False)
+    assert net.network_enabled() is True
+    monkeypatch.setenv(net.ENV, "off")
+    assert net.network_enabled() is False
+
+
+def test_every_analysis_carries_known_vulnerabilities_and_they_change_no_verdict(served, monkeypatch):
+    cap = ROOT / "testbed" / "captures" / "pq-downgrade.pcap"
+    with_intel = _json(cap)["sas"][0]
+    kv = with_intel["known_vulnerabilities"]
+    assert kv["status"] == "INFERRED" and "some version" in kv["note"].lower()
+    p = kv["products"][0]
+    assert p["implementation"] == "strongSwan" and p["ends"] == ["initiator", "responder"]
+    assert p["counts"]["total"] == 4 and len(p["top"]) <= L.TOP_N and p["sources"]["nvd"] == "fresh"
+    monkeypatch.setenv(net.ENV, "off")                                  # same capture, no intel at all
+    monkeypatch.setenv("TUNNELSCOPE_INTEL_DIR", str(Path(L.cache_dir()).parent / "empty"))
+    without = _json(cap)["sas"][0]
+    assert without["known_vulnerabilities"]["products"][0]["sources"]["nvd"] == "unavailable"
+    assert with_intel["verdicts"] == without["verdicts"]
+    assert with_intel["risk"]["risk"]["score"] == without["risk"]["risk"]["score"]
+
+
+def test_no_fingerprint_means_no_lookup_and_says_so(served):
+    kv = L.known_vulnerabilities({})
+    assert kv["status"] == "UNKNOWN" and kv["products"] == [] and served == []
+
+
+def test_a_source_that_fails_is_not_retried_on_every_analysis(monkeypatch, tmp_path):
+    monkeypatch.setenv("TUNNELSCOPE_INTEL_DIR", str(tmp_path))
+    monkeypatch.setenv(net.ENV, "on")
+    calls = []
+
+    def down(url, **kw):
+        calls.append((url, kw.get("timeout")))
+        raise OSError("connection refused")
+    monkeypatch.setattr(net, "http_json", down)
+    monkeypatch.setattr(L, "_FAILED", {})
+    L.known_vulnerabilities({"implementation": {"status": "INFERRED", "value": {"initiator": "strongSwan"}}})
+    n = len(calls)
+    assert n == 3 and all(t == L.AUTO_TIMEOUT_S for _, t in calls)      # NVD, EUVD, KEV: each once, short timeout
+    r = L.known_vulnerabilities({"implementation": {"status": "INFERRED", "value": {"initiator": "strongSwan"}}})
+    assert len(calls) == n                                               # not retried within RETRY_AFTER_S
+    assert set(r["products"][0]["sources"].values()) == {"unavailable"}

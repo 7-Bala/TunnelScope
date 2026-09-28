@@ -28,7 +28,7 @@ What happens on apply, in order. Every step that can refuse runs before anything
     own restores are recorded in the audit log the next time this module runs (reconcile).
 Every attempt, refusal, rollback and watchdog restore is appended to remediate.jsonl.
 
-Real gateways (DEC-044, owner decision 2026-09-27). A target named "gw:<name>" is a real strongSwan
+Real gateways (DEC-047, owner decision 2026-09-27). A target named "gw:<name>" is a real strongSwan
 gateway from the registry (gateways.py), reached with `ssh` (argument list, BatchMode, strict host
 key checking; the remote command is built from shell-quoted arguments). The same eight steps run,
 with these differences: the connection, its config files and the capture interface come from the
@@ -186,7 +186,7 @@ def remote_command(gw: dict[str, Any], argv: list[str], detach: bool = False) ->
 def _exec(target: str, argv: list[str], timeout: float = 10, detach: bool = False,
           stdin: bytes | None = None) -> subprocess.CompletedProcess:
     """The one way this module touches a target: `docker exec` into a lab container, or `ssh` to a
-    registered gateway (DEC-044), always with an argument list, never through a local shell."""
+    registered gateway (DEC-047), always with an argument list, never through a local shell."""
     if gwmod.is_gateway(target):
         gw = _gw(target)
         if gw is None:
@@ -381,7 +381,7 @@ def _peer_for(target: str) -> str | None:
     return LAB_PEERS.get(target) if target in PEER_PREP_TARGETS else None
 
 
-# ------------------------------------------------------------------ gateways: consent (DEC-044)
+# ------------------------------------------------------------------ gateways: consent (DEC-047)
 
 def save_gateway(name: str, entry: dict[str, Any], history_dir: str | Path | None = None) -> dict[str, Any]:
     """Add or replace one gateway in the registry file. Validated first; a changed definition

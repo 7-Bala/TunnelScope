@@ -77,6 +77,11 @@ TUNNELSCOPE_COLLECTOR_STATE=collector/ ./start.sh`}
                 s.status === "stale" ? "bg-warn/15 text-warn" : "bg-pos/15 text-pos")}>
                 {s.status === "stale" ? "stale" : "reporting"}
               </span>
+              {s.addresses === "masked" && (
+                <span className="rounded-full bg-secondary px-2 py-px text-[10.5px] text-faint" title="The site replaces every IP address with a keyed pseudonym; the key stays at the site (tunnelscope sensor-mask).">
+                  addresses masked
+                </span>
+              )}
               <span className="ml-auto text-[12px] text-faint">
                 last report {ago(s.age_s)} · {s.reports ?? 0} reports
                 {s.missing_reports > 0 && <span className="text-warn"> · {s.missing_reports} missing</span>}

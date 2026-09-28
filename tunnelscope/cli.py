@@ -92,6 +92,25 @@ def cmd_report(args):
         print("\n\n")
     if args.level in ("tech", "both"):
         print(technical_report(a))
+    print("\n" + _known_vulnerabilities_text(a))
+
+
+def _known_vulnerabilities_text(a) -> str:
+    """DEC-045: known vulnerabilities for the identified software, next to the rule verdicts (never a verdict)."""
+    from .intel.lookup import known_vulnerabilities
+    out = ["## Known vulnerabilities (INFERRED: some version of the identified software)"]
+    for i, sa in enumerate(a["sas"], 1):
+        kv = known_vulnerabilities(sa["record"].findings)
+        out.append(f"SA {i}: {kv['note']}")
+        for p in kv["products"]:
+            c = p["counts"]
+            src = ", ".join(f"{k} {v}" for k, v in p["sources"].items())
+            out.append(f"  {p['implementation']} ({'/'.join(p['ends'])}): {c.get('total', 0)} known CVEs, "
+                       f"{c.get('kev', 0)} actively exploited (CISA KEV); sources: {src}")
+            for e in p["top"][:5]:
+                out.append(f"    {e['id']}  CVSS {e['cvss'] if e['cvss'] is not None else '-'}"
+                           f"{'  KEV' if e['kev'] else ''}  [{e['match']}]  {e['description'][:110]}")
+    return "\n".join(out)
 
 
 def cmd_dashboard(args):
@@ -131,7 +150,8 @@ def cmd_live(args):
         print("--alerts needs --history (alerts compare each window with the tunnel's learned normal)", file=sys.stderr)
         return 2
     mon = LiveMonitor(interface=args.interface, follow=args.follow, window=args.window,
-                      history=args.history, keep=args.keep, alerts=args.alerts, alert_format=args.alert_format)
+                      history=args.history, keep=args.keep, alerts=args.alerts, alert_format=args.alert_format,
+                      headers_only=args.headers_only)
     mon.start_capture()
     print(f"live: {mon.status()['source']}, {mon.window}s windows"
           + (f", learning into {args.history}" if args.history else "") + " (Ctrl-C stops)", file=sys.stderr)
@@ -213,6 +233,10 @@ def cmd_doctor(args):
     print(f"required fields   all {len(REQUIRED_FIELDS)} resolve on this tshark")
     bl = load_baselines()
     print(f"baselines         {len(bl)} loaded: {', '.join(sorted(b['baseline'] for b in bl))}")
+    from .ingest.tshark import isolation_status
+    iso = isolation_status()
+    print(f"tshark isolation  network {iso['network']}; limits: {iso['limits']}; {iso['profile']}; "
+          f"name resolution {iso['name_resolution']}")
     print("\nready: evidence extraction will not silently under-report on this stack.")
     return 0
 
@@ -327,7 +351,7 @@ def cmd_fleet(args):
 
 
 def cmd_gateway(args):
-    """DEC-044: register real strongSwan gateways, read and accept the terms and risks."""
+    """DEC-047: register real strongSwan gateways, read and accept the terms and risks."""
     from .remediate import execute, gateways
     hd = args.history
     if args.action == "add":
@@ -424,13 +448,28 @@ def cmd_sensor(args):
     """Site sensor: live analysis at the site; only signed findings reports leave it (T-139)."""
     from .sensor.sensor import Sensor
     s = Sensor(args.site, args.key, args.outbox, args.state, window=args.window, interface=args.interface,
-               follow=args.follow, keep=args.keep)
+               follow=args.follow, keep=args.keep, headers_only=not args.full_packets,
+               mask_addresses=args.mask_addresses)
     print(f"sensor {args.site}: {s.monitor.status()['source']}, {s.window}s windows, reports -> {args.outbox} "
           "(Ctrl-C stops)", file=sys.stderr)
     try:
         s.run(max_reports=args.max_reports, on_report=lambda p: print(p.name, flush=True))
     except KeyboardInterrupt:
         pass
+    return 0
+
+
+def cmd_sensor_mask(args):
+    """Site side: the pseudonym a masked report uses for an address (the mask key never leaves the site)."""
+    from .sensor.report import pseudonym
+    from .sensor.sensor import MASK_KEY_FILE, mask_key
+    from pathlib import Path
+    if not (Path(args.state) / MASK_KEY_FILE).exists():
+        print(f"no mask key in {args.state}: this sensor has not masked any report", file=sys.stderr)
+        return 2
+    k = mask_key(args.state)
+    for a in args.address:
+        print(f"{a}\t{pseudonym(k, a)}")
     return 0
 
 
@@ -466,7 +505,8 @@ def cmd_sites(args):
         print("no site has reported yet")
     for r in rows:
         print(f"{r['site']}: {r['status'].upper()}, last report {r['age_s']:.0f} s ago, {r['reports']} reports"
-              + (f", {r['missing_reports']} missing" if r["missing_reports"] else ""))
+              + (f", {r['missing_reports']} missing" if r["missing_reports"] else "")
+              + (", addresses masked at the site" if r.get("addresses") == "masked" else ""))
         if r["note"]:
             print(f"    {r['note']}")
         for t in r["tunnels"]:
@@ -522,6 +562,8 @@ def main(argv=None):
     lv.add_argument("--window", type=int, default=30, help="seconds per window (default 30)")
     lv.add_argument("--history", metavar="DIR", help="anomaly history: compare each window with the tunnel's past")
     lv.add_argument("--keep", action="store_true", help="keep analysed window files (default: delete them)")
+    lv.add_argument("--headers-only", action="store_true",
+                    help="--interface only: store ESP/AH headers only (IKE stays whole; findings unchanged, EXP-33)")
     lv.add_argument("--json", action="store_true", help="one JSON object per window")
     lv.add_argument("--max-windows", type=int, help="stop after N windows (testing)")
     lv.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
@@ -566,7 +608,7 @@ def main(argv=None):
     cf.add_argument("file")
     cf.add_argument("--json", action="store_true")
     cf.set_defaults(func=cmd_config)
-    gwp = sub.add_parser("gateway", help="real strongSwan gateways for live fixes (DEC-044): add, list, terms, accept, withdraw")
+    gwp = sub.add_parser("gateway", help="real strongSwan gateways for live fixes (DEC-047): add, list, terms, accept, withdraw")
     gwp.add_argument("action", choices=["add", "list", "terms", "accept", "withdraw"])
     gwp.add_argument("name", nargs="?", default="")
     gwp.add_argument("--history", default=".tunnelscope-history")
@@ -607,8 +649,16 @@ def main(argv=None):
     sn.add_argument("--state", required=True, metavar="DIR", help="sensor state: sequence number, tunnel history")
     sn.add_argument("--window", type=int, default=30, help="seconds per window (default 30)")
     sn.add_argument("--keep", action="store_true", help="keep capture files after analysis (default: delete)")
+    sn.add_argument("--full-packets", action="store_true",
+                    help="--interface only: store whole ESP/AH packets (default: headers only, IKE whole; EXP-33)")
+    sn.add_argument("--mask-addresses", action="store_true",
+                    help="replace every IP address in reports and alerts with a keyed pseudonym; the key stays in --state")
     sn.add_argument("--max-reports", type=int, help="stop after N reports (testing)")
     sn.set_defaults(func=cmd_sensor)
+    sm = sub.add_parser("sensor-mask", help="site side: show the pseudonym masked reports use for an address")
+    sm.add_argument("--state", required=True, metavar="DIR", help="the sensor's --state directory")
+    sm.add_argument("address", nargs="+")
+    sm.set_defaults(func=cmd_sensor_mask)
     co = sub.add_parser("collect", help="central collector: accept signed site reports from an inbox directory")
     co.add_argument("--inbox", required=True, metavar="DIR")
     co.add_argument("--state", required=True, metavar="DIR", help="per-site state and quarantine")
@@ -630,7 +680,7 @@ def main(argv=None):
     try:
         # Verify the stack before trusting anything derived from it. Cached per
         # process, so a 70-capture fleet scan pays this once, not per capture.
-        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_gateway, cmd_sensor_key, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
+        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_gateway, cmd_sensor_key, cmd_sensor_mask, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
             preflight()
         return args.func(args) or 0
     except TunnelScopeError as e:
