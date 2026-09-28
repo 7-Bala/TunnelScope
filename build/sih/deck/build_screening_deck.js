@@ -1,10 +1,11 @@
 // TunnelScope idea-submission deck for the SIH screening round: the official 6-slide idea template
-// (Title, Idea title, Technical approach, Feasibility & viability, Impact & benefits, Research & references).
+// (Title, Proposed solution, Technical approach, Feasibility & viability, Impact & benefits, Research & references).
 //   node build/sih/deck/build_screening_deck.js [out.pptx]
-// Plain SIH-template look, like past winning decks: white slides, Times New Roman headings, Arial text,
-// thin-bordered text boxes, ➤ bullets, one classic flowchart in plain words. Every number has a source,
-// listed in SOURCES below. Fill TEAM_ID / VIDEO_URL / REPO_URL before exporting to PDF: while empty they
-// render as a yellow "fill before export" marker so they cannot be missed.
+// Icons and technology logos come from img/icons and img/logos (build/sih/deck/make_icons.js renders them).
+// Plain SIH-template look: white slides, Times New Roman headings, Arial text, thin-bordered boxes, ➤ bullets,
+// icons in coloured circles. Owner's rules for this version: no model accuracy, no "x of y" results, no test
+// counts, no typed confirmation codes, never the word "optional". Every number left has a source below.
+// Fill TEAM_ID / VIDEO_URL / REPO_URL before exporting to PDF: while empty they render as a yellow marker.
 const pptxgen = require("pptxgenjs");
 const JSZip = require("jszip");
 const fs = require("fs");
@@ -17,29 +18,26 @@ const TEAM_ID = "";   // from the SIH portal
 const VIDEO_URL = ""; // demo video, on a host that does not sleep
 const REPO_URL = "";  // only if the repository is public or shared with the evaluators
 
-// SOURCES (checked 2026-09-27)
-//   555 unit tests pass ........ `.venv/bin/python -m pytest -q` -> "555 passed, 1 skipped"
+// SOURCES (checked 2026-09-28)
 //   ~1.6 s per capture ......... `tunnelscope report` on 4 lab captures: 1.58-1.67 s wall time each
-//   124 lab captures ........... testbed/captures/**/*.groundtruth.json (endpoint ground truth)
-//   0.174 -> 0.757, 99.8% ...... experiments/exp20-real-ipsec-and-users/RESULT.md (R3), DEC-037
-//   24 experiments ............. experiments/*/RESULT.md (24 files)
-//   4 implementations .......... strongSwan, Libreswan (EXP-07), OpenBSD iked (EXP-10), MikroTik RouterOS (EXP-26)
-//   pq-downgrade verdicts ...... `tunnelscope report testbed/captures/pq-downgrade.pcap`
-//   32/32 unsafe drafts ........ experiments/exp18-generative-remediation/RESULT.md (H1), DEC-035
-//   12-13/16 fixes, 11/11 ...... experiments/exp18b-gemini-remediation/RESULT.md (Groq 12/16, gemini-3.1-flash-lite
-//                                13/16, local 0/16; 11/11 regressions rolled back and verified), DEC-041
-//   fix loop steps ............. DEC-033 (allowlist, dry run on copies, human approval, baseline, snapshot, verify
-//                                or roll back byte for byte), tunnelscope/remediate/generate.py (V1-V8)
-//   live gateways, 22/22 ....... testbed/live-gateway/e2e.py on two strongSwan gateways over SSH: 22 of 22 checks
-//                                pass (both ends fixed and verified in 34.2 s; rollback byte for byte; watchdog
-//                                restore), DEC-044. Test network on one host (network namespaces, userspace ESP)
-//   screenshot ................. img/threats.jpg (dashboard, lab capture a-tra-sha1.pcap), cropped to img/tunnel-view.jpg
+//   risk score formula ......... tunnelscope/risk/risk.py (DEC-028): noisy-OR, 100 * (1 - prod(1 - 0.6*L*I/9))
+//   4 VPN programs ............. strongSwan, Libreswan (EXP-07), OpenBSD iked (EXP-10), MikroTik RouterOS (EXP-26)
+//   live gateways .............. testbed/live-gateway/e2e.py, DEC-044 (strongSwan over SSH, terms accepted first)
+//   DST Task Force ............. research/registers/RESEARCH-LOG.md: CII by 2027, enterprises by 2028; vendor CBOM
+//                                from FY 2027-28; names "downgrade or insecure fallback"
+//   DPDP / CERT-In ............. build/06-INDIA-REGULATORY-MAPPING.md: Rule 6(1)(a) encryption, in force
+//                                13 May 2027, penalty up to Rs 250 crore (PIB 17 Nov 2025); CERT-In 2023 s3.4
+//                                internal audit at least every 6 months
+//   data leaving the site ...... remediate/gateways.py terms (rule text + proposal line to the AI provider when
+//                                cloud drafting is on), intel/lookup.py (only product names), README
 
 const C = { INK: "000000", TEXT: "1A1A1A", GREY: "595959", LINE: "7F7F7F", NAVY: "1F3864", BLUE: "2E75B6",
-  BAR: "0070C0", WHITE: "FFFFFF", LINK: "0563C1", HL: "FFFF00",
+  BAR: "0070C0", WHITE: "FFFFFF", LINK: "0563C1", HL: "FFFF00", SOFT: "F2F6FB",
   PROC: "DEEBF7", PROC_L: "2E75B6", DEC: "FFF2CC", DEC_L: "BF9000", TERM: "E2F0D9", TERM_L: "548235", SIDE: "F2F2F2", SIDE_L: "7F7F7F" };
 const HEAD = "Times New Roman", F = "Arial";
 const W = 13.333, H = 7.5;
+const ICON = (n) => path.join(HERE, "img", "icons", n + ".png");
+const LOGO = (n) => path.join(HERE, "img", "logos", n + ".png");
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
@@ -49,12 +47,12 @@ pres.author = "Team " + TEAM_NAME;
 function t(s, str, o) {
   s.addText(str, Object.assign({ fontFace: F, fontSize: 13, color: C.TEXT, isTextBox: true, margin: 0, valign: "top" }, o));
 }
-function frame(s, x, y, w, h) {
-  s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: C.WHITE }, line: { color: C.LINE, width: 1 } });
+function frame(s, x, y, w, h, fillc = C.WHITE) {
+  s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: fillc }, line: { color: C.LINE, width: 1 } });
 }
-// value, or a yellow marker while it is still empty
-function fill(v, what) { return v ? v : null; }
+function fill(v) { return v ? v : null; }
 function marker(what) { return { text: "FILL BEFORE EXPORT: " + what, options: { highlight: C.HL, bold: true, color: C.INK } }; }
+function icon(s, name, x, y, d) { s.addImage({ path: ICON(name), x, y, w: d, h: d }); }
 
 // ➤ bullet paragraphs: items are strings or [bold lead, rest]
 function bullets(items, o = {}) {
@@ -76,7 +74,7 @@ function chrome(s, num, title) {
   s.background = { color: C.WHITE };
   s.addShape(pres.shapes.OVAL, { x: 0.3, y: 0.24, w: 1.7, h: 0.6, fill: { color: C.WHITE }, line: { color: "595959", width: 1.25 } });
   t(s, TEAM_NAME, { x: 0.3, y: 0.24, w: 1.7, h: 0.6, fontSize: 12, align: "center", valign: "middle", color: C.INK });
-  t(s, title, { x: 2.2, y: 0.22, w: 8.7, h: 0.7, fontFace: HEAD, fontSize: 32, bold: true, align: "center", valign: "middle", color: C.INK });
+  t(s, title, { x: 2.2, y: 0.22, w: 8.7, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, align: "center", valign: "middle", color: C.INK });
   logo(s, 11.1, 0.14, 0.72);
   s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 7.12, w: W, h: 0.38, fill: { color: C.BAR }, line: { color: C.BAR, width: 0 } });
   t(s, "@SIH Idea submission- Template", { x: 3.67, y: 7.12, w: 6, h: 0.38, fontSize: 10, color: C.WHITE, align: "center", valign: "middle" });
@@ -86,30 +84,31 @@ function logo(s, x, y, h) {
   s.addImage({ path: path.join(HERE, "img", "sih-bulb.png"), x, y, w: h * 521 / 600, h });
   t(s, "SMART INDIA\nHACKATHON\n2026", { x: x + h * 0.9, y: y + 0.02, w: 1.3, h, fontSize: 10.5, bold: true, color: "4F5F6A", valign: "middle", lineSpacingMultiple: 0.95 });
 }
-function heading(s, str, x, y, w) {
-  t(s, str, { x, y, w, h: 0.32, fontSize: 15, bold: true, color: C.NAVY });
-}
 
 // ---- flowchart helpers (coordinates in inches)
 function node(s, shape, x, y, w, h, label, fillc, linec, fs = 11) {
   s.addText(label, { shape, x, y, w, h, fill: { color: fillc }, line: { color: linec, width: 1.25 },
     fontFace: F, fontSize: fs, color: C.INK, align: "center", valign: "middle", margin: 2, isTextBox: false });
 }
-function line(s, x1, y1, x2, y2, arrow = true) {
-  s.addShape(pres.shapes.LINE, { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.max(Math.abs(x2 - x1), 0.001), h: Math.max(Math.abs(y2 - y1), 0.001),
-    flipH: x2 < x1, flipV: y2 < y1, line: { color: "404040", width: 1.25, endArrowType: arrow ? "triangle" : undefined } });
+function line(s, x1, y1, x2, y2, arrow = true, color = "404040", dash) {
+  s.addShape(pres.shapes.LINE, { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1) || 0.0001, h: Math.abs(y2 - y1) || 0.0001,
+    flipH: x2 < x1, flipV: y2 < y1, line: { color, width: 1.25, dashType: dash, endArrowType: arrow ? "triangle" : undefined } });
 }
 function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bold: true, color: C.INK }); }
+
+// an icon in a circle with a bold label and a short line under it, centred on xc
+function iconItem(s, name, xc, y, label, sub, o = {}) {
+  const d = o.d || 0.55, w = o.w || 1.95;
+  icon(s, name, xc - d / 2, y, d);
+  t(s, label, { x: xc - w / 2, y: y + d + 0.05, w, h: 0.26, fontSize: o.fs || 11, bold: true, align: "center", color: C.INK });
+  if (sub) t(s, sub, { x: xc - w / 2, y: y + d + 0.31, w, h: 0.46, fontSize: o.sfs || 9.5, align: "center", color: C.GREY });
+}
 
 (async () => {
   // ============ 1  Title page
   { const s = pres.addSlide(); s.background = { color: C.WHITE };
     t(s, "SMART INDIA HACKATHON 2026", { x: 0.5, y: 0.3, w: 10.3, h: 0.75, fontFace: HEAD, fontSize: 36, bold: true, color: C.NAVY, align: "center", valign: "middle" });
-    logo(s, 11.1, 0.2, 0.75);
     t(s, "TITLE PAGE", { x: 0.5, y: 1.15, w: 7.6, h: 0.5, fontFace: HEAD, fontSize: 24, bold: true, align: "center", color: C.INK });
-    s.addShape(pres.shapes.HEXAGON, { x: 8.05, y: 1.35, w: 4.9, h: 4.9, fill: { color: "EDEDED" }, line: { color: "EDEDED", width: 0 }, rotate: 90 });
-    s.addShape(pres.shapes.HEXAGON, { x: 7.55, y: 1.05, w: 1.6, h: 1.6, fill: { color: C.WHITE, transparency: 100 }, line: { color: "D9D9D9", width: 3 }, rotate: 90 });
-    s.addShape(pres.shapes.HEXAGON, { x: 7.35, y: 4.45, w: 1.2, h: 1.2, fill: { color: "F2F2F2" }, line: { color: "F2F2F2", width: 0 }, rotate: 90 });
     s.addImage({ path: path.join(HERE, "img", "sih-bulb.png"), x: 8.85, y: 1.95, w: 3.3 * 521 / 600, h: 3.3 });
     const rows = [
       ["Problem Statement ID", "SIH26160"],
@@ -129,45 +128,56 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
     t(s, para, { x: 0.7, y: 1.95, w: 6.9, h: 4.8, fontSize: 18, color: C.INK, paraSpaceAfter: 16 });
   }
 
-  // ============ 2  Idea title
-  { const s = pres.addSlide(); chrome(s, 2, "IDEA TITLE");
-    t(s, [{ text: "IDEA/SOLUTION: ", options: { color: C.BLUE } }, { text: "TunnelScope – “Check how safe a VPN really is, just by watching its traffic”", options: { bold: true } }],
-      { x: 0.5, y: 1.05, w: 12.3, h: 0.4, fontSize: 16 });
+  // ============ 2  Proposed solution: the idea, how it works as a 6-step flow, the problem, what is unique
+  { const s = pres.addSlide(); chrome(s, 2, "PROPOSED SOLUTION");
+    t(s, [{ text: "IDEA: ", options: { color: C.BLUE, bold: true } }, { text: "TunnelScope – “Check how safe a VPN really is, just by watching its traffic”", options: { bold: true } }],
+      { x: 0.5, y: 1.02, w: 12.3, h: 0.36, fontSize: 16 });
+    t(s, "How it works", { x: 0.5, y: 1.48, w: 4, h: 0.3, fontSize: 14, bold: true, color: C.NAVY });
+    const steps = [
+      ["Input", "Saved capture (.pcap) or live network traffic"],
+      ["Read", "Packet headers read with tshark; nothing decrypted"],
+      ["Understand", "Each setting marked observed, inferred or unknown"],
+      ["Judge", "Checked against RFC 8247, RFC 8221, DISA and India’s PQ report"],
+      ["Report", "Risk score (noisy-OR formula), threats, plain-English report"],
+      ["Fix", "Approved fix applied; a bad change is rolled back automatically"],
+    ];
+    const sw = 2.2, step = 2.026, sy = 1.84;
+    steps.forEach(([name, desc], i) => {
+      const x = 0.5 + i * step;
+      s.addText(`${i + 1}  ${name}`, { shape: i === 0 ? pres.shapes.PENTAGON : pres.shapes.CHEVRON, x, y: sy, w: sw, h: 0.62,
+        fill: { color: i === steps.length - 1 ? "548235" : C.BLUE }, line: { color: C.WHITE, width: 1 },
+        fontFace: F, fontSize: 13, bold: true, color: C.WHITE, align: "center", valign: "middle", margin: 0 });
+      t(s, desc, { x: x + 0.12, y: sy + 0.72, w: sw - 0.3, h: 0.7, fontSize: 10.5, align: "center", color: C.TEXT });
+    });
 
-    const LX = 0.5, LW = 7.35, top = 1.55, bot = 7.0;
-    frame(s, LX, top, LW, bot - top);
-    t(s, [{ text: "TunnelScope", options: { bold: true } }, { text: " is a software tool for security analysts. It reads the traffic of an IPsec VPN and tells, in plain language, how the VPN is set up and whether that is safe. It works as follows:" }],
-      { x: LX + 0.15, y: top + 0.1, w: LW - 0.3, h: 0.7, fontSize: 12.5 });
-    t(s, bullets([
-      ["Input: ", "a saved traffic capture (.pcap) or a live copy of network traffic."],
-      ["Reads only the packet headers ", "with tshark; the encrypted data is never opened."],
-      ["Finds the settings: ", "VPN protocol, IKE version, encryption, key exchange, tunnel or transport mode."],
-      ["AI models trained by us ", "(Random Forest) tell the type of traffic inside (web, video, VoIP…) from packet size and timing."],
-      ["Checks every setting ", "against security standards (RFC 8247, RFC 8221, DISA, India’s post-quantum report)."],
-      ["Gives a risk score (0–100), threats and a fix ", "for each problem, in a report and a dashboard."],
-      ["Fixes safely: ", "AI can draft the fix, a person approves it, and if the fix breaks anything it is rolled back automatically. Works on real strongSwan gateways over SSH after the operator accepts the terms and risks."],
-    ]), { x: LX + 0.15, y: top + 0.78, w: LW - 0.3, h: 3.3, fontSize: 12, paraSpaceAfter: 4 });
-    t(s, "Unique Value Propositions:", { x: LX + 0.15, y: top + 3.95, w: LW - 0.3, h: 0.3, fontSize: 14, color: C.BLUE });
-    t(s, bullets(["Detects a post-quantum downgrade (safe option offered, weaker one used).", "Every verdict names the rule it is based on.",
-      "Never guesses: what cannot be seen is marked “unknown”, never “safe”.", "AI-drafted fixes with human approval and automatic rollback.", "Works offline by default."]),
-      { x: LX + 0.15, y: top + 4.27, w: LW - 0.3, h: 1.15, fontSize: 11.5, bold: true, paraSpaceAfter: 2 });
-
-    const RX = 8.1, RW = W - 0.5 - RX;
-    frame(s, RX, top, RW, 1.3);
-    t(s, "Problem Resolution:", { x: RX + 0.12, y: top + 0.08, w: RW - 0.24, h: 0.3, fontSize: 14, color: C.BLUE });
-    t(s, bullets(["Today an expert reads VPN packets by hand.", "TunnelScope checks automatically and shows the evidence for every answer."]),
-      { x: RX + 0.12, y: top + 0.4, w: RW - 0.24, h: 0.85, fontSize: 11.5, paraSpaceAfter: 2 });
-    const iy = top + 1.42, ih = bot - 0.3 - iy, iw = ih * 1400 / 1341;
-    s.addImage({ path: path.join(HERE, "img", "tunnel-view.jpg"), x: RX + (RW - iw) / 2, y: iy, w: iw, h: ih });
-    t(s, "Our working prototype: risk score, threats and the rule behind each one", { x: RX, y: iy + ih + 0.03, w: RW, h: 0.24, fontSize: 9.5, italic: true, color: C.GREY, align: "center" });
+    const by = 3.5, bh = 3.45, bw = 6.05;
+    const box = (x, iconName, title, items) => {
+      frame(s, x, by, bw, bh, C.WHITE);
+      icon(s, iconName, x + 0.18, by + 0.16, 0.46);
+      t(s, title, { x: x + 0.78, y: by + 0.2, w: bw - 1, h: 0.4, fontSize: 15, bold: true, color: C.NAVY, valign: "middle" });
+      t(s, bullets(items), { x: x + 0.2, y: by + 0.8, w: bw - 0.4, h: bh - 0.95, fontSize: 13.5, paraSpaceAfter: 9 });
+    };
+    box(0.5, "problem", "The problem today", [
+      ["Slow and manual: ", "an expert reads VPN packet captures by hand."],
+      ["Post-quantum blind spot: ", "VPNs now negotiate quantum-safe keys, but packet tools cannot decode them yet, so a downgrade goes unnoticed."],
+      ["Config is not reality: ", "existing tools such as Titania Nipper audit configuration files, not what the VPN actually negotiates."],
+      ["Found but not fixed: ", "changing a live VPN is risky, so weak settings stay for years."],
+    ]);
+    box(6.78, "unique", "What makes it unique", [
+      "Detects a post-quantum downgrade: safe option offered, weaker one used.",
+      "Every verdict names the rule and the evidence behind it.",
+      "Never guesses: what cannot be seen is marked “unknown”, never “safe”.",
+      "Fixes real gateways over SSH: human approval, verification, automatic rollback.",
+      "Written terms and risks are accepted before any live change.",
+    ]);
   }
 
-  // ============ 3  Technical approach: two flowcharts (checking, fixing) + technologies
+  // ============ 3  Technical approach: two flowcharts (checking, fixing) + technology logos
   { const s = pres.addSlide(); chrome(s, 3, "TECHNICAL APPROACH");
     const sub = (str, x, w) => t(s, str, { x, y: 1.02, w, h: 0.36, fontFace: HEAD, fontSize: 17, bold: true, color: C.INK });
     sub("Flow 1: Checking a VPN", 0.5, 6.0); sub("Flow 2: Fixing it safely", 6.95, 5.9);
-    s.addShape(pres.shapes.LINE, { x: 6.78, y: 1.05, w: 0, h: 4.95, line: { color: "A6A6A6", width: 1, dashType: "dash" } });
     const P = pres.shapes.FLOWCHART_PROCESS, D = pres.shapes.FLOWCHART_DECISION, T = pres.shapes.FLOWCHART_TERMINATOR;
+    line(s, 6.72, 1.1, 6.72, 5.95, false, "A6A6A6", "dash");
 
     // flow 1: "no" branches go right and rejoin
     { const cx = 2.6, NW = 3.1, X = cx - NW / 2, R = cx + NW / 2, SX = 4.5, SW = 2.1, DW = 2.5;
@@ -200,7 +210,7 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       const y = { start: 1.45, draft: 1.9, check: 2.48, ok: 3.06, apply: 3.58, d: 4.16, keep: 5.08 };
       node(s, T, cx - 0.9, y.start, 1.8, 0.3, "A rule failed", C.TERM, C.TERM_L, 10.5);
       line(s, cx, y.start + 0.3, cx, y.draft);
-      node(s, P, X, y.draft, NW, 0.44, "Draft a fix: written by us, or by AI (optional)", C.PROC, C.PROC_L, 10);
+      node(s, P, X, y.draft, NW, 0.44, "Draft a fix: written by us, or by AI", C.PROC, C.PROC_L, 10);
       line(s, cx, y.draft + 0.44, cx, y.check);
       node(s, P, X, y.check, NW, 0.44, "Safety checks + preview the change on a copy", C.PROC, C.PROC_L, 10);
       line(s, cx, y.check + 0.44, cx, y.ok);
@@ -213,135 +223,148 @@ function tag(s, str, x, y) { t(s, str, { x, y, w: 0.5, h: 0.22, fontSize: 10, bo
       node(s, T, cx - 0.9, y.keep, 1.8, 0.32, "Fix kept", C.TERM, C.TERM_L, 10.5);
       line(s, cx + DW / 2, y.d + 0.36, SX, y.d + 0.36); tag(s, "No", cx + DW / 2 + 0.03, y.d + 0.12);
       node(s, P, SX, y.d - 0.02, SW, 0.76, "Automatic rollback: old files restored byte for byte, checked again", "FBE5D6", "C55A11", 9.5);
-      t(s, [{ text: "Proven in our test lab: ", options: { bold: true } },
-        { text: "32 of 32 unsafe AI drafts blocked; 11 of 11 bad fixes rolled back. " },
-        { text: "Proven on real gateways: ", options: { bold: true } },
-        { text: "2 strongSwan gateways over SSH, 22 of 22 checks passed, terms and risks accepted first." }],
-        { x: 6.95, y: 5.46, w: 5.9, h: 0.62, fontSize: 10, italic: true, color: C.GREY });
+      t(s, "Works on our test lab and on real strongSwan gateways over SSH. Before any live change, the operator accepts written terms and risks.",
+        { x: 6.95, y: 5.5, w: 5.9, h: 0.5, fontSize: 10, italic: true, color: C.GREY });
     }
 
-    // technologies, one strip under both flows
-    frame(s, 0.5, 6.14, W - 1.0, 0.86);
-    t(s, [{ text: "Technologies Used: ", options: { bold: true, color: C.NAVY } },
-      { text: "Python 3.11 · tshark (Wireshark) · scikit-learn (Random Forest, Isolation Forest) · YAML rule files · React + TypeScript dashboard · test lab on Docker and VMs (strongSwan, Libreswan, OpenBSD iked, MikroTik) · OpenSSH for live fixes · optional AI fix drafting (Groq, Gemini)" }],
-      { x: 0.65, y: 6.2, w: W - 1.3, h: 0.74, fontSize: 11.5, valign: "middle" });
+    // technology stack: a few logos, not everything
+    const logos = JSON.parse(fs.readFileSync(path.join(HERE, "img", "logos", "logos.json"), "utf8"));
+    const names = ["python", "sklearn", "wireshark", "strongswan", "react", "typescript", "docker", "linux"];
+    const bx = 0.65, by = 6.1, bw = W - 1.3, bh = 0.92, lead = 1.75;
+    frame(s, bx, by, bw, bh);
+    t(s, "Technology stack", { x: bx + 0.15, y: by, w: lead, h: bh, fontSize: 13, bold: true, color: C.NAVY, valign: "middle" });
+    const cell = (bw - lead - 0.2) / names.length;
+    names.forEach((n, i) => {
+      const cxl = bx + lead + 0.1 + cell * i + cell / 2;
+      const lh = 0.42, lw = Math.min(lh * logos[n].ratio, cell - 0.2), hh = lw / logos[n].ratio;
+      s.addImage({ path: LOGO(n), x: cxl - lw / 2, y: by + 0.08 + (lh - hh) / 2, w: lw, h: hh });
+      t(s, logos[n].label, { x: cxl - cell / 2, y: by + 0.56, w: cell, h: 0.28, fontSize: 9.5, align: "center", color: C.TEXT });
+    });
   }
 
-  // ============ 4  Feasibility and viability
+  // ============ 4  Feasibility (icons around a hub) and viability (a tree), challenges below the tree
   { const s = pres.addSlide(); chrome(s, 4, "FEASIBILITY AND VIABILITY");
-    const LX = 0.5, LW = 5.6, top = 1.1, bot = 7.0;
-    frame(s, LX, top, LW, bot - top); frame(s, 6.3, top, W - 0.5 - 6.3, bot - top);
-    heading(s, "Feasibility of the Idea:", LX + 0.15, top + 0.12, LW - 0.3);
-    t(s, bullets([
-      ["Technical Feasibility: ", "already built and working. 555 automatic tests pass; one capture is checked in about 1.6 seconds."],
-      ["Proven on real traffic: ", "on real IPsec traffic the traffic-type model improved from 0.174 to 0.757 (F1 score) and is right 99.8% of the time when it answers."],
-      ["Operational Feasibility: ", "runs on one laptop, offline by default. Uses tshark, a tool analysts already know."],
-      ["Economic Feasibility: ", "built only on free, open-source software; no licence cost."],
-      ["AI fix drafting: ", "cloud AI models (Groq, Gemini) drafted working fixes for 12–13 of 16 test problems (a small local model: 0 of 16). It stays optional until it passes our 80% bar."],
-      ["Methodology: ", "our own VPN lab, 124 captures checked against the VPNs’ own logs, 24 experiments."],
-      ["Users: ", "NTRO analysts, security operations teams, VPN administrators, auditors."],
-    ]), { x: LX + 0.15, y: top + 0.5, w: LW - 0.3, h: bot - top - 0.6, fontSize: 12.5, paraSpaceAfter: 8 });
-
-    const RX = 6.45, RW = W - 0.65 - RX;
-    heading(s, "Potential Challenges, Risks and its Overcomings:", RX, top + 0.12, RW);
-    const pairs = [
-      ["Encrypted data: ", "the encryption of the data part is hidden.", "Show the few possible options, clearly marked as a best guess."],
-      ["AI can be wrong: ", "mixed traffic can confuse the model.", "The model says “uncertain” instead of guessing wrong."],
-      ["Lab vs real world: ", "most testing used open-source VPNs.", "Tested on 4 VPN programs and real public traffic; vendor devices next."],
-      ["A fix could break the VPN: ", "a wrong change could cut the connection.", "Only allowed edits; terms and risks accepted per gateway; the exact change typed to confirm; automatic rollback, and a watchdog if the connection drops."],
-      ["Hidden risks: ", "weak passwords or a hacked device cannot be seen in traffic.", "Listed separately as “not checked”, never scored."],
-      ["Sensitive data: ", "traffic must not leave the site.", "Works offline by default; nothing is uploaded unless an operator turns online extras on."],
+    // left: feasibility
+    const cxs = [1.25, 3.55, 5.85], ys = [1.12, 3.3, 5.5];
+    const items = [
+      [0, 0, "technical", "Technical", "Working prototype, tested end to end"],
+      [1, 0, "speed", "Speed", "About 1.6 s to check one capture"],
+      [2, 0, "operational", "Operational", "Runs on one laptop; uses tshark"],
+      [0, 1, "security", "Security", "Captures stay on the local machine"],
+      [2, 1, "economic", "Economic", "Free open-source stack, no licence fee"],
+      [0, 2, "rollback", "Safe fixing", "Backup, verify, automatic rollback"],
+      [1, 2, "scalability", "Scalability", "Fleet scans and live site sensors"],
+      [2, 2, "integration", "Integration", "Reports, CBOM, syslog alerts, API"],
     ];
-    const runs = [];
-    pairs.forEach(([lead, risk, fix], i) => {
-      runs.push({ text: lead, options: { bold: true, bullet: { code: "27A4" } } });
-      runs.push({ text: risk, options: { breakLine: true } });
-      runs.push({ text: "Solution: ", options: { bold: true, bullet: { code: "2756" }, indentLevel: 1 } });
-      runs.push({ text: fix, options: i === pairs.length - 1 ? {} : { breakLine: true } });
+    s.addShape(pres.shapes.OVAL, { x: 3.55 - 0.85, y: 3.85 - 0.85, w: 1.7, h: 1.7, fill: { color: C.SOFT }, line: { color: C.NAVY, width: 2 } });
+    t(s, "FEASIBILITY", { x: 3.55 - 0.85, y: 3.85 - 0.25, w: 1.7, h: 0.5, fontSize: 14, bold: true, color: C.NAVY, align: "center", valign: "middle" });
+    items.forEach(([c, r, ic, label, sub]) => iconItem(s, ic, cxs[c], ys[r], label, sub));
+    line(s, 6.85, 1.15, 6.85, 6.95, false, "A6A6A6", "dash");
+
+    // right: viability tree
+    const rc = 9.95, kids = [7.75, 9.2, 10.65, 12.1];
+    icon(s, "viability", rc - 0.3, 1.1, 0.6);
+    t(s, "VIABILITY", { x: rc - 1, y: 1.74, w: 2, h: 0.28, fontSize: 13, bold: true, align: "center", color: C.NAVY });
+    line(s, rc, 2.04, rc, 2.22, false, C.BLUE);
+    line(s, kids[0], 2.22, kids[3], 2.22, false, C.BLUE);
+    const tree = [
+      ["cost", "Cost effective", "No licence fee; runs on existing laptops"],
+      ["ease", "Easy to use", "Plain-English reports and a dashboard"],
+      ["market", "Market need", "DST post-quantum migration from 2027"],
+      ["adoption", "Adoption", "Works with strongSwan and tshark"],
+    ];
+    tree.forEach(([ic, label, sub], i) => {
+      line(s, kids[i], 2.22, kids[i], 2.38, false, C.BLUE);
+      iconItem(s, ic, kids[i], 2.38, label, sub, { d: 0.5, w: 1.42, fs: 10.5, sfs: 9 });
     });
-    t(s, runs, { x: RX, y: top + 0.5, w: RW, h: bot - top - 0.6, fontSize: 12.5, paraSpaceAfter: 5 });
+
+    // right, below: challenges and how we handle them
+    const cx0 = 7.1, cy0 = 3.95, cw = 5.75, ch = 3.0;
+    frame(s, cx0, cy0, cw, ch);
+    t(s, "Challenges and how we handle them", { x: cx0 + 0.18, y: cy0 + 0.1, w: cw - 0.3, h: 0.34, fontSize: 13, bold: true, color: C.NAVY });
+    const risks = [
+      ["encrypted", "Encrypted data: ", "part of the settings is hidden, so the few possible options are shown, clearly marked as a best guess."],
+      ["vendor", "Vendor devices: ", "tested on four open-source VPN programs and real public traffic; vendor devices come next."],
+      ["hidden", "Hidden risks: ", "weak passwords or a hacked device cannot be seen in traffic, so they are listed as “not checked”, never scored."],
+      ["privacy", "Data privacy: ", "captures stay on the machine. Fix drafting uses cloud AI APIs for now (limited resources); a client can run its own models on-site."],
+    ];
+    risks.forEach(([ic, lead, rest], i) => {
+      const ry = cy0 + 0.52 + i * 0.61;
+      icon(s, ic, cx0 + 0.2, ry + 0.04, 0.36);
+      t(s, [{ text: lead, options: { bold: true } }, { text: rest }], { x: cx0 + 0.68, y: ry, w: cw - 0.85, h: 0.56, fontSize: 10.5, valign: "middle" });
+    });
   }
 
-  // ============ 5  Impact and benefits
+  // ============ 5  Impact and benefits: short headed sections, each with its source
   { const s = pres.addSlide(); chrome(s, 5, "IMPACT AND BENEFITS");
-    const LX = 0.5, LW = 7.3, top = 1.1;
-    const items = [
-      ["Faster checks for analysts:", "Impact: a VPN is checked in seconds instead of reading packets by hand.", "Benefit: more VPNs checked, fewer missed problems."],
-      ["Quantum-safe readiness:", "Impact: finds VPNs that still use old key exchange, or were pushed down from a quantum-safe one.", "Benefit: supports India’s post-quantum migration."],
-      ["Safe fixes for administrators:", "Impact: each failed rule gets a fix; AI can draft it, a person approves, and a bad fix is undone automatically (proven in our lab and on real strongSwan gateways over SSH).", "Benefit: problems get fixed, not just reported, without risking the VPN."],
-      ["Evidence for auditors:", "Impact: each verdict cites its standard (RFC, DISA, DST).", "Benefit: supports DPDP Rules 2025 and CERT-In audits."],
-      ["Secure by design:", "Impact: works offline by default; nothing leaves the site.", "Benefit: suitable for sensitive government networks."],
+    const parts = [
+      ["quantum", "Quantum-Safe Readiness",
+        "India’s post-quantum Task Force (DST, Feb 2026) asks critical infrastructure to inventory its cryptography and assess quantum risk by 2027, and enterprises by 2028. TunnelScope does this for every VPN tunnel, and flags a downgrade to classical key exchange, a risk the report names."],
+      ["compliance", "Regulatory Compliance",
+        "DPDP Rules 2025, Rule 6(1)(a): personal data must be protected with encryption; in force from 13 May 2027, with penalties up to ₹250 crore for weak security safeguards. Each verdict cites the RFC, DISA or DST rule it checks, ready for CERT-In audits (internal audit every 6 months)."],
+      ["efficiency", "Speed & Efficiency",
+        "One capture is checked in about 1.6 seconds instead of an expert reading packets by hand. A weak setting is fixed after one approval, and a bad change is undone automatically."],
+      ["cbom", "Supply-Chain Assurance",
+        "The Task Force recommends mandatory Cryptographic Bills of Materials (CBOM) from vendors from FY 2027-28. TunnelScope exports a CycloneDX 1.6 CBOM for every capture."],
+      ["afford", "Affordability & Accessibility",
+        "Built only on free, open-source software: no licence fee, runs on one laptop, and explains every result in plain English for non-experts."],
     ];
-    const runs = [];
-    items.forEach(([h, a, b], i) => {
-      runs.push({ text: h, options: { bold: true, breakLine: true } });
-      runs.push({ text: a, options: { bullet: { code: "27A4" }, breakLine: true } });
-      runs.push({ text: b, options: i === items.length - 1 ? { bullet: { code: "27A4" } } : { bullet: { code: "27A4" }, breakLine: true } });
+    parts.forEach(([ic, head, body], i) => {
+      const y = 1.12 + i * 1.18;
+      icon(s, ic, 0.7, y + 0.04, 0.52);
+      t(s, head, { x: 1.45, y, w: 11.3, h: 0.32, fontSize: 15, bold: true, color: C.INK });
+      t(s, body, { x: 1.45, y: y + 0.34, w: 11.3, h: 0.72, fontSize: 12.5, color: C.TEXT });
     });
-    t(s, runs, { x: LX, y: top, w: LW, h: 5.85, fontSize: 14, paraSpaceAfter: 5 });
-
-    // right: a real result as a plain table
-    const RX = 8.15, RW = W - 0.5 - RX;
-    heading(s, "Example: result from our tool", RX, top, RW);
-    const hd = { bold: true, fill: { color: "D9E2F3" }, fontFace: F, fontSize: 11.5, color: C.INK };
-    const cell = { fontFace: F, fontSize: 11.5, color: C.INK };
-    s.addTable([
-      [{ text: "Capture file", options: hd }, { text: "pq-downgrade.pcap (lab)", options: hd }],
-      [{ text: "Quantum-safe?", options: cell }, { text: "No – offered, but a weaker one was used", options: cell }],
-      [{ text: "Risk score", options: cell }, { text: "90 / 100 (critical)", options: Object.assign({ bold: true, color: "C00000" }, cell) }],
-      [{ text: "RFC 8247 score", options: cell }, { text: "100 / 100", options: cell }],
-      [{ text: "DISA score", options: cell }, { text: "38.5 / 100", options: cell }],
-      [{ text: "India PQ score", options: cell }, { text: "0 / 100", options: cell }],
-    ], { x: RX, y: top + 0.42, w: RW, colW: [1.55, RW - 1.55], border: { type: "solid", color: "7F7F7F", pt: 0.75 }, rowH: 0.4, valign: "middle", margin: 0.06 });
-    t(s, "The same VPN can pass one standard and fail another, so TunnelScope shows each standard separately.",
-      { x: RX, y: top + 3.02, w: RW, h: 0.7, fontSize: 11, italic: true, color: C.GREY });
-    heading(s, "Future scope:", RX, top + 3.85, RW);
-    t(s, bullets(["Live fixing for more VPN software (today: strongSwan)", "Testing on vendor VPN devices", "Direct feeds from network sensors", "More real-world traffic for training"]),
-      { x: RX, y: top + 4.22, w: RW, h: 1.5, fontSize: 12, paraSpaceAfter: 4 });
   }
 
   // ============ 6  Research and references
   { const s = pres.addSlide(); chrome(s, 6, "RESEARCH AND REFERENCES");
     const L = (label, url) => ({ text: label, options: { hyperlink: { url }, color: C.LINK, bullet: { code: "27A4" }, breakLine: true } });
     const P = (label) => ({ text: label, options: { bullet: { code: "27A4" }, breakLine: true } });
-    const Hd = (label) => ({ text: label, options: { bold: true, fontSize: 15, color: C.INK, breakLine: true } });
-    const left = [
-      Hd("Security standards:"),
+    const Hd = (label) => ({ text: label, options: { bold: true, fontSize: 15, color: C.NAVY, breakLine: true } });
+    const gap = () => ({ text: " ", options: { fontSize: 8, breakLine: true } });
+    const colA = [
+      Hd("Security standards"),
       L("RFC 7296 – IKEv2 protocol", "https://www.rfc-editor.org/rfc/rfc7296.html"),
       L("RFC 4303 – ESP protocol", "https://datatracker.ietf.org/doc/html/rfc4303"),
       L("RFC 8221 – ESP/AH algorithm rules", "https://www.rfc-editor.org/rfc/rfc8221"),
       L("RFC 8247 – IKEv2 algorithm rules", "https://www.rfc-editor.org/rfc/rfc8247.html"),
-      L("RFC 9370 – post-quantum key exchange in IKEv2", "https://www.rfc-editor.org/info/rfc9370/"),
+      L("RFC 9370 – post-quantum IKEv2", "https://www.rfc-editor.org/info/rfc9370/"),
       L("RFC 9395 – IKEv1 deprecated", "https://datatracker.ietf.org/doc/rfc9395/"),
-      L("NIST SP 800-77 Rev. 1 – Guide to IPsec VPNs", "https://csrc.nist.gov/pubs/sp/800/77/r1/final"),
+      L("NIST SP 800-77r1 – IPsec VPN guide", "https://csrc.nist.gov/pubs/sp/800/77/r1/final"),
       P("DISA VPN Security Requirements Guide V2R6"),
-      L("DST – Quantum Safe Ecosystem in India, Task Force report (Feb 2026)", "https://dst.gov.in/sites/default/files/Report_TaskForce_PQMigration_4Feb26%20(v1).pdf"),
     ];
-    const right = [
-      Hd("Datasets (real traffic):"),
-      L("USBVPN2022 – real IPsec tunnels (Zenodo 7301756)", "https://zenodo.org/records/7301756"),
-      L("MIT Lincoln Laboratory – VNAT VPN dataset", "https://www.ll.mit.edu/r-d/datasets/vpnnonvpn-network-application-traffic-dataset-vnat"),
-      L("WireGuard traffic flows (Zenodo 18945858)", "https://zenodo.org/records/18945858"),
-      L("VNAT paper – arXiv:2205.05628", "https://arxiv.org/pdf/2205.05628"),
-      { text: " ", options: { breakLine: true } },
-      Hd("Research gap and Indian context:"),
-      L("Wireshark issue #21072 – cannot decode post-quantum IKEv2", "https://gitlab.com/wireshark/wireshark/-/work_items/21072"),
-      L("strongSwan 6.0.0 – VPNs already use post-quantum ML-KEM", "https://strongswan.org/blog/2024/12/03/strongswan-6.0.0-released.html"),
-      P("DPDP Rules 2025 – G.S.R. 846(E), 13 Nov 2025"),
-      L("CERT-In Guidelines for Government Entities (2023)", "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=1936470"),
-      { text: " ", options: { breakLine: true } },
-      Hd("Our work:"),
+    const colB = [
+      Hd("Policy (India)"),
+      L("DST post-quantum Task Force, 2026", "https://dst.gov.in/sites/default/files/Report_TaskForce_PQMigration_4Feb26%20(v1).pdf"),
+      P("DPDP Rules 2025 – G.S.R. 846(E)"),
+      L("CERT-In guidelines for Govt. entities, 2023", "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=1936470"),
+      gap(),
+      Hd("Threat data"),
+      L("NIST National Vulnerability Database (NVD)", "https://nvd.nist.gov/developers/vulnerabilities"),
+      L("CISA Known Exploited Vulnerabilities (KEV)", "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"),
+      L("ENISA EU Vulnerability Database (EUVD)", "https://euvd.enisa.europa.eu"),
+      L("MITRE ATT&CK", "https://attack.mitre.org"),
+    ];
+    const colC = [
+      Hd("Datasets (real traffic)"),
+      L("USBVPN2022 – real IPsec tunnels", "https://zenodo.org/records/7301756"),
+      L("VNAT – MIT Lincoln Laboratory", "https://www.ll.mit.edu/r-d/datasets/vpnnonvpn-network-application-traffic-dataset-vnat"),
+      L("WireGuard traffic flows", "https://zenodo.org/records/18945858"),
+      gap(),
+      Hd("Research gap"),
+      L("Wireshark #21072 – no post-quantum IKEv2", "https://gitlab.com/wireshark/wireshark/-/work_items/21072"),
+      L("strongSwan 6.0 – ships ML-KEM", "https://strongswan.org/blog/2024/12/03/strongswan-6.0.0-released.html"),
+      gap(),
+      Hd("Our work"),
       VIDEO_URL ? L("Demo video", VIDEO_URL) : Object.assign(marker("demo video link"), {}),
     ];
-    if (!VIDEO_URL) right[right.length - 1].options = Object.assign({ bullet: { code: "27A4" }, breakLine: true }, right[right.length - 1].options, { breakLine: true });
-    right.push(REPO_URL ? Object.assign(L("Source code", REPO_URL), {}) : Object.assign(marker("code link (only if public)"), {}));
-    if (!REPO_URL) right[right.length - 1].options.bullet = { code: "27A4" };
-    delete right[right.length - 1].options.breakLine;
-    left[left.length - 1].options = Object.assign({}, left[left.length - 1].options); delete left[left.length - 1].options.breakLine;
-    frame(s, 0.5, 1.1, 5.95, 5.9);
-    t(s, left, { x: 0.68, y: 1.25, w: 5.6, h: 5.65, fontSize: 14, paraSpaceAfter: 10 });
-    frame(s, 6.65, 1.1, 6.18, 5.9);
-    t(s, right, { x: 6.83, y: 1.25, w: 5.85, h: 5.65, fontSize: 14, paraSpaceAfter: 6 });
+    if (!VIDEO_URL) colC[colC.length - 1].options = Object.assign({ bullet: { code: "27A4" } }, colC[colC.length - 1].options, { breakLine: true });
+    colC.push(REPO_URL ? L("Source code", REPO_URL) : marker("code link (only if public)"));
+    if (!REPO_URL) colC[colC.length - 1].options.bullet = { code: "27A4" };
+    for (const col of [colA, colB, colC]) { col[col.length - 1].options = Object.assign({}, col[col.length - 1].options); delete col[col.length - 1].options.breakLine; }
+    const cw = 3.95;
+    [colA, colB, colC].forEach((col, i) => t(s, col, { x: 0.55 + i * (cw + 0.2), y: 1.25, w: cw, h: 5.7, fontSize: 13, paraSpaceAfter: 9 }));
   }
 
   // pptxgenjs writes a stray <a:pPr>…<a:buNone/></a:pPr> between the runs of a mixed bold/plain line, which
