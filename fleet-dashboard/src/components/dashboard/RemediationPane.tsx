@@ -6,6 +6,7 @@ import {
   previewRemediation,
   remediationCapabilities,
   draftingModel,
+  engineInfo,
   remediationTargets,
   type GenerateResult,
   type LabTarget,
@@ -47,7 +48,81 @@ function DiffBlock({ diff }: { diff: string }) {
   )
 }
 
-export function RemediationControl({
+// Asked once per page, not once per rule row: is this the public site (server.py public_demo)?
+let demoOnce: Promise<boolean> | null = null
+function isPublicDemo(): Promise<boolean> {
+  demoOnce ??= engineInfo().then((i) => !!i?.public_demo)
+  return demoOnce
+}
+
+/** On the public site fixing is switched off; say why, where the fix would be (DEC-046). */
+function FixOffHere({ ruleId }: { ruleId: string }) {
+  const [open, setOpen] = useState(false)
+  if (!open) {
+    return (
+      <div className="mt-1">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`Why fixing is off for ${ruleId}`}
+          className="inline-flex items-center text-[11.5px] font-medium text-faint transition-colors hover:text-muted-foreground hover:underline"
+        >
+          Fix: switched off on this public site (why?)
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div role="note" data-testid={`fix-off-${ruleId}`} className="mt-2 max-w-[80ch] space-y-2 rounded-lg border border-border bg-background/40 p-3 text-[12px] leading-relaxed text-muted-foreground">
+      <p className="font-semibold text-foreground/90">Fixing is switched off on this public site</p>
+      <p>
+        This is the same TunnelScope as the one you run yourself, and there it can fix this rule. Here it is switched off,
+        because a fix changes a real VPN and this site has no login:
+      </p>
+      <ul className="list-disc space-y-1 pl-5">
+        <li>
+          <span className="text-foreground/85">Real gateways:</span> a fix is applied over SSH to your own VPN gateway. That
+          needs the gateway&apos;s SSH key on this server, and without a login anyone could trigger a change to your VPN.
+        </li>
+        <li>
+          <span className="text-foreground/85">The lab:</span> lab fixes run in Docker containers on the analyst&apos;s own
+          machine; they do not exist on this server.
+        </li>
+        <li>
+          <span className="text-foreground/85">AI-drafted fixes:</span> they need API keys for the drafting models; on a
+          public site anyone could use them up.
+        </li>
+        <li>
+          <span className="text-foreground/85">Who approves:</span> every fix is previewed, tried on copies, approved by a
+          person and rolled back automatically if it fails. That only protects a network when you control who approves.
+        </li>
+      </ul>
+      <p>
+        To see and apply fixes, run TunnelScope on your own machine (<code className="font-mono text-[11.5px]">./start.sh</code>),
+        where nothing leaves it.
+      </p>
+      <button type="button" onClick={() => setOpen(false)} className="text-[11.5px] text-faint underline hover:text-muted-foreground">
+        Close
+      </button>
+    </div>
+  )
+}
+
+export function RemediationControl(props: { ruleId: string; observed?: unknown }) {
+  const [demo, setDemo] = useState<boolean | null>(null)
+  useEffect(() => {
+    let live = true
+    isPublicDemo().then((d) => live && setDemo(d))
+    return () => {
+      live = false
+    }
+  }, [])
+  if (demo === null) return null
+  if (demo) return <FixOffHere ruleId={props.ruleId} />
+  return <FixControl {...props} />
+}
+
+function FixControl({
   ruleId,
   observed,
 }: {
