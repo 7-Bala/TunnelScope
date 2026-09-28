@@ -49,7 +49,7 @@ Core capabilities:
 - Detects behavioral anomalies and configuration drift from historical tunnel norms, such as cipher downgrades.
 - Exports executive summaries, technical reports, and CycloneDX Cryptographic Bills of Materials (CBOM).
 - Hosts a self-contained local web dashboard for interactive capture analysis.
-- Fixes a failed rule and proves it, or undoes it: in the Docker lab, or (DEC-047) on a real strongSwan gateway over SSH. Before a real gateway can be changed, a named person accepts written terms and risks for that gateway (`tunnelscope gateway terms` / `accept`, or the dashboard), and every change needs the exact per-change sentence the preview shows. The same steps run on the gateway: dry run on copies, a load test in an isolated namespace on the gateway itself, baseline capture, backup plus a watchdog timer on the gateway, apply, fresh capture and forced rekey, else automatic byte-for-byte rollback. Proven end to end against two real strongSwan gateways reached only over SSH (`testbed/live-gateway/`, 22 checks, and a real-browser test).
+- Fixes a failed rule and proves it, or undoes it: in the Docker lab, or (DEC-049) on a real strongSwan gateway over SSH. Before a real gateway can be changed, a named person accepts written terms and risks for that gateway (`tunnelscope gateway terms` / `accept`, or the dashboard), and every change needs the exact per-change sentence the preview shows. The same steps run on the gateway: dry run on copies, a load test in an isolated namespace on the gateway itself, baseline capture, backup plus a watchdog timer on the gateway, apply, fresh capture and forced rekey, else automatic byte-for-byte rollback. Proven end to end against two real strongSwan gateways reached only over SSH (`testbed/live-gateway/`, 22 checks, and a real-browser test).
 - Runs entirely offline and air-gapped by default: every finding, verdict, score and posture judgment is made on your machine with no network access. Optional online extras (DEC-038, DEC-040) are all off until you set `TUNNELSCOPE_NETWORK=on`: threat intelligence for the fingerprinted VPN software (NVD, ENISA EUVD, CISA KEV, with MITRE ATT&CK/CAPEC names on each threat; `tunnelscope intel`, offline via `tunnelscope intel-bundle`) and remediation drafting by outside models (Gemini, then Groq, then the on-device model), whose drafts are re-verified before anything runs. Only software names and lab rule/config text leave the machine, never a capture. See `.env.example`.
 
 ## Honest limits
@@ -59,7 +59,7 @@ Core capabilities:
 - Whether a receiver drops replayed packets is not visible from a capture.
 - The remediation generator's local model (on-device, MiniCPM5-2B) failed its pre-registered ship bar (EXP-18: 0 of 16 confirmed fixes) and stays switched off (DEC-035). An optional second backend can call Google Gemini instead (DEC-038, owner override of the offline-only rule): off by default, needs an operator-set API key, and whether it clears the same bar is measured by EXP-18b before it ships.
 - Everything was measured on one lab, two IPsec implementations (strongSwan, Libreswan), no real WAN.
-- Live gateway fixes (DEC-047) are tested on real strongSwan gateways in network namespaces on one host, not yet on a production site, a vendor appliance, or anything but strongSwan's swanctl. That test host's kernel has no ESP, so its gateways use strongSwan's userspace ESP; the IKE handshake the fix changes and verifies is the real one. Each check restarts the tunnel for a few seconds, and a change that the other end cannot accept keeps the tunnel down until the rollback (seconds, or 180 s via the watchdog if TunnelScope loses contact).
+- Live gateway fixes (DEC-049) are tested on real strongSwan gateways in network namespaces on one host, not yet on a production site, a vendor appliance, or anything but strongSwan's swanctl. That test host's kernel has no ESP, so its gateways use strongSwan's userspace ESP; the IKE handshake the fix changes and verifies is the real one. Each check restarts the tunnel for a few seconds, and a change that the other end cannot accept keeps the tunnel down until the rollback (seconds, or 180 s via the watchdog if TunnelScope loses contact).
 
 ## How it was validated
 
@@ -87,3 +87,8 @@ The project's core idea isn't guessing what's inside an encrypted tunnel — it'
 what can actually be seen from each vantage point (passive capture, IKE visibility, endpoint
 telemetry, keys, authorized active probing), and building a real assessment on top of only that.
 "Scope" names the instrument; the tiers are the discipline behind it.
+
+## Licence
+
+Apache License 2.0: see [LICENSE](LICENSE) and [NOTICE](NOTICE) (copyright and the attributions for the vulnerability
+and ATT&CK/CAPEC data TunnelScope uses).

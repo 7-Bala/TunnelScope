@@ -548,3 +548,16 @@ handshakes A/B, W = 10 s). Bars: 0 finding/verdict differences; 100% of ESP/AH r
 Both bars held: 0 finding/verdict differences over 11 SAs between a full capture and a headers-only capture of the
 same traffic; 732/732 ESP records stored <= 80 bytes, 75/75 IKE whole. ESP bytes stored 112,728 -> 58,560 (small
 ping packets). Addenda A (one file per capture) and B (harness crash before any data). DEC-044.
+
+## EXP-34 — Behaviour-based IKE attack-pattern detectors (T-131) — PRE-REGISTRATION (2026-09-28)
+Pre-registered in `experiments/exp34-cve-detectors/PREREG.md` before the code and any run. Three exact detectors on
+plaintext IKEv2 (RFC 7296 violations matching CVE triggers from NVD): malformed KE data, INFORMATIONAL before
+IKE_AUTH, IKE_SA_INIT request missing SA/KE/Nonce. Bars: 0 detections on every benign capture; 18/18 crafted attacks
+sent at real strongSwan and Libreswan responders detected by the right detector; UNKNOWN (never PASS) without the
+handshake.
+
+### EXP-34 — RESULT (2026-09-28)
+Three plaintext-IKEv2 attack-pattern detectors (malformed KE, INFORMATIONAL before IKE_AUTH, IKE_SA_INIT missing
+SA/KE/Nonce). H1 specificity: 0 false detections over 695 captures / 668 SAs (159 PASS, 509 UNKNOWN). H2 sensitivity:
+decision-function unit tests (ADDENDUM A -- no crafted attack traffic). H3 vantage: UNKNOWN without the handshake. 4
+mutation checks caught. DEC-048. `experiments/exp34-cve-detectors/RESULT.md`

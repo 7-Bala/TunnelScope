@@ -697,6 +697,87 @@ def _msgid_gap_before_child(ike: list[dict], child_frame: int) -> str | None:
     return None
 
 
+# T-131 / EXP-34: exact detectors for plaintext IKEv2 attack patterns, each a violation of an explicit RFC 7296 rule
+# that matches the trigger of published CVEs. A detection reports only that the PATTERN was seen on the wire; it never
+# claims the responder was vulnerable or compromised (the software version is not visible). Vantage discipline as
+# EXP-09: a detector that needs the handshake says UNKNOWN when the capture does not contain the initial exchange,
+# never a pass on missing evidence. Pure decision functions (unit-tested, EXP-34 addendum A), no ML.
+
+# Byte length of a Key Exchange payload's data for the groups whose length is fixed and public (RFC 7296 3.4 with
+# RFC 3526 MODP, RFC 5903 ECP, RFC 8031/7748 curves). Groups not here (e.g. ML-KEM shares) are left unjudged.
+_KE_FIXED_LEN = {2: 128, 5: 192, 14: 256, 15: 384, 16: 512, 17: 768, 18: 1024,
+                 19: 64, 20: 96, 21: 132, 31: 32, 32: 56}
+
+
+def detect_ke_anomaly(init_reqs: list[dict]) -> tuple[str | None, str]:
+    """A KE payload whose data is all-zero bytes, or whose length is not its group's fixed length (RFC 7296 3.4).
+    Matches e.g. CVE-2015-3240 (zero g^x), CVE-2008-4551 (NULL KE), CVE-2023-41913 (over-long DH value)."""
+    if not init_reqs:
+        return None, "no IKE_SA_INIT request in this capture; the KE payload could not be examined"
+    for m in init_reqs:
+        for group, data in zip(m.get("ke_groups", []), m.get("ke_data", [])):
+            if not data:
+                continue
+            if set(data) == {"0"}:
+                return "malformed-ke", (f"an IKE_SA_INIT KE payload (frame {m['frame']}) carries all-zero key "
+                                        f"exchange data for group {group}")
+            fixed = _KE_FIXED_LEN.get(group)
+            if fixed is not None and len(data) // 2 != fixed:
+                return "malformed-ke", (f"an IKE_SA_INIT KE payload (frame {m['frame']}) for group {group} has "
+                                        f"{len(data) // 2} bytes of data, not the fixed {fixed}")
+    return "clean", "every observed IKE_SA_INIT key exchange payload is well-formed for its group"
+
+
+def detect_informational_before_auth(ike: list[dict]) -> tuple[str | None, str]:
+    """An INFORMATIONAL exchange before IKE_AUTH completes. RFC 7296 1.4: INFORMATIONAL runs only after the initial
+    exchanges, since it is protected by keys IKE_AUTH establishes. Matches e.g. CVE-2019-12312."""
+    init = [m for m in ike if m["exchange"] == 34]
+    if not init:
+        return None, "SA not observed from IKE_SA_INIT; cannot place an INFORMATIONAL relative to auth"
+    info = [m for m in ike if m["exchange"] == 37 and m["frame"] is not None]
+    auth = [m for m in ike if m["exchange"] == 35 and m["frame"] is not None]
+    earliest_auth = min((m["frame"] for m in auth), default=None)
+    early = [m for m in info if earliest_auth is None or m["frame"] < earliest_auth]
+    if early:
+        return "informational-before-auth", (f"an INFORMATIONAL exchange (frame {min(m['frame'] for m in early)}) "
+                                              "appears before IKE_AUTH, which cannot be protected yet")
+    return "clean", "no INFORMATIONAL exchange precedes IKE_AUTH"
+
+
+def detect_init_missing_payloads(init_reqs: list[dict]) -> tuple[str | None, str]:
+    """An IKE_SA_INIT request missing a required payload. RFC 7296 1.2: SAi1, KEi and Ni are mandatory. Matches e.g.
+    CVE-2013-7294 (I1 without KE) and CVE-2013-6467 (missing expected payloads)."""
+    if not init_reqs:
+        return None, "no IKE_SA_INIT request in this capture"
+    required = {33: "SA", 34: "KE", 40: "Nonce"}
+    for m in init_reqs:
+        present = set(m.get("payloads", []))
+        if not present:
+            continue          # payloads not parsed for this message: cannot judge, do not guess (specificity first)
+        missing = [name for pt, name in required.items() if pt not in present]
+        if missing:
+            return "init-missing-required-payload", (f"an IKE_SA_INIT request (frame {m['frame']}) is missing "
+                                                     f"required payload(s): {', '.join(missing)}")
+    return "clean", "every IKE_SA_INIT request carries SA, KE and Nonce"
+
+
+def extract_ike_attack_patterns(r: EvidenceRecord) -> None:
+    """T-131 / EXP-34: the three plaintext-IKEv2 attack-pattern detectors above, as findings on one SA."""
+    ike = getattr(r, "_ike", [])
+    if not ike:
+        return
+    init_reqs = [m for m in ike if m["exchange"] == 34 and not m["is_response"]]
+    method = "EXP-34 IKE attack patterns (T-131)"
+    for attr, (value, note), frame in (
+        ("ke_payload_anomaly", detect_ke_anomaly(init_reqs), (init_reqs[0]["frame"] if init_reqs else None)),
+        ("informational_before_auth", detect_informational_before_auth(ike), None),
+        ("init_missing_payloads", detect_init_missing_payloads(init_reqs), (init_reqs[0]["frame"] if init_reqs else None)),
+    ):
+        status = Status.UNKNOWN if value is None else Status.OBSERVED
+        ev = [EvidencePtr(r.source_pcap, frame, "isakmp (IKE_SA_INIT)", str(value))] if (frame and value) else []
+        r.add(Finding(attr, status, Vantage.T1, method, value=value, note=note, evidence=ev))
+
+
 def extract_offered_dh(r: EvidenceRecord) -> None:
     """EXP-13 P5: the key-exchange groups the INITIATOR offered, from its
     plaintext IKE_SA_INIT request(s). A peer that offers a weak group would
@@ -720,7 +801,7 @@ def extract_offered_dh(r: EvidenceRecord) -> None:
 
 ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke, extract_ppk, extract_ipsec_protocols, extract_ah,
                   extract_cipher_sieve, extract_pfs, extract_implementation, extract_sa_lifecycle, extract_mode, extract_sequence,
-                  extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_offered_dh,
+                  extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_ike_attack_patterns, extract_offered_dh,
                   extract_leakage, extract_attacker]
 
 
