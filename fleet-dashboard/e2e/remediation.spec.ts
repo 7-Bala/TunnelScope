@@ -18,23 +18,29 @@ type Engine = {
   apply?: RemediationApplyResult
   generate?: GenerateResult
   generateDelayMs?: number
+  publicDemo?: boolean
 }
 
-type Seen = { preview: Record<string, unknown>[]; apply: Record<string, unknown>[]; generate: number; consoleErrors: string[] }
+type Seen = { preview: Record<string, unknown>[]; apply: Record<string, unknown>[]; generate: number; plan: number; consoleErrors: string[] }
 
 const json = (route: Route, body: unknown, status = 200) =>
   route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) })
 
 async function mockEngine(page: Page, engine: Engine): Promise<Seen> {
-  const seen: Seen = { preview: [], apply: [], generate: 0, consoleErrors: [] }
+  const seen: Seen = { preview: [], apply: [], generate: 0, plan: 0, consoleErrors: [] }
   page.on("console", (m) => m.type() === "error" && seen.consoleErrors.push(m.text()))
   page.on("pageerror", (e) => seen.consoleErrors.push(`pageerror: ${e.message}`))
   const body = (r: Request) => (r.postData() ? JSON.parse(r.postData() as string) : {})
-  await page.route("**/health", (r) => json(r, { ok: true, dashboard: true, history: false, live: false }))
+  await page.route("**/health", (r) =>
+    json(r, { ok: true, dashboard: true, history: false, live: false, ...(engine.publicDemo ? { public_demo: true } : {}) }),
+  )
   await page.route("**/api/analyze**", (r) => json(r, ANALYZE))
   await page.route("**/api/live", (r) => json(r, { ok: true, enabled: false }))
   await page.route("**/api/history", (r) => json(r, { ok: true, tunnels: [] }))
-  await page.route("**/api/remediate/plan", (r) => json(r, PLAN))
+  await page.route("**/api/remediate/plan", (r) => {
+    seen.plan++
+    return json(r, PLAN)
+  })
   await page.route("**/api/remediate/targets", (r) => json(r, TARGETS))
   await page.route("**/api/remediate/capabilities", (r) => json(r, engine.caps ?? CAPS_OFF))
   await page.route("**/api/remediate/preview", (r) => {
@@ -274,6 +280,27 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         await expect(page.getByRole("button", { name: /Draft a fix with the/ })).toHaveCount(0)
         expect(seen.generate).toBe(0)
         await invariants(page, seen)
+      })
+
+      test("B1-27 public site: fixing is off, the reasons are shown, and no fix request is ever sent", async ({ page }) => {
+        const seen = await mockEngine(page, { caps: CAPS_ON, publicDemo: true })
+        await page.goto("/")
+        await page.locator("input[type=file]").setInputFiles(CAPTURE)
+        await page.locator("[data-state][aria-expanded]").first().click()
+        await page.getByRole("tab", { name: /Verdicts/ }).click()
+        await expect(page.getByRole("button", { name: `Propose fix for ${RULE}` })).toHaveCount(0)
+        await page.getByRole("button", { name: `Why fixing is off for ${RULE}` }).click()
+        const note = page.getByTestId(`fix-off-${RULE}`)
+        await expect(note).toBeVisible()
+        await expect(note.getByText("Fixing is switched off on this public site")).toBeVisible()
+        for (const reason of ["Real gateways:", "The lab:", "AI-drafted fixes:", "Who approves:"]) {
+          await expect(note.getByText(reason)).toBeVisible()
+        }
+        expect(seen.plan).toBe(0)
+        expect(seen.preview).toEqual([])
+        expect(seen.apply).toEqual([])
+        expect(seen.generate).toBe(0)
+        expect(seen.consoleErrors).toEqual([])
       })
 
       test("B1-07 model unavailable: a plain line, no draft button", async ({ page }) => {
