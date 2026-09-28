@@ -131,7 +131,8 @@ def cmd_live(args):
         print("--alerts needs --history (alerts compare each window with the tunnel's learned normal)", file=sys.stderr)
         return 2
     mon = LiveMonitor(interface=args.interface, follow=args.follow, window=args.window,
-                      history=args.history, keep=args.keep, alerts=args.alerts, alert_format=args.alert_format)
+                      history=args.history, keep=args.keep, alerts=args.alerts, alert_format=args.alert_format,
+                      headers_only=args.headers_only)
     mon.start_capture()
     print(f"live: {mon.status()['source']}, {mon.window}s windows"
           + (f", learning into {args.history}" if args.history else "") + " (Ctrl-C stops)", file=sys.stderr)
@@ -343,7 +344,7 @@ def cmd_sensor(args):
     """Site sensor: live analysis at the site; only signed findings reports leave it (T-139)."""
     from .sensor.sensor import Sensor
     s = Sensor(args.site, args.key, args.outbox, args.state, window=args.window, interface=args.interface,
-               follow=args.follow, keep=args.keep)
+               follow=args.follow, keep=args.keep, headers_only=args.headers_only)
     print(f"sensor {args.site}: {s.monitor.status()['source']}, {s.window}s windows, reports -> {args.outbox} "
           "(Ctrl-C stops)", file=sys.stderr)
     try:
@@ -441,6 +442,8 @@ def main(argv=None):
     lv.add_argument("--window", type=int, default=30, help="seconds per window (default 30)")
     lv.add_argument("--history", metavar="DIR", help="anomaly history: compare each window with the tunnel's past")
     lv.add_argument("--keep", action="store_true", help="keep analysed window files (default: delete them)")
+    lv.add_argument("--headers-only", action="store_true",
+                    help="--interface only: store ESP/AH headers only (IKE stays whole; findings unchanged, EXP-33)")
     lv.add_argument("--json", action="store_true", help="one JSON object per window")
     lv.add_argument("--max-windows", type=int, help="stop after N windows (testing)")
     lv.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
@@ -499,6 +502,8 @@ def main(argv=None):
     sn.add_argument("--state", required=True, metavar="DIR", help="sensor state: sequence number, tunnel history")
     sn.add_argument("--window", type=int, default=30, help="seconds per window (default 30)")
     sn.add_argument("--keep", action="store_true", help="keep capture files after analysis (default: delete)")
+    sn.add_argument("--headers-only", action="store_true",
+                    help="--interface only: store ESP/AH headers only (IKE stays whole)")
     sn.add_argument("--max-reports", type=int, help="stop after N reports (testing)")
     sn.set_defaults(func=cmd_sensor)
     co = sub.add_parser("collect", help="central collector: accept signed site reports from an inbox directory")

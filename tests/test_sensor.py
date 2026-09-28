@@ -141,3 +141,14 @@ def test_a_quiet_window_keeps_the_last_handshake_and_the_alert_visible(tmp_path)
     hs = rep["last_handshake"]["10.10.1.20 <-> 10.10.2.20"]
     assert hs["posture"].startswith("DOWNGRADED")                     # the last handshake seen, with its time
     assert st["tunnels"][0]["last_handshake"]["posture"].startswith("DOWNGRADED")
+
+
+def test_headers_only_capture_opens_the_interface_twice_ike_whole_esp_truncated():
+    from tunnelscope.live.live import ESP_SNAPLEN, ESP_FILTER, IKE_FILTER, capture_command
+    full = capture_command("dumpcap", "eth0", "/w.pcapng", 10, False)
+    assert full.count("-i") == 1 and "-s" not in full
+    cmd = capture_command("dumpcap", "eth0", "/w.pcapng", 10, True)
+    assert cmd.count("-i") == 2
+    ike, esp = cmd.index(IKE_FILTER), cmd.index(ESP_FILTER)
+    assert cmd[ike + 1:ike + 3] == ["-s", "0"] and cmd[esp + 1:esp + 3] == ["-s", str(ESP_SNAPLEN)]
+    assert "udp[8:4] = 0" in IKE_FILTER and "udp[8:4] != 0" in ESP_FILTER    # IKE vs ESP on port 4500
