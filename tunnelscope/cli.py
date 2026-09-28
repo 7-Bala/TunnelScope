@@ -344,7 +344,7 @@ def cmd_sensor(args):
     """Site sensor: live analysis at the site; only signed findings reports leave it (T-139)."""
     from .sensor.sensor import Sensor
     s = Sensor(args.site, args.key, args.outbox, args.state, window=args.window, interface=args.interface,
-               follow=args.follow, keep=args.keep, headers_only=args.headers_only)
+               follow=args.follow, keep=args.keep, headers_only=not args.full_packets)
     print(f"sensor {args.site}: {s.monitor.status()['source']}, {s.window}s windows, reports -> {args.outbox} "
           "(Ctrl-C stops)", file=sys.stderr)
     try:
@@ -502,8 +502,8 @@ def main(argv=None):
     sn.add_argument("--state", required=True, metavar="DIR", help="sensor state: sequence number, tunnel history")
     sn.add_argument("--window", type=int, default=30, help="seconds per window (default 30)")
     sn.add_argument("--keep", action="store_true", help="keep capture files after analysis (default: delete)")
-    sn.add_argument("--headers-only", action="store_true",
-                    help="--interface only: store ESP/AH headers only (IKE stays whole)")
+    sn.add_argument("--full-packets", action="store_true",
+                    help="--interface only: store whole ESP/AH packets (default: headers only, IKE whole; EXP-33)")
     sn.add_argument("--max-reports", type=int, help="stop after N reports (testing)")
     sn.set_defaults(func=cmd_sensor)
     co = sub.add_parser("collect", help="central collector: accept signed site reports from an inbox directory")

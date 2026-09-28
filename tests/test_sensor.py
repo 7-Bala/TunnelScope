@@ -152,3 +152,11 @@ def test_headers_only_capture_opens_the_interface_twice_ike_whole_esp_truncated(
     ike, esp = cmd.index(IKE_FILTER), cmd.index(ESP_FILTER)
     assert cmd[ike + 1:ike + 3] == ["-s", "0"] and cmd[esp + 1:esp + 3] == ["-s", str(ESP_SNAPLEN)]
     assert "udp[8:4] = 0" in IKE_FILTER and "udp[8:4] != 0" in ESP_FILTER    # IKE vs ESP on port 4500
+
+
+def test_the_sensor_stores_headers_only_by_default(tmp_path):
+    """DEC-044 (EXP-33: 0 finding differences over 11 SAs): --interface sensors truncate ESP/AH unless told not to."""
+    R.write_key(tmp_path / "k.key")
+    (tmp_path / "f").mkdir()
+    s = Sensor("lab1", str(tmp_path / "k.key"), str(tmp_path / "o"), str(tmp_path / "s"), follow=str(tmp_path / "f"))
+    assert s.monitor.headers_only is True

@@ -30,13 +30,13 @@ def _version() -> str:
 class Sensor:
     def __init__(self, site: str, key_file: str, outbox: str, state_dir: str, window: int = 30,
                  interface: str | None = None, follow: str | None = None, keep: bool = False,
-                 headers_only: bool = False):
+                 headers_only: bool = True):
         from ..live.live import LiveMonitor
         self.site, self.key = site, R.read_key(key_file)
         self.outbox, self.state_dir = Path(outbox), Path(state_dir)
         self.outbox.mkdir(parents=True, exist_ok=True)
         self.state_dir.mkdir(parents=True, exist_ok=True)
-        # T-141: on an interface, optionally store ESP/AH headers only (EXP-33 decides the default)
+        # T-141 / DEC-044: on an interface the sensor stores ESP/AH headers only by default (EXP-33: identical findings)
         self.monitor = LiveMonitor(interface=interface, follow=follow, window=window, keep=keep,
                                    history=str(self.state_dir / "history"), headers_only=headers_only)
         self.window = self.monitor.window
