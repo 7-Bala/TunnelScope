@@ -47,3 +47,8 @@ reasons unrelated to truncation, and per-window counts would differ. SAs are mat
 stated in H1; every SA in either file must have a partner. Truncation does not depend on file rotation.
 Both dumpcap commands come from `tunnelscope.live.live.capture_command` (window 0 = no ring), so the measured
 command is the shipped one. Captures stay local (git-ignored subfolder); their SHA-256 is in the results.
+
+## ADDENDUM B (2026-09-28, before any data was recorded)
+The first invocation crashed on its first log line (a harness bug: a field named `name` clashed with the logger's
+parameter) after starting one dumpcap and before any event, result or analysis existed. That capture was stopped
+and its partial file deleted unread; the logger is fixed; the run starts again from the beginning.

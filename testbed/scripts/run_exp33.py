@@ -27,9 +27,9 @@ B = {"proposals": "aes256-sha384-ecp384"}
 HANDSHAKES, GAP_S, DURATION_S = 10, 15, 190
 
 
-def event(name, **kw):
+def event(event_name, **kw):
     RAW.parent.mkdir(parents=True, exist_ok=True)
-    rec = {"event": name, "t": time.time(), **kw}
+    rec = {"event": event_name, "t": time.time(), **kw}
     with RAW.open("a") as fh:
         fh.write(json.dumps(rec) + "\n")
     print(json.dumps(rec), flush=True)
