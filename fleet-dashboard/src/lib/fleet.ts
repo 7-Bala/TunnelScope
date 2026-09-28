@@ -1,4 +1,3 @@
-import gatewaysData from "@/gateways.json"
 import type { AnalyzedSA } from "@/lib/api"
 
 export interface Finding {
@@ -11,18 +10,17 @@ export interface Finding {
 
 export interface Gateway {
   id: string
-  /** Display name: the gateway label for the sample fleet, the file name for uploads. */
+  /** Display name: the capture's file name. */
   city: string
   src: string
   dst: string
   posture: string
   fails: Finding[]
-  origin: "sample" | "upload"
-  /** Full evidence for an uploaded capture; the sample fleet carries verdicts only. */
+  origin: "upload"
+  /** Full evidence for the analysed capture. */
   detail?: AnalyzedSA
 }
 
-export const GATEWAYS: Gateway[] = (gatewaysData as Omit<Gateway, "origin">[]).map((g) => ({ ...g, origin: "sample" }))
 
 export function toGateway(sa: AnalyzedSA, index: number, total: number): Gateway {
   return {
