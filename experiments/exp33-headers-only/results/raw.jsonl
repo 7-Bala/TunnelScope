@@ -1,0 +1,15 @@
+{"event": "capture_started", "t": 1790570614.5863621, "name": "reference", "command": ["dumpcap", "-q", "-i", "eth0", "-f", "udp port 500 or udp port 4500 or ip proto 50 or ip proto 51 or ip6 proto 50 or ip6 proto 51", "-w", "/captures/exp33/reference.pcapng", "-a", "duration:190"]}
+{"event": "capture_started", "t": 1790570614.613555, "name": "headers", "command": ["dumpcap", "-q", "-i", "eth0", "-f", "udp port 500 or (udp port 4500 and udp[8:4] = 0)", "-s", "0", "-i", "eth0", "-f", "ip proto 50 or ip proto 51 or ip6 proto 50 or ip6 proto 51 or (udp port 4500 and udp[8:4] != 0)", "-s", "80", "-w", "/captures/exp33/headers.pcapng", "-a", "duration:190"]}
+{"event": "handshake", "t": 1790570618.012778, "n": 1, "state": "A"}
+{"event": "handshake", "t": 1790570633.382856, "n": 2, "state": "B"}
+{"event": "handshake", "t": 1790570648.756342, "n": 3, "state": "A"}
+{"event": "handshake", "t": 1790570664.131157, "n": 4, "state": "B"}
+{"event": "handshake", "t": 1790570679.507037, "n": 5, "state": "A"}
+{"event": "handshake", "t": 1790570694.860472, "n": 6, "state": "B"}
+{"event": "handshake", "t": 1790570710.23295, "n": 7, "state": "A"}
+{"event": "handshake", "t": 1790570725.603868, "n": 8, "state": "B"}
+{"event": "handshake", "t": 1790570740.976471, "n": 9, "state": "A"}
+{"event": "handshake", "t": 1790570756.349047, "n": 10, "state": "B"}
+{"event": "capture_file", "t": 1790570815.64767, "name": "reference", "bytes": 171064, "sha256": "0909a758149c81426a84b4f946baae93ceba4a35789aab80d8070520c3d51159"}
+{"event": "capture_file", "t": 1790570815.648221, "name": "headers", "bytes": 115668, "sha256": "bef12dec28a401cf23bcf64897240eac4440e8c752b0e1b523b7f71692a285ff"}
+{"event": "end", "t": 1790570815.966462}
