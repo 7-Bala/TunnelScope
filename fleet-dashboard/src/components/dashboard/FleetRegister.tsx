@@ -220,7 +220,6 @@ function Row({ g }: { g: Gateway }) {
           <span className="min-w-0 flex-1">
             <span className="flex min-w-0 items-baseline gap-2">
               <span className="truncate text-[14px] font-medium text-foreground">{g.city}</span>
-              {g.origin === "sample" && <span className="hidden shrink-0 font-mono text-[11px] text-faint sm:inline">{g.id}</span>}
               {g.detail?.anomaly?.status === "anomalous" && (
                 <span className="shrink-0 rounded-full bg-neg-bg px-2 py-px text-[10.5px] font-medium text-neg">changed</span>
               )}
