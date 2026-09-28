@@ -214,6 +214,10 @@ def cmd_doctor(args):
     print(f"required fields   all {len(REQUIRED_FIELDS)} resolve on this tshark")
     bl = load_baselines()
     print(f"baselines         {len(bl)} loaded: {', '.join(sorted(b['baseline'] for b in bl))}")
+    from .ingest.tshark import isolation_status
+    iso = isolation_status()
+    print(f"tshark isolation  network {iso['network']}; limits: {iso['limits']}; {iso['profile']}; "
+          f"name resolution {iso['name_resolution']}")
     print("\nready: evidence extraction will not silently under-report on this stack.")
     return 0
 
