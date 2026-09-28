@@ -63,6 +63,39 @@ def check_model() -> int:
     return PASS
 
 
+def _load_operator_env() -> None:
+    """The drafting and browser checks run the product the way ./start.sh does: the git-ignored .env, if present, is
+    loaded into this process (values are never printed). Variables already set win. The offline model check never
+    calls this: it must prove the model works with the network blocked."""
+    import os
+    f = ROOT / ".env"
+    if not f.is_file():
+        return
+    for line in f.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip().removeprefix("export ").strip(), v.strip().strip('"').strip("'"))
+
+
+def _drafting_backend() -> tuple[str | None, str]:
+    """(backend, why): the operator's backend when it can draft; the cloud chain when the local model is missing but a
+    cloud model is configured; (None, reason) when nothing can draft on this machine."""
+    import os
+    from tunnelscope.remediate import cloud_client, open_model_client
+    from tunnelscope.rephrase import runtime
+    cloud = cloud_client.available() or open_model_client.available()
+    want = os.environ.get("TUNNELSCOPE_GENERATOR_BACKEND", "local")
+    if want in ("cloud", "chain") and cloud:
+        return want, f"{want} backend (operator setting)"
+    if runtime.model_available():
+        return "local", "local model"
+    if cloud:
+        return "chain", "cloud chain (the local model is not on this machine)"
+    return None, "no drafting model: the local model is not on this machine and no cloud model is configured (TUNNELSCOPE_NETWORK=on + a key)"
+
+
 def _lab_up() -> bool:
     from tunnelscope.remediate import execute
     return all(execute.is_container_running(c) for c in ("sih26-alice-pq", "sih26-bob-pq"))
@@ -73,21 +106,24 @@ def check_generator() -> int:
     generatable rule against the real lab config, side by side with the hand-written fix. PASS
     means every draft either passed every check or was refused by a named check, and nothing
     crashed; it says nothing about how often the model is right."""
-    from tunnelscope.rephrase import runtime
-    if not runtime.model_available():
-        print("SKIP: the local model is not available on this machine")
+    _load_operator_env()
+    backend, why = _drafting_backend()
+    if backend is None:
+        print(f"SKIP: {why}")
         return SKIP
     if not _lab_up():
         print("SKIP: lab containers sih26-alice-pq / sih26-bob-pq are not running")
         return SKIP
+    print(f"drafting with: {why}")
     from tunnelscope.remediate import generate
     from tunnelscope.remediate.plan import GENERATABLE_RULES
     bad = 0
     for rule in sorted(GENERATABLE_RULES):
-        r = generate.generate_plan(rule, "sih26-alice-pq", compare_with_handwritten=True, **generate.SHIPPED_SETTINGS)
+        r = generate.generate_plan(rule, "sih26-alice-pq", compare_with_handwritten=True, backend=backend,
+                                   **generate.SHIPPED_SETTINGS)
         p = r.get("plan") or {}
         raw = (p.get("raw_output") or (r.get("revisions") or [{}])[-1].get("raw_output") or "")
-        print(json.dumps({"rule": rule, "ok": r["ok"], "stage": r.get("stage"), "reason": r.get("reason"),
+        print(json.dumps({"rule": rule, "backend": backend, "model_id": p.get("model_id") or (r.get("model") or {}).get("model_id"), "ok": r["ok"], "stage": r.get("stage"), "reason": r.get("reason"),
                           "change": p.get("change"), "agrees_with_handwritten": p.get("agrees_with_handwritten"),
                           "rounds": len(p.get("revisions") or r.get("revisions") or []),
                           "self_review": (p.get("self_review") or {}).get("verdict"),
@@ -109,10 +145,11 @@ def check_browser() -> int:
     import subprocess
     import tempfile
     import urllib.request
-    from tunnelscope.rephrase import runtime
     dash = ROOT / "fleet-dashboard"
-    if not runtime.model_available():
-        print("SKIP: the local model is not available on this machine")
+    _load_operator_env()
+    backend, why = _drafting_backend()
+    if backend is None:
+        print(f"SKIP: {why}")
         return SKIP
     if not _lab_up():
         print("SKIP: lab containers sih26-alice-pq / sih26-bob-pq are not running")
@@ -124,7 +161,8 @@ def check_browser() -> int:
         sk.bind(("127.0.0.1", 0))
         port = sk.getsockname()[1]
     history = tempfile.mkdtemp(prefix="ts-e2e-history-")
-    env = {**os.environ, "TUNNELSCOPE_GENERATOR": "1"}
+    env = {**os.environ, "TUNNELSCOPE_GENERATOR": "1", "TUNNELSCOPE_GENERATOR_BACKEND": backend}
+    print(f"engine drafts with: {why}")
     eng = subprocess.Popen([str(ROOT / ".venv/bin/python"), "-m", "tunnelscope.cli", "serve", "--no-browser",
                             "--port", str(port), "--history", history], cwd=ROOT, env=env,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -146,7 +184,7 @@ def check_browser() -> int:
             print(r.stderr[-2000:])
             print("FAIL: live browser tests failed")
             return FAIL
-        print("PASS: live browser tests (real engine, model and lab)")
+        print(f"PASS: live browser tests (real engine, {why}, real lab)")
         return PASS
     finally:
         eng.terminate()

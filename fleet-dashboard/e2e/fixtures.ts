@@ -35,6 +35,9 @@ export const CAPS_OFF: RemediationCapabilities = { local_model: true, cloud_mode
 export const CAPS_NO_MODEL: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "local", generator_enabled: true }
 export const CAPS_CLOUD_ON: RemediationCapabilities = { local_model: false, cloud_model: true, backend: "cloud", generator_enabled: true }
 export const CAPS_CLOUD_NO_KEY: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "cloud", generator_enabled: true }
+// DEC-041 default: the fallback chain (cloud models first, then the local model). The on-device model may be absent.
+export const CAPS_CHAIN_CLOUD_ONLY: RemediationCapabilities = { local_model: false, cloud_model: true, backend: "chain", generator_enabled: true }
+export const CAPS_CHAIN_NOTHING: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "chain", generator_enabled: true }
 
 const DIFF_HAND =
   "--- /tmp/exp15-alice.conf\n+++ /tmp/exp15-alice.conf (after)\n@@ -14,7 +14,7 @@\n         version = 2\n-        proposals = aes128-sha1-modp1024\n+        proposals = aes128-sha1-modp4096\n         children {\n"

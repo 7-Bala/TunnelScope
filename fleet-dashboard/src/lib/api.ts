@@ -363,10 +363,20 @@ export type RemediationCapabilities = {
   local_model: boolean
   /** DEC-038: the optional cloud drafting backend has an API key and its package is installed */
   cloud_model: boolean
-  /** which backend the operator has selected (server-side setting only, never client-chosen) */
-  backend: "local" | "cloud"
+  /** which backend the operator has selected (server-side setting only, never client-chosen); "chain" = the
+   * DEC-041 fallback chain: cloud models first, then the local model */
+  backend: "local" | "cloud" | "chain"
   /** local-model drafts are switched on (off until EXP-18 passes, DEC-034) */
   generator_enabled: boolean
+}
+
+/** Which model family drafts, and whether any drafting model is available, for the operator's backend. With the
+ * chain, cloud models come first; the local model is only the last fallback. */
+export function draftingModel(caps: RemediationCapabilities): { noun: "cloud model" | "local model"; available: boolean } {
+  if (caps.backend === "cloud") return { noun: "cloud model", available: caps.cloud_model }
+  if (caps.backend === "chain")
+    return { noun: caps.cloud_model ? "cloud model" : "local model", available: caps.cloud_model || caps.local_model }
+  return { noun: "local model", available: caps.local_model }
 }
 
 const NO_CAPS: RemediationCapabilities = { local_model: false, cloud_model: false, backend: "local", generator_enabled: false }
@@ -379,7 +389,7 @@ export async function remediationCapabilities(): Promise<RemediationCapabilities
     return {
       local_model: b?.local_model === true,
       cloud_model: b?.cloud_model === true,
-      backend: b?.backend === "cloud" ? "cloud" : "local",
+      backend: b?.backend === "cloud" || b?.backend === "chain" ? b.backend : "local",
       generator_enabled: b?.generator_enabled === true,
     }
   } catch {
@@ -401,7 +411,7 @@ export type GeneratedPlan = RemediationPlan & {
   model_revision: string
   /** DEC-038: which backend actually produced this draft (may differ from the operator's current
    * setting if it was rechecked later) */
-  backend?: "local" | "cloud"
+  backend?: "local" | "cloud" | "chain"
   self_review: { verdict: "no concerns" | "concerns" | "unavailable"; reason: string | null } | null
   agrees_with_handwritten?: boolean
   handwritten_diff?: Record<string, string> | null
