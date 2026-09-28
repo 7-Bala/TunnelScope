@@ -344,13 +344,15 @@ def ike_messages(pcap: str) -> list[dict]:
               "isakmp.notify.msgtype", "isakmp.tf.type", "isakmp.tf.id",
               "isakmp.vid_string", "isakmp.certreq.type",
               "isakmp.tf.id.dh", "isakmp.tf.id.integ", "frame.protocols",
-              "isakmp.nextpayload", "isakmp.payloadlength"]
+              "isakmp.nextpayload", "isakmp.payloadlength",
+              "isakmp.typepayload", "isakmp.key_exchange.dh_group", "isakmp.key_exchange.data"]
     rows = _run_fields(pcap, "isakmp", fields)
     msgs = []
     for r in rows:
         r = (r + [""] * len(fields))[:len(fields)]
         (fn, t, src, dst, iplen, src6, dst6, plen6, ispi, rspi, exch, flags, mid, ilen,
-         notify, tftype, tfid, vid, certreq, tfdh, tfinteg, protos, nextp, plens) = r
+         notify, tftype, tfid, vid, certreq, tfdh, tfinteg, protos, nextp, plens,
+         typep, kegrp, kedata) = r
         if not _outermost(protos, "isakmp"):
             continue                      # quoted inside an ICMP error, not a real message
 
@@ -381,6 +383,12 @@ def ike_messages(pcap: str) -> list[dict]:
             # SK (Encrypted and Authenticated, 46) payload: its next-payload field (0 = the message is
             # empty inside) and its length are plaintext. None when the message has no SK payload.
             **_sk_fields(ints(nextp), ints(plens)),
+            # T-131 / EXP-34, plaintext only: the top-level payloads present (IKEv2 payload types are >= 33,
+            # so transform type numbers 1-5 in isakmp.typepayload are excluded), and each Key Exchange
+            # payload's group and its data (as hex) for the malformed-KE detector.
+            payloads=sorted({v for v in ints(typep) if v >= 33}),
+            ke_groups=ints(kegrp),
+            ke_data=[d for d in kedata.split(",") if d != ""],
         ))
     return msgs
 
