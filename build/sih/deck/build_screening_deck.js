@@ -22,7 +22,7 @@ const REPO_URL = "";  // only if the repository is public or shared with the eva
 //   ~1.6 s per capture ......... `tunnelscope report` on 4 lab captures: 1.58-1.67 s wall time each
 //   risk score formula ......... tunnelscope/risk/risk.py (DEC-028): noisy-OR, 100 * (1 - prod(1 - 0.6*L*I/9))
 //   4 VPN programs ............. strongSwan, Libreswan (EXP-07), OpenBSD iked (EXP-10), MikroTik RouterOS (EXP-26)
-//   live gateways .............. testbed/live-gateway/e2e.py, DEC-044 (strongSwan over SSH, terms accepted first)
+//   live gateways .............. testbed/live-gateway/e2e.py, DEC-047 (strongSwan over SSH, terms accepted first)
 //   DST Task Force ............. research/registers/RESEARCH-LOG.md: CII by 2027, enterprises by 2028; vendor CBOM
 //                                from FY 2027-28; names "downgrade or insecure fallback"
 //   DPDP / CERT-In ............. build/06-INDIA-REGULATORY-MAPPING.md: Rule 6(1)(a) encryption, in force

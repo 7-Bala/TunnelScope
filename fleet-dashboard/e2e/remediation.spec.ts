@@ -4,7 +4,7 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test"
 import {
   ANALYZE, APPLY_CONFIRMED, APPLY_CONFIRMED_REKEY, APPLY_REKEY_DOWN, APPLY_ROLLED_BACK, APPLY_STALE, CAPS_CLOUD_NO_KEY, CAPS_CLOUD_ON,
-  CAPS_NO_MODEL, CAPS_OFF, CAPS_ON, CAPTURE,
+  CAPS_CHAIN_CLOUD_ONLY, CAPS_CHAIN_NOTHING, CAPS_NO_MODEL, CAPS_OFF, CAPS_ON, CAPTURE,
   DRAFT_AGREES, DRAFT_AGREES_CLOUD, DRAFT_DIFFERS_CONCERN, DRAFT_REFUSED_V4, PLAN, PREVIEW_DRAFT, PREVIEW_HAND, TARGETS,
 } from "./fixtures.ts"
 import type { GenerateResult, RemediationApplyResult, RemediationCapabilities, RemediationPreview } from "../src/lib/api.ts"
@@ -247,6 +247,32 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         await expect(pane.getByText(/Drafted by a cloud model this machine sent a request to/)).toBeVisible()
         await expect(page.getByRole("radio", { name: `Use the cloud model's draft for ${RULE}` })).toBeVisible()
         expect(seen.generate).toBe(1)
+        await invariants(page, seen)
+      })
+
+      test("B1-25 chain backend without a local model: drafting works through the cloud model (found 2026-09-28)", async ({ page }) => {
+        const seen = await mockEngine(page, {
+          caps: CAPS_CHAIN_CLOUD_ONLY,
+          generate: DRAFT_AGREES_CLOUD,
+          preview: (b) => (b.plan_id ? { ...PREVIEW_DRAFT, plan_id: b.plan_id as string } : PREVIEW_HAND),
+        })
+        const pane = await openPane(page)
+        await approve(page)
+        await expect(pane.getByText("The local model is not available on this machine.")).toHaveCount(0)
+        await expect(pane.getByText(/sends the failing rule and the lab connection.s current settings to that service/)).toBeVisible()
+        await page.getByRole("button", { name: `Draft a fix with the cloud model for ${RULE}` }).click()
+        await expect(page.getByRole("radio", { name: `Use the cloud model's draft for ${RULE}` })).toBeVisible()
+        expect(seen.generate).toBe(1)
+        await invariants(page, seen)
+      })
+
+      test("B1-26 chain backend with no model at all: a plain line, no draft button", async ({ page }) => {
+        const seen = await mockEngine(page, { caps: CAPS_CHAIN_NOTHING })
+        const pane = await openPane(page)
+        await approve(page)
+        await expect(pane.getByText(/No drafting model is available/)).toBeVisible()
+        await expect(page.getByRole("button", { name: /Draft a fix with the/ })).toHaveCount(0)
+        expect(seen.generate).toBe(0)
         await invariants(page, seen)
       })
 

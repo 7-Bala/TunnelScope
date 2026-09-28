@@ -7,6 +7,7 @@ import {
   generateRemediation,
   previewRemediation,
   remediationCapabilities,
+  draftingModel,
   remediationTargets,
   type GatewayTerms,
   type GenerateResult,
@@ -24,7 +25,7 @@ const FALLBACK_TARGETS: LabTarget[] = [
   { name: "sih26-bob-pq", running: true },
 ]
 
-/** DEC-044: the terms and risks, accepted once per real gateway before anything can change it. */
+/** DEC-047: the terms and risks, accepted once per real gateway before anything can change it. */
 function TermsPanel({ target, onAccepted }: { target: LabTarget; onAccepted: () => void }) {
   const [terms, setTerms] = useState<GatewayTerms | null>(null)
   const [who, setWho] = useState("")
@@ -587,7 +588,7 @@ export function RemediationControl({
                 {preview?.ok && (
                   <div className="space-y-1.5">
                     <p className="text-[11.5px] text-muted-foreground">
-                      Dry run of the {choice === "draft" ? "local model's draft" : "hand-written fix"} on copies of the real
+                      Dry run of the {choice === "draft" ? `${caps ? draftingModel(caps).noun : "local model"}'s draft` : "hand-written fix"} on copies of the real
                       files in {target}, and strongSwan loaded the result in{" "}
                       {preview.live ? "an isolated namespace on the gateway itself" : "a throwaway copy of the container"}. This
                       is exactly what "{preview.live ? "Apply to real gateway" : "Apply in lab"}" will change:
@@ -639,7 +640,7 @@ export function RemediationControl({
                   </p>
                 )}
 
-                {applyResult && <ApplyOutcome result={applyResult} />}
+                {applyResult && <ApplyOutcome result={applyResult} modelNoun={caps ? draftingModel(caps).noun : "local model"} />}
               </div>
             </div>
           )}
@@ -679,7 +680,7 @@ export function RemediationControl({
   )
 }
 
-function ApplyOutcome({ result }: { result: RemediationApplyResult }) {
+function ApplyOutcome({ result, modelNoun }: { result: RemediationApplyResult; modelNoun: string }) {
   if (result.decision === "unknown") {
     const secs = result.watchdog_timeout_s ?? 180
     return (
@@ -710,7 +711,7 @@ function ApplyOutcome({ result }: { result: RemediationApplyResult }) {
   return (
     <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[12px]">
       <p className="text-[11px] text-faint">
-        Plan used: {result.source === "generated" ? "the local model's draft (checked by code)" : "the hand-written fix"}
+        Plan used: {result.source === "generated" ? `the ${modelNoun}'s draft (checked by code)` : "the hand-written fix"}
       </p>
       {result.decision === "failed" ? (
         <p className="font-semibold text-warn">A command failed in the lab: {result.error}</p>
@@ -811,13 +812,17 @@ function DraftPanel({
       </p>
     )
   }
-  const usingCloud = caps.backend === "cloud"
-  const modelNoun = usingCloud ? "cloud model" : "local model"
+  const { noun: modelNoun, available } = draftingModel(caps)
+  const usingCloud = modelNoun === "cloud model"
   const draftLabel = usingCloud ? DRAFT_LABEL_CLOUD : DRAFT_LABEL
-  if (usingCloud ? !caps.cloud_model : !caps.local_model) {
+  if (!available) {
     return (
       <p className="text-[11px] text-faint">
-        {usingCloud ? "The cloud model is not configured (no API key)." : "The local model is not available on this machine."}
+        {caps.backend === "cloud"
+          ? "The cloud model is not configured (no API key)."
+          : caps.backend === "chain"
+            ? "No drafting model is available: no cloud API key (or the network is switched off) and no local model on this machine."
+            : "The local model is not available on this machine."}
       </p>
     )
   }
@@ -857,7 +862,7 @@ function DraftPanel({
         )}
       </div>
 
-      {draft && !draft.ok && <DraftRefused draft={draft} />}
+      {draft && !draft.ok && <DraftRefused draft={draft} modelNoun={modelNoun} />}
 
       {draft?.ok && (
         <div className="space-y-2">
@@ -884,6 +889,7 @@ function DraftPanel({
             {draft.plan.agrees_with_handwritten ? "Both make the same change." : "They differ."}
           </p>
           <p className="text-[11px] leading-relaxed text-faint">{draftLabel}</p>
+          {draft.plan.model_id && <p className="font-mono text-[11px] text-faint">model: {draft.plan.model_id}</p>}
           <DraftChecks checks={draft.plan.checks} rounds={draft.plan.revisions.length} />
           {draft.plan.self_review && (
             <p className={cn("text-[11px]", draft.plan.self_review.verdict === "concerns" ? "text-amber-300" : "text-faint")}>
@@ -945,13 +951,13 @@ function DraftChecks({ checks, rounds }: { checks: { id: string; name: string; o
   )
 }
 
-function DraftRefused({ draft }: { draft: Extract<GenerateResult, { ok: false }> }) {
+function DraftRefused({ draft, modelNoun }: { draft: Extract<GenerateResult, { ok: false }>; modelNoun: string }) {
   const last = draft.revisions?.[draft.revisions.length - 1]
   const failed = draft.checks?.find((c) => !c.ok)
   return (
     <div className="space-y-1 rounded border border-warn/30 bg-warn/10 p-2 text-[11.5px]">
       <p className="font-semibold text-warn">
-        {failed ? "The local model's draft did not pass the checks." : "No draft from the local model."}
+        {failed ? `The ${modelNoun}'s draft did not pass the checks.` : `No draft from the ${modelNoun}.`}
       </p>
       {failed ? (
         <p className="text-foreground/80">

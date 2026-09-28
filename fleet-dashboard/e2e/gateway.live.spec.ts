@@ -1,4 +1,4 @@
-// DEC-044 live browser test: the real engine, two REAL strongSwan gateways reached only over SSH
+// DEC-047 live browser test: the real engine, two REAL strongSwan gateways reached only over SSH
 // (testbed/live-gateway/setup.sh), a fresh history folder with both gateways registered but no terms
 // accepted. Local only, as root:
 //   sudo testbed/live-gateway/teardown.sh && sudo testbed/live-gateway/setup.sh

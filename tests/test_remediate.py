@@ -334,14 +334,14 @@ def test_execute_module_has_strict_safety_bounds():
                 func_name = f"{node.func.value.id}.{node.func.attr}"
             if func_name in ("subprocess.run", "subprocess.Popen", "subprocess.call", "subprocess.check_output"):
                 # First arg must be a list starting with 'docker' (lab) or 'ssh' (a registered real
-                # gateway, DEC-044: owner-approved change to this guard, 2026-09-27)
+                # gateway, DEC-047: owner-approved change to this guard, 2026-09-27)
                 first_arg = node.args[0] if node.args else None
                 assert isinstance(first_arg, ast.List), f"subprocess call must take a list of args: {ast.dump(node)}"
                 first_elem = first_arg.elts[0]
                 assert isinstance(first_elem, ast.Constant) and first_elem.value in ("docker", "ssh"), (
                     f"subprocess call must invoke 'docker' or 'ssh', got {ast.dump(first_elem)}"
                 )
-    # DEC-044: the SSH path never turns host key checking off and never asks for a password
+    # DEC-047: the SSH path never turns host key checking off and never asks for a password
     assert "stricthostkeychecking=no" not in src_lower.replace(" ", "")
     assert '"stricthostkeychecking=yes"' in src_lower and '"batchmode=yes"' in src_lower
 

@@ -27,17 +27,32 @@ def _version() -> str:
         return "unknown"
 
 
+MASK_KEY_FILE = "mask.key"
+
+
+def mask_key(state_dir: str | Path) -> bytes:
+    """The site's address-mask key (created on first use, owner-only). Losing it changes every pseudonym."""
+    p = Path(state_dir) / MASK_KEY_FILE
+    if not p.exists():
+        R.write_key(p)
+    return R.read_key(p)
+
+
 class Sensor:
     def __init__(self, site: str, key_file: str, outbox: str, state_dir: str, window: int = 30,
-                 interface: str | None = None, follow: str | None = None, keep: bool = False):
+                 interface: str | None = None, follow: str | None = None, keep: bool = False,
+                 headers_only: bool = True, mask_addresses: bool = False):
         from ..live.live import LiveMonitor
         self.site, self.key = site, R.read_key(key_file)
         self.outbox, self.state_dir = Path(outbox), Path(state_dir)
         self.outbox.mkdir(parents=True, exist_ok=True)
         self.state_dir.mkdir(parents=True, exist_ok=True)
+        # T-141 / DEC-044: on an interface the sensor stores ESP/AH headers only by default (EXP-33: identical findings)
         self.monitor = LiveMonitor(interface=interface, follow=follow, window=window, keep=keep,
-                                   history=str(self.state_dir / "history"))
+                                   history=str(self.state_dir / "history"), headers_only=headers_only)
         self.window = self.monitor.window
+        # T-142: the mask key is created here and never leaves the site (not in any report)
+        self.mask_key = mask_key(self.state_dir) if mask_addresses else None
         self.version = _version()
         self.last_emit = time.time()
         st = self.state_dir / STATE_FILE
@@ -52,7 +67,8 @@ class Sensor:
         return self.seq
 
     def emit(self, row: dict | None) -> Path:
-        rep = R.sign(R.build_report(self.site, self._next_seq(), self.window, row, self.version), self.key)
+        rep = R.sign(R.build_report(self.site, self._next_seq(), self.window, row, self.version,
+                                    mask_key=self.mask_key), self.key)
         name = f"{self.site}-{rep['seq']:010d}.json"
         tmp = self.outbox / f".{name}.tmp"                 # atomic: a transfer never picks up half a file
         tmp.write_text(json.dumps(rep, sort_keys=True))
