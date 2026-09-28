@@ -39,3 +39,11 @@ command for it.
 
 ## Rules
 Scored by `analyze.py` -> `results/summary.json`; RESULT.md quotes it only; addenda before the runs they govern.
+
+## ADDENDUM A (2026-09-28, after the code, before any run)
+Nothing above is removed. Each capture is ONE file for the whole run instead of 10-second ring files: two
+independent ring buffers never rotate at the same instant, so paired windows would hold different packets for
+reasons unrelated to truncation, and per-window counts would differ. SAs are matched by addresses and SPIs as
+stated in H1; every SA in either file must have a partner. Truncation does not depend on file rotation.
+Both dumpcap commands come from `tunnelscope.live.live.capture_command` (window 0 = no ring), so the measured
+command is the shipped one. Captures stay local (git-ignored subfolder); their SHA-256 is in the results.
