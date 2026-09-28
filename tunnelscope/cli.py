@@ -351,7 +351,7 @@ def cmd_fleet(args):
 
 
 def cmd_gateway(args):
-    """DEC-047: register real strongSwan gateways, read and accept the terms and risks."""
+    """DEC-049: register real strongSwan gateways, read and accept the terms and risks."""
     from .remediate import execute, gateways
     hd = args.history
     if args.action == "add":
@@ -608,7 +608,7 @@ def main(argv=None):
     cf.add_argument("file")
     cf.add_argument("--json", action="store_true")
     cf.set_defaults(func=cmd_config)
-    gwp = sub.add_parser("gateway", help="real strongSwan gateways for live fixes (DEC-047): add, list, terms, accept, withdraw")
+    gwp = sub.add_parser("gateway", help="real strongSwan gateways for live fixes (DEC-049): add, list, terms, accept, withdraw")
     gwp.add_argument("action", choices=["add", "list", "terms", "accept", "withdraw"])
     gwp.add_argument("name", nargs="?", default="")
     gwp.add_argument("--history", default=".tunnelscope-history")

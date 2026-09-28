@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Two real strongSwan gateways for the DEC-047 live-fix end-to-end test, on one Linux host, reached
+# Two real strongSwan gateways for the DEC-049 live-fix end-to-end test, on one Linux host, reached
 # ONLY over SSH (never docker exec, never a shared filesystem path TunnelScope knows about).
 #
 #   sudo testbed/live-gateway/setup.sh      # build and start office-a and office-b

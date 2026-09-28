@@ -133,7 +133,7 @@ def test_baseline_byte_identical_with_flag_off(monkeypatch):
     out_json = json.dumps(out, indent=2)
 
     expected = {
-        "summary": "This tunnel between 10.20.1.10 and 10.20.2.10 was checked against 12 rules: 6 passed, 5 failed, 2 of them high severity, and the rest could not be judged from this capture. Post-quantum posture: classical (quantum-vulnerable key exchange).",
+        "summary": "This tunnel between 10.20.1.10 and 10.20.2.10 was checked against 15 rules: 9 passed, 5 failed, 2 of them high severity, and the rest could not be judged from this capture. Post-quantum posture: classical (quantum-vulnerable key exchange).",
         "points": [
             {
                 "kind": "fail",

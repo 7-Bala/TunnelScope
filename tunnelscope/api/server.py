@@ -328,7 +328,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "targets": lab_targets(), "recommended": "sih26-alice-pq",
                              "gateways": gateway_list(HISTORY_DIR)})
         elif path == "/api/remediate/terms":
-            # DEC-047: the terms and risks a person must accept before a real gateway can be changed
+            # DEC-049: the terms and risks a person must accept before a real gateway can be changed
             from ..remediate import gateways
             self._json(200, {"ok": True, **gateways.terms()})
         elif path.startswith("/api/"):
@@ -483,9 +483,10 @@ class _Handler(BaseHTTPRequestHandler):
             return
         try:
             from ..remediate import execute, generate
+            backend = generator_backend()
             res = generate.generate_plan(body["rule_id"], body["target"], body.get("observed"),
-                                         compare_with_handwritten=True, backend=generator_backend(),
-                                         history_dir=HISTORY_DIR, **generate.SHIPPED_SETTINGS)
+                                         compare_with_handwritten=True, backend=backend,
+                                         history_dir=HISTORY_DIR, **generate.shipped_settings(backend))
             if res.get("ok"):
                 res["plan_id"] = execute.store_generated_plan(res["plan"], body["target"], HISTORY_DIR)
             plan = res.get("plan") or {}
@@ -501,7 +502,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._json(500, {"ok": False, "stage": "internal", "error": "unexpected server error while drafting"})
 
     def _remediate_terms(self, action: str) -> None:
-        """DEC-047: accept or withdraw the terms and risks for one registered gateway."""
+        """DEC-049: accept or withdraw the terms and risks for one registered gateway."""
         body = self._read_json_body()
         if body is None:
             return

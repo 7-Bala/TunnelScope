@@ -393,7 +393,7 @@ export type RemediationPreview = {
   digest?: string
   source?: "hand-written" | "generated"
   plan_id?: string | null
-  /** DEC-047: present only for a real gateway. Apply needs `ack_phrase` typed back exactly. */
+  /** DEC-049: present only for a real gateway. Apply needs `ack_phrase` typed back exactly. */
   live?: {
     gateway: string
     host: string
@@ -485,7 +485,7 @@ export async function generateRemediation(ruleId: string, target: string, observ
 export type LabTarget = {
   name: string
   running: boolean
-  /** DEC-047: a real gateway reached over SSH, not a lab container */
+  /** DEC-049: a real gateway reached over SSH, not a lab container */
   live?: boolean
   host?: string
   connection?: string

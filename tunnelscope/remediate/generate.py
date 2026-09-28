@@ -150,6 +150,17 @@ PRODUCT_SETTINGS = {"critique_rounds": CRITIQUE_ROUNDS, "self_review_on": SELF_R
 # accepted. A future model or EXP-18b can raise critique_rounds again, measured on its own bar.
 SHIPPED_SETTINGS = {"critique_rounds": 0, "self_review_on": SELF_REVIEW, "time_budget_s": TIME_BUDGET_S}
 
+# T-144 / DEC-047 (owner, 2026-09-28): drafting through the cloud models (backend "cloud" or the DEC-041 "chain") uses 2
+# critique rounds. EXP-18b H3 measured them helping both cloud models (A0 9/16 -> A1 12/16 and 13/16),
+# and the T-138 end-to-end check showed T9 refused with 0 rounds and fixed correctly with 2. The local model keeps
+# SHIPPED_SETTINGS (its own H3 result: no gain). Every draft still passes every check and needs a person's approval.
+CLOUD_SHIPPED_SETTINGS = {"critique_rounds": 2, "self_review_on": SELF_REVIEW, "time_budget_s": TIME_BUDGET_S}
+
+
+def shipped_settings(backend: str) -> dict:
+    """The settings the product drafts with for this backend (T-144)."""
+    return CLOUD_SHIPPED_SETTINGS if backend in ("cloud", "chain") else SHIPPED_SETTINGS
+
 
 # Which strongSwan transform types each IKE attribute judges (types as `swanctl --list-conns --raw` names them).
 _JUDGED_TYPES = {
@@ -672,7 +683,7 @@ def generate_plan(rule_id: str, target: str, observed: Any = None, *, compare_wi
             return {**base, "ok": False, "stage": "scope",
                     "reason": "a hand-written, tested fix exists for this rule; use it, or ask for a side-by-side draft"}
         if gwmod.is_gateway(target):
-            # DEC-047: a real gateway, only if it allows AI drafts and its terms are accepted. The
+            # DEC-049: a real gateway, only if it allows AI drafts and its terms are accepted. The
             # keyword list is the lab's strongSwan; the load check on the gateway itself decides.
             execute._CTX.history_dir = history_dir
             hd = execute._history_dir(history_dir)

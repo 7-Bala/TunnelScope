@@ -1,4 +1,4 @@
-# Live gateway test bed (DEC-047)
+# Live gateway test bed (DEC-049)
 
 Two real strongSwan gateways, `office-a` (192.168.77.10) and `office-b` (192.168.77.11), on one Linux
 host. Each is its own network namespace and mount namespace, with its own charon, sshd, `/run`, `/tmp`

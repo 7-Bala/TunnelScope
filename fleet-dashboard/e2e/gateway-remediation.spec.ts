@@ -1,4 +1,4 @@
-// DEC-047 browser test with a mocked engine (runs in CI with the mock project): a real gateway can be
+// DEC-049 browser test with a mocked engine (runs in CI with the mock project): a real gateway can be
 // changed only after its terms and risks are accepted in the UI, and Apply stays disabled until the
 // exact per-change sentence is typed. The same flow against two real gateways: gateway.live.spec.ts.
 import { expect, test, type Page, type Request, type Route } from "@playwright/test"

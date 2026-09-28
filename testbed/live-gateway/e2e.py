@@ -1,4 +1,4 @@
-"""End-to-end test of live gateway fixes (DEC-047) against the two real strongSwan gateways that
+"""End-to-end test of live gateway fixes (DEC-049) against the two real strongSwan gateways that
 setup.sh builds. Everything goes through SSH, exactly as on a real site. Run as root, after setup.sh:
 
     sudo testbed/live-gateway/teardown.sh && sudo testbed/live-gateway/setup.sh

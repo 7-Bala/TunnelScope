@@ -1,4 +1,4 @@
-"""Real VPN gateways the fix loop may change (DEC-047), and the consent that must come first.
+"""Real VPN gateways the fix loop may change (DEC-049), and the consent that must come first.
 
 Owner decision 2026-09-27: TunnelScope may apply a fix to a real strongSwan gateway, not only to the
 lab, over SSH, with the same safety steps as the lab (execute.py: dry run on copies, an isolated

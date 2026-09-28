@@ -26,7 +26,7 @@ const FALLBACK_TARGETS: LabTarget[] = [
   { name: "sih26-bob-pq", running: true },
 ]
 
-/** DEC-047: the terms and risks, accepted once per real gateway before anything can change it. */
+/** DEC-049: the terms and risks, accepted once per real gateway before anything can change it. */
 function TermsPanel({ target, onAccepted }: { target: LabTarget; onAccepted: () => void }) {
   const [terms, setTerms] = useState<GatewayTerms | null>(null)
   const [who, setWho] = useState("")
