@@ -150,6 +150,8 @@ export interface SiteStatus {
   last_window_ok?: boolean | null
   tunnels: SiteTunnel[]
   recent_alerts?: SiteAlert[]
+  /** T-142: "masked" = the site replaced every IP address with a keyed pseudonym (the key stays at the site) */
+  addresses?: "clear" | "masked"
   note?: string | null
 }
 
