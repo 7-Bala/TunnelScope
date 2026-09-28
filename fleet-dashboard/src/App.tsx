@@ -12,7 +12,7 @@ import { LiveView } from "@/components/dashboard/LiveView"
 import { SitesView } from "@/components/dashboard/SitesView"
 import type { TunnelState } from "@/components/tunnel/BackgroundTunnel"
 import { GATEWAYS, fleetStats, headline, postureKind, toGateway, type Gateway } from "@/lib/fleet"
-import { analyzeCapture, engineHealth, ENGINE_OFFLINE } from "@/lib/api"
+import { analyzeCapture, engineHealth, engineInfo, ENGINE_OFFLINE } from "@/lib/api"
 import { Intro } from "@/components/intro/Intro"
 import { cn } from "@/lib/utils"
 import { shouldPlayIntro } from "@/components/intro/shouldPlay"
@@ -38,6 +38,7 @@ function App() {
   const [queue, setQueue] = useState<QueueItem[]>([])
   const [results, setResults] = useState<Record<string, Gateway[]>>({})
   const [engine, setEngine] = useState<Engine>("checking")
+  const [publicDemo, setPublicDemo] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [flash, setFlash] = useState<TunnelState | null>(null)
   // the background tunnel holds the intro's lit frame until the intro leaves
@@ -50,6 +51,7 @@ function App() {
 
   useEffect(() => {
     engineHealth().then((ok) => setEngine(ok ? "online" : "offline"))
+    engineInfo().then((i) => setPublicDemo(!!i?.public_demo))
   }, [])
 
   // Captures are analysed one at a time, in the order they were added.
@@ -202,6 +204,15 @@ function App() {
           lastAnalysed={lastAnalysed}
         />
 
+        {publicDemo && (
+          <div role="note" className="mb-4 rounded-2xl border border-warn/30 bg-warn/10 px-4 py-3 text-[13px] leading-relaxed text-foreground/90">
+            <span className="font-semibold">Public demo.</span> A capture you upload here is sent to this server, analysed and
+            deleted after the response (25 MB at most); do not upload captures you are not allowed to share. Fixing
+            gateways, AI drafting, live capture and site views are switched off. For real networks, run TunnelScope on your
+            own machine, where nothing leaves it.
+          </div>
+        )}
+
         {engine === "offline" && (
           <div role="status" className="mb-4 rounded-2xl border border-neg/30 bg-neg-bg px-4 py-3 text-[13px] text-foreground/90">
             The analysis engine isn't reachable. Run{" "}
@@ -220,6 +231,7 @@ function App() {
             onRetry={retry}
             onRemove={remove}
             onClear={clear}
+            publicDemo={publicDemo}
           />
         </div>
 
@@ -305,7 +317,7 @@ function App() {
             Absence of evidence is never scored as compliance. Every verdict cites its baseline and rule, and anything this
             vantage cannot see is labelled as such.
           </p>
-          <p className="text-faint">TunnelScope · local engine on 127.0.0.1</p>
+          <p className="text-faint">{publicDemo ? "TunnelScope · public demo server" : "TunnelScope · local engine on 127.0.0.1"}</p>
         </footer>
       </main>
     </div>

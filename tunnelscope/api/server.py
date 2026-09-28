@@ -44,6 +44,20 @@ from ..report.labels import label
 from ..risk.risk import assess_risk
 
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB: generous for a capture, not for a DoS
+# Public demo (the Railway deployment, owner 2026-09-28): set only by the deployment, never by a flag a user can pass.
+# The server then listens on all interfaces (the platform's proxy in front), and everything that changes a system
+# is refused: fixes (lab or gateway), drafting, live capture, site views, anomaly history. Uploads are smaller and
+# at most DEMO_CONCURRENCY analyses run at once. Uploads are deleted after each response, as always.
+DEMO_ENV = "TUNNELSCOPE_PUBLIC_DEMO"
+DEMO_MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+DEMO_CONCURRENCY = 2
+_DEMO_SLOTS = threading.BoundedSemaphore(DEMO_CONCURRENCY)
+DEMO_REFUSAL = ("disabled in the public demo: it analyses captures only. Fixing gateways, drafting, live capture and "
+                "site views run on your own machine (tunnelscope serve).")
+
+
+def public_demo() -> bool:
+    return os.environ.get(DEMO_ENV) == "1"
 
 # The React dashboard's production build (T-060). When present, `serve` hosts it
 # at / and the dashboard talks to /api/analyze. When absent (e.g. installed
@@ -264,11 +278,19 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):  # noqa: N802 (stdlib method name)
         path = urlparse(self.path).path
+        if public_demo() and path in ("/api/remediate/targets", "/api/live", "/api/sites", "/api/history"):
+            self._json(403, {"ok": False, "error": DEMO_REFUSAL})
+            return
         if path == "/health":
-            self._json(200, {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file(),
-                             "history": bool(HISTORY_DIR), "live": LIVE is not None})
+            body = {"ok": True, "dashboard": (DASHBOARD_DIR / "index.html").is_file(),
+                    "history": bool(HISTORY_DIR), "live": LIVE is not None}
+            self._json(200, body | ({"public_demo": True} if public_demo() else {}))
         elif path == "/api/remediate/capabilities":
             backend = generator_backend()
+            if public_demo():
+                self._json(200, {"ok": True, "local_model": False, "cloud_model": False, "backend": "local",
+                                 "generator_enabled": False, "public_demo": True})
+                return
             self._json(200, {"ok": True, "local_model": local_model_available(),
                              "cloud_model": cloud_model_available(), "backend": backend,
                              "generator_enabled": generator_enabled()})
@@ -474,6 +496,21 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         url = urlparse(self.path)
+        if public_demo() and url.path.startswith("/api/remediate/"):
+            self._json(403, {"ok": False, "error": DEMO_REFUSAL})
+            return
+        if public_demo():
+            if not _DEMO_SLOTS.acquire(blocking=False):
+                self._json(503, {"ok": False, "error": "The public demo is busy; try again in a few seconds."})
+                return
+            try:
+                self._upload(url)
+            finally:
+                _DEMO_SLOTS.release()
+            return
+        self._upload(url)
+
+    def _upload(self, url) -> None:
         if url.path == "/api/remediate/plan":
             self._remediate_plan()
             return
@@ -498,9 +535,10 @@ class _Handler(BaseHTTPRequestHandler):
         if length <= 0:
             self._json(400, {"ok": False, "filename": name, "error": "The file is empty."})
             return
-        if length > MAX_UPLOAD_BYTES:
+        limit = DEMO_MAX_UPLOAD_BYTES if public_demo() else MAX_UPLOAD_BYTES
+        if length > limit:
             self._json(413, {"ok": False, "filename": name,
-                              "error": f"File is larger than the {MAX_UPLOAD_BYTES // (1024*1024)} MB limit."})
+                              "error": f"File is larger than the {limit // (1024*1024)} MB limit."})
             return
         data = self.rfile.read(length)
         if _sniff(data[:8]) is None:
@@ -518,7 +556,7 @@ class _Handler(BaseHTTPRequestHandler):
             print(f"[tunnelscope serve] analysed {name}: {length} bytes, {len(a['sas'])} SA(s), "
                   f"{time.monotonic() - t0:.2f}s", file=sys.stderr, flush=True)
             anomalies = None
-            if HISTORY_DIR and url.path == "/api/analyze":
+            if HISTORY_DIR and url.path == "/api/analyze" and not public_demo():
                 with _HISTORY_LOCK:
                     anomalies = observe(History(HISTORY_DIR), a["sas"], name)
             if url.path == "/api/analyze":
@@ -553,12 +591,16 @@ def history_summary() -> dict:
 
 
 def make_server(port: int = 8765) -> ThreadingHTTPServer:
-    return ThreadingHTTPServer(("127.0.0.1", port), _Handler)
+    """127.0.0.1 only; all interfaces only in the public demo (TUNNELSCOPE_PUBLIC_DEMO=1, set by the deployment)."""
+    return ThreadingHTTPServer(("0.0.0.0" if public_demo() else "127.0.0.1", port), _Handler)
 
 
 def run_server(port: int = 8765, open_browser: bool = True, history: str | None = None,
                live_follow: str | None = None, live_interface: str | None = None, live_window: int = 30) -> None:
     global HISTORY_DIR, LIVE
+    if public_demo():                    # the platform assigns the port; nothing that changes a system runs
+        port = int(os.environ.get("PORT", port))
+        open_browser, history, live_follow, live_interface = False, None, None, None
     if history:
         HISTORY_DIR = history
     if live_follow or live_interface:
@@ -570,8 +612,13 @@ def run_server(port: int = 8765, open_browser: bool = True, history: str | None 
     bound_port = server.server_address[1]
     url = f"http://127.0.0.1:{bound_port}/"
     ui = "dashboard" if (DASHBOARD_DIR / "index.html").is_file() else "basic page (no dashboard build found)"
-    print(f"TunnelScope local {ui}: {url}")
-    print("Local only (127.0.0.1); uploads are deleted after each response.")
+    if public_demo():
+        print(f"TunnelScope PUBLIC DEMO {ui} on port {bound_port} (all interfaces); captures only, uploads <= "
+              f"{DEMO_MAX_UPLOAD_BYTES // (1024 * 1024)} MB, deleted after each response; fixing, drafting, live "
+              "and site views are disabled.")
+    else:
+        print(f"TunnelScope local {ui}: {url}")
+        print("Local only (127.0.0.1); uploads are deleted after each response.")
     print(f"Anomaly history: {HISTORY_DIR + ' (posture profiles only, no packets)' if HISTORY_DIR else 'off'}")
     print(f"Live analysis: {LIVE.status()['source'] + f', {LIVE.window}s windows' if LIVE else 'off'}")
     if open_browser:
