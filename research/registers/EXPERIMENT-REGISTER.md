@@ -538,3 +538,13 @@ All bars held. 10/10 PQ downgrades on the live lab tunnel reached the central co
 (W = 10 s); 0 false alerts; 56 reports, each accepted exactly once across a 30 s collector outage; 56/56 passed the
 strict allow-list. Disclosed harness logging bug (H4 scored from the collector's state, a PREREG-named source).
 DEC-043. `experiments/exp32-site-sensor/RESULT.md`
+
+## EXP-33 — Headers-only capture (T-141) — PRE-REGISTRATION (2026-09-28)
+Pre-registered in `experiments/exp33-headers-only/PREREG.md` before the code and any run. One dumpcap, same interface
+twice: IKE at full length, ESP/AH stored to 80 bytes; compared with a full capture of the same traffic (10
+handshakes A/B, W = 10 s). Bars: 0 finding/verdict differences; 100% of ESP/AH records <= 80 bytes and IKE full.
+
+### EXP-33 — RESULT (2026-09-28)
+Both bars held: 0 finding/verdict differences over 11 SAs between a full capture and a headers-only capture of the
+same traffic; 732/732 ESP records stored <= 80 bytes, 75/75 IKE whole. ESP bytes stored 112,728 -> 58,560 (small
+ping packets). Addenda A (one file per capture) and B (harness crash before any data). DEC-044.

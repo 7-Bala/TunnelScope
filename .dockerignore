@@ -1,0 +1,20 @@
+# never in an image: secrets, local state, large data
+.env
+.env.*
+!.env.example
+.git
+.venv
+**/__pycache__
+**/node_modules
+fleet-dashboard/dist
+fleet-dashboard/test-results
+brag-output
+testbed
+experiments
+dataset
+research
+logs
+handoff
+build
+*.pcap
+*.pcapng

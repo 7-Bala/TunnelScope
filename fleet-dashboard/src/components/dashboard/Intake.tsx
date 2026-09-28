@@ -96,6 +96,7 @@ export function Intake({
   onRetry,
   onRemove,
   onClear,
+  publicDemo = false,
 }: {
   queue: QueueItem[]
   tunnel: TunnelState
@@ -105,6 +106,8 @@ export function Intake({
   onRetry: (key: string) => void
   onRemove: (key: string) => void
   onClear: () => void
+  /** the public demo server: uploads leave the visitor's machine, so say so (server.py public_demo) */
+  publicDemo?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const busy = queue.some((q) => q.status === "queued" || q.status === "analysing")
@@ -128,7 +131,7 @@ export function Intake({
         <p className="mt-2 max-w-[52ch] text-[13.5px] leading-relaxed text-muted-foreground">
           Drop <span className="font-mono text-[12.5px] text-foreground/85">.pcap</span> or{" "}
           <span className="font-mono text-[12.5px] text-foreground/85">.pcapng</span> files anywhere on this page. Each one is
-          read by the local engine, checked against every loaded baseline, and deleted as soon as its results are back.
+          read by the {publicDemo ? "demo server" : "local engine"}, checked against every loaded baseline, and deleted as soon as its results are back.
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -140,7 +143,9 @@ export function Intake({
             <FileUp className="h-4 w-4" strokeWidth={2} />
             Choose captures
           </button>
-          <span className="text-[12px] text-faint">Up to 200 MB each · stays on 127.0.0.1</span>
+          <span className="text-[12px] text-faint">
+            {publicDemo ? "Up to 25 MB each · sent to the demo server" : "Up to 200 MB each · stays on 127.0.0.1"}
+          </span>
           <input
             ref={inputRef}
             type="file"
@@ -221,7 +226,7 @@ export function Intake({
                     ? "waiting for a capture"
                     : "analysis complete"}
           </span>
-          <span>127.0.0.1</span>
+          <span>{publicDemo ? "demo server" : "127.0.0.1"}</span>
         </div>
       </div>
     </section>

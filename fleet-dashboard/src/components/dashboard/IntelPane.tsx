@@ -10,6 +10,9 @@ const STATUS_TEXT: Record<string, string> = {
   unavailable: "unavailable",
 }
 
+type Row = { id: string; cvss: number | string | null; kev: boolean; match: "cpe" | "vendor" | "keyword"; description: string | null }
+type View = { name: string; total?: number; kev?: number; sources: Record<string, string>; rows: Row[]; note?: string | null; error?: string }
+
 /** The implementations TunnelScope fingerprinted (EXP-29), per end. */
 function implementations(sa: AnalyzedSA): { end: string; name: string }[] {
   const f = sa.findings.find((x) => x.attribute === "implementation")
@@ -19,12 +22,26 @@ function implementations(sa: AnalyzedSA): { end: string; name: string }[] {
     .map(([end, name]) => ({ end, name: name as string }))
 }
 
-/** Known vulnerabilities for the VPN software seen at each end. Looked up only when the analyst asks. */
+function fromLookup(name: string, r: IntelResult | null): View {
+  if (r === null || !r.ok) return { name, sources: {}, rows: [], error: r?.error ?? "lookup failed" }
+  return {
+    name,
+    total: r.counts?.total,
+    kev: r.counts?.kev,
+    sources: Object.fromEntries(Object.entries(r.sources).map(([s, v]) => [s, v.status])),
+    rows: r.cves.slice(0, 15),
+    note: r.note,
+  }
+}
+
+/** Known vulnerabilities for the VPN software seen at each end (DEC-045): looked up by the engine on every analysis and
+ * shown here straight away; "Look up again" fetches the full, current list. Never a verdict. */
 export function IntelPane({ sa }: { sa: AnalyzedSA }) {
   const impls = implementations(sa)
   const names = [...new Set(impls.map((i) => i.name))]
-  const [res, setRes] = useState<Record<string, IntelResult | null>>({})
+  const [again, setAgain] = useState<View[] | null>(null)
   const [busy, setBusy] = useState(false)
+  const kv = sa.known_vulnerabilities
 
   if (names.length === 0) {
     return (
@@ -38,11 +55,22 @@ export function IntelPane({ sa }: { sa: AnalyzedSA }) {
 
   async function look() {
     setBusy(true)
-    const out: Record<string, IntelResult | null> = {}
-    for (const n of names) out[n] = await intelLookup(n)
-    setRes(out)
+    const out: View[] = []
+    for (const n of names) out.push(fromLookup(n, await intelLookup(n)))
+    setAgain(out)
     setBusy(false)
   }
+
+  const views: View[] =
+    again ??
+    (kv?.products ?? []).map((p) => ({
+      name: p.implementation,
+      total: p.counts.total,
+      kev: p.counts.kev,
+      sources: p.sources,
+      rows: p.top,
+      note: p.note,
+    }))
 
   return (
     <div className="max-w-[96ch] space-y-5">
@@ -56,31 +84,33 @@ export function IntelPane({ sa }: { sa: AnalyzedSA }) {
           disabled={busy}
           className="rounded-md border border-border px-3 py-1.5 text-[12.5px] font-medium hover:bg-secondary disabled:opacity-50"
         >
-          {busy ? "Looking up…" : Object.keys(res).length ? "Look up again" : "Look up known vulnerabilities"}
+          {busy ? "Looking up…" : "Look up again"}
         </button>
       </div>
       <p className="text-[12px] text-faint">
-        Sends only the software name to NVD, ENISA EUVD and CISA KEV, and only if the engine runs with TUNNELSCOPE_NETWORK=on;
-        otherwise the local cache or offline bundle is used.
+        Checked on every analysis against NVD, ENISA EUVD and CISA KEV (only the software name is sent; an install with
+        TUNNELSCOPE_NETWORK=off uses its local cache or offline bundle). These are known flaws in some version of the
+        software: traffic does not show the version, so none is confirmed on this tunnel, and no verdict or risk score
+        uses them.
       </p>
+      {views.length === 0 && (
+        <p className="text-[13px] text-muted-foreground">{kv?.note ?? "No vulnerability data for this analysis."}</p>
+      )}
 
-      {names.map((n) => {
-        const r = res[n]
-        if (r === undefined) return null
-        if (r === null || !r.ok) {
-          return <p key={n} className="text-[13px] text-neg">{n}: lookup failed{r?.error ? ` (${r.error})` : ""}.</p>
+      {views.map((v) => {
+        if (v.error) {
+          return <p key={v.name} className="text-[13px] text-neg">{v.name}: lookup failed ({v.error}).</p>
         }
-        const c = r.counts
         return (
-          <section key={n} aria-label={`Known vulnerabilities for ${n}`} className="space-y-2">
+          <section key={v.name} aria-label={`Known vulnerabilities for ${v.name}`} className="space-y-2">
             <h4 className="text-[14px] font-semibold text-foreground/90">
-              {n}: {c ? `${c.total} known CVEs` : "no data"}
-              {c && c.kev > 0 && <span className="ml-2 rounded-full bg-neg-bg px-2 py-0.5 text-[11px] text-neg">{c.kev} actively exploited (CISA KEV)</span>}
+              {v.name}: {v.total !== undefined ? `${v.total} known CVEs` : "no data"}
+              {!!v.kev && <span className="ml-2 rounded-full bg-neg-bg px-2 py-0.5 text-[11px] text-neg">{v.kev} actively exploited (CISA KEV)</span>}
             </h4>
             <p className="text-[12px] text-faint">
-              {Object.entries(r.sources).map(([s, v]) => `${s}: ${STATUS_TEXT[v.status] ?? v.status}`).join(" · ")}
+              {Object.entries(v.sources).map(([s, st]) => `${s}: ${STATUS_TEXT[st] ?? st}`).join(" · ")}
             </p>
-            {r.cves.length > 0 && (
+            {v.rows.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[620px] text-left text-[12.5px]">
                   <thead>
@@ -92,7 +122,7 @@ export function IntelPane({ sa }: { sa: AnalyzedSA }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
-                    {r.cves.slice(0, 15).map((e) => (
+                    {v.rows.map((e) => (
                       <tr key={e.id} className="align-top">
                         <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-[11.5px]">
                           {e.id}
@@ -109,7 +139,7 @@ export function IntelPane({ sa }: { sa: AnalyzedSA }) {
                 </table>
               </div>
             )}
-            {r.note && <p className="text-[12px] leading-relaxed text-muted-foreground">{r.note}</p>}
+            {v.note && <p className="text-[12px] leading-relaxed text-muted-foreground">{v.note}</p>}
           </section>
         )
       })}
