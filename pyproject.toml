@@ -1,11 +1,13 @@
 [build-system]
 # explicit, so the package-data globs below (tunnelscope/web/**) are honoured
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "tunnelscope"
 version = "0.3.0"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 description = "Evidence-tiered IPsec/IKE posture and PQ-migration assessment"
 requires-python = ">=3.11"
 # fastapi/uvicorn removed (T-049, 2026-09-14): declared from the start but
