@@ -217,6 +217,8 @@ export interface EngineInfo {
   ok: boolean
   history: boolean
   live: boolean
+  /** the public demo deployment: analyses captures only (server.py public_demo) */
+  public_demo: boolean
 }
 
 export async function engineInfo(): Promise<EngineInfo | null> {
@@ -224,7 +226,7 @@ export async function engineInfo(): Promise<EngineInfo | null> {
     const res = await fetch("/health", { cache: "no-store" })
     if (!res.ok) return null
     const b = await res.json()
-    return b?.ok ? { ok: true, history: !!b.history, live: !!b.live } : null
+    return b?.ok ? { ok: true, history: !!b.history, live: !!b.live, public_demo: b.public_demo === true } : null
   } catch {
     return null
   }
