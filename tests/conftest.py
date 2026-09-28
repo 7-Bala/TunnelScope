@@ -28,7 +28,11 @@ for _k in _operator_vars():
 
 
 @pytest.fixture(autouse=True)
-def _hermetic_env(monkeypatch):
+def _hermetic_env(monkeypatch, tmp_path_factory):
     """Per test: remove anything the package or an earlier test left in os.environ outside monkeypatch."""
     for k in _operator_vars():
         monkeypatch.delenv(k, raising=False)
+    # DEC-045 turned the network on by default. Unit tests never touch the network or this machine's intel cache:
+    # a test that needs either sets it itself (monkeypatch.setenv overrides these).
+    monkeypatch.setenv("TUNNELSCOPE_NETWORK", "off")
+    monkeypatch.setenv("TUNNELSCOPE_INTEL_DIR", str(tmp_path_factory.mktemp("intel-cache")))

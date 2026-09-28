@@ -92,6 +92,25 @@ def cmd_report(args):
         print("\n\n")
     if args.level in ("tech", "both"):
         print(technical_report(a))
+    print("\n" + _known_vulnerabilities_text(a))
+
+
+def _known_vulnerabilities_text(a) -> str:
+    """DEC-045: known vulnerabilities for the identified software, next to the rule verdicts (never a verdict)."""
+    from .intel.lookup import known_vulnerabilities
+    out = ["## Known vulnerabilities (INFERRED: some version of the identified software)"]
+    for i, sa in enumerate(a["sas"], 1):
+        kv = known_vulnerabilities(sa["record"].findings)
+        out.append(f"SA {i}: {kv['note']}")
+        for p in kv["products"]:
+            c = p["counts"]
+            src = ", ".join(f"{k} {v}" for k, v in p["sources"].items())
+            out.append(f"  {p['implementation']} ({'/'.join(p['ends'])}): {c.get('total', 0)} known CVEs, "
+                       f"{c.get('kev', 0)} actively exploited (CISA KEV); sources: {src}")
+            for e in p["top"][:5]:
+                out.append(f"    {e['id']}  CVSS {e['cvss'] if e['cvss'] is not None else '-'}"
+                           f"{'  KEV' if e['kev'] else ''}  [{e['match']}]  {e['description'][:110]}")
+    return "\n".join(out)
 
 
 def cmd_dashboard(args):
