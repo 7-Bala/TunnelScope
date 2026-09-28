@@ -91,9 +91,10 @@ def test_the_child_runs_with_limits_and_a_minimal_environment(monkeypatch):
     assert core == "0" and int(nofile) <= 256 and leaked.strip() == "[]"   # no operator settings or keys inherited
 
 
-def test_the_sandbox_really_denies_the_network():
-    if not T.sandbox_prefix():
-        pytest.skip(f"no network sandbox on this platform: {T.isolation_status()['network']}")
+def test_the_sandbox_really_denies_the_network_or_says_it_cannot():
+    if not T.sandbox_prefix():                     # no sandbox on this platform: the status must say so, never "denied"
+        assert T.isolation_status()["network"].startswith("not isolated")
+        return
     r = T.run_isolated([sys.executable, "-c", "import socket; socket.create_connection(('192.0.2.1', 9), 3)"],
                        timeout=20)
     assert r.returncode != 0

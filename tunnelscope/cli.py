@@ -348,13 +348,28 @@ def cmd_sensor(args):
     """Site sensor: live analysis at the site; only signed findings reports leave it (T-139)."""
     from .sensor.sensor import Sensor
     s = Sensor(args.site, args.key, args.outbox, args.state, window=args.window, interface=args.interface,
-               follow=args.follow, keep=args.keep, headers_only=not args.full_packets)
+               follow=args.follow, keep=args.keep, headers_only=not args.full_packets,
+               mask_addresses=args.mask_addresses)
     print(f"sensor {args.site}: {s.monitor.status()['source']}, {s.window}s windows, reports -> {args.outbox} "
           "(Ctrl-C stops)", file=sys.stderr)
     try:
         s.run(max_reports=args.max_reports, on_report=lambda p: print(p.name, flush=True))
     except KeyboardInterrupt:
         pass
+    return 0
+
+
+def cmd_sensor_mask(args):
+    """Site side: the pseudonym a masked report uses for an address (the mask key never leaves the site)."""
+    from .sensor.report import pseudonym
+    from .sensor.sensor import MASK_KEY_FILE, mask_key
+    from pathlib import Path
+    if not (Path(args.state) / MASK_KEY_FILE).exists():
+        print(f"no mask key in {args.state}: this sensor has not masked any report", file=sys.stderr)
+        return 2
+    k = mask_key(args.state)
+    for a in args.address:
+        print(f"{a}\t{pseudonym(k, a)}")
     return 0
 
 
@@ -390,7 +405,8 @@ def cmd_sites(args):
         print("no site has reported yet")
     for r in rows:
         print(f"{r['site']}: {r['status'].upper()}, last report {r['age_s']:.0f} s ago, {r['reports']} reports"
-              + (f", {r['missing_reports']} missing" if r["missing_reports"] else ""))
+              + (f", {r['missing_reports']} missing" if r["missing_reports"] else "")
+              + (", addresses masked at the site" if r.get("addresses") == "masked" else ""))
         if r["note"]:
             print(f"    {r['note']}")
         for t in r["tunnels"]:
@@ -508,8 +524,14 @@ def main(argv=None):
     sn.add_argument("--keep", action="store_true", help="keep capture files after analysis (default: delete)")
     sn.add_argument("--full-packets", action="store_true",
                     help="--interface only: store whole ESP/AH packets (default: headers only, IKE whole; EXP-33)")
+    sn.add_argument("--mask-addresses", action="store_true",
+                    help="replace every IP address in reports and alerts with a keyed pseudonym; the key stays in --state")
     sn.add_argument("--max-reports", type=int, help="stop after N reports (testing)")
     sn.set_defaults(func=cmd_sensor)
+    sm = sub.add_parser("sensor-mask", help="site side: show the pseudonym masked reports use for an address")
+    sm.add_argument("--state", required=True, metavar="DIR", help="the sensor's --state directory")
+    sm.add_argument("address", nargs="+")
+    sm.set_defaults(func=cmd_sensor_mask)
     co = sub.add_parser("collect", help="central collector: accept signed site reports from an inbox directory")
     co.add_argument("--inbox", required=True, metavar="DIR")
     co.add_argument("--state", required=True, metavar="DIR", help="per-site state and quarantine")
@@ -531,7 +553,7 @@ def main(argv=None):
     try:
         # Verify the stack before trusting anything derived from it. Cached per
         # process, so a 70-capture fleet scan pays this once, not per capture.
-        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_sensor_key, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
+        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_sensor_key, cmd_sensor_mask, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
             preflight()
         return args.func(args) or 0
     except TunnelScopeError as e:
