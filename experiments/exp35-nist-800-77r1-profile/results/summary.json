@@ -1,0 +1,406 @@
+{
+ "H1_defaults_unchanged": {
+  "captures_compared": 695,
+  "differences": [],
+  "main": "85777ca",
+  "pass": true
+ },
+ "H2_quotes_verbatim": {
+  "found": 20,
+  "missing": [],
+  "pass": true,
+  "pdf_sha256": "bc2a36dcccf96476d4e0d09468901726c930f2554115c440988bae746074bd70",
+  "quotes": 20
+ },
+ "H3_corpus_esp_rules_undecided": {
+  "counts": {
+   "NIST77-ESP-ENCR": {
+    "FAIL": 0,
+    "PASS": 0
+   },
+   "NIST77-ESP-INTEG": {
+    "FAIL": 0,
+    "PASS": 0
+   }
+  },
+  "pass": true
+ },
+ "H3_preregistered_verdicts": {
+  "matched": 10,
+  "of": 10,
+  "pass": true,
+  "rows": [
+   {
+    "capture": "exp15/s-ecp256.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "exp15/s-3des.pcap",
+    "got": [
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "exp15/s-x25519.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "UNKNOWN",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "UNKNOWN",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "exp15/s-modp1536.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "exp15/s-modp4096.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "cloud/c-v1.pcap",
+    "got": [
+     "FAIL",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "cloud/c-w.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "NOT_OBSERVABLE",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "NOT_OBSERVABLE",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "exp15/a-tra-sha1.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     null,
+     null,
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     null,
+     null,
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "exp07/e7-pfs-on.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE"
+    ]
+   },
+   {
+    "capture": "a7-cs-aes256gcm16.pcap",
+    "got": [
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "NOT_OBSERVABLE",
+     "PASS",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN"
+    ]
+   }
+  ]
+ },
+ "H4_no_pass_without_evidence": {
+  "pass": true,
+  "violations": {}
+ },
+ "captures": 695,
+ "sas": 668,
+ "verdict_counts_per_rule": {
+  "NIST77-AH": {
+   "FAIL": 5,
+   "PASS": 619,
+   "UNKNOWN": 44
+  },
+  "NIST77-AUTH": {
+   "NOT_OBSERVABLE": 164,
+   "UNKNOWN": 504
+  },
+  "NIST77-DH-APPROVED": {
+   "FAIL": 5,
+   "PASS": 140,
+   "UNKNOWN": 523
+  },
+  "NIST77-DH-RECOMMENDED": {
+   "FAIL": 8,
+   "PASS": 137,
+   "UNKNOWN": 523
+  },
+  "NIST77-ESP-ENCR": {
+   "UNKNOWN": 619,
+   "no verdict": 49
+  },
+  "NIST77-ESP-INTEG": {
+   "UNKNOWN": 619,
+   "no verdict": 49
+  },
+  "NIST77-IKE-ENCR": {
+   "FAIL": 2,
+   "PASS": 143,
+   "UNKNOWN": 523
+  },
+  "NIST77-IKE-INTEG": {
+   "FAIL": 4,
+   "PASS": 138,
+   "UNKNOWN": 526
+  },
+  "NIST77-IKE-PRF": {
+   "FAIL": 4,
+   "PASS": 141,
+   "UNKNOWN": 523
+  },
+  "NIST77-IKE-VERSION": {
+   "FAIL": 1,
+   "PASS": 159,
+   "UNKNOWN": 508
+  },
+  "NIST77-PFS": {
+   "FAIL": 14,
+   "NOT_OBSERVABLE": 638,
+   "PASS": 10,
+   "UNKNOWN": 6
+  }
+ }
+}

@@ -87,6 +87,9 @@ def _assert(op: str, want, value) -> bool | None:
             return False
         return None if any(g is None for g in ids) else True
     if op == "contains":     return isinstance(value, list) and want in value
+    if op == "not_contains":
+        # T-122 (EXP-35): e.g. "AH should not be deployed"; a non-list can't be judged, so UNKNOWN, never PASS
+        return None if not isinstance(value, list) else want not in value
     if op in ("candidates_not_all_in", "candidates_none_in"):
         # value: a candidate SET (the wire narrows it, can't always resolve it)
         if not isinstance(value, list) or not value:

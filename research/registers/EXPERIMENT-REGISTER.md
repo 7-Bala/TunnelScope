@@ -561,3 +561,16 @@ Three plaintext-IKEv2 attack-pattern detectors (malformed KE, INFORMATIONAL befo
 SA/KE/Nonce). H1 specificity: 0 false detections over 695 captures / 668 SAs (159 PASS, 509 UNKNOWN). H2 sensitivity:
 decision-function unit tests (ADDENDUM A -- no crafted attack traffic). H3 vantage: UNKNOWN without the handshake. 4
 mutation checks caught. DEC-048. `experiments/exp34-cve-detectors/RESULT.md`
+
+## EXP-35 — NIST SP 800-77 Rev. 1 as an opt-in rules profile (T-122 part 2) — PRE-REGISTRATION (2026-09-29)
+Pre-registered in `experiments/exp35-nist-800-77r1-profile/PREREG.md` (654e2ff) before any code and any run. 11 rules
+from Table 1 and sections 2.2-7.2.6 of the hashed NIST PDF, each with its verbatim quote; the rule-making method
+(severity from shall/should) and the requirements not made into rules are fixed there. Bars: default verdicts
+identical to main on every capture; every quote verbatim in the PDF; pre-stated verdicts on 10 named captures; no PASS
+on missing evidence.
+
+### EXP-35 — RESULT (2026-09-29)
+H1: 0 default-verdict differences over 695 captures vs main 85777ca. H2: 20/20 quotes verbatim (PDF SHA-256
+bc2a36dc...74bd70). H3: 10/10 captures exactly as pre-registered; the two ESP rules 0 PASS / 0 FAIL on 668 SAs
+(UNKNOWN: packet sizes cannot decide). H4: 0 PASS without evidence. 7 mutation checks caught. DEC-049.
+`experiments/exp35-nist-800-77r1-profile/RESULT.md`
