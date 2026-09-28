@@ -113,3 +113,39 @@ def test_shipped_settings_are_faster_than_product_settings_critique_rounds():
     frozen record, above) — this is a second, separate, newer configuration."""
     assert gen.SHIPPED_SETTINGS == {"critique_rounds": 0, "self_review_on": True, "time_budget_s": 45.0}
     assert gen.SHIPPED_SETTINGS != gen.PRODUCT_SETTINGS
+
+
+def test_cloud_drafting_ships_with_two_critique_rounds_local_keeps_none():
+    """T-144 / DEC-047 (owner, 2026-09-28): the cloud models revise after a failed check (EXP-18b H3; T9 fixed with 2
+    rounds, refused with 0). The local model keeps SHIPPED_SETTINGS (its H3 showed no gain)."""
+    assert gen.shipped_settings("chain")["critique_rounds"] == 2
+    assert gen.shipped_settings("cloud")["critique_rounds"] == 2
+    assert gen.shipped_settings("local") == gen.SHIPPED_SETTINGS
+
+
+def test_the_api_drafts_with_the_settings_of_its_backend(monkeypatch, tmp_path):
+    import json
+    import threading
+    import urllib.request
+    from tunnelscope.api import server
+    seen = {}
+
+    def fake_plan(rule_id, target, observed=None, **kw):
+        seen.update(kw)
+        return {"ok": False, "stage": "model", "reason": "fake"}
+    monkeypatch.setattr(gen, "generate_plan", fake_plan)
+    monkeypatch.setattr(server, "generator_enabled", lambda: True)
+    monkeypatch.setattr(server, "generator_backend", lambda: "chain")
+    srv = server.make_server(0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/api/remediate/generate",
+                                     data=json.dumps({"rule_id": "V-207193", "target": "sih26-alice-pq"}).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            urllib.request.urlopen(req)
+        except urllib.error.HTTPError:
+            pass
+        assert seen["backend"] == "chain" and seen["critique_rounds"] == 2
+    finally:
+        srv.shutdown()
