@@ -40,9 +40,10 @@ function App() {
   const [results, setResults] = useState<Record<string, Gateway[]>>({})
   const [engine, setEngine] = useState<Engine>("checking")
   const [publicDemo, setPublicDemo] = useState(false)
-  // public site only: uploads wait until the visitor agrees to the demo terms (DemoTerms)
+  // public site only: the terms dialog opens when the visitor tries to upload, never on page load (DemoTerms)
   const [termsOk, setTermsOk] = useState(demoTermsAgreed)
   const [showTerms, setShowTerms] = useState(false)
+  const [declined, setDeclined] = useState(false)
   const gate = useRef({ demo: false, ok: demoTermsAgreed() })
   const pending = useRef<File[]>([])
   const [dragging, setDragging] = useState(false)
@@ -61,7 +62,6 @@ function App() {
       const demo = !!i?.public_demo
       gate.current.demo = demo
       setPublicDemo(demo)
-      if (demo && !gate.current.ok) setShowTerms(true)
     })
   }, [])
 
@@ -241,10 +241,11 @@ function App() {
             onDecline={() => {
               pending.current = []
               setShowTerms(false)
+              setDeclined(true)
             }}
           />
         )}
-        {publicDemo && !termsOk && !showTerms && (
+        {publicDemo && !termsOk && !showTerms && declined && (
           <p role="status" className="mb-4 text-[13px] text-muted-foreground">
             Uploads are off until you agree to the demo terms.{" "}
             <button type="button" onClick={() => setShowTerms(true)} className="font-medium text-violet underline-offset-4 hover:underline">
