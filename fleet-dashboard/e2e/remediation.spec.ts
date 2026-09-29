@@ -290,8 +290,8 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
       test("B1-27 public site: fixing is off, the reasons are shown, and no fix request is ever sent", async ({ page }) => {
         const seen = await mockEngine(page, { caps: CAPS_ON, publicDemo: true })
         await page.goto("/")
-        await page.getByRole("button", { name: "I agree" }).click()
         await page.locator("input[type=file]").setInputFiles(CAPTURE)
+        await page.getByRole("button", { name: "I agree" }).click()          // the terms dialog opens on the upload, not on load
         await page.locator("[data-state][aria-expanded]").first().click()
         await page.getByRole("tab", { name: /Verdicts/ }).click()
         await expect(page.getByRole("button", { name: `Propose fix for ${RULE}` })).toHaveCount(0)
@@ -309,21 +309,31 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         expect(seen.consoleErrors).toEqual([])
       })
 
-      test("B1-28 public site: uploads wait for the demo terms; a held file goes through after I agree; not asked again", async ({ page }) => {
+      test("B1-28 public site: no dialog on page load; it opens when I upload; a held file goes through after I agree; not asked again", async ({ page }) => {
         const seen = await mockEngine(page, { caps: CAPS_ON, publicDemo: true })
         let analyses = 0
         page.on("request", (r) => r.url().includes("/api/analyze") && analyses++)
         await page.goto("/")
         const dialog = page.getByRole("dialog", { name: "Before you use the public demo" })
-        await expect(dialog).toBeVisible()
-        await dialog.getByRole("button", { name: "Not now" }).click()
-        await page.locator("input[type=file]").setInputFiles(CAPTURE)       // held: the dialog comes back, nothing is sent
+        await expect(page.getByText("Drop captures here")).toBeVisible()
+        await page.waitForTimeout(500)                                     // give a load-time popup every chance to appear
+        await expect(dialog).toHaveCount(0)
+        await expect(page.getByText("Uploads are off until you agree")).toHaveCount(0)
+        await page.locator("input[type=file]").setInputFiles(CAPTURE)       // held: the dialog opens now, nothing is sent
         await expect(dialog).toBeVisible()
         expect(analyses).toBe(0)
+        await dialog.getByRole("button", { name: "Not now" }).click()
+        await expect(dialog).toHaveCount(0)
+        await expect(page.getByText("Uploads are off until you agree")).toBeVisible()
+        expect(analyses).toBe(0)
+        await page.locator("input[type=file]").setInputFiles(CAPTURE)       // asks again on the next attempt
+        await expect(dialog).toBeVisible()
         await dialog.getByRole("button", { name: "I agree" }).click()
         await expect(page.getByText("10.10.1.220 → 10.10.2.220").first()).toBeVisible()
         expect(analyses).toBe(1)
         await page.reload()
+        await page.locator("input[type=file]").setInputFiles(CAPTURE)       // agreed earlier: no dialog, goes straight through
+        await expect.poll(() => analyses).toBe(2)
         await expect(page.getByRole("dialog")).toHaveCount(0)
         expect(seen.consoleErrors).toEqual([])
       })
@@ -333,7 +343,7 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         const refused: string[] = []
         page.on("request", (r) => /\/api\/(sites|live)$/.test(new URL(r.url()).pathname) && refused.push(r.url()))
         await page.goto("/")
-        await page.getByRole("button", { name: "I agree" }).click()
+        await expect(page.getByRole("dialog")).toHaveCount(0)               // no terms dialog just for looking around
         await page.getByRole("tab", { name: "Sites" }).click()
         await expect(page.getByText("Site views are switched off on this public site")).toBeVisible()
         await expect(page.getByText("Checking the engine…")).toHaveCount(0)
