@@ -626,3 +626,14 @@ All six held: 8/8 suites equal pluto's log; the two-offer arm reports the second
 UNKNOWN; 0 IKEv2 captures changed (701); verdicts as predicted, no RFC 8247 verdict on IKEv1; nothing else changed. The one existing
 IKEv1 capture (strongSwan) also matches swanctl. Not exercised: a real failed IKEv1 negotiation. Two earlier pins superseded with owner
 approval (EXP-35 NIST row for cloud/c-v1; test_cloud_vpn). DEC-051. `experiments/exp40-ikev1-transforms/RESULT.md`
+
+## EXP-41 — A third lab with sustained traffic and new generators — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp41-lab-c/PREREG.md` (a4521a2, erratum 3b9a94c); scorer and harness d6f43e8 and data f5c9c3f committed before any scoring. Lab C:
+eight classes from tools not in our shipped generators or labs A/B (iperf3, wget -r, MQTT, telnet over a pty, MPEG-TS over UDP, Opus RTP, curl SMTP, ping), two
+tunnel configurations, 32 captures of 60 s. Test for models retrained on the two public labs. Seven predictions.
+
+### EXP-41 — RESULT (2026-10-02)
+Held: shipped model does not transfer (0.442 macro-F1); lab C's classes are fully learnable inside the lab (1.000); no harm to our own CV (+0.001). Falsified: training on
+lab A (+0.026) or A and B (+0.026) did not help on lab C; gated coverage 12.5% (4 of 4 answers right); adding lab C lowered lab A (0.262 -> 0.245). Per class: right for
+bulk, e-mail, VoIP; wrong for ping, telnet, video. Decision: do not retrain on the public labs; README states the limit. One ICMP capture re-run after a gateway ICMP-redirect
+fault (found, fixed, disclosed). `experiments/exp41-lab-c/RESULT.md`
