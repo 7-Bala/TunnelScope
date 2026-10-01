@@ -1,0 +1,22 @@
+# EXP-41 lab C: two hosts BEHIND the PQ gateways, so their traffic crosses the tunnel (as EXP-16's apps hosts do).
+#   docker compose -f docker-compose.yml -f docker-compose.exp41.yml up -d router alice-pq bob-pq labc-a labc-b
+services:
+  labc-a:
+    build: { context: ./images/labc }
+    image: sih26-labc
+    container_name: sih26-labc-a
+    hostname: labc-a
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-a: { ipv4_address: 10.10.1.51 }
+    environment: { ROUTE_CIDR: 10.10.2.0/24, ROUTE_GW: 10.10.1.20 }
+    depends_on: [alice-pq]
+  labc-b:
+    image: sih26-labc
+    container_name: sih26-labc-b
+    hostname: labc-b
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-b: { ipv4_address: 10.10.2.51 }
+    environment: { ROUTE_CIDR: 10.10.1.0/24, ROUTE_GW: 10.10.2.20 }
+    depends_on: [bob-pq, labc-a]
