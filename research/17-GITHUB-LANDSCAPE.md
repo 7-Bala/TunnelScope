@@ -159,3 +159,21 @@ capture, endpoint vantage only.
   Needs a licence first: ask the authors (an outward message, so it needs your OK), because no licence
   means all rights reserved.
 - **D. Pull the PQ thesis zips** only if you approve a download from Google Drive (size unknown).
+
+## 6. Status update, 2026-10-02 (what became of section 5)
+
+- **A, done.** The "first dataset" claim is reworded in `dataset/README.md` and the pitch deck; `research/15` carries a dated correction.
+- **B, done.** The repository's About line no longer carries the problem-statement ID.
+- **C, done, with a result that was not the one hoped for.** Both lab owners gave permission (relayed verbally). EXP-37: honesty held on
+  another lab's data, the traffic-type model did not transfer. EXP-38: the gates are not the cause, the model underneath scores
+  macro-F1 0.26 while our features can separate that lab's classes. EXP-39: the two public labs cannot settle whether training on
+  one helps on the other, because lab B has no scorable window for three of its five classes (a flaw in that pre-registration,
+  stated in its RESULT). Nothing was retrained or shipped.
+- **D, done.** The ML-KEM thesis captures were re-fetched in part and used in EXP-37; a cut-short-file problem it exposed is fixed
+  (DEC-050, T-150). A second gap it exposed, unreadable IKEv1 suites, is fixed and verified (DEC-051, EXP-40, T-151).
+- **Still open, owner decision:** the shipped traffic model was trained partly on MIT Lincoln Laboratory's VNAT dataset (README,
+  DEC-036). Its web page, re-read 2026-10-02, still states no licence and says to contact the Technology Transfer Office; our
+  own survey (`research/15`, 2026-09-20) marked it "not used" for that reason. The shipped `tunnelscope/models/traffic_windows.npz`
+  holds feature windows derived from it. Someone needs to ask MIT LL whether that use and that redistribution are allowed.
+- **Not started:** lab C (our own lab with sustained traffic per class and new generators), the hash-chained evidence ledger
+  idea, printing the random-versus-grouped split gap.
