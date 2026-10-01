@@ -460,6 +460,18 @@ def extract_auth_hint(r: EvidenceRecord) -> None:
                        "negotiated method (validated by a same-responder differential test, EXP-11)"))
 
 
+def extract_capture_integrity(r: EvidenceRecord) -> None:
+    """The file ends inside its last packet. Added only when true, so intact captures keep exactly the
+    findings they had. Whole packets before the cut are analysed; anything that would rest on what is
+    NOT in the file is reported UNKNOWN by the extractor concerned (see extract_failure)."""
+    if getattr(r, "_truncated", False):
+        r.add(Finding("capture_integrity", Status.OBSERVED, Vantage.T0, "pcap framing",
+                      value="truncated",
+                      note="the capture file ends inside a packet (typically a capture stopped before its buffer "
+                           "was flushed); the whole packets before the cut were analysed, the rest is missing. "
+                           "Absence of a packet, exchange or rekey in this file is not evidence about the wire."))
+
+
 def extract_failure(r: EvidenceRecord) -> None:
     """Why a tunnel failed. EXP-06 r2: deterministic structural signatures."""
     ike = getattr(r, "_ike", [])
@@ -472,7 +484,12 @@ def extract_failure(r: EvidenceRecord) -> None:
     if not init:
         r.add(Finding("negotiation_outcome", Status.UNKNOWN, Vantage.T0, "failure_diag (EXP-06)",
                       note="no IKE_SA_INIT visible")); return
+    cut = getattr(r, "_truncated", False)
     if init and not init_resp:
+        if cut:      # the response may be in the part of the file that was lost: absence proves nothing
+            r.add(Finding("negotiation_outcome", Status.UNKNOWN, Vantage.T1, "failure_diag F6",
+                          note="IKE_SA_INIT seen, no response in the readable part; the capture is cut short "
+                               "(ends inside a packet), so the response may simply be missing from the file")); return
         r.add(Finding("negotiation_outcome", Status.OBSERVED, Vantage.T1, "failure_diag F6",
                       value="peer-unreachable", note="IKE_SA_INIT sent, no response")); return
     if any(NO_PROP in m["notify_types"] for m in init_resp):
@@ -488,6 +505,10 @@ def extract_failure(r: EvidenceRecord) -> None:
     if esp:
         r.add(Finding("negotiation_outcome", Status.OBSERVED, Vantage.T1, "failure_diag F0",
                       value="success", note="IKE_AUTH completed and ESP flows")); return
+    if cut:      # "no ESP observed" is an absence; here the end of the file is missing
+        r.add(Finding("negotiation_outcome", Status.UNKNOWN, Vantage.T1, "failure_diag (cut-short capture)",
+                      note="IKE up, no ESP in the readable part; the capture is cut short (ends inside a "
+                           "packet), so ESP may follow in the lost part")); return
     # IKE up, no ESP observed. Originally reported as "child-sa-rejected" at
     # confidence 0.7 (backed by 10/10 EXP-06r2 F2/F3 captures, all genuine
     # rejections at this exact structural point). EXP-10 (real OpenBSD iked)
@@ -799,7 +820,7 @@ def extract_offered_dh(r: EvidenceRecord) -> None:
                   note=f"groups {who} offered in IKE_SA_INIT; the responder's acceptable set is not visible"))
 
 
-ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke, extract_ppk, extract_ipsec_protocols, extract_ah,
+ALL_EXTRACTORS = [extract_capture_integrity, extract_ike_meta, extract_ike_crypto, extract_pq_addke, extract_ppk, extract_ipsec_protocols, extract_ah,
                   extract_cipher_sieve, extract_pfs, extract_implementation, extract_sa_lifecycle, extract_mode, extract_sequence,
                   extract_auth_hint, extract_failure, extract_early_childsa_cve, extract_ike_attack_patterns, extract_offered_dh,
                   extract_leakage, extract_attacker]
@@ -807,7 +828,9 @@ ALL_EXTRACTORS = [extract_ike_meta, extract_ike_crypto, extract_pq_addke, extrac
 
 def build_records(pcap: str) -> list[EvidenceRecord]:
     recs = group_sas(pcap)
+    truncated = tshark.is_truncated(pcap)     # group_sas has read the capture, so this is now known
     for r in recs:
+        r._truncated = truncated
         for ex in ALL_EXTRACTORS:
             ex(r)
     return recs

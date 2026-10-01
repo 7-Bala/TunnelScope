@@ -202,8 +202,15 @@ def _run_fields(pcap: str, display_filter: str, fields: list[str],
             f"tshark timed out after {timeout or DEFAULT_TIMEOUT_S}s on {pcap} — "
             "raise TUNNELSCOPE_TSHARK_TIMEOUT if this capture is genuinely large"
         ) from None
-    if proc.returncode != 0:
-        # tshark's own stderr says WHY (not a capture file, truncated, unreadable).
+    if proc.returncode != 0 and _cut_short(proc) and _has_a_whole_packet(pcap):
+        # The file ends inside its last packet (a capture killed before its buffer was flushed is
+        # the usual cause). tshark has already printed every whole packet before the cut, so keep
+        # them and remember the file was damaged: the caller must not read "not in the file" as
+        # "not on the wire" (EXP-37: 24 of 26 real hybrid-PQ captures were cut like this and the
+        # whole handshake was intact in the first nine packets).
+        _TRUNCATED.add(_fingerprint(pcap))
+    elif proc.returncode != 0:
+        # tshark's own stderr says WHY (not a capture file, unreadable).
         # Swallowing it into a CalledProcessError leaves the caller guessing.
         why = (proc.stderr or "").strip().splitlines()
         detail = why[-1] if why else f"tshark exited {proc.returncode}"
@@ -211,6 +218,37 @@ def _run_fields(pcap: str, display_filter: str, fields: list[str],
             detail = f"tshark was stopped by signal {-proc.returncode} (a resource limit, or a crash on this file)"
         raise InputError(f"tshark could not read {pcap}: {detail}")
     return [line.split("\t") for line in proc.stdout.splitlines() if line.strip()]
+
+
+def _cut_short(proc) -> bool:
+    """True only for tshark's own "cut short in the middle of a packet" report. Any other failure
+    (not a capture file, unreadable, killed by a limit) is still an error: those files give no
+    trustworthy packets. The exit code is not used: it was 14 here, and differs by tshark build."""
+    return "cut short in the middle of a packet" in (proc.stderr or "")
+
+
+def _has_a_whole_packet(pcap: str) -> bool:
+    """tshark words a file cut off inside its own header the same way as one cut off inside a packet.
+    Only the second has anything to analyse, so ask for the first packet. Runs only on the error path."""
+    try:
+        probe = run_isolated([tshark_bin(), "-n", "-r", str(pcap), "-c", "1", "-T", "fields", "-e", "frame.number"],
+                             DEFAULT_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        return False
+    return bool(probe.stdout.strip())
+
+
+# Captures (by path, mtime, size) whose last packet is cut off. Filled by _run_fields, read by
+# is_truncated(); cleared with the memo so a rewritten file is judged afresh.
+_TRUNCATED: set = set()
+
+
+def is_truncated(pcap: str) -> bool:
+    """Was this capture cut off inside its last packet? Only meaningful after a reader has run on it."""
+    try:
+        return _fingerprint(pcap) in _TRUNCATED
+    except OSError:
+        return False
 
 
 # --------------------------------------------------------------------------- #
@@ -240,6 +278,7 @@ def _fingerprint(pcap: str) -> tuple:
 def clear_cache() -> None:
     """Drop every memoised capture (tests, and long-lived callers)."""
     _CACHE.clear()
+    _TRUNCATED.clear()
 
 
 def _memo(fn):
@@ -490,9 +529,12 @@ def capture_summary(pcap: str) -> dict:
     esp = esp_packets(pcap)
     ah = ah_packets(pcap)
     exch = sorted({m["exchange_name"] for m in ike if m["exchange"] is not None})
-    return {"pcap": str(pcap), "n_ike": len(ike), "n_esp": len(esp), "n_ah": len(ah),
-            "exchanges": exch,
-            "has_ike_sa_init": any(m["exchange"] == 34 for m in ike)}
+    out = {"pcap": str(pcap), "n_ike": len(ike), "n_esp": len(esp), "n_ah": len(ah),
+           "exchanges": exch,
+           "has_ike_sa_init": any(m["exchange"] == 34 for m in ike)}
+    if is_truncated(pcap):          # only present when true, so intact captures keep their exact shape
+        out["capture_truncated"] = True
+    return out
 
 
 # IKEv2 Encryption (Transform Type 1) and Integrity (Type 3) id -> name (IANA)
