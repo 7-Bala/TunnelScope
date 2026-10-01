@@ -35,7 +35,7 @@ IN
 run() {
   local cls="$1" dur="$2"
   case "$cls" in
-  bulk)        docker exec $A iperf3 -c $BIP -t "$dur" -b 20M >/dev/null 2>&1 ;;
+  bulk)        docker exec $A iperf3 -c $BIP -t "$dur" -b 5M >/dev/null 2>&1 ;;
   web)         docker exec $A bash -c "end=\$((SECONDS+$dur)); while [ \$SECONDS -lt \$end ]; do rm -rf /tmp/w; timeout \$((end-SECONDS)) wget -q -r -l3 -np -nd -P /tmp/w --wait=0.6 --random-wait http://$BIP:8081/index.html; done" >/dev/null 2>&1 ;;
   messaging)   docker exec -d $A bash -c "timeout $dur mosquitto_sub -h $BIP -t 'chat/#' >/dev/null"
                docker exec -d $B bash -c "timeout $dur mosquitto_sub -h $BIP -t 'in/#' >/dev/null"
