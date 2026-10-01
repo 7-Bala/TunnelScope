@@ -1,0 +1,211 @@
+{
+ "errors": [],
+ "n_lab_a": 175,
+ "n_lab_b": 180,
+ "M0_on_B": {
+  "model": "M0 shipped",
+  "captures_with_windows": 108,
+  "ungated_macro_f1": 0.2,
+  "ungated_accuracy": 0.3333,
+  "ungated_per_class_f1": {
+   "file_transfer": 0.0,
+   "icmp": 1.0,
+   "video": 0.0,
+   "voip": 0.0,
+   "web": 0.0
+  },
+  "eligible_ge3_windows": 72,
+  "fewer_than_3_windows": 108,
+  "answered": 35,
+  "coverage": 0.4861,
+  "accuracy_among_answered": 1.0,
+  "stages": {
+   "answered": 35,
+   "out_of_distribution": 36,
+   "abstained": 1
+  }
+ },
+ "M0_on_A": {
+  "model": "M0 shipped",
+  "captures_with_windows": 169,
+  "ungated_macro_f1": 0.2619,
+  "ungated_accuracy": 0.2722,
+  "ungated_per_class_f1": {
+   "email": 0.889,
+   "file_transfer": 0.061,
+   "icmp": 0.0,
+   "messaging": 0.0,
+   "video": 0.459,
+   "voip": 0.102,
+   "web": 0.323
+  },
+  "eligible_ge3_windows": 153,
+  "fewer_than_3_windows": 22,
+  "answered": 5,
+  "coverage": 0.0327,
+  "accuracy_among_answered": 0.0,
+  "stages": {
+   "abstained": 107,
+   "out_of_distribution": 41,
+   "answered": 5
+  }
+ },
+ "M1_on_B": {
+  "model": "M1 shipped+A",
+  "captures_with_windows": 108,
+  "ungated_macro_f1": 0.2151,
+  "ungated_accuracy": 0.3519,
+  "ungated_per_class_f1": {
+   "file_transfer": 0.0,
+   "icmp": 1.0,
+   "video": 0.0,
+   "voip": 0.0,
+   "web": 0.075
+  },
+  "eligible_ge3_windows": 72,
+  "fewer_than_3_windows": 108,
+  "answered": 35,
+  "coverage": 0.4861,
+  "accuracy_among_answered": 1.0,
+  "stages": {
+   "answered": 35,
+   "out_of_distribution": 36,
+   "abstained": 1
+  }
+ },
+ "M2_on_A": {
+  "model": "M2 shipped+B",
+  "captures_with_windows": 169,
+  "ungated_macro_f1": 0.2699,
+  "ungated_accuracy": 0.2959,
+  "ungated_per_class_f1": {
+   "email": 0.889,
+   "file_transfer": 0.071,
+   "icmp": 0.0,
+   "messaging": 0.0,
+   "video": 0.518,
+   "voip": 0.103,
+   "web": 0.308
+  },
+  "eligible_ge3_windows": 153,
+  "fewer_than_3_windows": 22,
+  "answered": 3,
+  "coverage": 0.0196,
+  "accuracy_among_answered": 0.0,
+  "stages": {
+   "abstained": 109,
+   "out_of_distribution": 41,
+   "answered": 3
+  }
+ },
+ "P39-1": {
+  "m0_macro_f1_on_B": 0.2,
+  "pass": true
+ },
+ "P39-2": {
+  "m1_macro_f1_on_B": 0.2151,
+  "m0": 0.2,
+  "gain": 0.0151,
+  "pass": false
+ },
+ "P39-3": {
+  "coverage": 0.4861,
+  "accuracy_among_answered": 1.0,
+  "pass": false
+ },
+ "P39-4": {
+  "m2_macro_f1_on_A": 0.2699,
+  "m0_on_A": 0.2619,
+  "gain_over_0.262": 0.0079,
+  "pass": false
+ },
+ "P39-5": {
+  "coverage": 0.0196,
+  "accuracy_among_answered": 0.0,
+  "pass": false
+ },
+ "P39-6": {
+  "cv_shipped_only": 0.9196,
+  "cv_with_both_labs": 0.9218,
+  "change": 0.0022,
+  "pass": true
+ },
+ "exploratory_M3": {
+  "on_A": {
+   "model": "M3 shipped+A+B (has seen A)",
+   "captures_with_windows": 169,
+   "ungated_macro_f1": 1.0,
+   "ungated_accuracy": 1.0,
+   "ungated_per_class_f1": {
+    "email": 1.0,
+    "file_transfer": 1.0,
+    "icmp": 1.0,
+    "messaging": 1.0,
+    "video": 1.0,
+    "voip": 1.0,
+    "web": 1.0
+   },
+   "eligible_ge3_windows": 153,
+   "fewer_than_3_windows": 22,
+   "answered": 151,
+   "coverage": 0.9869,
+   "accuracy_among_answered": 1.0,
+   "stages": {
+    "answered": 151,
+    "abstained": 2
+   }
+  },
+  "on_B": {
+   "model": "M3 shipped+A+B (has seen B)",
+   "captures_with_windows": 108,
+   "ungated_macro_f1": 0.6,
+   "ungated_accuracy": 1.0,
+   "ungated_per_class_f1": {
+    "file_transfer": 0.0,
+    "icmp": 1.0,
+    "video": 1.0,
+    "voip": 0.0,
+    "web": 1.0
+   },
+   "eligible_ge3_windows": 72,
+   "fewer_than_3_windows": 108,
+   "answered": 71,
+   "coverage": 0.9861,
+   "accuracy_among_answered": 1.0,
+   "stages": {
+    "answered": 71,
+    "abstained": 1
+   }
+  }
+ },
+ "exploratory_M1_on_B_without_voip": 0.2689,
+ "exploratory_B_short_captures_by_class": {
+  "file_transfer": 36,
+  "icmp": 0,
+  "video": 36,
+  "voip": 36,
+  "web": 0
+ },
+ "exploratory_B_top_shifts": [
+  {
+   "feature": "in_h0_128",
+   "shift_in_train_sd": 2.47
+  },
+  {
+   "feature": "out_h0_128",
+   "shift_in_train_sd": 1.89
+  },
+  {
+   "feature": "out_frac_iat_lt_1ms",
+   "shift_in_train_sd": 0.96
+  },
+  {
+   "feature": "in_frac_iat_lt_1ms",
+   "shift_in_train_sd": 0.73
+  },
+  {
+   "feature": "in_log_iat_std",
+   "shift_in_train_sd": 0.54
+  }
+ ]
+}

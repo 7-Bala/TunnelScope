@@ -601,3 +601,17 @@ classes inside their lab (R05 1.000, leave-one-profile-out 1.000, caveat: easy d
 adding their windows to training scores 1.000 on R05 and changes our grouped-CV macro-F1 by +0.003. Decision: the gates
 are right to abstain; training-data coverage is the gap; any training change needs its own PREREG and a third lab.
 `experiments/exp38-traffic-transfer-diagnosis/RESULT.md`
+
+## EXP-39 — Does training on one lab help on another? (leave-one-lab-out) — PRE-REGISTRATION (2026-10-01)
+Pre-registered in `experiments/exp39-two-lab-transfer/PREREG.md` (d32724e), scorer 66adfc3, before any run. Lab A
+`ipsec-pcap-lab` (c0cf256) and lab B `ashwin02-cyber/SIH_2026` (ef0ffe9, manifest hashed); both authors' permission relayed
+verbally; no captures or derivatives committed. Shipped forest/gates retrained on other windows via `attacker.DATA`; no
+shipped file edited. Six predictions.
+
+### EXP-39 — RESULT (2026-10-01)
+Falsified as registered: P39-2 (A->B gain +0.015), P39-3 (coverage 48.6%, 35/35 correct), P39-4 (B->A gain +0.008), P39-5
+(2.0%); held: P39-1, P39-6 (no harm, +0.002). Pre-registration flaw found in the data: lab B has 0 windows for
+file_transfer and voip and 1 for video (10 MB scp ends inside one 2 s window; SIP is sparse), so only icmp and web can be
+scored and macro-F1 over five classes was unattainable. Supported reading: icmp transfers (1.000 for every model); for web,
+training on the other lab did not help in either direction. The labs cannot answer the wider question. Nothing ships.
+Next: a third lab of our own with sustained traffic per class. `experiments/exp39-two-lab-transfer/RESULT.md`
