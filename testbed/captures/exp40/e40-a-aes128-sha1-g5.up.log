@@ -1,0 +1,14 @@
+"e40-a-aes128-sha1-g5" #29: IKEv1 Aggressive Mode with PSK is vulnerable to dictionary attacks and is cracked on large scale by TLA's
+"e40-a-aes128-sha1-g5" #29: initiating IKEv1 Aggressive Mode connection
+"e40-a-aes128-sha1-g5" #29: sent Aggressive Mode request
+"e40-a-aes128-sha1-g5" #29: STATE_AGGR_I1: retransmission; will wait 0.5 seconds for response
+"e40-a-aes128-sha1-g5" #29: STATE_AGGR_I1: retransmission; will wait 1 second for response
+"e40-a-aes128-sha1-g5" #29: STATE_AGGR_I1: retransmission; will wait 2 seconds for response
+"e40-a-aes128-sha1-g5" #29: STATE_AGGR_I1: retransmission; will wait 4 seconds for response
+"e40-a-aes128-sha1-g5" #29: STATE_AGGR_I1: retransmission; will wait 8 seconds for response
+"e40-a-aes128-sha1-g5" #29: STATE_AGGR_I1: retransmission; will wait 16 seconds for response
+"e40-a-aes128-sha1-g5" #29: Peer ID is FQDN: '@b-e40-a-aes128-sha1-g5'
+"e40-a-aes128-sha1-g5" #29: ISAKMP SA established {auth=PRESHARED_KEY cipher=AES_CBC_128 integ=HMAC_SHA1 group=MODP1536}
+"e40-a-aes128-sha1-g5" #30: initiating Quick Mode IKEv1+PSK+ENCRYPT+TUNNEL+DONT_REKEY+UP+AGGRESSIVE+IKE_FRAG_ALLOW+ESN_NO+ESN_YES {using isakmp#29 msgid:1751d3a0 proposal=AES_GCM_16_256 pfsgroup=no-pfs 10.10.1.47/32===10.10.2.47/32}
+"e40-a-aes128-sha1-g5" #30: sent Quick Mode request
+"e40-a-aes128-sha1-g5" #30: IPsec SA established tunnel mode {ESP=>0x0fcff810 <0x7b8ff060 xfrm=AES_GCM_16_256 DPD=passive}

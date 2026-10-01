@@ -1,0 +1,26 @@
+{
+  "arm": "e40-a-aes128-sha1-g5",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 7,
+    "lsw_a": "10.10.1.47",
+    "lsw_b": "10.10.2.47",
+    "mode": "aggressive",
+    "ike": "aes128-sha1-modp1536"
+  },
+  "pluto_log_T2": [
+    "\"e40-a-aes128-sha1-g5\" #29: STATE_AGGR_I1: retransmission; will wait 0.5 seconds for response",
+    "\"e40-a-aes128-sha1-g5\" #29: STATE_AGGR_I1: retransmission; will wait 1 second for response",
+    "\"e40-a-aes128-sha1-g5\" #29: STATE_AGGR_I1: retransmission; will wait 2 seconds for response",
+    "\"e40-a-aes128-sha1-g5\" #29: STATE_AGGR_I1: retransmission; will wait 4 seconds for response",
+    "\"e40-a-aes128-sha1-g5\" #29: STATE_AGGR_I1: retransmission; will wait 8 seconds for response",
+    "\"e40-a-aes128-sha1-g5\" #29: STATE_AGGR_I1: retransmission; will wait 16 seconds for response",
+    "\"e40-a-aes128-sha1-g5\" #29: ISAKMP SA established {auth=PRESHARED_KEY cipher=AES_CBC_128 integ=HMAC_SHA1 group=MODP1536}",
+    "\"e40-a-aes128-sha1-g5\" #30: IPsec SA established tunnel mode {ESP=>0x0fcff810 <0x7b8ff060 xfrm=AES_GCM_16_256 DPD=passive}",
+    "\"e40-a-aes128-sha1-g5\":   host: oriented; local: 10.10.2.47; remote: 10.10.1.47; established ISAKMP SA: #13;",
+    "\"e40-a-aes128-sha1-g5\":   routing: routed-tunnel; owner: IPsec SA #14; established ISAKMP SA: #13; established IPsec SA: #14;",
+    "#13: \"e40-a-aes128-sha1-g5\":500 ISAKMP SA established; EXPIRE in 28796s; newest; lastdpd=-1s(seq in:0 out:0); idle;",
+    "#14: \"e40-a-aes128-sha1-g5\":500 IPsec SA established; EXPIRE in 28796s; newest; eroute owner; ISAKMP SA #13; idle;"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}

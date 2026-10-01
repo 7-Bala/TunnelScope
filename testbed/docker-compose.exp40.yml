@@ -1,0 +1,11 @@
+# EXP-40 override: the Libreswan pair reads the IKEv1 arms instead of EXP-07's.
+#   docker compose -f docker-compose.yml -f docker-compose.exp40.yml up -d router lsw-a lsw-b
+services:
+  lsw-a:
+    volumes:
+      - ./configs/exp40/ipsec.conf:/etc/ipsec.conf:ro
+      - ./configs/exp40/ipsec.secrets:/etc/ipsec.secrets:ro
+  lsw-b:
+    volumes:
+      - ./configs/exp40/ipsec.conf.b:/etc/ipsec.conf:ro
+      - ./configs/exp40/ipsec.secrets:/etc/ipsec.secrets:ro

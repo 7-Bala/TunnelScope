@@ -1,0 +1,1690 @@
+{
+ "e40-a-aes128-sha1-g5": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_AGGRESSIVE_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "00898a995ebcdcab",
+     "responder": "58fce49652053178"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 1.79,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ },
+ "e40-a-aes256-sha256-g14": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_AGGRESSIVE_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "70fb51eefaad15ce",
+     "responder": "74acbb705c3c7e45"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 1.79,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ },
+ "e40-m-3des-sha1-g5": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_MAIN_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "d68285502f5df46e",
+     "responder": "e3cbe089430773df"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 1.79,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ },
+ "e40-m-aes128-sha1-g5": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_MAIN_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "dc691ce01cef1541",
+     "responder": "f776898f8663b635"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 1.435,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ },
+ "e40-m-aes128-sha256-g19": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_MAIN_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "590b59f32d937528",
+     "responder": "a2e50acab345152e"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 1.79,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ },
+ "e40-m-aes256-sha256-g14": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_MAIN_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "b625dbcbe9eb200f",
+     "responder": "8e240ac2445fd413"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 2.231,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ },
+ "e40-m-aes256-sha384-g15": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_MAIN_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "61394f6ad48439ef",
+     "responder": "d95ac050d4d83cbd"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 1.79,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ },
+ "e40-m-multi": {
+  "findings": {
+   "ike_version": {
+    "status": "OBSERVED",
+    "value": "IKEv1"
+   },
+   "ike_exchanges": {
+    "status": "OBSERVED",
+    "value": [
+     "IKEv1_MAIN_MODE",
+     "IKEv1_QUICK_MODE"
+    ]
+   },
+   "ike_spi": {
+    "status": "OBSERVED",
+    "value": {
+     "initiator": "f150aa17a12ea468",
+     "responder": "84dbd912edb3e2f1"
+    }
+   },
+   "ike_encr": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_integ": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_dh_group": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_key_exchange": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "pq_ppk": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ipsec_protocols": {
+    "status": "OBSERVED",
+    "value": [
+     "ESP"
+    ]
+   },
+   "esp_cipher_family": {
+    "status": "INFERRED",
+    "value": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ]
+   },
+   "pfs": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "implementation": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "rekey_cadence": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "mode": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "sequence_integrity": {
+    "status": "OBSERVED",
+    "value": {
+     "spis": 2,
+     "packets": 12,
+     "replayed": 0,
+     "resets": 0,
+     "reordered": 0,
+     "capture_duplicates": 0,
+     "max_seq": 6
+    }
+   },
+   "peer_auth_method": {
+    "status": "NOT_OBSERVABLE",
+    "value": null
+   },
+   "negotiation_outcome": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "early_childsa_cve": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ke_payload_anomaly": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "informational_before_auth": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "init_missing_payloads": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "ike_offered_dh": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "metadata_exposure": {
+    "status": "MEASURED",
+    "value": {
+     "size_bits": 0.0,
+     "timing_bits": 1.79,
+     "tfc_padding_active": false
+    }
+   },
+   "attacker_exposure": {
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "traffic_type": {
+    "status": "UNKNOWN",
+    "value": null
+   }
+  },
+  "verdicts": [
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-2026-78135",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-KE-MALFORMED",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INFO-BEFORE-AUTH",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "CVE-WATCH",
+    "rule": "CVE-WATCH-INIT-PAYLOADS",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207205",
+    "verdict": "FAIL"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207193",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DISA-VPN-SRG-V2R6",
+    "rule": "V-207223",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-KE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "DST-NQM-2026",
+    "rule": "DST-PQ-DOWNGRADE",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4301-CONFIDENTIALITY",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC8221-ESP-3DES",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8221/4303",
+    "rule": "RFC4303-SEQ",
+    "verdict": "PASS"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-MUST",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-DH-OFFER",
+    "verdict": "UNKNOWN"
+   },
+   {
+    "baseline": "RFC-8247",
+    "rule": "RFC8247-ENCR",
+    "verdict": "UNKNOWN"
+   }
+  ]
+ }
+}

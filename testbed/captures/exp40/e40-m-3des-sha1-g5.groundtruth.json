@@ -1,0 +1,26 @@
+{
+  "arm": "e40-m-3des-sha1-g5",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 3,
+    "lsw_a": "10.10.1.43",
+    "lsw_b": "10.10.2.43",
+    "mode": "main",
+    "ike": "3des-sha1-modp1536"
+  },
+  "pluto_log_T2": [
+    "\"e40-m-3des-sha1-g5\" #21: STATE_MAIN_I1: retransmission; will wait 0.5 seconds for response",
+    "\"e40-m-3des-sha1-g5\" #21: STATE_MAIN_I1: retransmission; will wait 1 second for response",
+    "\"e40-m-3des-sha1-g5\" #21: STATE_MAIN_I1: retransmission; will wait 2 seconds for response",
+    "\"e40-m-3des-sha1-g5\" #21: STATE_MAIN_I1: retransmission; will wait 4 seconds for response",
+    "\"e40-m-3des-sha1-g5\" #21: STATE_MAIN_I1: retransmission; will wait 8 seconds for response",
+    "\"e40-m-3des-sha1-g5\" #21: STATE_MAIN_I1: retransmission; will wait 16 seconds for response",
+    "\"e40-m-3des-sha1-g5\" #21: ISAKMP SA established {auth=PRESHARED_KEY cipher=3DES_CBC_192 integ=HMAC_SHA1 group=MODP1536}",
+    "\"e40-m-3des-sha1-g5\" #22: IPsec SA established tunnel mode {ESP=>0x3bf74255 <0xbeef34ad xfrm=AES_GCM_16_256 DPD=passive}",
+    "\"e40-m-3des-sha1-g5\":   host: oriented; local: 10.10.2.43; remote: 10.10.1.43; established ISAKMP SA: #5;",
+    "\"e40-m-3des-sha1-g5\":   routing: routed-tunnel; owner: IPsec SA #6; established ISAKMP SA: #5; established IPsec SA: #6;",
+    "#5: \"e40-m-3des-sha1-g5\":500 ISAKMP SA established; EXPIRE in 28796s; newest; lastdpd=-1s(seq in:0 out:0); idle;",
+    "#6: \"e40-m-3des-sha1-g5\":500 IPsec SA established; EXPIRE in 28796s; newest; eroute owner; ISAKMP SA #5; idle;"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}
