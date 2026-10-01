@@ -20,6 +20,13 @@ EXP-15/16 tables (216 labelled sessions, 8 classes, two implementations, synthet
 applications, with per-session ground truth) appear to be the first of their kind, which is a reason
 to publish them as a dataset alongside the tool.
 
+> **Correction, 2026-10-01.** The paragraph above is wrong and is kept as the record of what we believed.
+> `naman9271/ipsec-pcap-lab` (repo created 2026-08-27, 239 real strongSwan captures with cipher, DH group,
+> PFS and mode per file) and `ashwin02-cyber/SIH_2026` (216 captures, 36 configurations) are public
+> labelled IPsec sets. Neither carries a licence. What is still true of ours: one-factor-at-a-time arms,
+> ground truth from the endpoint's own log, two implementations with a locked cross-implementation test,
+> and post-quantum arms. See `17-GITHUB-LANDSCAPE.md`.
+
 ## 2. Open-source alternatives and neighbours
 
 | Project | What it does | Overlap with TunnelScope |
