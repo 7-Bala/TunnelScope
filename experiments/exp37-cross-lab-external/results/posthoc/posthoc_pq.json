@@ -1,0 +1,1500 @@
+{
+ "summary": {
+  "n": 55,
+  "cut_files": 24,
+  "original": {
+   "hybrid": {
+    "n": 26,
+    "read": 2,
+    "says_mlkem768": 2,
+    "suite_matches_swanctl": 2
+   },
+   "classical": {
+    "n": 29,
+    "read": 29,
+    "false_pq_claims": 0,
+    "suite_matches_swanctl": 29
+   }
+  },
+  "trimmed_or_original": {
+   "hybrid": {
+    "n": 26,
+    "read": 26,
+    "says_mlkem768": 26,
+    "suite_matches_swanctl": 26
+   },
+   "classical": {
+    "n": 29,
+    "read": 29,
+    "false_pq_claims": 0,
+    "suite_matches_swanctl": 29
+   }
+  },
+  "hybrid_not_detected_examples": [],
+  "classical_suite_mismatch_examples": []
+ },
+ "rows": [
+  {
+   "rel": "Classical/P0/run1/run1_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 60,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run10/run10_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 38,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 3,
+    "pq_values": [
+     "classical-only",
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256",
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519",
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run2/run2_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 18,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run3/run3_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 22,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run4/run4_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 18,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run5/run5_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 28,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run6/run6_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 36,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 3,
+    "pq_values": [
+     "classical-only",
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256",
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519",
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run7/run7_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 18,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run8/run8_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 18,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P0/run9/run9_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 36,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 3,
+    "pq_values": [
+     "classical-only",
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256",
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519",
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run1/run1_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 17,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 1,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run10/run10_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 34,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run2/run2_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 18,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run3/run3_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 33,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run4/run4_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 18,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run5/run5_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 30,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run6/run6_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 34,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run7/run7_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 48,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run8/run8_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 30,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P1/run9/run9_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 70,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run1/run1_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 53,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run2/run2_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 150,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run3/run3_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 161,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run4/run4_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 71,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run5/run5_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 412,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run6/run6_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 18,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run7/run7_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 1399,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 3,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run8/run8_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 78,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Classical/P2/run9/run9_ike_control_plane.pcap",
+   "kind": "classical",
+   "packets_kept": 25,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "classical-only"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": false,
+    "says_pq_present": false,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Hybrid/P0/Run3/run3_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 34,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/Run3/run3_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 3,
+    "pq_values": [
+     "['ML-KEM-768']",
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256",
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519",
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run1/run1_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run1/run1_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run10/run10_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "de-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run10/run10_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run2/run2_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run2/run2_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run4/run4_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 10,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run4/run4_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run5/run5_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run5/run5_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run6/run6_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run6/run6_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run7/run7_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run7/run7_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run8/run8_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run8/run8_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P0/run9/run9_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 38,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P0/run9/run9_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 3,
+    "pq_values": [
+     "['ML-KEM-768']",
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256",
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519",
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run10/run10_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "de-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run10/run10_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run2/run2_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 44,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run2/run2_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run3/run3_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run3/run3_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": null
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run4/run4_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run4/run4_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run5/run5_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 44,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run5/run5_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run6/run6_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 9,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run6/run6_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run7/run7_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 44,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run7/run7_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": null
+   }
+  },
+  {
+   "rel": "Hybrid/P1/run8/run8_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 44,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P1/run8/run8_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P2/run10/run10_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 79,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "de-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P2/run10/run10_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P2/run3/run3_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 66,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Hybrid/P2/run4/run4_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 43,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P2/run4/run4_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P2/run5/run5_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 97,
+   "was_cut": false,
+   "original": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": null
+   },
+   "trimmed": null
+  },
+  {
+   "rel": "Hybrid/P2/run6/run6_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 44,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P2/run6/run6_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P2/run7/run7_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 44,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P2/run7/run7_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P2/run8/run8_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 80,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P2/run8/run8_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  },
+  {
+   "rel": "Hybrid/P2/run9/run9_ike_control_plane.pcap",
+   "kind": "hybrid",
+   "packets_kept": 115,
+   "was_cut": true,
+   "original": {
+    "read": false,
+    "error": "aude-501/-Users-bala-Documents-SIH-2026/6a5eedce-e2e4-49a0-b2c5-20cb74139d12/scratchpad/pq_thesis/Hybrid/P2/run9/run9_ik"
+   },
+   "trimmed": {
+    "read": true,
+    "has_ike_sa_init": true,
+    "n_records": 2,
+    "pq_values": [
+     "['ML-KEM-768']"
+    ],
+    "ike_encr": [
+     "AES-GCM-16-256"
+    ],
+    "ike_dh": [
+     "Curve25519"
+    ],
+    "says_mlkem768": true,
+    "says_pq_present": true,
+    "suite_matches_swanctl": true,
+    "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519/KE1_ML_KEM_768"
+   }
+  }
+ ]
+}

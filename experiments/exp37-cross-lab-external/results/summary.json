@@ -1,0 +1,461 @@
+{
+ "A": {
+  "n_known": 175,
+  "errors": [],
+  "P37-1": {
+   "violations": 0,
+   "examples": [],
+   "pass": true
+  },
+  "P37-2": {
+   "inferred": 175,
+   "unknown_or_other": 0,
+   "exclusions": 0,
+   "examples": [],
+   "pass": true
+  },
+  "P37-3": {
+   "commits": 5,
+   "correct": 0,
+   "accuracy": 0.0,
+   "pass": false
+  },
+  "P37-4": {
+   "coverage": 0.0286,
+   "pass": false
+  },
+  "P37-5": {
+   "confident_wrong": 0,
+   "share_of_commits": 0.0,
+   "pass": true
+  },
+  "confusion_committed": {
+   "file_transfer->video streaming": 4,
+   "messaging->interactive shell (ssh-like)": 1
+  },
+  "commit_by_profile": {
+   "P01": {
+    "n": 35,
+    "commit": 0
+   },
+   "P02": {
+    "n": 35,
+    "commit": 2
+   },
+   "P03": {
+    "n": 35,
+    "commit": 1
+   },
+   "P04": {
+    "n": 35,
+    "commit": 2
+   },
+   "P05": {
+    "n": 35,
+    "commit": 0
+   }
+  },
+  "P37-6": {
+   "ood_eval": 25,
+   "abstained_or_low": 25,
+   "share": 1.0,
+   "pass": true,
+   "labels_given": []
+  },
+  "P37-7": {
+   "committed": 0,
+   "correct": 0,
+   "accuracy": null,
+   "pass": null,
+   "note": "pass is None when the tool never commits"
+  },
+  "P37-8": {
+   "observed_values_to_adjudicate": [
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p01.pcap",
+     "attr": "ike_version",
+     "ours": "IKEv2",
+     "metadata": "IKEv2"
+    },
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p01.pcap",
+     "attr": "ike_dh_group",
+     "ours": "MODP-2048",
+     "metadata": "14-MODP2048"
+    },
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p02.pcap",
+     "attr": "ike_version",
+     "ours": "IKEv2",
+     "metadata": "IKEv2"
+    },
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p02.pcap",
+     "attr": "ike_dh_group",
+     "ours": "ECP-256",
+     "metadata": "19-ECP256"
+    },
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p03.pcap",
+     "attr": "ike_version",
+     "ours": "IKEv1",
+     "metadata": "IKEv1"
+    },
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p04.pcap",
+     "attr": "ike_version",
+     "ours": "IKEv1",
+     "metadata": "IKEv1"
+    },
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p05.pcap",
+     "attr": "ike_version",
+     "ours": "IKEv2",
+     "metadata": "IKEv2"
+    },
+    {
+     "rel": "pcaps/protocol_validation/ike_session_p05.pcap",
+     "attr": "ike_dh_group",
+     "ours": "ECP-384",
+     "metadata": "20-ECP384"
+    }
+   ],
+   "pass": "ADJUDICATE BY HAND (see RESULT.md)"
+  },
+  "exploratory_anomaly": [
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p01_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p01_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p02_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p02_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p03_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p03_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p04_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p04_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p05_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/beacon_burst_p05_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p01_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p01_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p02_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p02_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p03_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p03_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p04_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p04_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p05_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/icmp_flood_p05_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p01_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p01_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p02_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p02_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p03_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p03_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p04_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p04_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "uncertain: this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, so its confide"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p05_R01.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "mixed traffic: two or more kinds of traffic are sharing this tunnel (90% confidence); the loudest one looks like Interac"
+   },
+   {
+    "rel": "pcaps/anomaly/udp_flood_p05_R02.pcap",
+    "traffic_type": null,
+    "status": "UNKNOWN",
+    "note": "mixed traffic: two or more kinds of traffic are sharing this tunnel (90% confidence); the loudest one looks like Interac"
+   }
+  ],
+  "exploratory_exact_cipher_integrity_contained": {
+   "checked": 175,
+   "contained": 175
+  },
+  "exploratory_candidate_set_size": [
+   7,
+   7,
+   8,
+   8,
+   9,
+   9,
+   9,
+   9,
+   9,
+   9,
+   9
+  ]
+ },
+ "B": {
+  "n": 55,
+  "errors": [
+   "Hybrid/P0/Run3/run3_ike_control_plane.pcap",
+   "Hybrid/P0/run1/run1_ike_control_plane.pcap",
+   "Hybrid/P0/run10/run10_ike_control_plane.pcap",
+   "Hybrid/P0/run2/run2_ike_control_plane.pcap",
+   "Hybrid/P0/run4/run4_ike_control_plane.pcap",
+   "Hybrid/P0/run5/run5_ike_control_plane.pcap",
+   "Hybrid/P0/run6/run6_ike_control_plane.pcap",
+   "Hybrid/P0/run7/run7_ike_control_plane.pcap",
+   "Hybrid/P0/run8/run8_ike_control_plane.pcap",
+   "Hybrid/P0/run9/run9_ike_control_plane.pcap",
+   "Hybrid/P1/run10/run10_ike_control_plane.pcap",
+   "Hybrid/P1/run2/run2_ike_control_plane.pcap",
+   "Hybrid/P1/run3/run3_ike_control_plane.pcap",
+   "Hybrid/P1/run4/run4_ike_control_plane.pcap",
+   "Hybrid/P1/run5/run5_ike_control_plane.pcap",
+   "Hybrid/P1/run6/run6_ike_control_plane.pcap",
+   "Hybrid/P1/run7/run7_ike_control_plane.pcap",
+   "Hybrid/P1/run8/run8_ike_control_plane.pcap",
+   "Hybrid/P2/run10/run10_ike_control_plane.pcap",
+   "Hybrid/P2/run4/run4_ike_control_plane.pcap",
+   "Hybrid/P2/run6/run6_ike_control_plane.pcap",
+   "Hybrid/P2/run7/run7_ike_control_plane.pcap",
+   "Hybrid/P2/run8/run8_ike_control_plane.pcap",
+   "Hybrid/P2/run9/run9_ike_control_plane.pcap"
+  ],
+  "included": 31,
+  "excluded": [
+   "Hybrid/P0/Run3/run3_ike_control_plane.pcap",
+   "Hybrid/P0/run1/run1_ike_control_plane.pcap",
+   "Hybrid/P0/run10/run10_ike_control_plane.pcap",
+   "Hybrid/P0/run2/run2_ike_control_plane.pcap",
+   "Hybrid/P0/run4/run4_ike_control_plane.pcap",
+   "Hybrid/P0/run5/run5_ike_control_plane.pcap",
+   "Hybrid/P0/run6/run6_ike_control_plane.pcap",
+   "Hybrid/P0/run7/run7_ike_control_plane.pcap",
+   "Hybrid/P0/run8/run8_ike_control_plane.pcap",
+   "Hybrid/P0/run9/run9_ike_control_plane.pcap",
+   "Hybrid/P1/run10/run10_ike_control_plane.pcap",
+   "Hybrid/P1/run2/run2_ike_control_plane.pcap",
+   "Hybrid/P1/run3/run3_ike_control_plane.pcap",
+   "Hybrid/P1/run4/run4_ike_control_plane.pcap",
+   "Hybrid/P1/run5/run5_ike_control_plane.pcap",
+   "Hybrid/P1/run6/run6_ike_control_plane.pcap",
+   "Hybrid/P1/run7/run7_ike_control_plane.pcap",
+   "Hybrid/P1/run8/run8_ike_control_plane.pcap",
+   "Hybrid/P2/run10/run10_ike_control_plane.pcap",
+   "Hybrid/P2/run4/run4_ike_control_plane.pcap",
+   "Hybrid/P2/run6/run6_ike_control_plane.pcap",
+   "Hybrid/P2/run7/run7_ike_control_plane.pcap",
+   "Hybrid/P2/run8/run8_ike_control_plane.pcap",
+   "Hybrid/P2/run9/run9_ike_control_plane.pcap"
+  ],
+  "P37-12": {
+   "share": 0.5636,
+   "pass": false
+  },
+  "P37-9": {
+   "hybrid_included": 2,
+   "not_observed_as_mlkem768": 2,
+   "examples": [
+    "Hybrid/P2/run3/run3_ike_control_plane.pcap",
+    "Hybrid/P2/run5/run5_ike_control_plane.pcap"
+   ],
+   "pass": false
+  },
+  "P37-10": {
+   "classical_included": 29,
+   "false_pq_claims": 0,
+   "examples": [],
+   "pass": true
+  },
+  "P37-11": {
+   "checked": 31,
+   "auto_mismatch_candidates": 30,
+   "examples": [
+    {
+     "rel": "Classical/P0/run1/run1_ike_control_plane.pcap",
+     "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519",
+     "ike_encr": null,
+     "ike_encr_status": "UNKNOWN",
+     "ike_dh_group": null,
+     "ike_dh_status": "UNKNOWN",
+     "pq": null,
+     "pq_status": "UNKNOWN"
+    },
+    {
+     "rel": "Classical/P0/run10/run10_ike_control_plane.pcap",
+     "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519",
+     "ike_encr": null,
+     "ike_encr_status": "UNKNOWN",
+     "ike_dh_group": null,
+     "ike_dh_status": "UNKNOWN",
+     "pq": null,
+     "pq_status": "UNKNOWN"
+    },
+    {
+     "rel": "Classical/P0/run2/run2_ike_control_plane.pcap",
+     "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519",
+     "ike_encr": null,
+     "ike_encr_status": "UNKNOWN",
+     "ike_dh_group": null,
+     "ike_dh_status": "UNKNOWN",
+     "pq": null,
+     "pq_status": "UNKNOWN"
+    },
+    {
+     "rel": "Classical/P0/run3/run3_ike_control_plane.pcap",
+     "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519",
+     "ike_encr": null,
+     "ike_encr_status": "UNKNOWN",
+     "ike_dh_group": null,
+     "ike_dh_status": "UNKNOWN",
+     "pq": null,
+     "pq_status": "UNKNOWN"
+    },
+    {
+     "rel": "Classical/P0/run4/run4_ike_control_plane.pcap",
+     "truth": "AES_GCM_16-256/PRF_HMAC_SHA2_256/CURVE_25519",
+     "ike_encr": null,
+     "ike_encr_status": "UNKNOWN",
+     "ike_dh_group": null,
+     "ike_dh_status": "UNKNOWN",
+     "pq": null,
+     "pq_status": "UNKNOWN"
+    }
+   ],
+   "pass": "ADJUDICATE BY HAND (see RESULT.md)"
+  },
+  "distinct_pq_values": [
+   "OBSERVED:classical-only",
+   "UNKNOWN:None"
+  ]
+ }
+}

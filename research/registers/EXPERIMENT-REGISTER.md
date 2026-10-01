@@ -574,3 +574,17 @@ H1: 0 default-verdict differences over 695 captures vs main 85777ca. H2: 20/20 q
 bc2a36dc...74bd70). H3: 10/10 captures exactly as pre-registered; the two ESP rules 0 PASS / 0 FAIL on 668 SAs
 (UNKNOWN: packet sizes cannot decide). H4: 0 PASS without evidence. 7 mutation checks caught. DEC-049.
 `experiments/exp35-nist-800-77r1-profile/RESULT.md`
+
+## EXP-37 — Cross-lab test on two other teams' captures — PRE-REGISTRATION (2026-10-01)
+Pre-registered in `experiments/exp37-cross-lab-external/PREREG.md` (df26be3), scorer committed before the run (43dcd82).
+Part A: 239 captures of `ipsec-pcap-lab` (commit c0cf256, ESP-only, no licence). Part B: 55 of 60 control-plane captures
+of an ML-KEM thesis set (5 not downloadable). 12 predictions; local analysis only; captures deleted afterwards.
+
+### EXP-37 — RESULT (2026-10-01)
+Held: no DH/PFS claim on 175 ESP-only captures; the cipher sieve never excluded the true family (175/175); 0 OBSERVED
+handshake values contradicted metadata (8/8); 0 false PQ claims on 29 classical runs. Falsified: traffic type answered
+5/175 and 0/5 correct (coverage 2.9%); 24 of 26 hybrid files cut short mid-packet and refused by the product. Not scorable
+as registered: mode (never committed), P37-9 and P37-11 (scorer defect: wrong record chosen for control-plane files,
+found after the numbers, disclosed). Post-hoc, not registered: whole-capture scoring on trimmed copies reads 26/26 hybrid
+runs as ML-KEM-768 with the swanctl suite, 0 false PQ. Follow-ups: read cut-short captures, IKEv1 transform coverage,
+multi-lab traffic-type test. `experiments/exp37-cross-lab-external/RESULT.md`
