@@ -1,0 +1,115 @@
+{
+ "errors": [],
+ "n_known": 175,
+ "stage_census": {
+  "abstained": 107,
+  "insufficient": 22,
+  "out_of_distribution": 41,
+  "answered": 5
+ },
+ "P38-1": {
+  "share_in_distribution_below_0.5": 0.2343,
+  "pass": false
+ },
+ "in_dist_share_quartiles": [
+  0.0,
+  0.0,
+  1.0,
+  1.0,
+  1.0
+ ],
+ "P38-2": {
+  "captures_with_windows": 169,
+  "macro_f1": 0.2619,
+  "accuracy": 0.2722,
+  "pass": true,
+  "pred_counts": {
+   "email": 20,
+   "web": 12,
+   "video": 49,
+   "file_transfer": 8,
+   "voip": 34,
+   "messaging": 22,
+   "interactive": 24
+  }
+ },
+ "P38-3": {
+  "train_captures": 101,
+  "test_captures": 33,
+  "macro_f1": 1.0,
+  "pass": true
+ },
+ "P38-4": {
+  "per_profile": {
+   "P01": 1.0,
+   "P02": 1.0,
+   "P03": 1.0,
+   "P04": 1.0,
+   "P05": 1.0
+  },
+  "mean_macro_f1": 1.0,
+  "pass": true
+ },
+ "P38-5": {
+  "macro_f1_on_R05": 1.0,
+  "pass": true
+ },
+ "P38-6": {
+  "cv_macro_f1_shipped_only": 0.9196,
+  "cv_macro_f1_with_their_windows": 0.9222,
+  "change": 0.0026,
+  "pass": true
+ },
+ "exploratory_top_feature_shifts": [
+  {
+   "feature": "in_max",
+   "shift_in_train_sd": 1.15
+  },
+  {
+   "feature": "in_hist_1024_1600",
+   "shift_in_train_sd": 1.1
+  },
+  {
+   "feature": "in_mean",
+   "shift_in_train_sd": 1.04
+  },
+  {
+   "feature": "in_log_iat_median",
+   "shift_in_train_sd": 0.95
+  },
+  {
+   "feature": "in_frac_iat_lt_1ms",
+   "shift_in_train_sd": -0.95
+  }
+ ],
+ "exploratory_ood_eval_ungated_labels": {
+  "voip": 19,
+  "web": 2,
+  "messaging": 4
+ },
+ "exploratory_shipped_answers_by_class": {
+  "email": {
+   "None": 25
+  },
+  "file_transfer": {
+   "None": 21,
+   "video": 4
+  },
+  "icmp": {
+   "None": 25
+  },
+  "messaging": {
+   "None": 24,
+   "interactive": 1
+  },
+  "video": {
+   "None": 25
+  },
+  "voip": {
+   "None": 25
+  },
+  "web": {
+   "None": 25
+  }
+ }
+}

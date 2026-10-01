@@ -588,3 +588,16 @@ as registered: mode (never committed), P37-9 and P37-11 (scorer defect: wrong re
 found after the numbers, disclosed). Post-hoc, not registered: whole-capture scoring on trimmed copies reads 26/26 hybrid
 runs as ML-KEM-768 with the swanctl suite, 0 false PQ. Follow-ups: read cut-short captures, IKEv1 transform coverage,
 multi-lab traffic-type test. `experiments/exp37-cross-lab-external/RESULT.md`
+
+## EXP-38 — Why the traffic-type model does not transfer to another lab — PRE-REGISTRATION (2026-10-01)
+Pre-registered in `experiments/exp38-traffic-transfer-diagnosis/PREREG.md` (9d7a03c), scorer 584da2f, before any run. Same
+175 `ipsec-pcap-lab` captures as EXP-37 (permission relayed verbally; no licence file). Separates three causes: a strict
+gate, a model that does not generalise, features that cannot separate the classes. Nothing that ships is changed.
+
+### EXP-38 — RESULT (2026-10-01)
+P38-1 falsified: the out-of-distribution gate stops 41 of 175 (23%); 107 (61%) pass it and are stopped by the confidence /
+agreement rules, 22 have under 3 windows, 5 answered. Held: ungated shipped model macro-F1 0.262; features separate their
+classes inside their lab (R05 1.000, leave-one-profile-out 1.000, caveat: easy distinct generators, 33 test captures);
+adding their windows to training scores 1.000 on R05 and changes our grouped-CV macro-F1 by +0.003. Decision: the gates
+are right to abstain; training-data coverage is the gap; any training change needs its own PREREG and a third lab.
+`experiments/exp38-traffic-transfer-diagnosis/RESULT.md`
