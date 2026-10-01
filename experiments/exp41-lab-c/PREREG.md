@@ -72,3 +72,8 @@ M0 and M3 on C; results split by tunnel configuration; M3's score on lab A and B
 - P41-2 fails -> lab C is not a usable test bed; fix lab C before concluding anything.
 - P41-7 failing blocks any retraining regardless.
 Every prediction is reported whether or not it holds. Other labs' captures are deleted after RESULT.md is written.
+
+## Erratum (2026-10-02, before any scored capture)
+The table above says email messages are "0.3-2 MB". The generator (`testbed/scripts/labc_gen.sh`) draws `300 + RANDOM * n` bytes with n in 1..6
+before base64, i.e. about 0.4 KB to 260 KB per message, and the messaging payloads are 20-179 random bytes before base64 (28-240 characters).
+The script is what ran; this line corrects the description. No prediction depends on these sizes.
