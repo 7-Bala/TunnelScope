@@ -532,10 +532,35 @@ def extract_failure(r: EvidenceRecord) -> None:
 
 
 
+def _ike1_crypto(r: EvidenceRecord) -> None:
+    """IKEv1 (EXP-40): the responder's SA payload in Main/Aggressive Mode message 2 names the ONE transform it
+    selected, in the clear. Read from that packet only: never from the initiator's offer, and never when the
+    responder's message is not in the capture (then UNKNOWN). IKEv1 has a single hash algorithm that serves as the
+    PRF and the message HMAC, so there is no separate integrity transform to report."""
+    c = tshark.ike1_selection(r.source_pcap, ispi=r.ike_spi_i)
+    ev = [EvidencePtr(r.source_pcap, c.get("frame"), "isakmp.ike.attr (responder SA payload)", str(c))] if c else []
+    for attr, val, extra in (("ike_encr", c.get("encr"), {}),
+                             ("ike_prf", c.get("prf"), {}),
+                             ("ike_dh_group", c.get("dh"), {"note": f"DH group id {c.get('dh_id')}"})):
+        if val:
+            r.add(Finding(attr, Status.OBSERVED, Vantage.T1, "ike_crypto (IKEv1 responder SA)", value=val, evidence=ev, **extra))
+        else:
+            r.add(Finding(attr, Status.UNKNOWN, Vantage.T0, "ike_crypto (IKEv1 responder SA)",
+                          note="IKEv1: the responder's SA payload (Main/Aggressive Mode message 2) is not in this "
+                               "capture, so the selected transform is not visible; the initiator's offer is not used"))
+    r.add(Finding("ike_integ", Status.UNKNOWN, Vantage.T0, "ike_crypto (IKEv1 responder SA)",
+                  note="IKEv1 has no separate integrity transform: its one hash algorithm is the PRF and the "
+                       "message HMAC, reported as ike_prf"))
+
+
 def extract_ike_crypto(r: EvidenceRecord) -> None:
     """R4/R6/R8 for the IKE SA: ENCR (+key length), PRF, INTEG, DH group. All
     plaintext in the IKE_SA_INIT response -> O at T1. Note this is the IKE SA
     key length (observable); the ESP key length is NOT (F-05)."""
+    v = r.findings.get("ike_version")
+    if v is not None and v.value == "IKEv1":
+        _ike1_crypto(r)
+        return
     c = tshark.ike_sa_crypto(r.source_pcap, ispi=r.ike_spi_i)
     # c is {} (no response) or has None fields (a NO_PROPOSAL_CHOSEN response
     # selected nothing). Either way, a field we could not read is UNKNOWN, never

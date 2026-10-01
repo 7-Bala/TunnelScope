@@ -163,7 +163,7 @@ IPSEC_KEYS = {"left", "right", "leftid", "rightid", "leftsubnet", "rightsubnet",
               "lifetime", "keylife", "rekey", "auto", "also", "leftcert", "rightcert", "leftauth", "rightauth",
               "ikev2", "fragmentation", "dpddelay", "dpdtimeout", "dpdaction", "leftsourceip", "rightsourceip",
               "mobike", "rekeymargin", "keyingtries", "ikelifetime", "margintime", "leftprotoport", "rightprotoport",
-              "intermediate"}
+              "intermediate", "aggrmode"}
 
 
 def _ipsec_conf(text: str, source: str) -> list[dict]:

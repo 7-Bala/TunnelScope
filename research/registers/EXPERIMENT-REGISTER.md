@@ -615,3 +615,14 @@ file_transfer and voip and 1 for video (10 MB scp ends inside one 2 s window; SI
 scored and macro-F1 over five classes was unattainable. Supported reading: icmp transfers (1.000 for every model); for web,
 training on the other lab did not help in either direction. The labs cannot answer the wider question. Nothing ships.
 Next: a third lab of our own with sustained traffic per class. `experiments/exp39-two-lab-transfer/RESULT.md`
+
+## EXP-40 — Read the negotiated suite of an IKEv1 session — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp40-ikev1-transforms/PREREG.md` (9d95710) before any capture and any code; lab, 8 Libreswan 5.4
+IKEv1 arms (Main and Aggressive Mode, one two-offer arm), captures with pluto ground truth, scorer and before-snapshot committed
+in 04a8a27 before the extractor existed. Six predictions plus five named mutation checks.
+
+### EXP-40 — RESULT (2026-10-02)
+All six held: 8/8 suites equal pluto's log; the two-offer arm reports the second offer (the selection); 8/8 offer-only cuts give
+UNKNOWN; 0 IKEv2 captures changed (701); verdicts as predicted, no RFC 8247 verdict on IKEv1; nothing else changed. The one existing
+IKEv1 capture (strongSwan) also matches swanctl. Not exercised: a real failed IKEv1 negotiation. Two earlier pins superseded with owner
+approval (EXP-35 NIST row for cloud/c-v1; test_cloud_vpn). DEC-051. `experiments/exp40-ikev1-transforms/RESULT.md`

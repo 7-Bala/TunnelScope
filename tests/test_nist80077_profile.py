@@ -22,7 +22,10 @@ H3 = {
     "exp15/s-x25519.pcap":   "P P P P P F U P U U N",
     "exp15/s-modp1536.pcap": "P P P P F F F P U U N",
     "exp15/s-modp4096.pcap": "P P P P P P P P U U N",
-    "cloud/c-v1.pcap":       "F U U U U U N P U U N",
+    # Superseded by DEC-051 / EXP-40 (owner-approved 2026-10-02): the PREREG row was "F U U U U U N P U U N" because the
+    # IKEv1 suite was unreadable then. It is read now and agrees with strongSwan's own swanctl output for this capture
+    # (AES_CBC-128 / PRF_HMAC_SHA1 / MODP_1024): cipher PASS, SHA-1 PRF FAIL, group 2 FAIL, integ stays UNKNOWN (IKEv1 has none).
+    "cloud/c-v1.pcap":       "F P F U F F N P U U N",
     "cloud/c-w.pcap":        "P P F F F F N P U U N",
     "exp15/a-tra-sha1.pcap": "P P P P P P F F - - N",
     "exp07/e7-pfs-on.pcap":  "P P P P P P P P U U N",

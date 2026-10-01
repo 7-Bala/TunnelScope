@@ -571,6 +571,50 @@ def _ike_sa_init_responses(pcap: str) -> list[dict]:
     return out
 
 
+# IKEv1 phase-1 transform attributes (RFC 2409 Appendix A, IANA "ISAKMP Transform Type 1 Attribute Values").
+IKE1_ENCR = {1: "DES-CBC", 2: "IDEA-CBC", 3: "Blowfish-CBC", 4: "RC5-CBC", 5: "3DES", 6: "CAST-CBC", 7: "AES-CBC",
+             8: "Camellia-CBC"}
+# The IKEv1 "hash algorithm" is the single function behind both the PRF and the message HMAC, so it is reported
+# as the PRF (the vocabulary the IKEv2 findings use); there is no separate integrity transform in IKEv1.
+IKE1_HASH_AS_PRF = {1: "PRF-HMAC-MD5", 2: "PRF-HMAC-SHA1", 3: "PRF-HMAC-Tiger", 4: "PRF-HMAC-SHA2-256",
+                    5: "PRF-HMAC-SHA2-384", 6: "PRF-HMAC-SHA2-512"}
+
+
+@_memo
+def _ike1_responder_sas(pcap: str) -> list[dict]:
+    """Every IKEv1 phase-1 SA payload sent by a RESPONDER (Main Mode or Aggressive Mode message 2), in capture
+    order. The responder's SA carries the ONE transform it selected, in the clear (RFC 2409 5.1, 5.4); the
+    initiator's message 1 and its retransmissions carry the offer and are ignored here (responder SPI zero).
+    A payload with more than one transform is not a selection and yields nothing. Quick Mode is encrypted."""
+    fields = ["frame.number", "isakmp.ispi", "isakmp.rspi", "isakmp.ike.attr.encryption_algorithm",
+              "isakmp.ike.attr.hash_algorithm", "isakmp.ike.attr.group_description", "isakmp.ike.attr.key_length"]
+    out = []
+    for r in _run_fields(pcap, "isakmp.exchangetype==2 || isakmp.exchangetype==4", fields):
+        frame, ispi, rspi, encr, hsh, grp, klen = (r + [""] * len(fields))[:len(fields)]
+        if not rspi.lower().removeprefix("0x").strip("0"):
+            continue                                   # responder SPI zero: the initiator's first message
+        if not (encr or hsh or grp):
+            continue                                   # a later, encrypted message of the exchange: no SA payload
+        if any("," in x for x in (encr, hsh, grp)):
+            continue                                   # several transforms in one payload: an offer, not a selection
+        e, h, g, k = _int(encr), _int(hsh), _int(grp), _int(klen)
+        name = IKE1_ENCR.get(e, f"encr-{e}") if e is not None else None
+        out.append({"frame": _int(frame), "ispi": ispi.lower().removeprefix("0x").split(",")[0], "suite": {
+            "encr": f"{name}-{k}" if name and k else name,
+            "prf": IKE1_HASH_AS_PRF.get(h, f"hash-{h}") if h is not None else None,
+            "dh": KE_METHOD.get(g, f"dh-{g}") if g is not None else None,
+            "dh_id": g}})
+    return out
+
+
+def ike1_selection(pcap: str, ispi: str | None = None) -> dict:
+    """The suite the responder selected in an IKEv1 phase-1 exchange: {'frame', 'encr', 'prf', 'dh', 'dh_id'} or {}
+    when no responder SA is in the file. With `ispi`, only that session's. The last selection stands."""
+    want = ispi.lower().removeprefix("0x") if ispi else None
+    rows = [r for r in _ike1_responder_sas(pcap) if not (want and r["ispi"] and r["ispi"] != want)]
+    return {"frame": rows[-1]["frame"], **rows[-1]["suite"]} if rows else {}
+
+
 def ike_sa_crypto(pcap: str, ispi: str | None = None) -> dict:
     """The IKE SA's negotiated crypto suite from the plaintext IKE_SA_INIT
     RESPONSE (the responder's single selected proposal). T1-observable. This is
