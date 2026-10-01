@@ -122,8 +122,8 @@ def main():
     S["P38-4"] = {"per_profile": per, "mean_macro_f1": round(f4, 4), "pass": f4 >= 0.70}
     # P38-5 / P38-6 mixed training
     d = np.load(A.DATA, allow_pickle=False)
-    Xs, ys = d["X"], np.array([MAP.get(v, v) for v in d["y"]]),
-    ys = ys[0] if isinstance(ys, tuple) else ys
+    Xs = d["X"]
+    ys = np.array([MAP.get(v, v) for v in d["y"]])
     groups = d["session"]
     rf_mix = fit(np.vstack([Xs, Xtr]), np.concatenate([ys, Ytr]))
     p5 = [cap_pred(rf_mix, r["feats"]) for r in test]
