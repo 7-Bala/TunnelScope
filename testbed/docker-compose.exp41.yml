@@ -20,3 +20,9 @@ services:
       net-b: { ipv4_address: 10.10.2.51 }
     environment: { ROUTE_CIDR: 10.10.1.0/24, ROUTE_GW: 10.10.2.20 }
     depends_on: [bob-pq, labc-a]
+  # The gateways forward the lab hosts' packets back out the interface they arrived on, so Linux sends an ICMP Redirect for the first
+  # packet and `ping` stops on it (found in EXP-41: one ICMP capture had 4 packets instead of ~166). No redirects, no early exit.
+  alice-pq:
+    sysctls: { net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }
+  bob-pq:
+    sysctls: { net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }

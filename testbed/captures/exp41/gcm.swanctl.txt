@@ -1,0 +1,11 @@
+e41g: #1, ESTABLISHED, IKEv2, fd36d6dfc684a544_i* cccdd4e92692e56d_r
+  local  'a-e41g' @ 10.10.1.20[4500]
+  remote 'b-e41g' @ 10.10.2.20[4500]
+  AES_CBC-256/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_3072
+  established 0s ago, rekeying in 14348s
+  e41g: #1, reqid 1, INSTALLED, TUNNEL, ESP:AES_GCM_16-256
+    installed 0s ago, expires in 7200s
+    in  c681e0d7,      0 bytes,     0 packets
+    out cca4e3fb,      0 bytes,     0 packets
+    local  10.10.1.0/24
+    remote 10.10.2.0/24
