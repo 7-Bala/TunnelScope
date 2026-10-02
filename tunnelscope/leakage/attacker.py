@@ -242,7 +242,7 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     base.update(n_train_windows=n_train, in_distribution_share=round(float(in_dist.mean()), 3))
     if in_dist.mean() < 0.5:
         return {**base, "status": "out_of_distribution", "level": None,
-                "note": "this traffic looks unlike the eight families of lab and real traffic the attacker was trained on, "
+                "note": "this traffic looks unlike the lab traffic and real traffic (eight families) the attacker was trained on, "
                         "so its confidence would mean nothing here; the size/timing bits still apply"}
     P = rf.predict_proba(X[in_dist])
     top = P.max(axis=1)
