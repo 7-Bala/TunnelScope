@@ -637,3 +637,14 @@ Held: shipped model does not transfer (0.442 macro-F1); lab C's classes are full
 lab A (+0.026) or A and B (+0.026) did not help on lab C; gated coverage 12.5% (4 of 4 answers right); adding lab C lowered lab A (0.262 -> 0.245). Per class: right for
 bulk, e-mail, VoIP; wrong for ping, telnet, video. Decision: do not retrain on the public labs; README states the limit. One ICMP capture re-run after a gateway ICMP-redirect
 fault (found, fixed, disclosed). `experiments/exp41-lab-c/RESULT.md`
+
+## EXP-42 — Make the traffic classifier generalise to generators it has never seen — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp42-generalise/PREREG.md` (bad8196) before any leave-one-family-out number. Eight families as raw
+packet streams (`build/models/corpus.py`); candidates K0-K6 (balancing, augmentation, v2 rhythm/shape features, ExtraTrees,
+HistGradientBoosting); selection rule and lab D's tools fixed in advance.
+
+### EXP-42 — RESULT (2026-10-02)
+Leave-one-family-out mean macro-F1: K0 0.412 -> chosen K4 (v2 + balancing + augmentation) 0.455 (+0.043; predicted >= +0.10,
+falsified). Balancing +0.014, augmentation -0.023, v2 +0.026 (all below +0.03). In-distribution stays 0.977-0.988. Gains on lab C
+(0.49->0.66), lab A (0.30->0.45), VNAT (0.44->0.54); losses on lab-tgen and WireGuard; USBVPN 0.03-0.10 for every candidate. One
+scorer crash (zero-packet session) fixed before K2 was scored. Decision deferred to lab D (EXP-43). `experiments/exp42-generalise/RESULT.md`
