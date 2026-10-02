@@ -1,0 +1,27 @@
+# EXP-45 labs E and F: two hosts behind the PQ gateways (as labs C and D); gateways send no ICMP redirects.
+#   docker compose -f docker-compose.yml -f docker-compose.exp45.yml up -d router alice-pq bob-pq labe-a labe-b
+services:
+  alice-pq:
+    sysctls: { net.ipv4.ip_forward: 1, net.ipv4.conf.all.rp_filter: 0, net.ipv4.conf.default.rp_filter: 0,
+               net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }
+  bob-pq:
+    sysctls: { net.ipv4.ip_forward: 1, net.ipv4.conf.all.rp_filter: 0, net.ipv4.conf.default.rp_filter: 0,
+               net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }
+  labe-a:
+    image: sih26-labef
+    container_name: sih26-labe-a
+    hostname: labe-a
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-a: { ipv4_address: 10.10.1.53 }
+    environment: { ROUTE_CIDR: 10.10.2.0/24, ROUTE_GW: 10.10.1.20 }
+    depends_on: [alice-pq]
+  labe-b:
+    image: sih26-labef
+    container_name: sih26-labe-b
+    hostname: labe-b
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-b: { ipv4_address: 10.10.2.53 }
+    environment: { ROUTE_CIDR: 10.10.1.0/24, ROUTE_GW: 10.10.2.20 }
+    depends_on: [bob-pq, labe-a]
