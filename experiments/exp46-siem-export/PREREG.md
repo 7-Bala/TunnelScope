@@ -75,3 +75,16 @@ assessment time. A fail-open case (Elasticsearch down) is the shipper's concern;
 ## Rules of this experiment
 No bar, mapping or prediction above changes after this commit. RESULT.md quotes `results/summary.json` only. Addenda go
 below this line, dated, before the run they govern.
+
+## ADDENDUM A (2026-10-02, after the code and a 25-capture rehearsal, before the run that counts)
+Nothing above is removed or loosened; the run gets stronger in two ways, and the rehearsals were not scored.
+1. **Corpus.** The work tree holds only the 145 captures that git tracks. The run uses the full local capture directory of
+   the main checkout (`testbed/captures`, 767 files at this point, including every lab) via `analyze.py --captures`, plus the
+   ten EXP-35 captures again under the `nist-sp800-77r1` profile. `summary.json` records the count, the directory and a
+   SHA-256 of the sorted name list. Every capture is exported; any capture that cannot be read is reported as an error and
+   fails the run (none is skipped).
+2. **Negative controls (they test the test; they do not replace any bar).** A scorer that cannot fail proves nothing, so the
+   run also sends (a) one document whose `source.ip` is `not-an-ip` into a separate `logs-tunnelscope-control` data stream:
+   Elasticsearch must accept it without an error and the `_ignored` check must still see the dropped field (this is the
+   case the H2 check exists for), and the schema checker must flag it; and (b) one malformed syslog line that Filebeat
+   must mark with `error.message` and the strict parser must reject. If either control does not trip, the run fails.
