@@ -1,0 +1,16 @@
+{
+ "features_identical": true,
+ "sessions_checked": 64,
+ "mismatches": [],
+ "artifact": "tunnelscope/models/traffic_windows_v2.npz",
+ "artifact_bytes": 5004853,
+ "artifact_ungated_macro_f1": 0.8333,
+ "k4_ungated_macro_f1": 0.8333,
+ "within_0.02": true,
+ "artifact_gated": {
+  "answered": 11,
+  "correct": 11,
+  "scored": 32
+ },
+ "pass": true
+}

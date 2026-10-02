@@ -648,3 +648,13 @@ Leave-one-family-out mean macro-F1: K0 0.412 -> chosen K4 (v2 + balancing + augm
 falsified). Balancing +0.014, augmentation -0.023, v2 +0.026 (all below +0.03). In-distribution stays 0.977-0.988. Gains on lab C
 (0.49->0.66), lab A (0.30->0.45), VNAT (0.44->0.54); losses on lab-tgen and WireGuard; USBVPN 0.03-0.10 for every candidate. One
 scorer crash (zero-packet session) fixed before K2 was scored. Decision deferred to lab D (EXP-43). `experiments/exp42-generalise/RESULT.md`
+
+## EXP-43 — Lab D, the final untouched test for EXP-42's chosen model — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp43-lab-d/PREREG.md` (31c3bc5) after EXP-42's selection and before any lab-D capture. Lab D: aria2c,
+httrack, GStreamer H.264 and G.711 RTP, IRC, msmtp/OpenSMTPD, mosh, fping; ChaCha20-Poly1305 and AES-CBC/SHA-384; netem 15 ms +- 5 ms,
+0.2% loss; 32 captures. Ship rule fixed in advance.
+
+### EXP-43 — RESULT (2026-10-02)
+All four predictions held. Shipped model 0.417 macro-F1, K4 0.833 (+0.417; both suites 0.833); gated answers K4 11/11 right vs 7/9.
+Interactive still 0/4. Ship rule met; the shipped artifact (5.0 MB) reproduced 0.833 and 11/11 when checked once. DEC-054. Limits: 4
+captures per class; built on our gateways. `experiments/exp43-lab-d/RESULT.md`

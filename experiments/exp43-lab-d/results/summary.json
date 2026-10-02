@@ -1,0 +1,103 @@
+{
+ "captures": 32,
+ "scored": 32,
+ "k4_train": {
+  "n_train_windows": 88683,
+  "families": [
+   "lab-a",
+   "lab-b",
+   "lab-c",
+   "lab-real-apps",
+   "lab-tgen",
+   "usbvpn",
+   "vnat",
+   "wireguard"
+  ]
+ },
+ "S_ungated_macro_f1": 0.4167,
+ "K4_ungated_macro_f1": 0.8333,
+ "S_gated": {
+  "answered": 9,
+  "correct": 7,
+  "coverage": 0.2812,
+  "accuracy_among_answered": 0.7778,
+  "stages": {
+   "answered": 9,
+   "abstained": 19,
+   "out_of_distribution": 4,
+   "insufficient": 0
+  }
+ },
+ "S_per_class_f1": {
+  "bulk": 0.0,
+  "email": 0.667,
+  "icmp": 1.0,
+  "interactive": 0.0,
+  "messaging": 0.667,
+  "video": 0.0,
+  "voip": 0.667,
+  "web": 0.333
+ },
+ "K4_gated": {
+  "answered": 11,
+  "correct": 11,
+  "coverage": 0.3438,
+  "accuracy_among_answered": 1.0,
+  "stages": {
+   "answered": 11,
+   "abstained": 17,
+   "out_of_distribution": 4,
+   "insufficient": 0
+  }
+ },
+ "K4_per_class_f1": {
+  "bulk": 1.0,
+  "email": 1.0,
+  "icmp": 1.0,
+  "interactive": 0.0,
+  "messaging": 1.0,
+  "video": 1.0,
+  "voip": 0.667,
+  "web": 1.0
+ },
+ "by_suite": {
+  "chacha": {
+   "S": 0.5417,
+   "K4": 0.8333
+  },
+  "sha384": {
+   "S": 0.2083,
+   "K4": 0.8333
+  }
+ },
+ "P43-1": {
+  "S": 0.4167,
+  "pass": true
+ },
+ "P43-2": {
+  "K4": 0.8333,
+  "S": 0.4167,
+  "gain": 0.4166,
+  "pass": true
+ },
+ "P43-3": {
+  "k4_accuracy_among_answered": 1.0,
+  "k4_correct": 11,
+  "s_correct": 7,
+  "pass": true
+ },
+ "P43-4": {
+  "by_suite": {
+   "chacha": {
+    "S": 0.5417,
+    "K4": 0.8333
+   },
+   "sha384": {
+    "S": 0.2083,
+    "K4": 0.8333
+   }
+  },
+  "pass": true
+ },
+ "ship": true
+}
