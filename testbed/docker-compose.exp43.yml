@@ -1,0 +1,27 @@
+# EXP-43 lab D: two hosts BEHIND the PQ gateways (as lab C), gateways never send ICMP redirects (the EXP-41 fault).
+#   docker compose -f docker-compose.yml -f docker-compose.exp43.yml up -d router alice-pq bob-pq labd-a labd-b
+services:
+  alice-pq:
+    sysctls: { net.ipv4.ip_forward: 1, net.ipv4.conf.all.rp_filter: 0, net.ipv4.conf.default.rp_filter: 0,
+               net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }
+  bob-pq:
+    sysctls: { net.ipv4.ip_forward: 1, net.ipv4.conf.all.rp_filter: 0, net.ipv4.conf.default.rp_filter: 0,
+               net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }
+  labd-a:
+    image: sih26-labd
+    container_name: sih26-labd-a
+    hostname: labd-a
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-a: { ipv4_address: 10.10.1.52 }
+    environment: { ROUTE_CIDR: 10.10.2.0/24, ROUTE_GW: 10.10.1.20 }
+    depends_on: [alice-pq]
+  labd-b:
+    image: sih26-labd
+    container_name: sih26-labd-b
+    hostname: labd-b
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-b: { ipv4_address: 10.10.2.52 }
+    environment: { ROUTE_CIDR: 10.10.1.0/24, ROUTE_GW: 10.10.2.20 }
+    depends_on: [bob-pq, labd-a]
