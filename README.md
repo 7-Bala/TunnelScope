@@ -48,6 +48,7 @@ Core capabilities:
 - Predicts encrypted traffic categories using an in-house trained Random Forest model with its confidence.
 - Detects behavioral anomalies and configuration drift from historical tunnel norms, such as cipher downgrades.
 - Exports executive summaries, technical reports, and CycloneDX Cryptographic Bills of Materials (CBOM).
+- Writes a tamper-evident evidence ledger (`tunnelscope ledger`): every finding and verdict hash-chained to the capture's SHA-256, so any later edit, deletion or reordering is detected (`tunnelscope ledger-verify`, optionally by re-running the analysis). It proves the record was not altered; it does not prove the analysis was right.
 - Hosts a self-contained local web dashboard for interactive capture analysis.
 - Every finding, verdict, score and posture judgment is made on your machine from the capture alone; no capture ever leaves it. The network is ON by default (DEC-045) for two extras only: known vulnerabilities for the fingerprinted VPN software (NVD, ENISA EUVD, CISA KEV, with MITRE ATT&CK/CAPEC names on each threat), looked up on every analysis and shown next to the verdicts without changing any of them, and optional remediation drafting by outside models (Groq, then Gemini, DEC-041), whose drafts are re-verified before anything runs. Only software names and lab rule/config text are sent. For an air-gapped install set `TUNNELSCOPE_NETWORK=off` and use an offline bundle made with `tunnelscope intel-bundle`. See `.env.example`.
 
