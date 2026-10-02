@@ -37,3 +37,5 @@ exp40/* :: ike_dh_group  # T-151 / EXP-40 / DEC-051: IKEv1 DH group read from th
 cloud/c-v1.pcap :: ike_encr  # T-151 / EXP-40 / DEC-051: the one existing IKEv1 capture; agrees with strongSwan's own swanctl output (AES_CBC-128)
 cloud/c-v1.pcap :: ike_prf  # T-151 / EXP-40 / DEC-051: agrees with swanctl (PRF_HMAC_SHA1)
 cloud/c-v1.pcap :: ike_dh_group  # T-151 / EXP-40 / DEC-051: agrees with swanctl (MODP_1024)
+* :: traffic_type  # T-158 / DEC-054: classifier replaced by EXP-42's K4 (v2 features, eight families, balanced); lab D 0.42 -> 0.83 (EXP-43)
+* :: attacker_exposure  # T-158 / DEC-054: same model change; exposure score comes from the new model's confidence and agreement

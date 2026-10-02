@@ -177,3 +177,5 @@ capture, endpoint vantage only.
   holds feature windows derived from it. Someone needs to ask MIT LL whether that use and that redistribution are allowed.
 - **Not started:** lab C (our own lab with sustained traffic per class and new generators), the hash-chained evidence ledger
   idea, printing the random-versus-grouped split gap.
+
+**Update 2026-10-02:** the VNAT question above is closed: the owner reports approval from MIT Lincoln Laboratory's Technology Transfer Office (DEC-052). Lab C was built (EXP-41).

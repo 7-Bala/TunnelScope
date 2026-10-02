@@ -88,3 +88,4 @@ handoff/reviews/
 # EXP-17: session pcaps are large (hashed in manifest.csv); the small IKE bring-up captures are tracked
 !testbed/captures/exp17/ike/*.pcap
 testbed/captures/exp17/exp17-*.pcap
+.corpus_cache/

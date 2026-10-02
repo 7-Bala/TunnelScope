@@ -637,3 +637,33 @@ Held: shipped model does not transfer (0.442 macro-F1); lab C's classes are full
 lab A (+0.026) or A and B (+0.026) did not help on lab C; gated coverage 12.5% (4 of 4 answers right); adding lab C lowered lab A (0.262 -> 0.245). Per class: right for
 bulk, e-mail, VoIP; wrong for ping, telnet, video. Decision: do not retrain on the public labs; README states the limit. One ICMP capture re-run after a gateway ICMP-redirect
 fault (found, fixed, disclosed). `experiments/exp41-lab-c/RESULT.md`
+
+## EXP-42 — Make the traffic classifier generalise to generators it has never seen — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp42-generalise/PREREG.md` (bad8196) before any leave-one-family-out number. Eight families as raw
+packet streams (`build/models/corpus.py`); candidates K0-K6 (balancing, augmentation, v2 rhythm/shape features, ExtraTrees,
+HistGradientBoosting); selection rule and lab D's tools fixed in advance.
+
+### EXP-42 — RESULT (2026-10-02)
+Leave-one-family-out mean macro-F1: K0 0.412 -> chosen K4 (v2 + balancing + augmentation) 0.455 (+0.043; predicted >= +0.10,
+falsified). Balancing +0.014, augmentation -0.023, v2 +0.026 (all below +0.03). In-distribution stays 0.977-0.988. Gains on lab C
+(0.49->0.66), lab A (0.30->0.45), VNAT (0.44->0.54); losses on lab-tgen and WireGuard; USBVPN 0.03-0.10 for every candidate. One
+scorer crash (zero-packet session) fixed before K2 was scored. Decision deferred to lab D (EXP-43). `experiments/exp42-generalise/RESULT.md`
+
+## EXP-43 — Lab D, the final untouched test for EXP-42's chosen model — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp43-lab-d/PREREG.md` (31c3bc5) after EXP-42's selection and before any lab-D capture. Lab D: aria2c,
+httrack, GStreamer H.264 and G.711 RTP, IRC, msmtp/OpenSMTPD, mosh, fping; ChaCha20-Poly1305 and AES-CBC/SHA-384; netem 15 ms +- 5 ms,
+0.2% loss; 32 captures. Ship rule fixed in advance.
+
+### EXP-43 — RESULT (2026-10-02)
+All four predictions held. Shipped model 0.417 macro-F1, K4 0.833 (+0.417; both suites 0.833); gated answers K4 11/11 right vs 7/9.
+Interactive still 0/4. Ship rule met; the shipped artifact (5.0 MB) reproduced 0.833 and 11/11 when checked once. DEC-054. Limits: 4
+captures per class; built on our gateways. `experiments/exp43-lab-d/RESULT.md`
+
+## EXP-44 — Recalibrate the mixed-traffic check for the new classifier — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp44-mixed-recalibrate/PREREG.md` (23b179f) after a disclosed diagnostic (lab D singles 21/32 wrongly
+flagged mixed with K4). Detector retrained on leave-one-family-out probabilities; EXP-16's bar and threshold rule.
+
+### EXP-44 — RESULT (2026-10-02)
+P44-1 falsified: best cross-validated catch 78.6% at 2.2% false flags (bar 80%), 28 mixed sessions only. Not shipped; the current
+detector stays. Post-hoc for the owner: the near-miss candidate would answer 15/32 lab-D sessions (all right) instead of 11, letting
+1/12 EXP-05 mixed sessions through. `experiments/exp44-mixed-recalibrate/RESULT.md`

@@ -1,13 +1,16 @@
 """The traffic classifier and Random Forest ATTACKER (EXP-05, EXP-15), run live on a capture.
 
-What it is: a model of a passive eavesdropper. It was trained on our own lab
-traffic (EXP-05: voip / web / bulk / interactive / video, with and without TFC padding) and,
-since EXP-19/DEC-036 and EXP-20/DEC-037, on real public traffic recorded by others: OpenVPN
-tunnels (MIT VNAT), real IPsec tunnels (USBVPN2022 L2TP-IPsec) and real people's WireGuard traffic
-(excluding its unlabelled-video-as-"web" class, EXP-20 Q5) — to guess what kind of traffic is
-inside an encrypted ESP tunnel from packet sizes, timing and direction alone. On our own lab data
-it was right almost every time (macro-F1 1.000 unpadded, 0.995 padded; leave-one-repetition-out);
-on real IPsec traffic it had never seen, adding that data raised it from 0.174 to 0.757 (EXP-20).
+What it is: a model of a passive eavesdropper that guesses what kind of traffic is inside an encrypted ESP tunnel from
+packet sizes, timing and direction alone. Since DEC-054 (EXP-42/43) it is EXP-42's K4: v2 features (the 31 original
+window features plus 15 rhythm/shape features), trained on EIGHT families of traffic, each family's generators different:
+our seeded lab generator and our real lab applications (EXP-05/15/16/17), real OpenVPN tunnels (MIT VNAT), real
+L2TP-IPsec tunnels (USBVPN2022), real people's WireGuard traffic (its unlabelled-video-as-"web" class excluded), two other
+teams' public IPsec labs (ipsec-pcap-lab, ashwin02 SIH_2026; their authors' permission) and our lab C (EXP-41); every family
+and every class inside a family carries equal weight, and each session enters twice more with its sizes shifted and its
+pace scaled. Measured on lab D (EXP-43), a lab of tools and ciphers nobody trained on: macro-F1 0.83 (0.42 for the model
+it replaced), 11 of 11 gated answers right; still wrong on interactive sessions there. On a whole family held out of
+training (EXP-42) it averages 0.455: traffic unlike all eight families can still be misread, which is what the abstain
+rule and the out-of-distribution check are for.
 
 What it reports for a capture (DEC-027, superseding DEC-021's "never a label"):
   - attacker_exposure: how SURE and how CONSISTENT the attacker is, 0-100;
@@ -59,7 +62,9 @@ WIN = 2.0                  # seconds per window (EXP-05)
 MIN_PKTS = 3               # a window with fewer packets carries no usable signal
 SIZE_EDGES = [0, 128, 256, 512, 1024, 1600]
 MIN_WINDOWS = 3            # below this, too little traffic to say anything
-DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "traffic_windows.npz")
+DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "traffic_windows_v2.npz")
+# The v1 file (31 features, lab + VNAT/USBVPN/WireGuard) stays for the frozen scoreboard and earlier experiments.
+DATA_V1 = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "traffic_windows.npz")
 
 # Measured on held-out repetitions: EXP-15 (synthetic shapes) and EXP-16 (real
 # lab applications + Libreswan). The last number is the one to keep in mind: a
@@ -74,6 +79,8 @@ REFERENCE = {"f1_unpadded": 0.995, "f1_tfc_padded": 0.958, "f1_real_apps_loro": 
              "f1_cross_implementation": 1.0, "f1_synthetic_only_on_real_apps": 0.461,
              "f1_lab_only_on_real_public": 0.472, "f1_real_public_heldout": 0.741,
              "f1_before_real_ipsec": 0.174, "f1_with_real_ipsec_and_people": 0.757,
+             # DEC-054: EXP-42 (a whole family held out, mean of eight) and EXP-43 (lab D, nobody trained on it)
+             "f1_unseen_family_mean": 0.455, "f1_lab_d_unseen": 0.833, "f1_lab_d_previous_model": 0.417,
              "chance": round(1 / len(CLASSES), 3)}
 
 
@@ -109,6 +116,85 @@ def window_features(pkts: list[tuple[float, str, int]], complete_only: bool = Tr
     return feats
 
 
+V2_NEW = ["pps", "bps", "up_share", "dir_switch", "out_near_max", "in_near_max", "out_iat_cv", "in_iat_cv", "size_entropy",
+          "rhythm_peak", "rhythm_lag", "fast_share", "ctx_pps", "ctx_bps", "ctx_up_share"]
+
+
+def _rhythm(ts):
+    if len(ts) < 4:
+        return 0.0, 0.0
+    c = np.bincount(((ts - ts[0]) / 0.01).astype(int), minlength=200)[:200].astype(float)
+    c -= c.mean()
+    den = float((c * c).sum())
+    if den <= 0:
+        return 0.0, 0.0
+    ac = np.array([float((c[:-k] * c[k:]).sum()) / den for k in range(1, 21)])
+    k = int(ac.argmax())
+    return float(ac[k]), (k + 1) * 0.01
+
+
+def _v2_extra(pkts):
+    """The 15 rhythm/shape columns of EXP-42's v2 (build/models/features_v2.py, frozen); same windows as window_features."""
+    if not pkts:
+        return []
+    t = np.array([p[0] for p in pkts], float)
+    out = np.array([p[1] == "out" for p in pkts], bool)
+    size = np.array([p[2] for p in pkts], float)
+    idx = ((t - t[0]) // WIN).astype(int)
+    last_full = int((t[-1] - t[0]) // WIN) - 1
+    smax_out = size[out].max() if out.any() else 0.0
+    smax_in = size[~out].max() if (~out).any() else 0.0
+
+    def cv(x):
+        d = np.diff(x)
+        return float(d.std() / d.mean()) if len(d) > 1 and d.mean() > 0 else 0.0
+    rows = []
+    for w in np.unique(idx):
+        m = idx == w
+        if m.sum() < MIN_PKTS or w > last_full:
+            continue
+        tw, ow, sw = t[m], out[m], size[m]
+        n, b = len(tw), float(sw.sum())
+        hist = np.histogram(np.clip(sw, 0, 1599), bins=16, range=(0, 1600))[0] / n
+        ent = float(-(hist[hist > 0] * np.log2(hist[hist > 0])).sum())
+        peak, lag = _rhythm(tw)
+        iat = np.diff(tw)
+        rows.append([n / WIN, b / WIN, float(sw[ow].sum()) / b if b else 0.0,
+                     float((ow[1:] != ow[:-1]).mean()) if n > 1 else 0.0,
+                     float((sw[ow] >= smax_out - 8).mean()) if ow.any() else 0.0,
+                     float((sw[~ow] >= smax_in - 8).mean()) if (~ow).any() else 0.0,
+                     cv(tw[ow]), cv(tw[~ow]), ent, peak, lag,
+                     float((iat < 0.005).mean()) if len(iat) else 0.0])
+    R = np.asarray(rows, float)
+    if len(R):
+        ctx = np.array([R[max(0, i - 2):i + 3, :3].mean(axis=0) for i in range(len(R))])
+        R = np.hstack([R, ctx])
+    return R.tolist()
+
+
+def window_features_v2(pkts: list[tuple[float, str, int]]) -> list[list[float]]:
+    """EXP-42's v2 = the 31 v1 columns + 15 rhythm/shape columns, window for window (DEC-054). Only times, directions
+    and IP lengths: nothing about the label, the cipher or the tunnel type."""
+    pkts = sorted(pkts, key=lambda p: p[0])     # stable on time only, as the experiments ordered them
+    base = window_features(pkts)
+    ext = _v2_extra(pkts)
+    return [a + b for a, b in zip(base, ext)]
+
+
+def balanced_weights(y, family):
+    """Every training family carries equal total weight; within a family every class does (EXP-42 K1)."""
+    y, family = np.asarray(y), np.asarray(family)
+    w = np.zeros(len(y))
+    fams = set(family.tolist())
+    for f in fams:
+        mf = family == f
+        classes = set(y[mf].tolist())
+        for c in classes:
+            m = mf & (y == c)
+            w[m] = 1.0 / (len(fams) * len(classes) * m.sum())
+    return w * len(y)
+
+
 @lru_cache(maxsize=1)
 def _model():
     """Train once per process on the shipped training windows (build/models/make_traffic_data.py).
@@ -120,7 +206,8 @@ def _model():
 
     d = np.load(DATA, allow_pickle=False)
     X, y = d["X"], d["y"]
-    rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=-1, min_samples_leaf=2).fit(X, y)
+    w = balanced_weights(y, d["family"]) if "family" in d.files else None
+    rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=-1, min_samples_leaf=2).fit(X, y, sample_weight=w)
     # out-of-distribution gate: how far is a window from the nearest training
     # window, compared with how far training windows are from each other
     sc = StandardScaler().fit(X)
@@ -141,7 +228,7 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     status 'measured' | 'insufficient' | 'out_of_distribution'."""
     if out_src is None and esp:
         out_src = esp[0]["src"]
-    feats = window_features(_packets(esp, out_src))
+    feats = window_features_v2(_packets(esp, out_src))
     base = {"windows": len(feats), "min_windows": MIN_WINDOWS, "reference": REFERENCE,
             "label_suppressed": True}
     if len(feats) < MIN_WINDOWS:
@@ -155,7 +242,7 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     base.update(n_train_windows=n_train, in_distribution_share=round(float(in_dist.mean()), 3))
     if in_dist.mean() < 0.5:
         return {**base, "status": "out_of_distribution", "level": None,
-                "note": "this traffic looks unlike the lab traffic and real public traffic the attacker was trained on, "
+                "note": "this traffic looks unlike the lab traffic and real traffic (eight families) the attacker was trained on, "
                         "so its confidence would mean nothing here; the size/timing bits still apply"}
     P = rf.predict_proba(X[in_dist])
     top = P.max(axis=1)
@@ -193,7 +280,7 @@ def _note(level: str, conf: float, cons: float, n: int) -> str:
     what = {"high": "can reliably tell what kind of traffic this tunnel carries",
             "medium": "can partly tell what kind of traffic this tunnel carries",
             "low": "cannot reliably tell what kind of traffic this tunnel carries"}[level]
-    return (f"A passive attacker model trained on lab and real public traffic {what}, from packet sizes and timing alone "
+    return (f"A passive attacker model trained on eight families of lab and real traffic {what}, from packet sizes and timing alone "
             f"(average confidence {conf:.0%}, same guess in {cons:.0%} of {n} windows). "
             "Encryption hides the content, not the shape.")
 

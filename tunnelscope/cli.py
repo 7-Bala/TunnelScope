@@ -16,7 +16,7 @@ import json
 import os
 import sys
 
-from .errors import TunnelScopeError
+from .errors import InputError, TunnelScopeError
 from .evidence.extract import build_records
 from .ingest.tshark import capture_summary, preflight, REQUIRED_FIELDS
 from .assess.engine import assess_record, load_baselines
@@ -43,6 +43,36 @@ def cmd_analyze(args):
             print(f"    {attr:22} {f.status.value:15} {v:30}  [{f.vantage.value}] {f.method}")
             if f.note and f.status.name in ("NOT_OBSERVABLE", "UNKNOWN", "CONTRADICTORY"):
                 print(f"        └ {f.note}")
+
+
+def cmd_ledger(args):
+    from .ledger import build_ledger
+    led = build_ledger(args.pcap)
+    out = json.dumps(led, indent=1, ensure_ascii=False)
+    if args.out:
+        with open(args.out, "w") as fh:
+            fh.write(out + "\n")
+        print(f"ledger: {led['count']} entries, head {led['head']} -> {args.out}")
+    else:
+        print(out)
+    return 0
+
+
+def cmd_ledger_verify(args):
+    from .ledger import verify_ledger
+    try:
+        with open(args.ledger) as fh:
+            led = json.load(fh)
+    except (OSError, ValueError) as e:
+        raise InputError(f"cannot read ledger {args.ledger}: {e}") from None
+    r = verify_ledger(led, pcap=args.pcap, reanalyse=args.reanalyse)
+    if r["ok"]:
+        print(f"OK: {r['count']} entries, head {r['head']}" + (" (capture matches)" if args.pcap else "")
+              + (" (re-analysis matches)" if args.reanalyse else ""))
+        return 0
+    where = "" if r["first_bad"] is None else f" at entry {r['first_bad']}"
+    print(f"TAMPERED or MISMATCHED{where}: {r['reason']}")
+    return 1
 
 
 def _version() -> str:
@@ -453,6 +483,15 @@ def main(argv=None):
                    help="exit 1 if any FAIL verdict is present (for CI/monitoring gates)")
     s.add_argument("--profile", action="append", help="also assess against an opt-in rules profile (e.g. cnsa2-ipsec); repeatable")
     s.set_defaults(func=cmd_assess)
+    lg = sub.add_parser("ledger", help="tamper-evident evidence ledger: every finding and verdict, hash-chained to the capture")
+    lg.add_argument("pcap")
+    lg.add_argument("-o", "--out", help="write the ledger here instead of printing it")
+    lg.set_defaults(func=cmd_ledger)
+    lv2 = sub.add_parser("ledger-verify", help="check a ledger's hash chain (exit 1 if anything was changed)")
+    lv2.add_argument("ledger")
+    lv2.add_argument("--pcap", help="also check it describes this capture")
+    lv2.add_argument("--reanalyse", action="store_true", help="also re-run the analysis and require the same head (needs --pcap)")
+    lv2.set_defaults(func=cmd_ledger_verify)
     cb = sub.add_parser("cbom", help="emit a CycloneDX CBOM for a pcap")
     cb.add_argument("pcap")
     cb.set_defaults(func=cmd_cbom)

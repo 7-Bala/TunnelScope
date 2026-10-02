@@ -1,0 +1,11 @@
+e43s: #3, ESTABLISHED, IKEv2, cdb372599d07be4f_i* c773c92114cc0277_r
+  local  'a-e43s' @ 10.10.1.20[4500]
+  remote 'b-e43s' @ 10.10.2.20[4500]
+  AES_CBC-256/HMAC_SHA2_384_192/PRF_HMAC_SHA2_384/MODP_3072
+  established 0s ago, rekeying in 13368s
+  e43s: #3, reqid 1, INSTALLED, TUNNEL, ESP:AES_CBC-256/HMAC_SHA2_384_192
+    installed 0s ago, expires in 7200s
+    in  c0078010,      0 bytes,     0 packets
+    out c76b9ba4,      0 bytes,     0 packets
+    local  10.10.1.0/24
+    remote 10.10.2.0/24
