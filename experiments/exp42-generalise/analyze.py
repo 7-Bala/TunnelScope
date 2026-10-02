@@ -58,6 +58,8 @@ def augmented(sessions):
     """Two seeded copies per session: constant size offset in [-40, +80] bytes, time scale in [0.8, 1.25]."""
     out, src = [], []
     for i, s in enumerate(sessions):
+        if len(s.t) == 0:                        # a session with no packets has no windows and is never scored
+            continue
         for k in range(N_COPIES):
             rng = np.random.default_rng(int(hashlib.sha256(f"{s.sid}#{k}".encode()).hexdigest()[:8], 16))
             off, scale = int(rng.integers(-40, 81)), float(rng.uniform(0.8, 1.25))
@@ -157,8 +159,12 @@ def select(R):
 def main():
     RES.mkdir(exist_ok=True)
     sessions = corpus.load()
-    R = {}
+    part = RES / "partial.json"
+    R = json.load(open(part)) if part.exists() else {}       # resume: candidates already scored by this same code
     for name, spec in CANDIDATES.items():
+        if name in R:
+            print(f"== {name} (from partial.json)", flush=True)
+            continue
         print(f"== {name}", flush=True)
         R[name] = run_candidate(name, spec, sessions)
         json.dump(R, open(RES / "partial.json", "w"), indent=1)
