@@ -561,3 +561,79 @@ Three plaintext-IKEv2 attack-pattern detectors (malformed KE, INFORMATIONAL befo
 SA/KE/Nonce). H1 specificity: 0 false detections over 695 captures / 668 SAs (159 PASS, 509 UNKNOWN). H2 sensitivity:
 decision-function unit tests (ADDENDUM A -- no crafted attack traffic). H3 vantage: UNKNOWN without the handshake. 4
 mutation checks caught. DEC-048. `experiments/exp34-cve-detectors/RESULT.md`
+
+## EXP-35 — NIST SP 800-77 Rev. 1 as an opt-in rules profile (T-122 part 2) — PRE-REGISTRATION (2026-09-29)
+Pre-registered in `experiments/exp35-nist-800-77r1-profile/PREREG.md` (654e2ff) before any code and any run. 11 rules
+from Table 1 and sections 2.2-7.2.6 of the hashed NIST PDF, each with its verbatim quote; the rule-making method
+(severity from shall/should) and the requirements not made into rules are fixed there. Bars: default verdicts
+identical to main on every capture; every quote verbatim in the PDF; pre-stated verdicts on 10 named captures; no PASS
+on missing evidence.
+
+### EXP-35 — RESULT (2026-09-29)
+H1: 0 default-verdict differences over 695 captures vs main 85777ca. H2: 20/20 quotes verbatim (PDF SHA-256
+bc2a36dc...74bd70). H3: 10/10 captures exactly as pre-registered; the two ESP rules 0 PASS / 0 FAIL on 668 SAs
+(UNKNOWN: packet sizes cannot decide). H4: 0 PASS without evidence. 7 mutation checks caught. DEC-049.
+`experiments/exp35-nist-800-77r1-profile/RESULT.md`
+
+## EXP-37 — Cross-lab test on two other teams' captures — PRE-REGISTRATION (2026-10-01)
+Pre-registered in `experiments/exp37-cross-lab-external/PREREG.md` (df26be3), scorer committed before the run (43dcd82).
+Part A: 239 captures of `ipsec-pcap-lab` (commit c0cf256, ESP-only, no licence). Part B: 55 of 60 control-plane captures
+of an ML-KEM thesis set (5 not downloadable). 12 predictions; local analysis only; captures deleted afterwards.
+
+### EXP-37 — RESULT (2026-10-01)
+Held: no DH/PFS claim on 175 ESP-only captures; the cipher sieve never excluded the true family (175/175); 0 OBSERVED
+handshake values contradicted metadata (8/8); 0 false PQ claims on 29 classical runs. Falsified: traffic type answered
+5/175 and 0/5 correct (coverage 2.9%); 24 of 26 hybrid files cut short mid-packet and refused by the product. Not scorable
+as registered: mode (never committed), P37-9 and P37-11 (scorer defect: wrong record chosen for control-plane files,
+found after the numbers, disclosed). Post-hoc, not registered: whole-capture scoring on trimmed copies reads 26/26 hybrid
+runs as ML-KEM-768 with the swanctl suite, 0 false PQ. Follow-ups: read cut-short captures, IKEv1 transform coverage,
+multi-lab traffic-type test. `experiments/exp37-cross-lab-external/RESULT.md`
+
+## EXP-38 — Why the traffic-type model does not transfer to another lab — PRE-REGISTRATION (2026-10-01)
+Pre-registered in `experiments/exp38-traffic-transfer-diagnosis/PREREG.md` (9d7a03c), scorer 584da2f, before any run. Same
+175 `ipsec-pcap-lab` captures as EXP-37 (permission relayed verbally; no licence file). Separates three causes: a strict
+gate, a model that does not generalise, features that cannot separate the classes. Nothing that ships is changed.
+
+### EXP-38 — RESULT (2026-10-01)
+P38-1 falsified: the out-of-distribution gate stops 41 of 175 (23%); 107 (61%) pass it and are stopped by the confidence /
+agreement rules, 22 have under 3 windows, 5 answered. Held: ungated shipped model macro-F1 0.262; features separate their
+classes inside their lab (R05 1.000, leave-one-profile-out 1.000, caveat: easy distinct generators, 33 test captures);
+adding their windows to training scores 1.000 on R05 and changes our grouped-CV macro-F1 by +0.003. Decision: the gates
+are right to abstain; training-data coverage is the gap; any training change needs its own PREREG and a third lab.
+`experiments/exp38-traffic-transfer-diagnosis/RESULT.md`
+
+## EXP-39 — Does training on one lab help on another? (leave-one-lab-out) — PRE-REGISTRATION (2026-10-01)
+Pre-registered in `experiments/exp39-two-lab-transfer/PREREG.md` (d32724e), scorer 66adfc3, before any run. Lab A
+`ipsec-pcap-lab` (c0cf256) and lab B `ashwin02-cyber/SIH_2026` (ef0ffe9, manifest hashed); both authors' permission relayed
+verbally; no captures or derivatives committed. Shipped forest/gates retrained on other windows via `attacker.DATA`; no
+shipped file edited. Six predictions.
+
+### EXP-39 — RESULT (2026-10-01)
+Falsified as registered: P39-2 (A->B gain +0.015), P39-3 (coverage 48.6%, 35/35 correct), P39-4 (B->A gain +0.008), P39-5
+(2.0%); held: P39-1, P39-6 (no harm, +0.002). Pre-registration flaw found in the data: lab B has 0 windows for
+file_transfer and voip and 1 for video (10 MB scp ends inside one 2 s window; SIP is sparse), so only icmp and web can be
+scored and macro-F1 over five classes was unattainable. Supported reading: icmp transfers (1.000 for every model); for web,
+training on the other lab did not help in either direction. The labs cannot answer the wider question. Nothing ships.
+Next: a third lab of our own with sustained traffic per class. `experiments/exp39-two-lab-transfer/RESULT.md`
+
+## EXP-40 — Read the negotiated suite of an IKEv1 session — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp40-ikev1-transforms/PREREG.md` (9d95710) before any capture and any code; lab, 8 Libreswan 5.4
+IKEv1 arms (Main and Aggressive Mode, one two-offer arm), captures with pluto ground truth, scorer and before-snapshot committed
+in 04a8a27 before the extractor existed. Six predictions plus five named mutation checks.
+
+### EXP-40 — RESULT (2026-10-02)
+All six held: 8/8 suites equal pluto's log; the two-offer arm reports the second offer (the selection); 8/8 offer-only cuts give
+UNKNOWN; 0 IKEv2 captures changed (701); verdicts as predicted, no RFC 8247 verdict on IKEv1; nothing else changed. The one existing
+IKEv1 capture (strongSwan) also matches swanctl. Not exercised: a real failed IKEv1 negotiation. Two earlier pins superseded with owner
+approval (EXP-35 NIST row for cloud/c-v1; test_cloud_vpn). DEC-051. `experiments/exp40-ikev1-transforms/RESULT.md`
+
+## EXP-41 — A third lab with sustained traffic and new generators — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp41-lab-c/PREREG.md` (a4521a2, erratum 3b9a94c); scorer and harness d6f43e8 and data f5c9c3f committed before any scoring. Lab C:
+eight classes from tools not in our shipped generators or labs A/B (iperf3, wget -r, MQTT, telnet over a pty, MPEG-TS over UDP, Opus RTP, curl SMTP, ping), two
+tunnel configurations, 32 captures of 60 s. Test for models retrained on the two public labs. Seven predictions.
+
+### EXP-41 — RESULT (2026-10-02)
+Held: shipped model does not transfer (0.442 macro-F1); lab C's classes are fully learnable inside the lab (1.000); no harm to our own CV (+0.001). Falsified: training on
+lab A (+0.026) or A and B (+0.026) did not help on lab C; gated coverage 12.5% (4 of 4 answers right); adding lab C lowered lab A (0.262 -> 0.245). Per class: right for
+bulk, e-mail, VoIP; wrong for ping, telnet, video. Decision: do not retrain on the public labs; README states the limit. One ICMP capture re-run after a gateway ICMP-redirect
+fault (found, fixed, disclosed). `experiments/exp41-lab-c/RESULT.md`

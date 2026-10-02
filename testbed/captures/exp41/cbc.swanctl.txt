@@ -1,0 +1,11 @@
+e41c: #2, ESTABLISHED, IKEv2, c1649ceed6a97e2a_i* 04e118bbbf4b907b_r
+  local  'a-e41c' @ 10.10.1.20[4500]
+  remote 'b-e41c' @ 10.10.2.20[4500]
+  AES_CBC-128/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048
+  established 0s ago, rekeying in 13631s
+  e41c: #2, reqid 1, INSTALLED, TUNNEL, ESP:AES_CBC-128/HMAC_SHA2_256_128
+    installed 0s ago, expires in 7200s
+    in  c5d194a3,      0 bytes,     0 packets
+    out c1789b6b,      0 bytes,     0 packets
+    local  10.10.1.0/24
+    remote 10.10.2.0/24

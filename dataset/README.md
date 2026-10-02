@@ -1,8 +1,10 @@
 # TunnelScope IPsec Capture Dataset — Release
 
 A controlled, hash-verified IPsec/IKE capture set with **causal ground truth** (the configuration we
-set + the endpoint's own `swanctl`/`pluto` log — never inferred from the capture). First public
-dataset labelled with IPsec cryptographic **configuration** (doc 05: none existed).
+set + the endpoint's own `swanctl`/`pluto` log — never inferred from the capture). Built as
+one-factor-at-a-time arms on two implementations, with a locked cross-implementation test set and
+post-quantum downgrade arms. Other public IPsec capture sets exist (for example `ipsec-pcap-lab`,
+labelled by traffic class and profile); see `research/17-GITHUB-LANDSCAPE.md` for how this one differs.
 
 | File | What |
 |---|---|

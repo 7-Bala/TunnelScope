@@ -202,8 +202,15 @@ def _run_fields(pcap: str, display_filter: str, fields: list[str],
             f"tshark timed out after {timeout or DEFAULT_TIMEOUT_S}s on {pcap} — "
             "raise TUNNELSCOPE_TSHARK_TIMEOUT if this capture is genuinely large"
         ) from None
-    if proc.returncode != 0:
-        # tshark's own stderr says WHY (not a capture file, truncated, unreadable).
+    if proc.returncode != 0 and _cut_short(proc) and _has_a_whole_packet(pcap):
+        # The file ends inside its last packet (a capture killed before its buffer was flushed is
+        # the usual cause). tshark has already printed every whole packet before the cut, so keep
+        # them and remember the file was damaged: the caller must not read "not in the file" as
+        # "not on the wire" (EXP-37: 24 of 26 real hybrid-PQ captures were cut like this and the
+        # whole handshake was intact in the first nine packets).
+        _TRUNCATED.add(_fingerprint(pcap))
+    elif proc.returncode != 0:
+        # tshark's own stderr says WHY (not a capture file, unreadable).
         # Swallowing it into a CalledProcessError leaves the caller guessing.
         why = (proc.stderr or "").strip().splitlines()
         detail = why[-1] if why else f"tshark exited {proc.returncode}"
@@ -211,6 +218,37 @@ def _run_fields(pcap: str, display_filter: str, fields: list[str],
             detail = f"tshark was stopped by signal {-proc.returncode} (a resource limit, or a crash on this file)"
         raise InputError(f"tshark could not read {pcap}: {detail}")
     return [line.split("\t") for line in proc.stdout.splitlines() if line.strip()]
+
+
+def _cut_short(proc) -> bool:
+    """True only for tshark's own "cut short in the middle of a packet" report. Any other failure
+    (not a capture file, unreadable, killed by a limit) is still an error: those files give no
+    trustworthy packets. The exit code is not used: it was 14 here, and differs by tshark build."""
+    return "cut short in the middle of a packet" in (proc.stderr or "")
+
+
+def _has_a_whole_packet(pcap: str) -> bool:
+    """tshark words a file cut off inside its own header the same way as one cut off inside a packet.
+    Only the second has anything to analyse, so ask for the first packet. Runs only on the error path."""
+    try:
+        probe = run_isolated([tshark_bin(), "-n", "-r", str(pcap), "-c", "1", "-T", "fields", "-e", "frame.number"],
+                             DEFAULT_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        return False
+    return bool(probe.stdout.strip())
+
+
+# Captures (by path, mtime, size) whose last packet is cut off. Filled by _run_fields, read by
+# is_truncated(); cleared with the memo so a rewritten file is judged afresh.
+_TRUNCATED: set = set()
+
+
+def is_truncated(pcap: str) -> bool:
+    """Was this capture cut off inside its last packet? Only meaningful after a reader has run on it."""
+    try:
+        return _fingerprint(pcap) in _TRUNCATED
+    except OSError:
+        return False
 
 
 # --------------------------------------------------------------------------- #
@@ -240,6 +278,7 @@ def _fingerprint(pcap: str) -> tuple:
 def clear_cache() -> None:
     """Drop every memoised capture (tests, and long-lived callers)."""
     _CACHE.clear()
+    _TRUNCATED.clear()
 
 
 def _memo(fn):
@@ -490,9 +529,12 @@ def capture_summary(pcap: str) -> dict:
     esp = esp_packets(pcap)
     ah = ah_packets(pcap)
     exch = sorted({m["exchange_name"] for m in ike if m["exchange"] is not None})
-    return {"pcap": str(pcap), "n_ike": len(ike), "n_esp": len(esp), "n_ah": len(ah),
-            "exchanges": exch,
-            "has_ike_sa_init": any(m["exchange"] == 34 for m in ike)}
+    out = {"pcap": str(pcap), "n_ike": len(ike), "n_esp": len(esp), "n_ah": len(ah),
+           "exchanges": exch,
+           "has_ike_sa_init": any(m["exchange"] == 34 for m in ike)}
+    if is_truncated(pcap):          # only present when true, so intact captures keep their exact shape
+        out["capture_truncated"] = True
+    return out
 
 
 # IKEv2 Encryption (Transform Type 1) and Integrity (Type 3) id -> name (IANA)
@@ -527,6 +569,50 @@ def _ike_sa_init_responses(pcap: str) -> list[dict]:
             "dh_id": d,
         }})
     return out
+
+
+# IKEv1 phase-1 transform attributes (RFC 2409 Appendix A, IANA "ISAKMP Transform Type 1 Attribute Values").
+IKE1_ENCR = {1: "DES-CBC", 2: "IDEA-CBC", 3: "Blowfish-CBC", 4: "RC5-CBC", 5: "3DES", 6: "CAST-CBC", 7: "AES-CBC",
+             8: "Camellia-CBC"}
+# The IKEv1 "hash algorithm" is the single function behind both the PRF and the message HMAC, so it is reported
+# as the PRF (the vocabulary the IKEv2 findings use); there is no separate integrity transform in IKEv1.
+IKE1_HASH_AS_PRF = {1: "PRF-HMAC-MD5", 2: "PRF-HMAC-SHA1", 3: "PRF-HMAC-Tiger", 4: "PRF-HMAC-SHA2-256",
+                    5: "PRF-HMAC-SHA2-384", 6: "PRF-HMAC-SHA2-512"}
+
+
+@_memo
+def _ike1_responder_sas(pcap: str) -> list[dict]:
+    """Every IKEv1 phase-1 SA payload sent by a RESPONDER (Main Mode or Aggressive Mode message 2), in capture
+    order. The responder's SA carries the ONE transform it selected, in the clear (RFC 2409 5.1, 5.4); the
+    initiator's message 1 and its retransmissions carry the offer and are ignored here (responder SPI zero).
+    A payload with more than one transform is not a selection and yields nothing. Quick Mode is encrypted."""
+    fields = ["frame.number", "isakmp.ispi", "isakmp.rspi", "isakmp.ike.attr.encryption_algorithm",
+              "isakmp.ike.attr.hash_algorithm", "isakmp.ike.attr.group_description", "isakmp.ike.attr.key_length"]
+    out = []
+    for r in _run_fields(pcap, "isakmp.exchangetype==2 || isakmp.exchangetype==4", fields):
+        frame, ispi, rspi, encr, hsh, grp, klen = (r + [""] * len(fields))[:len(fields)]
+        if not rspi.lower().removeprefix("0x").strip("0"):
+            continue                                   # responder SPI zero: the initiator's first message
+        if not (encr or hsh or grp):
+            continue                                   # a later, encrypted message of the exchange: no SA payload
+        if any("," in x for x in (encr, hsh, grp)):
+            continue                                   # several transforms in one payload: an offer, not a selection
+        e, h, g, k = _int(encr), _int(hsh), _int(grp), _int(klen)
+        name = IKE1_ENCR.get(e, f"encr-{e}") if e is not None else None
+        out.append({"frame": _int(frame), "ispi": ispi.lower().removeprefix("0x").split(",")[0], "suite": {
+            "encr": f"{name}-{k}" if name and k else name,
+            "prf": IKE1_HASH_AS_PRF.get(h, f"hash-{h}") if h is not None else None,
+            "dh": KE_METHOD.get(g, f"dh-{g}") if g is not None else None,
+            "dh_id": g}})
+    return out
+
+
+def ike1_selection(pcap: str, ispi: str | None = None) -> dict:
+    """The suite the responder selected in an IKEv1 phase-1 exchange: {'frame', 'encr', 'prf', 'dh', 'dh_id'} or {}
+    when no responder SA is in the file. With `ispi`, only that session's. The last selection stands."""
+    want = ispi.lower().removeprefix("0x") if ispi else None
+    rows = [r for r in _ike1_responder_sas(pcap) if not (want and r["ispi"] and r["ispi"] != want)]
+    return {"frame": rows[-1]["frame"], **rows[-1]["suite"]} if rows else {}
 
 
 def ike_sa_crypto(pcap: str, ispi: str | None = None) -> dict:

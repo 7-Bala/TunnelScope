@@ -1,0 +1,58 @@
+{
+  "e40-m-aes256-sha256-g14": {
+    "k": 1,
+    "lsw_a": "10.10.1.41",
+    "lsw_b": "10.10.2.41",
+    "mode": "main",
+    "ike": "aes256-sha2_256-modp2048"
+  },
+  "e40-m-aes128-sha1-g5": {
+    "k": 2,
+    "lsw_a": "10.10.1.42",
+    "lsw_b": "10.10.2.42",
+    "mode": "main",
+    "ike": "aes128-sha1-modp1536"
+  },
+  "e40-m-3des-sha1-g5": {
+    "k": 3,
+    "lsw_a": "10.10.1.43",
+    "lsw_b": "10.10.2.43",
+    "mode": "main",
+    "ike": "3des-sha1-modp1536"
+  },
+  "e40-m-aes256-sha384-g15": {
+    "k": 4,
+    "lsw_a": "10.10.1.44",
+    "lsw_b": "10.10.2.44",
+    "mode": "main",
+    "ike": "aes256-sha2_384-modp3072"
+  },
+  "e40-m-aes128-sha256-g19": {
+    "k": 5,
+    "lsw_a": "10.10.1.45",
+    "lsw_b": "10.10.2.45",
+    "mode": "main",
+    "ike": "aes128-sha2_256-dh19"
+  },
+  "e40-a-aes256-sha256-g14": {
+    "k": 6,
+    "lsw_a": "10.10.1.46",
+    "lsw_b": "10.10.2.46",
+    "mode": "aggressive",
+    "ike": "aes256-sha2_256-modp2048"
+  },
+  "e40-a-aes128-sha1-g5": {
+    "k": 7,
+    "lsw_a": "10.10.1.47",
+    "lsw_b": "10.10.2.47",
+    "mode": "aggressive",
+    "ike": "aes128-sha1-modp1536"
+  },
+  "e40-m-multi": {
+    "k": 8,
+    "lsw_a": "10.10.1.48",
+    "lsw_b": "10.10.2.48",
+    "mode": "main",
+    "ike": "aes256-sha2_256-modp2048,aes128-sha1-modp1536"
+  }
+}

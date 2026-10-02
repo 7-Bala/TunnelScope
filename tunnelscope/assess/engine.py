@@ -87,6 +87,9 @@ def _assert(op: str, want, value) -> bool | None:
             return False
         return None if any(g is None for g in ids) else True
     if op == "contains":     return isinstance(value, list) and want in value
+    if op == "not_contains":
+        # T-122 (EXP-35): e.g. "AH should not be deployed"; a non-list can't be judged, so UNKNOWN, never PASS
+        return None if not isinstance(value, list) else want not in value
     if op in ("candidates_not_all_in", "candidates_none_in"):
         # value: a candidate SET (the wire narrows it, can't always resolve it)
         if not isinstance(value, list) or not value:
@@ -143,6 +146,11 @@ def assess_record(rec: EvidenceRecord, baselines: list[dict] | None = None) -> l
                 pf = rec.findings.get("ipsec_protocols")
                 if not (pf is not None and isinstance(pf.value, list) and need in pf.value):
                     continue     # e.g. no AH verdict for an ESP-only SA: not applicable, not "unknown"
+            need_ike = rule.get("applies_to_ike_version")
+            if need_ike:
+                iv = rec.findings.get("ike_version")
+                if iv is not None and iv.value not in (None, need_ike):
+                    continue     # e.g. RFC 8247 is an IKEv2 document: it says nothing about an IKEv1 session
             f = rec.findings.get(rule["attribute"])
             common = dict(baseline=b["baseline"], authority=b["authority"], rule_id=rule["id"],
                           title=rule["title"], severity=rule.get("severity", "medium"),

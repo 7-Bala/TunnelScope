@@ -31,3 +31,9 @@ exp26/mt-m7.pcap :: pfs  # T-135: same padding; was INFERRED True for a PFS-off 
 * :: ke_payload_anomaly  # T-131: new detector, malformed IKE_SA_INIT KE payload (RFC 7296 3.4; CVE pattern), OBSERVED/UNKNOWN only
 * :: informational_before_auth  # T-131: new detector, INFORMATIONAL before IKE_AUTH (RFC 7296 1.4; CVE pattern)
 * :: init_missing_payloads  # T-131: new detector, IKE_SA_INIT request missing SA/KE/Nonce (RFC 7296 1.2; CVE pattern)
+exp40/* :: ike_encr  # T-151 / EXP-40 / DEC-051: IKEv1 phase-1 cipher read from the responder's SA payload (Main/Aggressive Mode message 2); was UNKNOWN
+exp40/* :: ike_prf  # T-151 / EXP-40 / DEC-051: IKEv1 hash algorithm reported as the PRF; new finding for IKEv1
+exp40/* :: ike_dh_group  # T-151 / EXP-40 / DEC-051: IKEv1 DH group read from the responder's SA payload; was UNKNOWN
+cloud/c-v1.pcap :: ike_encr  # T-151 / EXP-40 / DEC-051: the one existing IKEv1 capture; agrees with strongSwan's own swanctl output (AES_CBC-128)
+cloud/c-v1.pcap :: ike_prf  # T-151 / EXP-40 / DEC-051: agrees with swanctl (PRF_HMAC_SHA1)
+cloud/c-v1.pcap :: ike_dh_group  # T-151 / EXP-40 / DEC-051: agrees with swanctl (MODP_1024)

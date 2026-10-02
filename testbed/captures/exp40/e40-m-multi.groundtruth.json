@@ -1,0 +1,26 @@
+{
+  "arm": "e40-m-multi",
+  "implementation": "libreswan-5.4-5.fc46 (NSS 3.127)",
+  "configured": {
+    "k": 8,
+    "lsw_a": "10.10.1.48",
+    "lsw_b": "10.10.2.48",
+    "mode": "main",
+    "ike": "aes256-sha2_256-modp2048,aes128-sha1-modp1536"
+  },
+  "pluto_log_T2": [
+    "\"e40-m-multi\" #31: STATE_MAIN_I1: retransmission; will wait 0.5 seconds for response",
+    "\"e40-m-multi\" #31: STATE_MAIN_I1: retransmission; will wait 1 second for response",
+    "\"e40-m-multi\" #31: STATE_MAIN_I1: retransmission; will wait 2 seconds for response",
+    "\"e40-m-multi\" #31: STATE_MAIN_I1: retransmission; will wait 4 seconds for response",
+    "\"e40-m-multi\" #31: STATE_MAIN_I1: retransmission; will wait 8 seconds for response",
+    "\"e40-m-multi\" #31: STATE_MAIN_I1: retransmission; will wait 16 seconds for response",
+    "\"e40-m-multi\" #31: ISAKMP SA established {auth=PRESHARED_KEY cipher=AES_CBC_128 integ=HMAC_SHA1 group=MODP1536}",
+    "\"e40-m-multi\" #32: IPsec SA established tunnel mode {ESP=>0x886272b3 <0xed59b6ba xfrm=AES_GCM_16_256 DPD=passive}",
+    "\"e40-m-multi\":   host: oriented; local: 10.10.2.48; remote: 10.10.1.48; established ISAKMP SA: #15;",
+    "\"e40-m-multi\":   routing: routed-tunnel; owner: IPsec SA #16; established ISAKMP SA: #15; established IPsec SA: #16;",
+    "#15: \"e40-m-multi\":500 ISAKMP SA established; EXPIRE in 28796s; newest; lastdpd=-1s(seq in:0 out:0); idle;",
+    "#16: \"e40-m-multi\":500 IPsec SA established; EXPIRE in 28796s; newest; eroute owner; ISAKMP SA #15; idle;"
+  ],
+  "note": "T2 ground truth = configured arm + pluto's own log of what it negotiated."
+}

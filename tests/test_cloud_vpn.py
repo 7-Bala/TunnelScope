@@ -96,4 +96,7 @@ def test_ikev1_fails_disa_and_is_never_passed():
     r, v = _verdicts("c-v1")
     assert r.findings["ike_version"].value == "IKEv1"
     assert v["V-207205"] == "FAIL"
-    assert "PASS" not in {v["V-207193"], v["V-207223"], v["RFC8247-DH-MUST"]}
+    assert "PASS" not in {v["V-207193"], v["V-207223"]}
+    # DEC-051 / EXP-40 (owner-approved 2026-10-02): RFC 8247 is an IKEv2 document, so it gives no verdict at all on an
+    # IKEv1 session. It used to give UNKNOWN only because the IKEv1 suite could not be read.
+    assert not [r for r in v if r.startswith("RFC8247-")]

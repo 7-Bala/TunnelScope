@@ -1,0 +1,178 @@
+{
+ "arms": {
+  "e40-a-aes128-sha1-g5": {
+   "expected": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "got": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "FAIL",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  },
+  "e40-a-aes256-sha256-g14": {
+   "expected": {
+    "ike_encr": "AES-CBC-256",
+    "ike_prf": "PRF-HMAC-SHA2-256",
+    "ike_dh_group": "MODP-2048"
+   },
+   "got": {
+    "ike_encr": "AES-CBC-256",
+    "ike_prf": "PRF-HMAC-SHA2-256",
+    "ike_dh_group": "MODP-2048"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "FAIL",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  },
+  "e40-m-3des-sha1-g5": {
+   "expected": {
+    "ike_encr": "3DES",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "got": {
+    "ike_encr": "3DES",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "FAIL",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  },
+  "e40-m-aes128-sha1-g5": {
+   "expected": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "got": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "FAIL",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  },
+  "e40-m-aes128-sha256-g19": {
+   "expected": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA2-256",
+    "ike_dh_group": "ECP-256"
+   },
+   "got": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA2-256",
+    "ike_dh_group": "ECP-256"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "PASS",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  },
+  "e40-m-aes256-sha256-g14": {
+   "expected": {
+    "ike_encr": "AES-CBC-256",
+    "ike_prf": "PRF-HMAC-SHA2-256",
+    "ike_dh_group": "MODP-2048"
+   },
+   "got": {
+    "ike_encr": "AES-CBC-256",
+    "ike_prf": "PRF-HMAC-SHA2-256",
+    "ike_dh_group": "MODP-2048"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "FAIL",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  },
+  "e40-m-aes256-sha384-g15": {
+   "expected": {
+    "ike_encr": "AES-CBC-256",
+    "ike_prf": "PRF-HMAC-SHA2-384",
+    "ike_dh_group": "MODP-3072"
+   },
+   "got": {
+    "ike_encr": "AES-CBC-256",
+    "ike_prf": "PRF-HMAC-SHA2-384",
+    "ike_dh_group": "MODP-3072"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "FAIL",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  },
+  "e40-m-multi": {
+   "expected": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "got": {
+    "ike_encr": "AES-CBC-128",
+    "ike_prf": "PRF-HMAC-SHA1",
+    "ike_dh_group": "MODP-1536"
+   },
+   "initiator_only_packets": 7,
+   "initiator_only_asserted": [],
+   "V-207193": "FAIL",
+   "V-207205": "FAIL",
+   "rfc8247_verdicts": [],
+   "other_findings_changed": []
+  }
+ },
+ "P40-1": {
+  "arms_checked": 8,
+  "arms_ok": 8,
+  "failed": [],
+  "pass": true
+ },
+ "P40-2": {
+  "arms_checked": 1,
+  "arms_ok": 1,
+  "failed": [],
+  "pass": true
+ },
+ "P40-3": {
+  "arms_checked": 8,
+  "arms_ok": 8,
+  "failed": [],
+  "pass": true
+ },
+ "P40-5": {
+  "arms_checked": 8,
+  "arms_ok": 8,
+  "failed": [],
+  "pass": true
+ },
+ "P40-6": {
+  "arms_checked": 8,
+  "arms_ok": 8,
+  "failed": [],
+  "pass": true
+ }
+}

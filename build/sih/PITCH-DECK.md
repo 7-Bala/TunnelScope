@@ -62,7 +62,7 @@ structural signatures** — no ML needed. Honest AI beats decorative AI in front
 - 9 experiments, each **pre-registered** (predictions before data). 18/18 predictions held.
 - On **two independent implementations** (strongSwan + Libreswan).
 - **69/69** captures pass end-to-end validation against causal ground truth.
-- First IPsec dataset labelled with cryptographic configuration.
+- IPsec dataset with ground truth taken from the endpoint's own log, one-factor-at-a-time arms, two implementations and a locked cross-implementation test.
 _We can show the pre-registrations and the git history: weights and predictions committed before results._
 
 ---

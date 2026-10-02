@@ -1,0 +1,222 @@
+{
+ "errors": [],
+ "n_lab_a": 175,
+ "n_lab_b": 180,
+ "n_lab_c": 32,
+ "M0_on_C": {
+  "model": "M0 shipped",
+  "captures_with_windows": 32,
+  "ungated_macro_f1": 0.4417,
+  "ungated_accuracy": 0.5312,
+  "per_class_f1": {
+   "bulk": 0.8,
+   "email": 1.0,
+   "icmp": 0.0,
+   "interactive": 0.0,
+   "messaging": 0.4,
+   "video": 0.0,
+   "voip": 1.0,
+   "web": 0.333
+  },
+  "eligible_ge3_windows": 32,
+  "answered": 4,
+  "coverage": 0.125,
+  "accuracy_among_answered": 1.0,
+  "stages": {
+   "out_of_distribution": 6,
+   "abstained": 22,
+   "answered": 4
+  }
+ },
+ "M1_on_C": {
+  "model": "M1 shipped+A",
+  "captures_with_windows": 32,
+  "ungated_macro_f1": 0.4681,
+  "ungated_accuracy": 0.5625,
+  "per_class_f1": {
+   "bulk": 0.8,
+   "email": 1.0,
+   "icmp": 0.0,
+   "interactive": 0.0,
+   "messaging": 0.444,
+   "video": 0.0,
+   "voip": 1.0,
+   "web": 0.5
+  },
+  "eligible_ge3_windows": 32,
+  "answered": 4,
+  "coverage": 0.125,
+  "accuracy_among_answered": 1.0,
+  "stages": {
+   "out_of_distribution": 8,
+   "abstained": 20,
+   "answered": 4
+  }
+ },
+ "M3_on_C": {
+  "model": "M3 shipped+A+B",
+  "captures_with_windows": 32,
+  "ungated_macro_f1": 0.4681,
+  "ungated_accuracy": 0.5625,
+  "per_class_f1": {
+   "bulk": 0.8,
+   "email": 1.0,
+   "icmp": 0.0,
+   "interactive": 0.0,
+   "messaging": 0.444,
+   "video": 0.0,
+   "voip": 1.0,
+   "web": 0.5
+  },
+  "eligible_ge3_windows": 32,
+  "answered": 4,
+  "coverage": 0.125,
+  "accuracy_among_answered": 1.0,
+  "stages": {
+   "out_of_distribution": 8,
+   "abstained": 20,
+   "answered": 4
+  }
+ },
+ "M0_on_A": {
+  "model": "M0 shipped",
+  "captures_with_windows": 169,
+  "ungated_macro_f1": 0.2619,
+  "ungated_accuracy": 0.2722,
+  "per_class_f1": {
+   "email": 0.889,
+   "file_transfer": 0.061,
+   "icmp": 0.0,
+   "messaging": 0.0,
+   "video": 0.459,
+   "voip": 0.102,
+   "web": 0.323
+  },
+  "eligible_ge3_windows": 153,
+  "answered": 5,
+  "coverage": 0.0327,
+  "accuracy_among_answered": 0.0,
+  "stages": {
+   "abstained": 107,
+   "out_of_distribution": 41,
+   "answered": 5
+  }
+ },
+ "M4_on_A": {
+  "model": "M4 shipped+C",
+  "captures_with_windows": 169,
+  "ungated_macro_f1": 0.2448,
+  "ungated_accuracy": 0.2485,
+  "per_class_f1": {
+   "email": 0.889,
+   "file_transfer": 0.0,
+   "icmp": 0.0,
+   "messaging": 0.0,
+   "video": 0.418,
+   "voip": 0.103,
+   "web": 0.303
+  },
+  "eligible_ge3_windows": 153,
+  "answered": 6,
+  "coverage": 0.0392,
+  "accuracy_among_answered": 0.0,
+  "stages": {
+   "abstained": 109,
+   "out_of_distribution": 38,
+   "answered": 6
+  }
+ },
+ "P41-1": {
+  "m0_macro_f1_on_C": 0.4417,
+  "pass": true
+ },
+ "P41-2": {
+  "train_captures": 16,
+  "test_captures": 16,
+  "macro_f1": 1.0,
+  "per_class_f1": {
+   "bulk": 1.0,
+   "email": 1.0,
+   "icmp": 1.0,
+   "interactive": 1.0,
+   "messaging": 1.0,
+   "video": 1.0,
+   "voip": 1.0,
+   "web": 1.0
+  },
+  "pass": true
+ },
+ "P41-3": {
+  "m1": 0.4681,
+  "m0": 0.4417,
+  "gain": 0.0264,
+  "pass": false
+ },
+ "P41-4": {
+  "m3": 0.4681,
+  "m0": 0.4417,
+  "gain": 0.0264,
+  "pass": false
+ },
+ "P41-5": {
+  "coverage": 0.125,
+  "accuracy_among_answered": 1.0,
+  "pass": false
+ },
+ "P41-6": {
+  "m4_macro_f1_on_A": 0.2448,
+  "bar": 0.362,
+  "pass": false
+ },
+ "P41-7": {
+  "cv_shipped_only": 0.9196,
+  "cv_with_A_B_C": 0.9206,
+  "change": 0.001,
+  "pass": true
+ },
+ "exploratory_M3_has_seen_A": {
+  "ungated_macro_f1": 1.0,
+  "coverage": 0.9869,
+  "accuracy_among_answered": 1.0
+ },
+ "exploratory_by_config": {
+  "gcm": {
+   "M0": 0.4681
+  },
+  "cbc": {
+   "M0": 0.3955
+  }
+ },
+ "exploratory_windows_per_class": {
+  "bulk": [
+   30
+  ],
+  "email": [
+   13,
+   14,
+   15
+  ],
+  "icmp": [
+   29
+  ],
+  "interactive": [
+   12,
+   13,
+   14
+  ],
+  "messaging": [
+   20,
+   21
+  ],
+  "video": [
+   29
+  ],
+  "voip": [
+   29
+  ],
+  "web": [
+   29,
+   30
+  ]
+ }
+}

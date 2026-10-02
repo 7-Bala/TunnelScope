@@ -1,0 +1,15 @@
+"e40-m-aes128-sha1-g5" #19: initiating IKEv1 Main Mode connection
+"e40-m-aes128-sha1-g5" #19: sent Main Mode request
+"e40-m-aes128-sha1-g5" #19: STATE_MAIN_I1: retransmission; will wait 0.5 seconds for response
+"e40-m-aes128-sha1-g5" #19: STATE_MAIN_I1: retransmission; will wait 1 second for response
+"e40-m-aes128-sha1-g5" #19: STATE_MAIN_I1: retransmission; will wait 2 seconds for response
+"e40-m-aes128-sha1-g5" #19: STATE_MAIN_I1: retransmission; will wait 4 seconds for response
+"e40-m-aes128-sha1-g5" #19: STATE_MAIN_I1: retransmission; will wait 8 seconds for response
+"e40-m-aes128-sha1-g5" #19: STATE_MAIN_I1: retransmission; will wait 16 seconds for response
+"e40-m-aes128-sha1-g5" #19: sent Main Mode I2
+"e40-m-aes128-sha1-g5" #19: sent Main Mode I3
+"e40-m-aes128-sha1-g5" #19: Peer ID is IPV4_ADDR: '10.10.2.42'
+"e40-m-aes128-sha1-g5" #19: ISAKMP SA established {auth=PRESHARED_KEY cipher=AES_CBC_128 integ=HMAC_SHA1 group=MODP1536}
+"e40-m-aes128-sha1-g5" #20: initiating Quick Mode IKEv1+PSK+ENCRYPT+TUNNEL+DONT_REKEY+UP+IKE_FRAG_ALLOW+ESN_NO+ESN_YES {using isakmp#19 msgid:44e95ddf proposal=AES_GCM_16_256 pfsgroup=no-pfs 10.10.1.42/32===10.10.2.42/32}
+"e40-m-aes128-sha1-g5" #20: sent Quick Mode request
+"e40-m-aes128-sha1-g5" #20: IPsec SA established tunnel mode {ESP=>0xc46e0e90 <0x401a9e58 xfrm=AES_GCM_16_256 DPD=passive}
