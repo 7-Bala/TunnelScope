@@ -667,3 +667,19 @@ flagged mixed with K4). Detector retrained on leave-one-family-out probabilities
 P44-1 falsified: best cross-validated catch 78.6% at 2.2% false flags (bar 80%), 28 mixed sessions only. Not shipped; the current
 detector stays. Post-hoc for the owner: the near-miss candidate would answer 15/32 lab-D sessions (all right) instead of 11, letting
 1/12 EXP-05 mixed sessions through. `experiments/exp44-mixed-recalibrate/RESULT.md`
+
+## EXP-46 — SIEM export: Elastic ECS JSON and RFC 5424 syslog (T-129) — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp46-siem-export/PREREG.md` (991e939) before any code and any run; ADDENDUM A (cb1c69f)
+before the run that counts. One event per verdict as ECS 9.5.0 JSON or RFC 5424 syslog, verified against Elasticsearch 9.5.4
+and Filebeat 9.5.4 in Docker. Bars: every non-`tunnelscope.*` field valid against the official `ecs_flat.yml`; Elasticsearch
+accepts everything with 0 errors and 0 `_ignored` fields; per-rule counts equal the CLI's independent `assess --json`; every
+syslog line parses in a strict RFC 5424 parser and in Filebeat with no error and no field changed; no network code; output
+deterministic.
+
+### EXP-46 — RESULT (2026-10-02)
+767 captures + the ten EXP-35 captures under the NIST profile: 11,290 verdict events + 3 alerts. H1 0 violations; H2 11,293
+stored, 0 errors, 0 ignored; H3 0 differences over 73 rule/verdict pairs; H4 11,293 lines, Filebeat 0 errors and 0 differences;
+H5 0 network imports, `assess` byte-identical to origin/main; H6 0 differences. Negative controls tripped (a malformed
+`source.ip` is dropped silently by Elasticsearch; only `_ignored` shows it). 16 mutation checks caught. DEC-055.
+`experiments/exp46-siem-export/RESULT.md`
+
