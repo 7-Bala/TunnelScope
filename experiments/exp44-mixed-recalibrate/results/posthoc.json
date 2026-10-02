@@ -1,0 +1,5 @@
+{
+ "note": "POST-HOC, not pre-registered; for the owner only",
+ "current_detector": {"lab_d_answered": 11, "lab_d_correct": 11, "exp05_mixed_not_answered": 12, "exp05_n": 12},
+ "tau_0.20_candidate": {"lab_d_answered": 15, "lab_d_correct": 15, "exp05_mixed_not_answered": 11, "exp05_n": 12}
+}

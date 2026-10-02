@@ -658,3 +658,12 @@ httrack, GStreamer H.264 and G.711 RTP, IRC, msmtp/OpenSMTPD, mosh, fping; ChaCh
 All four predictions held. Shipped model 0.417 macro-F1, K4 0.833 (+0.417; both suites 0.833); gated answers K4 11/11 right vs 7/9.
 Interactive still 0/4. Ship rule met; the shipped artifact (5.0 MB) reproduced 0.833 and 11/11 when checked once. DEC-054. Limits: 4
 captures per class; built on our gateways. `experiments/exp43-lab-d/RESULT.md`
+
+## EXP-44 — Recalibrate the mixed-traffic check for the new classifier — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp44-mixed-recalibrate/PREREG.md` (23b179f) after a disclosed diagnostic (lab D singles 21/32 wrongly
+flagged mixed with K4). Detector retrained on leave-one-family-out probabilities; EXP-16's bar and threshold rule.
+
+### EXP-44 — RESULT (2026-10-02)
+P44-1 falsified: best cross-validated catch 78.6% at 2.2% false flags (bar 80%), 28 mixed sessions only. Not shipped; the current
+detector stays. Post-hoc for the owner: the near-miss candidate would answer 15/32 lab-D sessions (all right) instead of 11, letting
+1/12 EXP-05 mixed sessions through. `experiments/exp44-mixed-recalibrate/RESULT.md`
