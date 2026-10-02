@@ -1,0 +1,28 @@
+# Filebeat 9.5.4 config used by analyze.py: reads the exported syslog files and parses them with the syslog processor
+# (strict RFC 5424: a line that is not valid ends up with error.message, which the scorer counts).
+filebeat.inputs:
+  - type: filestream
+    id: tunnelscope-syslog
+    paths: ["/data/*.log"]
+    prospector.scanner.check_interval: 1s
+  - type: filestream            # negative control: one malformed line, kept out of the counted index
+    id: tunnelscope-control
+    paths: ["/control/*.log"]
+    index: "tsc-control"
+    prospector.scanner.check_interval: 1s
+processors:
+  - syslog:
+      field: message
+      format: rfc5424
+      timezone: UTC
+      ignore_missing: false
+      ignore_failure: false
+setup.ilm.enabled: false
+setup.template.enabled: true
+setup.template.name: tsc
+setup.template.pattern: "tsc-*"
+output.elasticsearch:
+  hosts: ["http://tsc-es:9200"]
+  index: "tsc-syslog"
+logging.level: info
+logging.to_stderr: true

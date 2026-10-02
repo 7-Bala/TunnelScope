@@ -45,6 +45,37 @@ def cmd_analyze(args):
                 print(f"        └ {f.note}")
 
 
+def cmd_export(args):
+    """T-129: one SIEM event per verdict -- Elastic ECS JSON lines, or RFC 5424 syslog lines. Files and stdout only."""
+    from .siem import ecs, export
+    if args.bulk_index and args.format != "ecs":
+        raise InputError("--bulk-index needs --format ecs")
+    try:
+        at = ecs.timestamp(args.at)        # one assessment time for the whole export (and a clear error for a bad --at)
+    except ValueError:
+        raise InputError(f"--at {args.at!r} is neither an ISO 8601 time nor epoch seconds") from None
+    if args.format == "syslog":
+        lines = export.syslog_lines(args.pcap, args.profile, args.only_fail, at)
+    else:
+        docs = export.ecs_documents(args.pcap, args.profile, args.only_fail, at)
+        lines = []
+        for d in docs:
+            if args.bulk_index:
+                lines.append(json.dumps({"create": {"_index": args.bulk_index}}, separators=(",", ":")))
+            lines.append(ecs.dumps(d))
+    if not lines:
+        print(f"nothing exported from {args.pcap}: no verdicts" + (" with FAIL" if args.only_fail else
+              " (no IKE, ESP or AH traffic found)"), file=sys.stderr)
+    out = "".join(line + "\n" for line in lines)
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as fh:
+            fh.write(out)
+        print(f"export: {len(lines)} line(s) -> {args.out}", file=sys.stderr)
+    else:
+        sys.stdout.write(out)
+    return 0
+
+
 def cmd_ledger(args):
     from .ledger import build_ledger
     led = build_ledger(args.pcap)
@@ -483,6 +514,15 @@ def main(argv=None):
                    help="exit 1 if any FAIL verdict is present (for CI/monitoring gates)")
     s.add_argument("--profile", action="append", help="also assess against an opt-in rules profile (e.g. cnsa2-ipsec); repeatable")
     s.set_defaults(func=cmd_assess)
+    xp = sub.add_parser("export", help="SIEM export: one event per verdict as Elastic ECS JSON or RFC 5424 syslog (files/stdout only)")
+    xp.add_argument("pcap")
+    xp.add_argument("--format", choices=["ecs", "syslog"], default="ecs", help="ecs = Elastic Common Schema JSON lines (default)")
+    xp.add_argument("--profile", action="append", help="also assess against an opt-in rules profile; repeatable")
+    xp.add_argument("--only-fail", action="store_true", help="export FAIL verdicts only")
+    xp.add_argument("--at", metavar="TIME", help="assessment time, ISO 8601 or epoch seconds (default: now); for replays")
+    xp.add_argument("--bulk-index", metavar="NAME", help="ecs only: Elasticsearch _bulk format into this index / data stream")
+    xp.add_argument("-o", "--out", help="write here instead of stdout")
+    xp.set_defaults(func=cmd_export)
     lg = sub.add_parser("ledger", help="tamper-evident evidence ledger: every finding and verdict, hash-chained to the capture")
     lg.add_argument("pcap")
     lg.add_argument("-o", "--out", help="write the ledger here instead of printing it")
@@ -525,7 +565,7 @@ def main(argv=None):
     lv.add_argument("--json", action="store_true", help="one JSON object per window")
     lv.add_argument("--max-windows", type=int, help="stop after N windows (testing)")
     lv.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
-    lv.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl", help="alert line format (syslog = RFC 5424)")
+    lv.add_argument("--alert-format", choices=["jsonl", "syslog", "ecs"], default="jsonl", help="alert line format (syslog = RFC 5424, ecs = Elastic Common Schema JSON)")
     lv.set_defaults(func=cmd_live)
     wt = sub.add_parser("watch", help="anomaly detection: compare each tunnel with its learned normal, then record it (role D)")
     wt.add_argument("target", help="a capture, or a directory of captures (processed in name order)")
@@ -534,7 +574,7 @@ def main(argv=None):
     wt.add_argument("--json", action="store_true")
     wt.add_argument("--fail-on-anomaly", action="store_true", help="exit 1 if any tunnel is anomalous")
     wt.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
-    wt.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl", help="alert line format (syslog = RFC 5424)")
+    wt.add_argument("--alert-format", choices=["jsonl", "syslog", "ecs"], default="jsonl", help="alert line format (syslog = RFC 5424, ecs = Elastic Common Schema JSON)")
     wt.set_defaults(func=cmd_watch)
     ex = sub.add_parser("explain", help="plain-English explanation of a capture's verdicts, for non-experts")
     ex.add_argument("pcap")
@@ -595,7 +635,7 @@ def main(argv=None):
     co.add_argument("--state", required=True, metavar="DIR", help="per-site state and quarantine")
     co.add_argument("--keys", required=True, metavar="DIR", help="directory of <site>.key files")
     co.add_argument("--alerts", metavar="FILE", help="append each site's alerts, tagged with the site")
-    co.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl")
+    co.add_argument("--alert-format", choices=["jsonl", "syslog", "ecs"], default="jsonl")
     co.add_argument("--poll", type=float, default=1.0, help="seconds between inbox checks (default 1)")
     co.add_argument("--once", action="store_true", help="process the inbox once and exit (1 if anything was rejected)")
     co.add_argument("--json", action="store_true")
