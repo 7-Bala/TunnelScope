@@ -72,12 +72,15 @@ def report(version="v1", families=None, make_model=shipped_rf):
     R["leaky_random_windows"] = {"window_macro_f1": round(macro(y, pred.astype(str)), 4)}
     # 2. grouped by session (all families pooled)
     groups = np.arange(len(ok))
-    ys, ps = [], []
+    ys, ps, wy, wp = [], [], [], []
     for tr, te in GroupKFold(5).split(groups, groups, groups):
         Xt, yt = stack(ss, wins, [ok[j] for j in tr])
         m = make_model().fit(Xt, yt)
         a, b = session_predict(m, ss, wins, [ok[j] for j in te]); ys += a; ps += b
-    R["grouped_by_session"] = {"session_macro_f1": round(macro(ys, ps), 4), "sessions": len(ys)}
+        Xe, ye = stack(ss, wins, [ok[j] for j in te])
+        wy += ye.tolist(); wp += m.predict(Xe).tolist()          # window level, to compare like with like
+    R["grouped_by_session"] = {"session_macro_f1": round(macro(ys, ps), 4), "window_macro_f1": round(macro(wy, wp), 4),
+                               "sessions": len(ys)}
     # 3. leave one family out
     lofo = {}
     for f in fams:
@@ -102,8 +105,11 @@ def to_markdown(R):
          f"| random windows (**leaky**) | nothing honest: windows of one session on both sides | {R['leaky_random_windows']['window_macro_f1']} (windows) |",
          f"| grouped by session | new sessions from generators it has already seen | {R['grouped_by_session']['session_macro_f1']} |",
          f"| **leave one family out (mean)** | **traffic from generators it has never seen** | **{R['lofo_mean_macro_f1']}** (worst {R['lofo_worst_macro_f1']}) |", "",
-         f"Gap, leaky to grouped: {R['leaky_random_windows']['window_macro_f1'] - R['grouped_by_session']['session_macro_f1']:+.3f}; "
-         f"grouped to unseen family: {R['grouped_by_session']['session_macro_f1'] - R['lofo_mean_macro_f1']:+.3f}.", "",
+         f"Window level, leaky random split {R['leaky_random_windows']['window_macro_f1']} vs grouped by session "
+         f"{R['grouped_by_session']['window_macro_f1']}: the leak buys "
+         f"{R['leaky_random_windows']['window_macro_f1'] - R['grouped_by_session']['window_macro_f1']:+.3f}. Session level, seen "
+         f"generators {R['grouped_by_session']['session_macro_f1']} vs never-seen families {R['lofo_mean_macro_f1']}: "
+         f"{R['lofo_mean_macro_f1'] - R['grouped_by_session']['session_macro_f1']:+.3f}.", "",
          "## Leave one family out", "", "| Held-out family | Sessions | Macro-F1 | Accuracy | Per class |", "|---|---|---|---|---|"]
     for f, v in R["leave_one_family_out"].items():
         L.append(f"| {f} | {v['sessions']} | {v['session_macro_f1']} | {v['accuracy']} | {', '.join(f'{c} {s}' for c, s in v['per_class_f1'].items())} |")
