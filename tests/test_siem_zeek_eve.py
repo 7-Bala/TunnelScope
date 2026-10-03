@@ -149,3 +149,10 @@ def test_only_fail_and_profiles_work_in_the_new_formats():
 def test_bulk_index_still_needs_ecs():
     rc, _, err = _run(["export", str(CAP / "exp15/s-ecp256.pcap"), "--format", "zeek", "--bulk-index", "x"])
     assert rc != 0 and "ecs" in err
+
+
+def test_column_names_and_zeek_types_are_exactly_the_documented_ones():
+    """Zeek's reader needs the real type names (an address column typed string would still parse here and break a Zeek script)."""
+    assert zeek.COLUMNS == [("ts", "time"), ("id.orig_h", "addr"), ("id.resp_h", "addr"), ("ike_spi_i", "string"), ("ike_spi_r", "string"),
+                            ("baseline", "string"), ("rule_id", "string"), ("attribute", "string"), ("verdict", "string"),
+                            ("severity", "string"), ("title", "string"), ("observed", "string"), ("message", "string")]
