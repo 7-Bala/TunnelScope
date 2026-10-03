@@ -667,3 +667,16 @@ flagged mixed with K4). Detector retrained on leave-one-family-out probabilities
 P44-1 falsified: best cross-validated catch 78.6% at 2.2% false flags (bar 80%), 28 mixed sessions only. Not shipped; the current
 detector stays. Post-hoc for the owner: the near-miss candidate would answer 15/32 lab-D sessions (all right) instead of 11, letting
 1/12 EXP-05 mixed sessions through. `experiments/exp44-mixed-recalibrate/RESULT.md`
+
+## EXP-47 — A FortiGate-VM (FortiOS 7.6.7) as an independent IKE implementation (T-118 step 2) — PRE-REGISTRATION (2026-10-03)
+Pre-registered in `experiments/exp47-fortigate/PREREG.md` (28d7ed0) before any scored capture; addenda A-E before the runs they govern. A FortiGate-VM ARM64
+(unlicensed, DES-only evaluation state) against a strongSwan peer on a virtual wire, 18 arms (10 IKEv2 suites, IKEv1 main and aggressive, FortiGate as
+responder, three rekey arms, two failures), ground truth from the device's own diagnostics. Bar: every finding equals the device's report or is UNKNOWN, never wrong.
+
+### EXP-47 — RESULT (2026-10-04)
+H1 held (0 wrong handshake values in 16 arms; IKEv2 and IKEv1; DH groups 2-31). Predicted failures confirmed: IKE cipher DES printed as `encr-2` (14 IKEv2 arms), and the ESP
+candidate set lacked the true DES-CBC+HMAC-SHA-2 family (12 arms). Fixed: names for IANA ids 1, 2, 4-9; three sieve families; after the fix all seven bars pass and nothing else moves
+(corpus: 64 of 418 ESP findings gain the three families, 6 lose the "CBC excluded" refinement). Found, not fixed (owner's decision): `pfs=False` is asserted when the IKE group is not
+visible (wrong on a mid-stream ECP-256 PFS capture); the drafted fix breaks two pinned tests. Lab faults disclosed (stale peer config, handshake outside the capture). DEC-056.
+`experiments/exp47-fortigate/RESULT.md`
+

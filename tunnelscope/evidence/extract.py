@@ -612,6 +612,10 @@ _SIEVE = {
     "Blowfish-CBC+HMAC-96": dict(iv=8, icv=12, align=8),
     "Twofish-CBC+HMAC-96": dict(iv=16, icv=12, align=16),
     "CAST-CBC+HMAC-96": dict(iv=8, icv=12, align=8),
+    # EXP-47 (FortiGate-VM, DES-CBC with HMAC-SHA-2 in ESP, RFC 4868 truncations): without these the true family could not be in the set
+    "DES-CBC+HMAC-SHA256-128": dict(iv=8, icv=16, align=8),
+    "DES-CBC+HMAC-SHA384-192": dict(iv=8, icv=24, align=8),
+    "DES-CBC+HMAC-SHA512-256": dict(iv=8, icv=32, align=8),
     "NULL+HMAC-96": dict(iv=0, icv=12, align=4),
     "NULL+HMAC-SHA256-128": dict(iv=0, icv=16, align=4),
 }

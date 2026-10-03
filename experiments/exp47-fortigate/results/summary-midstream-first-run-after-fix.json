@@ -1,0 +1,588 @@
+{
+ "H1": {
+  "failing_arms": [],
+  "pass": true
+ },
+ "H2": {
+  "failing_arms": [],
+  "pass": true,
+  "values": []
+ },
+ "H3": {
+  "failing_arms": [],
+  "pass": true
+ },
+ "H4": {
+  "arms_scored": [
+   "P01",
+   "P02",
+   "P03"
+  ],
+  "failing_arms": [
+   "P03"
+  ],
+  "pass": false
+ },
+ "H5": {
+  "pass": true,
+  "values": [
+   "null"
+  ]
+ },
+ "H6": {
+  "failing_arms": [],
+  "pass": true
+ },
+ "H7": {
+  "arms": {},
+  "pass": true
+ },
+ "arms": {
+  "P01": {
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H4": {
+    "expected": true,
+    "pass": true,
+    "status": "INFERRED",
+    "value": true
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "P01",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 2,
+    "keylife": 120,
+    "record": 330
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "MEASURED",
+     {
+      "intervals_s": [
+       92.01,
+       87.01,
+       93.0
+      ],
+      "mean_interval_s": 90.67,
+      "n_rekeys": 4
+     }
+    ]
+   }
+  },
+  "P02": {
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H4": {
+    "expected": false,
+    "pass": true,
+    "status": "INFERRED",
+    "value": false
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "P02",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 2,
+    "keylife": 120,
+    "pfs": false,
+    "record": 330
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "MEASURED",
+     {
+      "intervals_s": [
+       92.0,
+       87.0,
+       90.0
+      ],
+      "mean_interval_s": 89.67,
+      "n_rekeys": 4
+     }
+    ]
+   }
+  },
+  "P03": {
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H4": {
+    "expected": true,
+    "pass": false,
+    "status": "INFERRED",
+    "value": false
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "P03",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 19,
+    "hash": "sha256",
+    "ike": 2,
+    "keylife": 120,
+    "record": 330
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "MEASURED",
+     {
+      "intervals_s": [
+       87.98,
+       86.96
+      ],
+      "mean_interval_s": 87.47,
+      "n_rekeys": 3
+     }
+    ]
+   }
+  },
+  "R01": {
+   "arm": "R01",
+   "note": "not captured"
+  },
+  "S01": {
+   "arm": "S01",
+   "note": "not captured"
+  },
+  "S02": {
+   "arm": "S02",
+   "note": "not captured"
+  },
+  "S03": {
+   "arm": "S03",
+   "note": "not captured"
+  },
+  "S04": {
+   "H3": {
+    "candidates": [
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA384-192",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA384-192"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "S04",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 15,
+    "hash": "sha384",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S05": {
+   "arm": "S05",
+   "note": "not captured"
+  },
+  "S06": {
+   "arm": "S06",
+   "note": "not captured"
+  },
+  "S07": {
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "S07",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 20,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S08": {
+   "arm": "S08",
+   "note": "not captured"
+  },
+  "S09": {
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "S09",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 31,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S10": {
+   "arm": "S10",
+   "note": "not captured"
+  },
+  "V01": {
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "V01",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 1,
+    "mode": "main"
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "V02": {
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "arm": "V02",
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": false,
+   "ike_sa_established_on_both_ends": true,
+   "mid_stream": "the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; only what a mid-stream vantage can say is scored",
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 1,
+    "mode": "aggressive"
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "X01": {
+   "arm": "X01",
+   "note": "not captured"
+  },
+  "X02": {
+   "arm": "X02",
+   "note": "not captured"
+  }
+ },
+ "capture_sha256": {
+  "P01": "8c9faf774097172d0d9f41d63ef168112dc579feb37af22406b81090daba3ea1",
+  "P02": "e624a93e9a45a0967103f5746efdd78a5b75162fe54a6e650b2cce628259be4c",
+  "P03": "5ecee6af73c98848585e57a125c910294c099e6a3bef8ad62908074a7095430f",
+  "S04": "cfc84558af59534f39a7ee4adbb0e399d923cf2101bc76a6435ce1e404be407b",
+  "S07": "5844328febe8ad7315e642ad4c24c7f14550886264e76f74e9e62215d5167f1d",
+  "S09": "94ca51d81a1b3d2df2df7798caf015779e3229694f2a7094c2d8ccacc8b276f5",
+  "V01": "d82e425e0a5fdf80a34a1746c62d076f6310c34ae1ba3850903eb9a669cbb55e",
+  "V02": "9ff82054c4ca278dd3d23cffecd73e3743273b490931fd6fd3b81c28fb218b89"
+ },
+ "established_scored": 0,
+ "label": "midstream-first-run-after-fix",
+ "mid_stream": [
+  "S04",
+  "S07",
+  "S09",
+  "V01",
+  "V02",
+  "P01",
+  "P02",
+  "P03"
+ ],
+ "scored_with_handshake": [],
+ "stopped_ground_truth_disagrees": [],
+ "unnegotiable": []
+}

@@ -46,7 +46,7 @@ def ok_or_unknown(r, attr, expected, accept=None):
     return ("ok" if (v == expected or (accept and accept(v))) else "WRONG"), v
 
 
-def gt_check(arm, a, gt):
+def gt_check(arm, a, gt, need_esp=True):
     """Does the device's own report agree with the PREREG table? Returns (ok, notes)."""
     notes = []
     fg_gw, fg_t, peer = gt.get("fortigate_ike_gateway", ""), gt.get("fortigate_tunnel", ""), gt.get("peer_sas", "")
@@ -57,13 +57,13 @@ def gt_check(arm, a, gt):
     if not m or m.group(1) != f"des-{h}":
         ok = False; notes.append(f"FortiGate proposal {m.group(1) if m else None} != des-{h}")
     m = re.search(r"esp=(\w+) key=(\d+)", fg_t)
-    if not m or m.group(1) != "des":
+    if need_esp and (not m or m.group(1) != "des"):
         ok = False; notes.append(f"FortiGate esp {m.group(0) if m else None}")
     m = re.search(r"ah=(\w+)", fg_t)
-    if not m or m.group(1) != h:
+    if need_esp and (not m or m.group(1) != h):
         ok = False; notes.append(f"FortiGate ah {m.group(1) if m else None} != {h}")
     ike = re.search(r"DES_CBC/(\w+)/(\w+)/(\w+)", peer)
-    if a["ike"] == 2 and (not ike or ike.group(2) != ik_prf or ike.group(3) != DH[g][1] or ike.group(1) != ik_integ):
+    if not ike or ike.group(2) != ik_prf or ike.group(3) != DH[g][1] or ike.group(1) != ik_integ:
         ok = False; notes.append(f"peer IKE suite {ike.group(0) if ike else None}")
     return ok, notes
 
@@ -95,7 +95,7 @@ def score_arm(arm, d, pcap):
         return res
     if not d["established"]:
         res["child_sa_failed"] = True                                    # ADDENDUM B: the IKE SA is scored, ESP is not
-    ok, notes = gt_check(arm, a, d["ground_truth"])
+    ok, notes = gt_check(arm, a, d["ground_truth"], need_esp=d["established"])
     res["ground_truth_agrees_with_table"] = ok
     if not ok:
         res["ground_truth_notes"] = notes

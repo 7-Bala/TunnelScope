@@ -1,0 +1,24 @@
+{
+ "arm": "S04",
+ "established": true,
+ "ground_truth": {
+  "fortigate_ike_gateway": "vd: root/0\nname: tsc-p1\nversion: 2\ninterface: port2 4\naddr: 10.50.0.1:500 -> 10.50.0.2:500\ntun_id: 10.50.0.2/::10.50.0.2\nremote_location: 0.0.0.0\nnetwork-id: 0\ntransport: UDP\ncreated: 63s ago\npeer-id: 10.50.0.2\npeer-id-auth: no\npending-queue: 0\nPPK: no\nIKE SA: created 1/1  established 1/1  time 4340/4340/4340 ms\nIPsec SA: created 1/1  established 1/1  time 4340/4340/4340 ms\n\n  id/spi: 950 b68e95f81743191a/989c8951ea20e694\n  direction: initiator\n  status: established 63-58s ago = 4340ms\n  proposal: des-sha384\n  child: no\n  SK_ei: <redacted>\n  SK_er: <redacted>\n  SK_ai: <redacted>\n  SK_ar: <redacted>\n  PPK: no\n  message-id sent/recv: 2/0\n  QKD: no\n  PQC-KEM (IKE): no\n  PQC-KEM (all IPsec): no\n  lifetime/rekey: 86400/86041\n  DPD sent/recv: 00000000/00000000\n  peer-id: 10.50.0.2",
+  "fortigate_tunnel": "list ipsec tunnel by names in vd 0\n------------------------------------------------------\nname=tsc-p1 ver=2 serial=1 10.50.0.1:0->10.50.0.2:0 nexthop=0.0.0.0 tun_id=10.50.0.2 tun_id6=::10.50.0.2 status=up dst_mtu=1500 weight=1\nbound_if=4 real_if=4 lgwy=static/1 tun=intf mode=auto/1 encap=none/552 options[0228]=npu frag-rfc  run_state=0 role=primary accept_traffic=1 overlay_id=0\n\nproxyid_num=1 child_num=0 refcnt=5 ilast=3 olast=3 ad=/0\nstat: rxp=40 txp=40 rxb=14688 txb=14688\ndpd: mode=on-demand on=1 status=ok idle=20000ms retry=3 count=0 seqno=0\nnatt: mode=none draft=0 interval=0 remote_port=0\nfec: egress=0 ingress=0\nproxyid=tsc-p2 proto=0 sa=1 ref=4 serial=20\n  src: 0:10.61.0.0-10.61.0.255:0\n  dst: 0:10.62.0.0-10.62.0.255:0\n  SA:  ref=3 options=10202 type=00 soft=0 mtu=1438 expire=42839/0B replaywin=2048\n       seqno=29 esn=0 replaywin_lastseq=00000028 qat=0 rekey=0 hash_search_len=1\n  life: type=01 bytes=0/0 timeout=42899/43200\n  dec: spi=ade1fa9e esp=des key=8 <redacted>\n       ah=sha384 key=48 <redacted>\n  enc: spi=c7963cb0 esp=des key=8 <redacted>\n       ah=sha384 key=48 <redacted>\n  dec:pkts/bytes=40/14688, enc:pkts/bytes=40/14688\n  npu_flag=00 npu_rgwy=0.0.0.0:0 npu_lgwy=0.0.0.0:0 npu_selid=0\n  dec_npuid=0 enc_npuid=0 dec_engid=-1 enc_engid=-1 dec_saidx=-1 enc_saidx=-1",
+  "peer_log": "'received packet|sending packet' | head -60 | cut -c17-200\npeer daemon.info : 03[ENC] parsed IKE_SA_INIT request 0 [ SA KE No N(NATD_S_IP) N(NATD_D_IP) N(FRAG_SUP) ]\npeer daemon.info : 03[IKE] 10.50.0.1 is initiating IKE_SA (unnamed)[9]\npeer authpriv.info : 03[IKE] 10.50.0.1 is initiating IKE_SA (unnamed)[9]\npeer daemon.info : 03[CFG] selected proposal: IKE:DES_CBC/HMAC_SHA2_384_192/PRF_HMAC_SHA2_384/MODP_3072\npeer daemon.info : 03[ENC] generating IKE_SA_INIT response 0 [ SA KE No N(NATD_S_IP) N(NATD_D_IP) N(FRAG_SUP) N(CHDLESS_SUP) N(MULT_AUTH) ]\npeer daemon.info : 16[ENC] parsed IKE_AUTH request 1 [ IDi N(INIT_CONTACT) AUTH N(MSG_ID_SYN_SUP) SA TSi TSr ]\npeer daemon.info : 16[CFG] looking for peer configs matching 10.50.0.2[%any]...10.50.0.1[10.50.0.1]\npeer daemon.info : 16[CFG] selected peer config 'fgt'\npeer daemon.info : 16[IKE] authentication of '10.50.0.1' with pre-shared key successful\npeer daemon.info : 16[IKE] authentication of '10.50.0.2' (myself) with pre-shared key\npeer daemon.info : 16[IKE] IKE_SA fgt[9] established between 10.50.0.2[10.50.0.2]...10.50.0.1[10.50.0.1]\npeer authpriv.info : 16[IKE] IKE_SA fgt[9] established between 10.50.0.2[10.50.0.2]...10.50.0.1[10.50.0.1]\npeer daemon.info : 16[IKE] scheduling rekeying in 13089s\npeer daemon.info : 16[IKE] maximum IKE_SA lifetime 14529s\npeer daemon.info : 16[CFG] selected proposal: ESP:DES_CBC/HMAC_SHA2_384_192/NO_EXT_SEQ\npeer daemon.info : 16[IKE] CHILD_SA net{2} established with SPIs c7963cb0_i ade1fa9e_o and TS 10.62.0.0/24 === 10.61.0.0/24\npeer authpriv.info : 16[IKE] CHILD_SA net{2} established with SPIs c7963cb0_i ade1fa9e_o and TS 10.62.0.0/24 === 10.61.0.0/24\npeer daemon.info : 16[ENC] generating IKE_AUTH response 1 [ IDr AUTH SA TSi TSr ]",
+  "peer_sas": "fgt: #9, ESTABLISHED, IKEv2, b68e95f81743191a_i 989c8951ea20e694_r*\n  local  '10.50.0.2' @ 10.50.0.2[500]\n  remote '10.50.0.1' @ 10.50.0.1[500]\n  DES_CBC/HMAC_SHA2_384_192/PRF_HMAC_SHA2_384/MODP_3072\n  established 60s ago, rekeying in 13029s\n  net: #2, reqid 1, INSTALLED, TUNNEL, ESP:DES_CBC/HMAC_SHA2_384_192\n    installed 60s ago, rekeying in 2807s, expires in 3240s\n    in  c7963cb0,  14688 bytes,    40 packets,     2s ago\n    out ade1fa9e,  14688 bytes,    40 packets,     2s ago\n    local  10.62.0.0/24\n    remote 10.61.0.0/24"
+ },
+ "params": {
+  "dh": 15,
+  "hash": "sha384",
+  "ike": 2
+ },
+ "pings": {
+  "large": [
+   "12"
+  ],
+  "small": [
+   "28"
+  ]
+ },
+ "seconds": 95
+}

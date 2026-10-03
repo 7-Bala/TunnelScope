@@ -147,3 +147,27 @@ the capture started (the device's own report still matched the arm's suite, so t
    strongSwan, which is the peer and correct; the literal reading of H5 would fail that. H5 is scored on the FortiGate's role
    (UNKNOWN or Fortinet passes); the literal reading is reported beside it (it fails on R01 for that reason only).
 Not re-run: S01-S03, S05, S06, S08, S10, R01 (handshake present), X01, X02.
+
+## ADDENDUM E (2026-10-03, after the final set was scored once with unchanged code, before any fix is committed)
+Facts: `results/summary-before-fix.json` (18 arms, 16 with the handshake in the capture, 2 failure arms) and
+`results/summary-midstream-first-run.json` (the eight mid-stream first captures). H1 held (no wrong handshake value in 16 arms,
+IKEv2 and IKEv1, groups 2-31); H2 and H3 failed as predicted; H4-H7 passed on the final captures. The mid-stream P03 capture
+(ECP-256 PFS, no IKE_SA_INIT in the capture) made TunnelScope report `pfs = False` (INFERRED, 0.9) while the device negotiated
+PFS: a wrong value (H4 fails there).
+Decisions, fixed before they are committed:
+1. **F1 (H2):** `IKE_ENCR` gets names from IANA's "IKEv2 Parameters" registry, Transform Type 1, read on 2026-10-03: 1 `DES-IV64`,
+   2 `DES`, 4 `RC5`, 5 `IDEA`, 6 `CAST`, 7 `Blowfish`, 8 `3IDEA`, 9 `DES-IV32`. (This corrects PREREG H2's wording "ids 1-6 and 8-10":
+   id 7 is defined, id 10 is reserved.)
+2. **F2 (H3):** the sieve table gets `DES-CBC+HMAC-SHA256-128` (IV 8, ICV 16, align 8), `DES-CBC+HMAC-SHA384-192` (8, 24, 8) and
+   `DES-CBC+HMAC-SHA512-256` (8, 32, 8), per RFC 4868 truncation. Measured effect on the corpus, stated before commit: of 418
+   `esp_cipher_family` findings in 163 captures, 354 unchanged, 64 gain exactly these three families (12 of them in exp47), none
+   loses one, no status changes; 6 records move from "AEAD/stream (CBC excluded)" to "CBC or AEAD/stream (ambiguous)" (less
+   informative, still true). `build/findings_diff.py` shows the same 64 plus the exp47 `ike_encr` renames.
+3. **F3 (found, NOT applied):** the PFS overclaim above. A drafted change (UNKNOWN instead of `pfs=False` when the IKE group is
+   not visible and the request is short) makes exactly two existing tests fail, both pinning `rekey-cs-pfs-off-aes256gcm16-run2.pcap`
+   (a lab capture without IKE_SA_INIT) as INFERRED False: `tests/test_extract.py::test_finding[...-pfs-INFERRED-False]` and
+   `tests/test_pfs_padding.py::test_minimal_padding_implementations_keep_their_answer[...-False]`. Changing a pinned expectation is
+   a change of specification and AGENTS.md forbids editing a test to make it pass, so the change stays out of the code and is put to
+   the owner with the diff in RESULT.md.
+After-fix prediction (stated now): scoring the same captures again as `after-fix` differs from `before-fix` in H2 and H3 only, both
+becoming PASS; nothing else moves.

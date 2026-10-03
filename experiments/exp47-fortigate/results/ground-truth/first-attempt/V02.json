@@ -1,0 +1,18 @@
+{
+ "arm": "V02",
+ "established": false,
+ "ground_truth": {
+  "fortigate_ike_gateway": "vd: root/0\nname: tsc-p1\nversion: 1\ninterface: port2 4\naddr: 10.50.0.1:500 -> 10.50.0.2:500\ntun_id: 10.50.0.2/::10.50.0.2\nremote_location: 0.0.0.0\nnetwork-id: 0\ntransport: UDP\ncreated: 7s ago\npending-queue: 0\nIKE SA: created 1/1\nIPsec SA: created 0/0\n\n  id/spi: 62 29f0b7f9468c8546/0000000000000000\n  direction: responder\n  status: connecting, state 3, started 7s ago",
+  "fortigate_tunnel": "list ipsec tunnel by names in vd 0\n------------------------------------------------------\nname=tsc-p1 ver=1 serial=1 10.50.0.1:0->10.50.0.2:0 nexthop=0.0.0.0 tun_id=10.50.0.2 tun_id6=::10.50.0.2 status=down dst_mtu=1500 weight=1\nbound_if=4 real_if=4 lgwy=static/1 tun=intf mode=auto/1 encap=none/552 options[0228]=npu frag-rfc  run_state=0 role=primary accept_traffic=0 overlay_id=0\n\nproxyid_num=1 child_num=0 refcnt=4 ilast=1623 olast=1623 ad=/0\nstat: rxp=0 txp=0 rxb=0 txb=0\ndpd: mode=on-demand on=0 status=fail idle=20000ms retry=3 count=0 seqno=0\nnatt: mode=none draft=0 interval=0 remote_port=0\nfec: egress=0 ingress=0\nproxyid=tsc-p2 proto=0 sa=0 ref=1 serial=13\n  src: 0:10.61.0.0-10.61.0.255:0\n  dst: 0:10.62.0.0-10.62.0.255:0",
+  "peer_log": "out|giving up' /var/log/messages 2>/dev/null | tail -5\nOct  3 15:41:04 peer daemon.info : 11[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 15:41:18 peer daemon.info : 01[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 15:41:49 peer daemon.info : 10[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 16:11:12 peer daemon.info : 08[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 16:11:15 peer daemon.info : 10[IKE] no matching proposal found, sending NO_PROPOSAL_CHOSEN",
+  "peer_sas": "swanctl --list-sas 2>&1\npeer:~#"
+ },
+ "params": {
+  "dh": 14,
+  "hash": "sha256",
+  "ike": 1,
+  "mode": "aggressive"
+ },
+ "pings": null,
+ "seconds": 289
+}
