@@ -53,3 +53,35 @@ No plugin, no script installed into a sensor, no connection: files and stdout on
 ## Not claimed (fixed here)
 No Zeek package or Suricata plugin is shipped or tested. Not tested: Filebeat's Suricata/Zeek modules, Splunk, Security Onion, a live interface, rules that react to
 `tunnelscope` events. The `ts` of a row is the assessment time, so rows join to sensor logs by IP pair and SPI pair only, never by time window.
+
+## ADDENDUM A (2026-10-04, before the scored run): empty strings are written as unset
+A probe of Zeek 9.0.0's input framework (ASCII reader, `Input::add_event`, not scored) on a file with hostile values showed that an empty string written as `(empty)`
+comes back as the literal text `(empty)`, while `-` (unset) comes back as a missing optional field and the escaped forms `\x2d` and `\x28empty)` come back as the
+literal values `-` and `(empty)`. So the text above ("an empty string as `(empty)`") is replaced by: **an empty string is written as `-` (unset)**; empty and missing mean
+the same for every column here. H1 compares by hexadecimal dump of the bytes the reader returns, because `print` re-escapes strings and cannot show what was read.
+`exit_only_after_terminate` is needed in the reader script, otherwise Zeek exits before the input thread delivers anything.
+
+## ADDENDUM B (2026-10-04, after the sensor output existed and before the scored run): what the probe of the sensor logs showed
+Over the 145 captures of the work tree Suricata 8.0.7 wrote 494 `ike` events (IKEv2 and also IKEv1: `alg_enc`, `alg_hash`, `alg_auth` (an authentication method in IKEv1),
+`alg_dh`, `sa_key_length`), 50 `anomaly` events, 500 `flow` events. Consequences for the bars, fixed here:
+- **H4 covers IKEv1 as well.** For IKEv1 the compared event is the first one with a non-zero responder SPI that carries `alg_enc` (the responder's selection; the
+  initiator's offer has responder SPI zero). Attributes compared: cipher family (and key length where both sides give one), DH group number, and hash: IKEv2 `alg_prf` against
+  TunnelScope's `ike_prf`, IKEv1 `alg_hash` against `ike_prf` (TunnelScope reports the IKEv1 hash as the PRF, DEC-051). IKEv2 `alg_auth` against `ike_integ`. IKEv1
+  `alg_auth` is an authentication method and is not compared. IKEv2: the responder's IKE_SA_INIT event (`exchange_type` 34, `role` "responder") of the same SPI pair.
+- **The SA key is the SPI pair.** A tunnel whose SPI pair is incomplete (no IKE_SA_INIT) is not compared and is counted under H3's explained misses.
+- **Mapping:** done by IANA group numbers for the DH group, by (family, key length) for ciphers (Suricata's IKEv2 events give no key length, so only the family is compared
+  there), by hash name for PRF and integrity. A value outside the mapping is "unmapped", listed, never matched. The functions are in `analyze.py`, committed with this addendum.
+- **H5 additions to report:** how many of Suricata's IKEv2 CREATE_CHILD_SA events list any inner payload (prediction: none, they are encrypted); Suricata `flow` events
+  with protocol ESP/AH; Suricata `anomaly` event kinds.
+- **H6 byte-identity** is checked against the commit this branch started from (`b242551`) with `git archive`, for `ecs` and `syslog`, on the ten EXP-35 captures.
+- Sensor run: `sensors.sh` (committed) in the official images; the first two attempts were discarded (the first lost most captures because `suricata` read the loop's stdin;
+  the second ran concurrently with a leftover process) and the third is the one scored.
+
+## ADDENDUM C (2026-10-04, after a dry run of `analyze.py` and before the scored run): three scorer corrections, disclosed
+The first execution of the scorer (not the scored run; its output was overwritten) showed three faults in the scorer, not in the product:
+(1) the Zeek reader script declared a function parameter `&optional`, which Zeek rejects, so H1 read 0 rows: fixed;
+(2) the IKEv1 hash names were mapped to `SHA1` etc. while the IKEv2/TunnelScope side maps to `HMAC-SHA1`, so nine agreeing IKEv1 captures were counted as
+disagreements: the mapping now gives `HMAC-SHA1`, same as the other side (the bar is unchanged: the family must be equal);
+(3) the H5 metric "CREATE_CHILD_SA events listing inner payloads" was ill-defined (Suricata lists `EncryptedAndAuthenticated`, `Notify`); it is replaced by the
+distribution of payload lists of those events and the count of events listing `KeyExchange` (the payload that shows PFS). Prediction kept: 0 such events.
+The dry run also showed one real disagreement, `cloud/a-start.pcap` (4 attributes, one SA); it is not hidden by any change here and is diagnosed in RESULT.
