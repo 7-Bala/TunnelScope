@@ -46,7 +46,7 @@ def cmd_analyze(args):
 
 
 def cmd_export(args):
-    """T-129: one SIEM event per verdict -- Elastic ECS JSON lines, or RFC 5424 syslog lines. Files and stdout only."""
+    """T-129/T-128: one SIEM event per verdict -- Elastic ECS JSON, RFC 5424 syslog, a Zeek log or Suricata EVE-shaped JSON. Files and stdout only."""
     from .siem import ecs, export
     if args.bulk_index and args.format != "ecs":
         raise InputError("--bulk-index needs --format ecs")
@@ -56,6 +56,11 @@ def cmd_export(args):
         raise InputError(f"--at {args.at!r} is neither an ISO 8601 time nor epoch seconds") from None
     if args.format == "syslog":
         lines = export.syslog_lines(args.pcap, args.profile, args.only_fail, at)
+    elif args.format == "eve":
+        lines = export.eve_lines(args.pcap, args.profile, args.only_fail, at)
+    elif args.format == "zeek":
+        text = export.zeek_log(args.pcap, args.profile, args.only_fail, at)
+        lines = text.splitlines() if text else []
     else:
         docs = export.ecs_documents(args.pcap, args.profile, args.only_fail, at)
         lines = []
@@ -514,9 +519,10 @@ def main(argv=None):
                    help="exit 1 if any FAIL verdict is present (for CI/monitoring gates)")
     s.add_argument("--profile", action="append", help="also assess against an opt-in rules profile (e.g. cnsa2-ipsec); repeatable")
     s.set_defaults(func=cmd_assess)
-    xp = sub.add_parser("export", help="SIEM export: one event per verdict as Elastic ECS JSON or RFC 5424 syslog (files/stdout only)")
+    xp = sub.add_parser("export", help="SIEM export: one event per verdict as Elastic ECS JSON, RFC 5424 syslog, a Zeek log or Suricata EVE-shaped JSON (files/stdout only)")
     xp.add_argument("pcap")
-    xp.add_argument("--format", choices=["ecs", "syslog"], default="ecs", help="ecs = Elastic Common Schema JSON lines (default)")
+    xp.add_argument("--format", choices=["ecs", "syslog", "zeek", "eve"], default="ecs",
+                    help="ecs = Elastic Common Schema JSON lines (default); zeek = Zeek TSV log tunnelscope.log; eve = Suricata EVE-shaped JSON lines")
     xp.add_argument("--profile", action="append", help="also assess against an opt-in rules profile; repeatable")
     xp.add_argument("--only-fail", action="store_true", help="export FAIL verdicts only")
     xp.add_argument("--at", metavar="TIME", help="assessment time, ISO 8601 or epoch seconds (default: now); for replays")
