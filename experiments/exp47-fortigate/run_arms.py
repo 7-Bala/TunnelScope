@@ -70,7 +70,7 @@ class Lab:
         self.sh("ip addr show dev lo | grep -q 10.62.0.1 || ip addr add 10.62.0.1/24 dev lo")
 
     # ---- per-arm configuration
-    def configure(self, a, arm):
+    def configure_fg(self, a):
         dh, hsh = a["dh"], a["hash"]
         pfs = a.get("pfs", True)
         p1 = ['config vpn ipsec phase1-interface', 'edit "tsc-p1"', 'set interface "port2"', f"set ike-version {a['ike']}",
@@ -89,6 +89,10 @@ class Lab:
         p2 += ["set pfs enable", f"set dhgrp {dh}"] if pfs else ["set pfs disable"]
         p2 += ["next", "end"]
         self.fgt(p2)
+
+    def configure_peer(self, a):
+        dh, hsh = a["dh"], a["hash"]
+        pfs = a.get("pfs", True)
         psk = PSK + ("-WRONG" if a.get("fail") == "bad-psk" else "")
         ike_dh = DH_NAME.get(dh, "modp2048")                    # X01: group 32 has no strongSwan name; the peer offers modp2048
         esp = f"des-{hsh}-{ike_dh}" if pfs else f"des-{hsh}"
@@ -124,10 +128,23 @@ secrets {{ ike-fgt {{ secret = {psk} }} }}
             raise RuntimeError(f"peer config not loaded: {out[:300]}")
         self.sh(": > /var/log/messages")                           # the arm's peer log starts empty (syslog rotates at 200 KB)
 
-    def clear(self):
+    def quiesce(self):
+        """Nothing may negotiate between arms: tunnel interface down, both ends cleared and verified empty."""
+        self.fgt_out('config system interface'); self.fgt_out('edit "tsc-p1"'); self.fgt_out("set status down")
+        self.fgt_out("next"); self.fgt_out("end")
         self.sh("swanctl --terminate --ike fgt --force 2>&1 | tail -1", limit=30)
         self.fg.run("diagnose vpn ike gateway clear name tsc-p1", limit=15)
-        time.sleep(3)
+        for _ in range(15):
+            gw = self.fgt_out("diagnose vpn ike gateway list name tsc-p1", limit=20)
+            sas = self.sh("swanctl --list-sas 2>&1", limit=15)
+            if "id/spi" not in gw and "ESTABLISHED" not in sas and "CONNECTING" not in sas:
+                return
+            time.sleep(2)
+        raise RuntimeError("the SAs did not clear between arms")
+
+    def up(self):
+        self.fgt_out('config system interface'); self.fgt_out('edit "tsc-p1"'); self.fgt_out("set status up")
+        self.fgt_out("next"); self.fgt_out("end")
 
     def established(self):
         out = self.sh("swanctl --list-sas 2>&1", limit=20)
@@ -146,12 +163,14 @@ secrets {{ ike-fgt {{ secret = {psk} }} }}
 def run_arm(lab, arm, out_dir):
     a = ARMS[arm]
     print(f"--- {arm} {a}", flush=True)
-    lab.clear()
-    lab.configure(a, arm)
+    lab.quiesce()
+    lab.configure_peer(a)
+    lab.configure_fg(a)
     cap = f"exp47-{arm}"
     subprocess.run([os.path.join(REPO, "testbed", "fortigate", "lab.sh"), "cap-start", cap], check=True, capture_output=True)
     t0 = time.time()
     try:
+        lab.up()                                                    # from here on, everything happens inside the capture
         if a.get("role") == "responder":
             lab.sh("swanctl --initiate --child net 2>&1 | tail -2", limit=40)
         else:

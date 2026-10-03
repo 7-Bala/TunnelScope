@@ -102,6 +102,13 @@ def score_arm(arm, d, pcap):
         return res
     h, g = a["hash"], a["dh"]
     exp_integ, exp_prf, family, _, _ = HASH[h]
+    ex = subprocess.run(["tshark", "-n", "-r", pcap, "-Y", "isakmp", "-T", "fields", "-e", "isakmp.exchangetype"],
+                        capture_output=True, text=True).stdout.split()
+    res["handshake_in_capture"] = any(x in ("34", "2", "4") for x in ex)         # IKE_SA_INIT, or IKEv1 main/aggressive mode
+    mid = not res["handshake_in_capture"]
+    if mid:
+        res["mid_stream"] = ("the capture holds no IKE handshake (it starts mid-session): H1, H2 and H6 do not apply; "
+                             "only what a mid-stream vantage can say is scored")
     out = {}
     # H1
     out["ike_version"] = ok_or_unknown(r, "ike_version", f"IKEv{a['ike']}")
@@ -109,11 +116,11 @@ def score_arm(arm, d, pcap):
     out["ike_integ"] = ok_or_unknown(r, "ike_integ", exp_integ) if a["ike"] == 2 else ("skip (IKEv1 has no integrity transform)", None)
     out["ike_dh_group"] = ok_or_unknown(r, "ike_dh_group", DH[g][0])
     out["pq_key_exchange"] = ok_or_unknown(r, "pq_key_exchange", "classical-only")
-    res["H1"] = out
-    res["H1_pass"] = all(v[0] in ("ok", "unknown") or str(v[0]).startswith("skip") for v in out.values())
-    # H2
-    st, v = val(r, "ike_encr")
-    res["H2"] = {"status": st, "value": v, "pass": bool(isinstance(v, str) and re.fullmatch(r"DES(-CBC)?", v))}
+    if not mid:
+        res["H1"] = out
+        res["H1_pass"] = all(v[0] in ("ok", "unknown") or str(v[0]).startswith("skip") for v in out.values())
+        st, v = val(r, "ike_encr")                                                  # H2
+        res["H2"] = {"status": st, "value": v, "pass": bool(isinstance(v, str) and re.fullmatch(r"DES(-CBC)?", v))}
     # H3
     st, v = val(r, "esp_cipher_family")
     if res.get("child_sa_failed"):
@@ -127,16 +134,25 @@ def score_arm(arm, d, pcap):
     want_pfs = a.get("pfs", True)
     if arm.startswith("P") or st != "NOT_OBSERVABLE":
         res["H4"] = {"status": st, "value": v, "expected": want_pfs, "pass": st in ("UNKNOWN", "NOT_OBSERVABLE") or v == want_pfs}
-    # H5
+    # H5 -- scored for the FortiGate's role (ADDENDUM D); the literal reading is reported next to it
     st, v = val(r, "implementation")
-    res["H5"] = {"status": st, "value": v, "pass": not (isinstance(v, str) and any(s.lower() in v.lower() for s in SILLY)) and
-                 not (isinstance(v, dict) and any(s.lower() in json.dumps(v).lower() for s in SILLY))}
+    role = "responder" if a.get("role") == "responder" else "initiator"
+    fg_side = v.get(role) if isinstance(v, dict) else v
+    literal_ok = not (isinstance(v, str) and any(x.lower() in v.lower() for x in SILLY)) and \
+        not (isinstance(v, dict) and any(x.lower() in json.dumps(v).lower() for x in SILLY))
+    res["H5"] = {"status": st, "value": v, "fortigate_role": role, "fortigate_side": fg_side,
+                 "pass": fg_side is None or "forti" in str(fg_side).lower(), "literal_reading_pass": literal_ok}
     # H6: verdicts equal those the same rules give on the expected values
+    if mid:
+        res["reported"] = {"rekey_cadence": val(r, "rekey_cadence"), "ipsec_protocols": val(r, "ipsec_protocols")}
+        return res
     base = load_baselines()
     got = {x.rule_id: x.verdict for x in assess_record(r, base)}
     exp_rec = copy.deepcopy(r)
     from tunnelscope.evidence.record import Finding, Status
     def setf(attr, value):
+        if attr not in exp_rec.findings:                              # e.g. IKEv1 has no separate integrity transform
+            return
         f = exp_rec.findings[attr]
         exp_rec.findings[attr] = Finding(attr, Status.OBSERVED, f.vantage, f.method, value=value, evidence=f.evidence)
     setf("ike_prf", exp_prf); setf("ike_dh_group", DH[g][0]); setf("ike_encr", "DES")
@@ -167,19 +183,21 @@ def main():
             continue
         manifest[arm] = hashlib.sha256(open(p, "rb").read()).hexdigest()
         arms[arm] = score_arm(arm, json.load(open(j)), p)
-    scored = [x for x in arms.values() if "H1" in x]
+    scored = [x for x in arms.values() if "H1" in x]                              # arms whose capture holds the handshake
+    esp_arms = [x for x in arms.values() if "H3" in x]                             # arms with an established IKE SA (mid-stream too)
     summary = {
         "label": a.label, "arms": arms, "capture_sha256": manifest,
         "established_scored": len(scored),
         "H1": {"pass": all(x["H1_pass"] for x in scored), "failing_arms": [x["arm"] for x in scored if not x["H1_pass"]]},
         "H2": {"pass": all(x["H2"]["pass"] for x in scored), "failing_arms": [x["arm"] for x in scored if not x["H2"]["pass"]],
                "values": sorted({str(x["H2"]["value"]) for x in scored})},
-        "H3": {"pass": all(x["H3"]["pass"] for x in scored), "failing_arms": [x["arm"] for x in scored if not x["H3"]["pass"]]},
-        "H4": {"pass": all(x["H4"]["pass"] for x in scored if "H4" in x), "arms_scored": [x["arm"] for x in scored if "H4" in x],
-               "failing_arms": [x["arm"] for x in scored if "H4" in x and not x["H4"]["pass"]]},
-        "H5": {"pass": all(x["H5"]["pass"] for x in scored), "values": sorted({json.dumps(x["H5"]["value"])[:80] for x in scored})},
+        "H3": {"pass": all(x["H3"]["pass"] for x in esp_arms), "failing_arms": [x["arm"] for x in esp_arms if not x["H3"]["pass"]]},
+        "H4": {"pass": all(x["H4"]["pass"] for x in esp_arms if "H4" in x), "arms_scored": [x["arm"] for x in esp_arms if "H4" in x],
+               "failing_arms": [x["arm"] for x in esp_arms if "H4" in x and not x["H4"]["pass"]]},
+        "H5": {"pass": all(x["H5"]["pass"] for x in esp_arms), "values": sorted({json.dumps(x["H5"]["value"])[:80] for x in esp_arms})},
         "H6": {"pass": all(x["H6"]["pass"] for x in scored), "failing_arms": [x["arm"] for x in scored if not x["H6"]["pass"]]},
         "H7": {"arms": {k: v["H7"] for k, v in arms.items() if "H7" in v}, "pass": all(v["H7"]["pass"] for v in arms.values() if "H7" in v)},
+        "scored_with_handshake": [x["arm"] for x in scored], "mid_stream": [k for k, v in arms.items() if v.get("mid_stream")],
         "unnegotiable": [k for k, v in arms.items() if "unnegotiable" in v],
         "stopped_ground_truth_disagrees": [k for k, v in arms.items() if v.get("ground_truth_agrees_with_table") is False],
     }

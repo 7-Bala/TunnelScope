@@ -129,3 +129,21 @@ pre-shared key. This is a peer policy, not FortiGate behaviour. The peer's delib
 (`charon.i_dont_care_about_security_and_use_aggressive_mode_psk = yes`, written to `/etc/strongswan.d/zz-lab-aggressive.conf`)
 is set on the lab peer and V02 is run once more with every other parameter unchanged. The first and second attempts are kept
 under `first-attempt/` and `second-attempt/`. The setting stays on for the lab's remaining life; no other arm is re-run.
+
+## ADDENDUM D (2026-10-03, after scoring the first complete set once, before the re-run it governs)
+A first scoring pass of all 18 arms (label `before-fix-first-pass`, kept) showed that **8 of the 16 established arms' captures do not
+contain the handshake**: S04, S07, S09 hold no IKE message at all; V01 and V02 start at the IKEv1 Quick Mode; P01-P03 start at a
+rekey (counted with `isakmp.exchangetype`). Cause: the FortiGate renegotiated while the harness was still reconfiguring it, before
+the capture started (the device's own report still matched the arm's suite, so the ground-truth gate could not notice). Changes:
+1. **Harness:** each arm now (a) takes the tunnel interface down, clears both ends and verifies they are empty, (b) configures
+   peer and FortiGate, (c) starts the capture, (d) only then brings the interface up and triggers. Tested: with the interface down,
+   cleared SAs stayed cleared for 25 s.
+2. **Scorer:** an arm is scored for H1, H2 and H6 only if its capture contains the handshake (IKE_SA_INIT, or IKEv1 main or
+   aggressive mode); otherwise it is reported as **mid-stream**, scored for H3, H4 and H5 only (what a mid-stream vantage can say).
+   H3-H5 are tallied over every arm with an established IKE SA.
+3. **Re-run once:** S04, S07, S09, V01, V02, P01, P02 and P03. The first captures of those eight are kept in `first-run-midstream/`
+   and their mid-stream results are reported (P03's first capture is also a regression case for any change to the PFS rule).
+4. **H5 clarified, not loosened:** the bar's purpose is that the FortiGate is not misnamed. In R01 TunnelScope names the *initiator*
+   strongSwan, which is the peer and correct; the literal reading of H5 would fail that. H5 is scored on the FortiGate's role
+   (UNKNOWN or Fortinet passes); the literal reading is reported beside it (it fails on R01 for that reason only).
+Not re-run: S01-S03, S05, S06, S08, S10, R01 (handshake present), X01, X02.
