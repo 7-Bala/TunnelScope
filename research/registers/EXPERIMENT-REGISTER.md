@@ -667,3 +667,12 @@ flagged mixed with K4). Detector retrained on leave-one-family-out probabilities
 P44-1 falsified: best cross-validated catch 78.6% at 2.2% false flags (bar 80%), 28 mixed sessions only. Not shipped; the current
 detector stays. Post-hoc for the owner: the near-miss candidate would answer 15/32 lab-D sessions (all right) instead of 11, letting
 1/12 EXP-05 mixed sessions through. `experiments/exp44-mixed-recalibrate/RESULT.md`
+
+## EXP-49 — Analysis throughput on one Mac (T-125) — PRE-REGISTRATION (2026-10-04)
+`experiments/exp49-throughput/PREREG.md` before any measurement; addendum A (interleaved A/D check) dated before it ran. Window analysis only, synthetic ESP with ground truth, no live capture (no capture permission).
+Bars: H1 exact packet accounting at every size, H2 loud timeout, H3 damaged file flagged, H6 product untouched; H4/H5 measured and derived; five predictions.
+
+### EXP-49 — RESULT (2026-10-04)
+Apple M4 / 16 GB / macOS 27.0.1. H1 15/15 exact up to 3x10^6 packets; H2 and H3 pass; 32-41 k packets/s = 0.36-0.46 Gbps represented per core; Python memory 1.24 KB/packet; P1-P5 held (P1 by a hair; machine not idle).
+Capture-side drops are silent by code reading (T-161). DEC-058. `experiments/exp49-throughput/RESULT.md`
+

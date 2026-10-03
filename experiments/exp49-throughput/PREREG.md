@@ -53,3 +53,10 @@ side; closing it is a separate task, not part of this experiment.
 ## Not claimed (fixed here)
 Live capture rate on any interface; behaviour on a Linux server, a NIC, SPAN/TAP, 10/40/100 Gbit links; multi-process or multi-core scaling (the analysis is one Python
 process; `tshark` is single-threaded per pass); IPv6, AH or ESP-in-UDP traffic; the cost of the traffic classifier on long flows beyond what `analyze` runs.
+
+## ADDENDUM A (2026-10-04, after the scored run, before this extra measurement): the machine was not idle, so P4 is re-checked with interleaved runs
+The harness recorded a one-minute load average of 4.1-4.2 during scenario A at 10^4 and 10^5 packets and 5.5-6.5 during the later scenarios; another Python and tshark process
+(another work session on this Mac) was running. The pre-registration asked for nothing heavy alongside; that was not achieved and is stated in RESULT. The scored numbers are kept
+as they are. Because scenarios C and D (both 2.97 s at 10^5) ran under a higher load than A (2.45 s), P4 ("full packets cost within 30% of headers-only") is not separated from
+load by the scored data alone. Supplementary measurement, not a bar: A and D at 10^5 packets, **interleaved** (A, D, A, D, A, D) in one session so both see the same load,
+reported with the load average of each run. It changes no scored result.
