@@ -8,6 +8,7 @@ the FortiGate and from the peer, and write <arm>.pcap (local, not committed) and
 The pre-shared key and the lab password are read from files outside the repository and are never written to any output.
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -111,10 +112,17 @@ class Lab:
 }}
 secrets {{ ike-fgt {{ secret = {psk} }} }}
 """
-        self.sh("cat > /etc/swanctl/swanctl.conf <<'EOF'\n" + conf + "EOF")
+        want = hashlib.md5(conf.encode()).hexdigest()
+        for attempt in range(4):                                  # the console is slow: verify the file by checksum, never assume
+            self.sh("cat > /etc/swanctl/swanctl.conf <<'EOF'\n" + conf + "EOF")
+            if want in self.sh("md5sum /etc/swanctl/swanctl.conf", limit=15):
+                break
+        else:
+            raise RuntimeError("peer swanctl.conf did not match what was sent after 4 attempts")
         out = self.sh("swanctl --load-all 2>&1 | tail -3", limit=30)
         if "successfully loaded" not in out:
             raise RuntimeError(f"peer config not loaded: {out[:300]}")
+        self.sh(": > /var/log/messages")                           # the arm's peer log starts empty (syslog rotates at 200 KB)
 
     def clear(self):
         self.sh("swanctl --terminate --ike fgt --force 2>&1 | tail -1", limit=30)
@@ -166,7 +174,7 @@ def run_arm(lab, arm, out_dir):
             "fortigate_ike_gateway": lab.fgt_out("diagnose vpn ike gateway list name tsc-p1", limit=30),
             "fortigate_tunnel": lab.fgt_out("diagnose vpn tunnel list name tsc-p1", limit=30),
             "peer_sas": lab.sh("swanctl --list-sas 2>&1", limit=20),
-            "peer_log": lab.sh("grep -iE 'no proposal|AUTHENTICATION_FAILED|NO_PROPOSAL|retransmit|timed out|giving up' /var/log/messages 2>/dev/null | tail -5", limit=15),
+            "peer_log": lab.sh("grep -E '\\[(IKE|CFG|ENC|NET)\\]' /var/log/messages 2>/dev/null | grep -vE 'received packet|sending packet' | head -60 | cut -c17-200", limit=20),
         }
     finally:
         time.sleep(2)

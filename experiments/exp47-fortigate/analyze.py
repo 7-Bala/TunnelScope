@@ -87,10 +87,14 @@ def score_arm(arm, d, pcap):
             res["H7"] = {"value": v, "status": st, "pass": v != "success"}
         res["established_by_device"] = d["established"]
         return res
-    if not d["established"]:
-        res["unnegotiable"] = {"fortigate": d["ground_truth"]["fortigate_ike_gateway"][-300:],
-                               "peer_log": d["ground_truth"]["peer_log"][-300:]}
+    gt0 = d["ground_truth"]
+    ike_sa_up = bool(re.search(r"IKE SA:[^\n]*established 1/1", gt0["fortigate_ike_gateway"])) and bool(re.search(r"ESTABLISHED, IKEv", gt0["peer_sas"]))
+    res["ike_sa_established_on_both_ends"] = ike_sa_up
+    if not d["established"] and not ike_sa_up:
+        res["unnegotiable"] = {"fortigate": gt0["fortigate_ike_gateway"][-300:], "peer_log": gt0["peer_log"][-300:]}
         return res
+    if not d["established"]:
+        res["child_sa_failed"] = True                                    # ADDENDUM B: the IKE SA is scored, ESP is not
     ok, notes = gt_check(arm, a, d["ground_truth"])
     res["ground_truth_agrees_with_table"] = ok
     if not ok:
@@ -112,7 +116,9 @@ def score_arm(arm, d, pcap):
     res["H2"] = {"status": st, "value": v, "pass": bool(isinstance(v, str) and re.fullmatch(r"DES(-CBC)?", v))}
     # H3
     st, v = val(r, "esp_cipher_family")
-    if st == "INFERRED" and isinstance(v, list):
+    if res.get("child_sa_failed"):
+        res["H3"] = {"status": st, "pass": True, "note": "no child SA formed, nothing to be wrong about ESP"}
+    elif st == "INFERRED" and isinstance(v, list):
         res["H3"] = {"status": st, "truth": family, "contains_truth": family in v, "candidates": v, "pass": family in v}
     else:
         res["H3"] = {"status": st, "pass": True, "note": "not INFERRED, so nothing to be wrong"}

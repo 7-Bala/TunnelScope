@@ -104,3 +104,20 @@ No arm, bar or prediction above changes. Details the scorer needs, fixed here:
 6. The rehearsal (S03 into a throwaway folder) showed `ike_encr = encr-2` and a candidate set without the true family, i.e. the
    two predicted failures; S03 is captured again in the scored run. 26 of 28 small pings succeeded in the rehearsal (the first
    two are sent while the SA is still coming up); ping loss is reported per arm and is not a bar.
+
+## ADDENDUM B (2026-10-03, after the first full run, before the re-run it governs)
+Facts, then the change. The first run captured 18 arms (the arm table lists 18, S01-S10, V01, V02, R01, P01-P03, X01, X02; the
+heading "17 arms" above was a miscount). Three did not form a full tunnel:
+- **V02 and P01:** the peer replied `NO_PROPOSAL_CHOSEN` ("no IKE config found for 10.50.0.2...10.50.0.1"), which strongSwan
+  sends when no loaded connection matches the request's IKE version or aggressive-mode flag. The most likely cause is a **stale
+  peer configuration**: the harness types `swanctl.conf` through a slow serial console and did not verify that the file landed
+  (inferred from the message and from the neighbouring arms; the peer's own log of that period was rotated away by the X02 flood,
+  so this is not directly proven). A lab fault of mine, not a FortiGate behaviour.
+- **V01:** the IKEv1 main-mode IKE SA **was** established on both ends (the FortiGate reports `proposal: des-sha256`, the peer
+  `DES_CBC/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048`); the Quick Mode child failed. The harness counted only a full tunnel
+  as established.
+Changes: (1) the harness now verifies the peer's `swanctl.conf` by MD5 (up to 4 writes), empties the peer log before each arm and
+keeps the arm's IKE/CFG/ENC/NET log lines in the ground-truth JSON; (2) **V01, V02 and P01 are re-run once**; the first attempts
+are kept under `first-attempt/` and reported; (3) the scorer scores the IKE SA (H1, H2, H5, H6) whenever it is established on both
+ends even if the child SA failed, and then does not score H3/H4 for that arm. The other 15 arms are not re-run. If the re-run
+of an arm fails again it is reported as unnegotiable with the new logs.
