@@ -387,6 +387,13 @@ def extract_pfs(r: EvidenceRecord) -> None:
         r.add(Finding("pfs", Status.INFERRED, Vantage.T1, "pfs (EXP-03 length gap)", value=True,
                       confidence=0.9, evidence=ev,
                       note=f"CREATE_CHILD_SA request {max(sizes)} B carries a KE payload{caveat}"))
+    elif dh_val is None:
+        # EXP-47 (D3): a short request is only "no KE" if the KE would have been MODP-sized; a mid-stream capture does
+        # not show the group, and an ECP-256 PFS rekey (64-byte KE) looks the same. Not a pass, not a fail.
+        r.add(Finding("pfs", Status.UNKNOWN, Vantage.T1, "pfs (EXP-03 length gap)", evidence=ev,
+                      note=f"CREATE_CHILD_SA request {max(sizes) if sizes else '?'} B is below the MODP threshold, but the IKE DH "
+                           "group is not visible, and a PFS rekey with a smaller group (ECP, Curve25519) is also this short; "
+                           "needs the IKE_SA_INIT or T2 endpoint telemetry"))
     else:
         r.add(Finding("pfs", Status.INFERRED, Vantage.T1, "pfs (EXP-03 length gap)", value=False,
                       confidence=0.9, evidence=ev,

@@ -171,3 +171,13 @@ Decisions, fixed before they are committed:
    the owner with the diff in RESULT.md.
 After-fix prediction (stated now): scoring the same captures again as `after-fix` differs from `before-fix` in H2 and H3 only, both
 becoming PASS; nothing else moves.
+
+## ADDENDUM F (2026-10-04, written before the code change): D3, the PFS rule must not assert "no PFS" when the IKE group is invisible
+Owner decision 2026-10-04: option (a), fix D3 (see RESULT.md, defect D3).
+Change: in `extract_pfs`, when the IKE DH group is not a visible string and no rekey request reaches 400 B, `pfs` is UNKNOWN (was INFERRED False).
+A request of 400 B or more still reads INFERRED True with the existing caveat (a large request cannot come from a missing KE payload; padding is handled earlier).
+Prediction, computed before the change from the current code over the whole local corpus (450 records with a `pfs` finding): exactly 4 records change from INFERRED False to UNKNOWN and nothing else moves:
+`exp47/first-run-midstream/P02.pcap`, `exp47/first-run-midstream/P03.pcap`, `rekey-cs-pfs-off-aes256gcm16-run2.pcap`, `synthetic/cve-2026-78135-plaintext-positive.pcap`.
+P03 (PFS on, ECP-256) stops being wrong; P02 and the rekey-cs capture (PFS really off) stop being right: the rule cannot tell them apart without the group, and that is the honest answer.
+Two pinned expectations change by this decision, as a documented edit and not a silent one: `tests/test_extract.py` (pfs-off row) and `tests/test_pfs_padding.py` (pfs-off row of the minimal-padding test).
+Bar: the corpus differential equals the 4 predicted records exactly; a mutation that restores the old branch fails the new test.

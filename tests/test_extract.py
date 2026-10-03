@@ -20,7 +20,9 @@ def _main(pcap):
     ("exp06r2/exp06r2-f01-rep1.pcap", "negotiation_outcome", "OBSERVED", "ike-proposal-mismatch"),
     ("exp06r2/exp06r2-f06-rep1.pcap", "negotiation_outcome", "OBSERVED", "peer-unreachable"),
     ("rekey-cs-pfs-on-aes256gcm16-run2.pcap", "pfs", "INFERRED", True),
-    ("rekey-cs-pfs-off-aes256gcm16-run2.pcap", "pfs", "INFERRED", False),
+    # EXP-47 addendum F / DEC-056: this capture is rekey-only (IKE group invisible); a short request there cannot
+    # tell PFS-off from an ECP/Curve25519 PFS rekey, so it was INFERRED False and is now UNKNOWN.
+    ("rekey-cs-pfs-off-aes256gcm16-run2.pcap", "pfs", "UNKNOWN", None),
     # T-048/EXP-11: peer_auth_method is NOT_OBSERVABLE everywhere (the actual
     # CERT/AUTH payload is encrypted in IKE_AUTH) - true for a genuine
     # certificate exchange, a PSK exchange on the SAME cert-capable responder,
@@ -160,6 +162,14 @@ def _pfs(group, req_len):
 def test_pfs_modp_rule(group, req_len, value):
     f = _pfs(group, req_len)
     assert f.status.value == "INFERRED" and f.value is value
+
+
+def test_pfs_short_request_with_invisible_group_is_unknown_but_a_long_one_still_reads_pfs_on():
+    """EXP-47 D3: no IKE group visible (mid-stream capture). 290 B could be a PFS rekey with a 64-byte ECP-256 KE."""
+    short = _pfs(None, 236)
+    assert short.status.value == "UNKNOWN" and short.value is None and "not visible" in short.note
+    long = _pfs(None, 508)
+    assert long.status.value == "INFERRED" and long.value is True
 
 
 @pytest.mark.parametrize("group", ["Curve25519", "ECP-256", "ECP-384", "dh-2"])

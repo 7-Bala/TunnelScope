@@ -102,3 +102,11 @@ is dropped: the owner could not register, Juniper requires a company email).
 ## Decision
 DEC-056: FortiOS (unlicensed evaluation image 7.6.7, DES-only) is added to the validated implementations for the handshake, IKEv1, rekey and failure findings; F1
 and F2 ship; **D3 awaits the owner's decision** (apply the `elif` and change the two pinned expectations, or keep the current rule and document the limit).
+
+## Addendum, 2026-10-04: D3 resolved by the owner (option a)
+The owner approved the fix. PREREG addendum F (written before the code change) predicted exactly 4 changed records over the 175-capture local corpus; the findings
+differential (`build/findings_diff.py --base HEAD`) showed 4 changed findings, the same 4, all `pfs` INFERRED False (0.9) to UNKNOWN: `exp47/first-run-midstream/P02`,
+`exp47/first-run-midstream/P03`, `rekey-cs-pfs-off-aes256gcm16-run2`, `synthetic/cve-2026-78135-plaintext-positive`. P03 (PFS on, ECP-256) is no longer wrong; P02 and the
+rekey-cs capture (PFS really off) lose a correct answer, because without the IKE group a short rekey request cannot separate PFS-off from a small-KE PFS rekey. A request of
+400 B or more still reads INFERRED True. Mutation check: restoring the old branch fails three tests (the changed pin in `test_extract.py`, the new unit test, the new
+`test_pfs_padding.py` test). Full pytest after the change: 654 passed, 1 skipped. The scored sets above are unchanged; this addendum does not alter their numbers.
