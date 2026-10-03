@@ -91,3 +91,16 @@ dropped: the owner could not register, Juniper requires a company email).
 ## Rules of this experiment
 No arm, bar or prediction above changes after this commit. RESULT.md quotes `results/summary.json` only. Addenda go below,
 dated, before the run they govern.
+
+## ADDENDUM A (2026-10-03, after the harness and scorer, after one throwaway rehearsal of arm S03, before the run that counts)
+No arm, bar or prediction above changes. Details the scorer needs, fixed here:
+1. **H2** passes when `ike_encr` is exactly `DES` or `DES-CBC`.
+2. **H3** truth names in the sieve table: `DES-CBC+HMAC-96` (md5 and sha1; already in the table), and `DES-CBC+HMAC-SHA256-128`,
+   `DES-CBC+HMAC-SHA384-192`, `DES-CBC+HMAC-SHA512-256` (sha256, sha384, sha512; to be added by the fix after the result).
+3. **H6** feeds the same rules a copy of the record whose `ike_encr` is `DES` and whose PRF, integrity and group are the expected ones.
+4. **Ground-truth gate:** an arm is scored only if the FortiGate's `proposal`, `esp=` and `ah=` and the peer's IKE suite all equal
+   the arm table; the ESP SPIs the FortiGate reports must appear on the wire (reported, not a bar).
+5. Peer-side child `rekey_time` is 3000 s so that the FortiGate (phase-2 keylife 120 s) is the side that rekeys in P01-P03.
+6. The rehearsal (S03 into a throwaway folder) showed `ike_encr = encr-2` and a candidate set without the true family, i.e. the
+   two predicted failures; S03 is captured again in the scored run. 26 of 28 small pings succeeded in the rehearsal (the first
+   two are sent while the SA is still coming up); ping loss is reported per arm and is not a bar.
