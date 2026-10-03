@@ -1,0 +1,93 @@
+# EXP-47 — A FortiGate-VM (FortiOS 7.6.7) as an independent IKE implementation (T-118 step 2) — PRE-REGISTRATION (2026-10-03, before any scored capture)
+
+## Why
+Every capture so far comes from strongSwan, Libreswan or RouterOS (EXP-26). T-118 asks for implementations with genuinely
+different IKE code, and the rule that decides every such experiment: **each TunnelScope finding either equals the device's own
+report or is UNKNOWN; never wrong.** Fortinet's IKE daemon is a different code base again, and FortiOS is the gateway the
+judges' critique named. This experiment captures a real FortiGate-VM against a strongSwan peer, with the device's own
+diagnostics as ground truth.
+
+## Lab (built before this registration; nothing scored yet)
+- **Device under test:** `FGT_ARM64_KVM-v7.6.7.M-build3704-FORTINET.out.kvm.zip` (Fortinet support portal, FortiCloud account of
+  the owner; 108,605,838 bytes; SHA-512 `d9284b8b546abcd90e5be7b2b76f56d641c7966065c46b4d4345878a97a3acc2444052213b2b3e2fb1293db718cd870cc8ce258d7e7f21e86a03019ae8db48e8`
+  verified against the portal), run natively on an Apple M4 under QEMU 11.1.1 with Hypervisor.framework, 1 vCPU, 2 GB.
+  **Licence state: `Invalid` (the permanent evaluation licence was never applied).** FortiOS offers, in this state, only the
+  IKE/ESP proposals `des-md5`, `des-sha1`, `des-sha256`, `des-sha384`, `des-sha512` (DES encryption, five hashes) and DH groups
+  1, 2, 5, 14-21, 27-32 (read from the device CLI).
+- **Peer:** Alpine Linux 3.24.2 aarch64 (official ISO, SHA-256 `a57ba668...dbf6` verified), strongSwan 6.0.7, on a virtual
+  Ethernet wire (10.50.0.1 FortiGate `port2` <-> 10.50.0.2 peer `eth1`). The capture is QEMU's `filter-dump` on that wire (both
+  directions, identical to a SPAN), started and stopped per arm through the QEMU monitor.
+- **Scripts:** `testbed/fortigate/lab.sh`, `fgt_console.py`. Lab files live outside the repository; captures stay local, the
+  repository gets a manifest (SHA-256 per capture) and the ground-truth JSON per arm.
+- **Exploratory, unscored, done before this file:** three probe captures (an IKEv2 tunnel `des-sha256`/group 14). They showed
+  that FortiOS needs a firewall policy before it initiates, that the unlicensed VM negotiates IKE and ESP, and that TunnelScope
+  labels IKE encryption id 2 (DES) as the unnamed string `encr-2`. The arms below were fixed after that, from what the device offers.
+
+## Arms (17; each = configure both ends, record the wire, bring the tunnel up, send 40 pings in the tunnel, read the ground truth)
+Common: PSK, tunnel mode, no NAT, selectors 10.61.0.0/24 (FortiGate loopback) <-> 10.62.0.0/24 (peer loopback), pings between
+the two loopbacks (28 at 56 bytes and 12 at 1000 bytes), FortiGate initiates unless noted, IKE and ESP use the same hash.
+
+| Arm | IKE | Proposal (FortiOS name) | DH (IANA id) | Role / extra |
+|---|---|---|---|---|
+| S01-S05 | v2 | des-md5 / des-sha1 / des-sha256 / des-sha384 / des-sha512 | 2 / 5 / 14 / 15 / 16 | PFS on, same group |
+| S06-S09 | v2 | des-sha256 | 19 / 20 / 21 / 31 | PFS on, same group |
+| S10 | v2 | des-sha256 | 28 (brainpoolP256r1) | PFS on; the peer may be unable (then see "unnegotiable") |
+| V01, V02 | v1 | des-sha256, main mode / aggressive mode | 14 | PFS on |
+| R01 | v2 | des-sha256 | 14 | the peer initiates, the FortiGate responds |
+| P01, P02, P03 | v2 | des-sha256 | 14 / 14 / 19 | phase-2 key lifetime 120 s, 5 minutes recorded; P01 PFS on, P02 PFS off, P03 PFS on |
+| X01 | v2 | des-sha256 | 32 (Curve448, FortiGate offers only this; the peer has no such group) | failure: proposal mismatch |
+| X02 | v2 | des-sha256 | 14 | failure: wrong pre-shared key on the peer |
+
+An arm whose tunnel cannot form for a reason other than X01/X02 is reported as **unnegotiable** with the device's and the
+peer's own error text, and counts toward no bar except H8 (the failure diagnosis).
+
+## Ground truth (read from the device and the peer, never from TunnelScope)
+FortiGate: `diagnose vpn ike gateway list` (version, proposal, lifetime, PPK, PQC), `diagnose vpn tunnel list name <p1>`
+(`esp=`, `ah=`, SPIs, life, replay window, `mode=`, `encap=`), the phase-1/-2 configuration. Peer: `swanctl --list-sas` and the
+loaded connection. Expected suite per arm is also written down here from the arm table:
+
+| Hash | IKE integrity (id) | PRF (id) | ESP integrity | ESP cipher |
+|---|---|---|---|---|
+| md5 | HMAC-MD5-96 (1) | PRF-HMAC-MD5 (1) | HMAC-MD5-96 | DES-CBC |
+| sha1 | HMAC-SHA1-96 (2) | PRF-HMAC-SHA1 (2) | HMAC-SHA1-96 | DES-CBC |
+| sha256 | HMAC-SHA2-256-128 (12) | PRF-HMAC-SHA2-256 (5) | HMAC-SHA2-256-128 | DES-CBC |
+| sha384 | HMAC-SHA2-384-192 (13) | PRF-HMAC-SHA2-384 (6) | HMAC-SHA2-384-192 | DES-CBC |
+| sha512 | HMAC-SHA2-512-256 (14) | PRF-HMAC-SHA2-512 (7) | HMAC-SHA2-512-256 | DES-CBC |
+
+IKE encryption is DES-CBC (IANA id 2) in every successful arm. A disagreement between the FortiGate's report, the peer's report
+and this table stops the arm: it is reported, not scored.
+
+## Hypotheses and bars (fixed here)
+- **H1 (handshake values are never wrong):** in every established arm, `ike_version`, `ike_prf`, `ike_integ`, `ike_dh_group`,
+  `pq_key_exchange` (= classical-only) each equal the expected value or are UNKNOWN. One wrong value fails H1.
+- **H2 (the IKE cipher is named):** `ike_encr` names DES-CBC in every established arm. **Predicted to fail before any change**
+  (all arms report `encr-2`, because the name table has no entry for IANA id 2). It is a defect found by this experiment, not
+  a wrong value; the fix (names for the missing IKE encryption ids 1-6 and 8-10 of the IANA registry that have a defined name) is
+  made after the result and re-scored on the same captures.
+- **H3 (ESP family candidates are honest):** when `esp_cipher_family` is INFERRED, its candidate set contains the true family
+  (DES-CBC with the arm's integrity). **Predicted to fail for sha256, sha384 and sha512 arms**: the sieve table has
+  `DES-CBC+HMAC-96` (md5, sha1) but no DES-CBC family with a 16-, 24- or 32-byte ICV, so the truth cannot be in the set.
+  Fix after the result: add the three families; re-score.
+- **H4 (PFS is never wrong):** in P01-P03 and S-arms with a rekey observed, `pfs` equals the ground truth (P01 yes, P02 no, P03
+  yes) or is UNKNOWN; a wrong value fails H4. (EXP-26's lesson: some stacks pad IKE messages, which fooled the size rule.)
+- **H5 (the implementation is not misnamed):** `implementation` is UNKNOWN or `FortiGate`/`FortiOS`; naming strongSwan,
+  Libreswan or RouterOS fails H5. Predicted UNKNOWN (Fortinet's notify set is not in the fingerprint table).
+- **H6 (verdicts follow the facts):** every default-rule verdict equals the verdict the same rules give when fed the expected
+  values (table above) directly. One disagreement fails H6.
+- **H7 (failures are diagnosed honestly):** X01 -> `negotiation_outcome` reports a proposal mismatch (or UNKNOWN); X02 -> not
+  reported as a successful tunnel (ambiguous or UNKNOWN). Never "success".
+- **H8 (nothing else changes):** the findings differential over the existing corpus before/after the H2/H3 fixes shows only
+  (a) IKE encryption id 2 named and (b) the sieve table's new families, with the corpus's existing results otherwise identical
+  (as `build/findings_diff.py` checks).
+Reported, without a bar: the `rekey_cadence` measured against the configured 120 s; FortiOS's padding of encrypted IKE messages;
+the notify types and vendor IDs Fortinet sends.
+
+## Not claimed
+Only one FortiOS build, only the unlicensed DES-only state (no AES, GCM, ECP-signature or post-quantum suites, no FortiOS 7.6
+hybrid key exchange, which the evaluation image does not offer), a virtual NIC (no hardware offload), PSK only, no NAT-T, one peer
+implementation. Behaviour of licensed FortiGates and physical appliances is not tested. No Juniper device (T-118 step 3 is
+dropped: the owner could not register, Juniper requires a company email).
+
+## Rules of this experiment
+No arm, bar or prediction above changes after this commit. RESULT.md quotes `results/summary.json` only. Addenda go below,
+dated, before the run they govern.
