@@ -683,3 +683,13 @@ H5 0 network imports, `assess` byte-identical to origin/main; H6 0 differences. 
 `source.ip` is dropped silently by Elasticsearch; only `_ignored` shows it). 16 mutation checks caught. DEC-059.
 `experiments/exp46-siem-export/RESULT.md`
 
+## EXP-48 — Zeek and Suricata bridge (T-128) — PRE-REGISTRATION (2026-10-04)
+`experiments/exp48-zeek-suricata/PREREG.md` before any code or scored run; addenda A-C dated before the scored run. `export --format zeek|eve`; bars H1 (real Zeek reader reads every
+row back, hostile values included), H2 (EVE envelope equals Suricata's), H3 (join keys, misses explained), H4 (cross-check with Suricata's IKE algorithms, 0 undiagnosed), H5
+(what the sensors cannot see, reported), H6 (no side effects).
+
+### EXP-48 — RESULT (2026-10-04)
+145 captures, Suricata 8.0.7 and Zeek 9.0.0 in Docker. H1 2,259/2,259 rows read back exactly; H2 0 violations in 2,246 lines; H3 150/150 by address pair, 130/150 by SPI pair (20 explained);
+H4 125 of 126 SAs agree, 1 disagreement diagnosed (Suricata logs the retried offer's last transforms; TunnelScope right); H5 Zeek `service` empty on 235/235 IKE connections, no
+KeyExchange payload visible in 18 Suricata CREATE_CHILD_SA events; H6 ecs/syslog byte-identical. DEC-057. `experiments/exp48-zeek-suricata/RESULT.md`
+

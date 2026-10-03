@@ -18,7 +18,7 @@ it's judged against and admits what it couldn't see.
 .venv/bin/tunnelscope config <swanctl.conf|ipsec.conf>   # read a config file offline: its crypto in the same names as the wire findings
 .venv/bin/tunnelscope reconcile <capture.pcap> <config> --conn <name>   # does the traffic match the config? (exit 3 on a mismatch)
 TUNNELSCOPE_NETWORK=on .venv/bin/tunnelscope intel <capture.pcap>   # known CVEs (NVD, EUVD, CISA KEV) for the VPN software seen
-.venv/bin/tunnelscope export <capture.pcap> --format ecs      # SIEM export: one Elastic ECS JSON event per verdict (--format syslog = RFC 5424; --bulk-index NAME = Elasticsearch _bulk)
+.venv/bin/tunnelscope export <capture.pcap> --format ecs      # SIEM export: one Elastic ECS JSON event per verdict (--format syslog = RFC 5424; --bulk-index NAME = Elasticsearch _bulk); --format zeek = Zeek tunnelscope.log; --format eve = Suricata EVE-shaped JSON
 .venv/bin/tunnelscope live --follow DIR --history H --alerts alerts.jsonl --alert-format ecs   # live alerts as ECS (jsonl and syslog also; Filebeat or rsyslog ships the file)
 ```
 
