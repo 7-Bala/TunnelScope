@@ -121,3 +121,11 @@ keeps the arm's IKE/CFG/ENC/NET log lines in the ground-truth JSON; (2) **V01, V
 are kept under `first-attempt/` and reported; (3) the scorer scores the IKE SA (H1, H2, H5, H6) whenever it is established on both
 ends even if the child SA failed, and then does not score H3/H4 for that arm. The other 15 arms are not re-run. If the re-run
 of an arm fails again it is reported as unnegotiable with the new logs.
+
+## ADDENDUM C (2026-10-03, after the V01/V02/P01 re-run, before the V02 re-run it governs)
+The re-run formed V01 and P01 completely. V02 did not, and this time the peer log (kept by the changed harness) names the
+reason: `Aggressive Mode PSK disabled for security reasons` -- strongSwan's default refuses IKEv1 aggressive mode with a
+pre-shared key. This is a peer policy, not FortiGate behaviour. The peer's deliberate opt-in
+(`charon.i_dont_care_about_security_and_use_aggressive_mode_psk = yes`, written to `/etc/strongswan.d/zz-lab-aggressive.conf`)
+is set on the lab peer and V02 is run once more with every other parameter unchanged. The first and second attempts are kept
+under `first-attempt/` and `second-attempt/`. The setting stays on for the lab's remaining life; no other arm is re-run.
