@@ -230,7 +230,9 @@ v() {
   interactive.cmatrix) dA "timeout $dur $SSH -tt root@$BIP 'TERM=xterm cmatrix -b -u 5' </dev/null" >/dev/null 2>&1 ;;
   video.vp8)     dAd "timeout $((dur+2)) gst-launch-1.0 -q udpsrc port=5750 caps='application/x-rtp,media=video,encoding-name=VP8,payload=96,clock-rate=90000' ! rtpvp8depay ! fakesink"; sleep 1
                  dB "timeout $dur gst-launch-1.0 -q videotestsrc is-live=true pattern=smpte ! video/x-raw,width=640,height=360,framerate=25/1 ! vp8enc deadline=1 target-bitrate=800000 keyframe-max-dist=50 ! rtpvp8pay ! udpsink host=$AIP port=5750" >/dev/null 2>&1 ;;
-  video.tstcp)   dAd "timeout $((dur+2)) gst-launch-1.0 -q tcpclientsrc host=$BIP port=5760 ! fakesink"; dBd "timeout $((dur+3)) gst-launch-1.0 -q videotestsrc is-live=true pattern=ball ! video/x-raw,width=640,height=360,framerate=25/1 ! x264enc tune=zerolatency bitrate=1000 ! mpegtsmux ! tcpserversink host=0.0.0.0 port=5760"; sleep $dur ;;
+  video.tstcp)   # the server must be listening before the client connects (the client used to start first and exit at once)
+                 dBd "timeout $((dur+3)) gst-launch-1.0 -q videotestsrc is-live=true pattern=ball ! video/x-raw,width=640,height=360,framerate=25/1 ! x264enc tune=zerolatency bitrate=1000 ! mpegtsmux ! tcpserversink host=0.0.0.0 port=5760"; sleep 2
+                 dAd "timeout $((dur+1)) gst-launch-1.0 -q tcpclientsrc host=$BIP port=5760 ! fakesink"; sleep $dur ;;
   video.theora)  dAd "timeout $((dur+2)) gst-launch-1.0 -q udpsrc port=5770 caps='application/x-rtp,media=video,encoding-name=THEORA,clock-rate=90000,payload=96' ! rtptheoradepay ! fakesink"; sleep 1
                  dB "timeout $dur gst-launch-1.0 -q videotestsrc is-live=true pattern=snow ! video/x-raw,width=480,height=270,framerate=20/1 ! theoraenc bitrate=700 ! rtptheorapay config-interval=2 ! udpsink host=$AIP port=5770" >/dev/null 2>&1 ;;
   voip.opus60)   gst_rx_audio $A 5780 OPUS rtpopusdepay $dur 48000; gst_rx_audio $B 5782 OPUS rtpopusdepay $dur 48000; sleep 1
