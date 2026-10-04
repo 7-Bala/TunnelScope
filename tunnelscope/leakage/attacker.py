@@ -55,6 +55,8 @@ KNOWN_CONFUSION = {"web": "video streaming mixed with an interactive session als
 # the dashboard shows. An earlier version said "96%", which no experiment produced.
 MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (in testing it caught 92.9% "
               "of mixed sessions and wrongly flagged 8.3% of single ones)")
+MIXED_NOT_RUN = ("the mixed-traffic check could not run here (it needs at least three in-distribution windows), "
+                 "so two kinds of traffic sharing this tunnel are not ruled out")
 # abstain rule (set from EXP-15's leave-one-repetition-out analysis; see RESULT.md)
 TAU = 0.60              # minimum mean top-class probability
 MIN_CONSISTENCY = 0.70  # minimum share of windows agreeing with the session's top class
@@ -266,7 +268,7 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
                         "label": LABEL.get(guess) if answer else None, "probability": round(p_guess, 3),
                         "alternatives": [{"class": str(rf.classes_[i]), "label": LABEL.get(str(rf.classes_[i])),
                                           "probability": round(float(mean_p[i]), 3)} for i in order[:3]],
-                        "mixed": mixed, "mixed_probability": p_mixed,
+                        "mixed": mixed, "mixed_probability": p_mixed, "mixed_checked": mx is not None,
                         "dominant": {"class": guess, "label": LABEL.get(guess), "probability": round(p_guess, 3)},
                         "why_not": None if answer else (
                             f"two or more kinds of traffic are sharing this tunnel ({p_mixed:.0%} confidence); "
@@ -314,7 +316,7 @@ def extract_attacker(rec) -> None:
                              "tunnels (MIT VNAT), not from app fingerprints; traffic unlike anything in that training "
                              "set can be misread (EXP-16: a synthetic-only model scored 0.46 on real applications; "
                              "EXP-19: 0.74 on real public tunnels it never saw); "
-                             + MIXED_NOTE
+                             + (MIXED_NOTE if t.get("mixed_checked") else MIXED_NOT_RUN)
                              + (f"; caution: {KNOWN_CONFUSION[t['class']]}" if t["class"] in KNOWN_CONFUSION else "")
                              + "."))
     else:

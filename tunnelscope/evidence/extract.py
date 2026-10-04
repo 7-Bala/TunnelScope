@@ -304,7 +304,7 @@ def extract_implementation(r: EvidenceRecord) -> None:
             why.append(f"{end}: no single fingerprint matches (notifies {m['notify_types']})")
     status = Status.INFERRED if any(labels.values()) else Status.UNKNOWN
     r.add(Finding("implementation", status, Vantage.T1, "fingerprint (EXP-29)",
-                  value=labels if status is Status.INFERRED else None, confidence=0.8 if labels else 1.0,
+                  value=labels if status is Status.INFERRED else None, confidence=0.8 if status is Status.INFERRED else 1.0,
                   evidence=ev, note="; ".join(why) + ". Fingerprints from 3 implementations only (EXP-29); an "
                   "implementation never seen reads as UNKNOWN or, if it copies another's notify order, could be mislabeled"))
 
@@ -503,8 +503,19 @@ def extract_failure(r: EvidenceRecord) -> None:
                           value="auth-or-child-failure", confidence=0.9,
                           note=f"IKE_AUTH response {maxlen} B carries only an error notify")); return
     if esp:
-        r.add(Finding("negotiation_outcome", Status.OBSERVED, Vantage.T1, "failure_diag F0",
-                      value="success", note="IKE_AUTH completed and ESP flows")); return
+        # ESP is attached by address pair, never by SPI proof, so it only shows THIS negotiation succeeded when its
+        # IKE_AUTH response is in the capture and ESP flows after the handshake began. ESP from an older tunnel
+        # between the same hosts, or a capture without the IKE_AUTH, proves nothing about this exchange.
+        t0 = min(m["t"] for m in init)
+        esp_after = [p for p in esp if p.get("t", t0) >= t0]
+        if auth_resp and esp_after:
+            r.add(Finding("negotiation_outcome", Status.OBSERVED, Vantage.T1, "failure_diag F0",
+                          value="success", note="IKE_AUTH completed and ESP flows")); return
+        why = ("no IKE_AUTH response is in the capture" if not auth_resp
+               else "the only ESP between these hosts was sent before this handshake began")
+        r.add(Finding("negotiation_outcome", Status.UNKNOWN, Vantage.T1, "failure_diag F0",
+                      note=f"ESP flows between these hosts, but {why}; that traffic may belong to an earlier SA, "
+                           "so it does not show whether this negotiation succeeded")); return
     if cut:      # "no ESP observed" is an absence; here the end of the file is missing
         r.add(Finding("negotiation_outcome", Status.UNKNOWN, Vantage.T1, "failure_diag (cut-short capture)",
                       note="IKE up, no ESP in the readable part; the capture is cut short (ends inside a "
@@ -561,7 +572,9 @@ def extract_ike_crypto(r: EvidenceRecord) -> None:
     if v is not None and v.value == "IKEv1":
         _ike1_crypto(r)
         return
-    c = tshark.ike_sa_crypto(r.source_pcap, ispi=r.ike_spi_i)
+    # A record with no IKE of its own (ESP-only / AH-only flow) has no initiator SPI to filter on; without this
+    # guard ike_sa_crypto() returned the LAST response in the file, i.e. another tunnel's suite, as OBSERVED.
+    c = tshark.ike_sa_crypto(r.source_pcap, ispi=r.ike_spi_i) if r.ike_spi_i else {}
     # c is {} (no response) or has None fields (a NO_PROPOSAL_CHOSEN response
     # selected nothing). Either way, a field we could not read is UNKNOWN, never
     # a value-less OBSERVED (ADR-002).
@@ -629,7 +642,12 @@ def extract_cipher_sieve(r: EvidenceRecord) -> None:
                  if all((c - s["iv"] - s["icv"]) >= 0 and (c - s["iv"] - s["icv"]) % s["align"] == 0
                         for c in lengths)]
     ev = [EvidencePtr(r.source_pcap, esp[0]["frame"], "esp content lengths", str(sorted(set(lengths))[:8]))]
-    is_cbc = survivors == ["AES-CBC+HMAC-SHA256-128"] or (len(survivors) == 1 and "CBC" in survivors[0])
+    if not survivors:
+        r.add(Finding("esp_cipher_family", Status.UNKNOWN, Vantage.T0, "cipher_sieve (EXP-01)", evidence=ev,
+                      note=f"no single one of the {len(_SIEVE)} cipher families modelled fits every ESP packet length "
+                           "seen: more than one cipher on this host pair (a rekey to another suite, or several "
+                           "tunnels), or a cipher outside the table"))
+        return
     if len(survivors) == 1:
         r.add(Finding("esp_cipher_family", Status.INFERRED, Vantage.T0, "cipher_sieve (EXP-01)",
                       value=survivors, confidence=0.95, evidence=ev))

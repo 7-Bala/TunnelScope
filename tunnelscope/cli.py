@@ -33,9 +33,9 @@ def cmd_analyze(args):
         print(json.dumps({"summary": summ, "records": [r.to_dict() for r in recs]}, indent=2))
         return
     print(f"# {args.pcap}")
-    print(f"  IKE messages: {summ['n_ike']} | ESP packets: {summ['n_esp']} | exchanges: {', '.join(summ['exchanges']) or 'none'}")
+    print(f"  IKE messages: {summ['n_ike']} | ESP packets: {summ['n_esp']} | AH packets: {summ['n_ah']} | exchanges: {', '.join(summ['exchanges']) or 'none'}")
     for r in recs:
-        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
+        if not (getattr(r, "_ike", []) or getattr(r, "_esp", []) or getattr(r, "_ah", [])):
             continue
         print(f"\n  SA {r.key()}  ({r.src} <-> {r.dst})")
         for attr, f in r.findings.items():
@@ -65,10 +65,20 @@ def cmd_ledger_verify(args):
             led = json.load(fh)
     except (OSError, ValueError) as e:
         raise InputError(f"cannot read ledger {args.ledger}: {e}") from None
+    if args.reanalyse and not args.pcap:
+        raise InputError("--reanalyse needs --pcap: there is nothing to re-analyse without the capture")
+    if not isinstance(led, dict):
+        raise InputError(f"{args.ledger} is not a TunnelScope ledger (not a JSON object)")
     r = verify_ledger(led, pcap=args.pcap, reanalyse=args.reanalyse)
     if r["ok"]:
         print(f"OK: {r['count']} entries, head {r['head']}" + (" (capture matches)" if args.pcap else "")
               + (" (re-analysis matches)" if args.reanalyse else ""))
+        if not args.reanalyse:
+            # The chain carries no key or signature: anyone can edit entries and recompute every hash. Only a
+            # re-analysis of the capture (or a head hash kept somewhere else) shows the CONTENT is the original.
+            print("note: this checks the chain is internally consistent. A ledger rebuilt from altered results also "
+                  "passes it; to rule that out run with --pcap <capture> --reanalyse, or compare the head with one "
+                  "you recorded separately.")
         return 0
     where = "" if r["first_bad"] is None else f" at entry {r['first_bad']}"
     print(f"TAMPERED or MISMATCHED{where}: {r['reason']}")
@@ -88,7 +98,7 @@ def cmd_assess(args):
     recs = build_records(args.pcap)
     all_v = []
     for r in recs:
-        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
+        if not (getattr(r, "_ike", []) or getattr(r, "_esp", []) or getattr(r, "_ah", [])):
             continue
         vs = assess_record(r, baselines)
         all_v += [v.to_dict() for v in vs]

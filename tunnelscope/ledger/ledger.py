@@ -85,6 +85,8 @@ def verify_ledger(ledger: dict, pcap: str | None = None, reanalyse: bool = False
     re-run the analysis and require the same head (same capture, same version, same rules => same ledger)."""
     def bad(i, why):
         return {"ok": False, "first_bad": i, "reason": why, "count": len(ledger.get("entries") or [])}
+    if reanalyse and pcap is None:
+        return bad(None, "a re-analysis was asked for without the capture to re-analyse")
     if ledger.get("format") != FORMAT:
         return bad(None, f"not a {FORMAT} ledger")
     entries = ledger.get("entries") or []

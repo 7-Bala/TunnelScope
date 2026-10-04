@@ -238,8 +238,41 @@ def generator_backend() -> str:
     return b if b in ("cloud", "chain") else "local"
 
 
+# Binding to 127.0.0.1 keeps other MACHINES out, not other web pages in this user's browser: a page can point a
+# hostname it controls at 127.0.0.1 (DNS rebinding) and then read and post to this server as "same origin". So a
+# request must NAME this server as a local host, and a request sent by a page must come from a local page.
+_LOCAL_HOSTS = {"127.0.0.1", "localhost", "[::1]", "::1"}
+
+
+def _hostname(hostport: str) -> str:
+    h = (hostport or "").strip().lower()
+    if h.startswith("["):                       # [::1]:8765
+        return h.split("]", 1)[0] + "]"
+    return h.rsplit(":", 1)[0] if ":" in h else h
+
+
+def request_is_local(headers) -> bool:
+    """False for a request whose Host is not this machine, or whose Origin is another site. Not applied in the public
+    demo (it is served under the platform's own hostname and changes nothing)."""
+    if public_demo():
+        return True
+    if _hostname(headers.get("Host", "")) not in _LOCAL_HOSTS:
+        return False
+    origin = headers.get("Origin")
+    if origin:
+        return urlparse(origin).scheme in ("http", "https") and (urlparse(origin).hostname or "") in {"127.0.0.1", "localhost", "::1"}
+    return True
+
+
 class _Handler(BaseHTTPRequestHandler):
     server_version = "TunnelScope/0.2"
+
+    def _refuse_foreign(self) -> bool:
+        if request_is_local(self.headers):
+            return False
+        self._json(403, {"ok": False, "error": "refused: this server answers only requests made to 127.0.0.1 / "
+                                               "localhost from a local page"})
+        return True
 
     def _json(self, status: int, payload: dict) -> None:
         body = json.dumps(payload, default=str).encode()
@@ -277,6 +310,8 @@ class _Handler(BaseHTTPRequestHandler):
         return True
 
     def do_GET(self):  # noqa: N802 (stdlib method name)
+        if self._refuse_foreign():
+            return
         path = urlparse(self.path).path
         if public_demo() and path in ("/api/remediate/targets", "/api/live", "/api/sites", "/api/history"):
             self._json(403, {"ok": False, "error": DEMO_REFUSAL})
@@ -496,6 +531,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._json(500, {"ok": False, "stage": "internal", "error": "unexpected server error while drafting"})
 
     def do_POST(self):  # noqa: N802
+        if self._refuse_foreign():
+            return
         url = urlparse(self.path)
         if public_demo() and url.path.startswith("/api/remediate/"):
             self._json(403, {"ok": False, "error": DEMO_REFUSAL})
@@ -567,14 +604,20 @@ class _Handler(BaseHTTPRequestHandler):
                                   "html": render_sas_html(a)})
         except Exception as e:  # a bad-but-magic-matching file must not crash the server
             print(f"[tunnelscope serve] {name}: {type(e).__name__}: {e}", file=sys.stderr)
-            self._json(200, {"ok": False, "filename": name,
-                              "error": f"tshark could not parse this capture ({type(e).__name__})."})
+            # Only an input/dependency error is the capture's fault; anything else is a fault in TunnelScope and
+            # must not be reported to the analyst as a bad file.
+            from ..errors import TunnelScopeError
+            msg = (f"tshark could not parse this capture ({type(e).__name__})." if isinstance(e, TunnelScopeError)
+                   else f"TunnelScope hit an internal error analysing this capture ({type(e).__name__}); "
+                        "the capture itself may be fine.")
+            self._json(200, {"ok": False, "filename": name, "error": msg})
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
     def log_message(self, fmt, *args):  # keep stderr access logging, just tag it
-        if self.path == "/health":  # start.sh polls this; don't drown the log
+        # http.server logs a malformed request line BEFORE it sets self.path
+        if getattr(self, "path", "") == "/health":  # start.sh polls this; don't drown the log
             return
         sys.stderr.write(f"[tunnelscope serve] {self.address_string()} - {fmt % args}\n")
 

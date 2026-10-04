@@ -89,3 +89,7 @@ handoff/reviews/
 !testbed/captures/exp17/ike/*.pcap
 testbed/captures/exp17/exp17-*.pcap
 .corpus_cache/
+# generated demo media (large video/audio; not source)
+demo-video/out/
+video_generator/
+brag-output/
