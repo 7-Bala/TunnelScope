@@ -1,0 +1,1 @@
+qdisc netem 8003: root refcnt 11 limit 1000 delay 8ms  3ms loss 0.1%
