@@ -802,6 +802,15 @@ def detect_informational_before_auth(ike: list[dict]) -> tuple[str | None, str]:
     auth = [m for m in ike if m["exchange"] == 35 and m["frame"] is not None]
     earliest_auth = min((m["frame"] for m in auth), default=None)
     early = [m for m in info if earliest_auth is None or m["frame"] < earliest_auth]
+    if early and earliest_auth is None:
+        # "No IKE_AUTH in the capture" is not "no IKE_AUTH was sent" (a lost or filtered packet). As for the early
+        # Child SA detector (T-055), message IDs settle it: only an INFORMATIONAL that DIRECTLY follows the last
+        # pre-auth exchange proves nothing was sent in between. Anything else is UNKNOWN, never a detection.
+        first = min(early, key=lambda m: m["frame"])
+        gap = _msgid_gap_before_child(ike, first["frame"])
+        if gap is not None:
+            return None, (f"no IKE_AUTH in the capture, and the INFORMATIONAL exchange (frame {first['frame']}) {gap}; "
+                          "an IKE_AUTH may have been sent and not captured, so the pattern is not proven")
     if early:
         return "informational-before-auth", (f"an INFORMATIONAL exchange (frame {min(m['frame'] for m in early)}) "
                                               "appears before IKE_AUTH, which cannot be protected yet")

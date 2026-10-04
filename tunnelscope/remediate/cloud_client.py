@@ -25,6 +25,11 @@ version lines, and the vocabulary of strongSwan keywords the lab image accepts. 
 and any traffic content are never part of the prompt. This backend is reachable only through the
 generator's existing scope (DEC-034 D-D: the lab-only `t-tun` connection, never a real capture or a
 real gateway) — nothing about a real analysed capture is ever sent here.
+
+DEC-055 (owner, 2026-10-04) adds one more caller: tunnelscope/rephrase/api.py may ask this client to REWORD
+explanation sentences. Those do describe a real analysed capture (rule ids, algorithm names, counts), with every IP
+address replaced by a placeholder before sending; each reworded sentence is kept only if the fact check in
+rephrase.py passes. Off unless the operator sets TUNNELSCOPE_REPHRASE_BACKEND=api.
 """
 from __future__ import annotations
 

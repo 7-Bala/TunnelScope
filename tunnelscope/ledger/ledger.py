@@ -80,7 +80,23 @@ def build_ledger(pcap: str, records=None, baselines=None) -> dict:
     return {"format": FORMAT, "head": entries[-1]["hash"], "count": len(entries), "entries": entries}
 
 
-def verify_ledger(ledger: dict, pcap: str | None = None, reanalyse: bool = False) -> dict:
+SIG_ALG = "HMAC-SHA256"
+
+
+def _mac(ledger: dict, key: bytes) -> str:
+    import hmac
+    msg = _canon({"format": ledger.get("format"), "head": ledger.get("head"), "count": ledger.get("count")})
+    return hmac.new(key, msg.encode(), hashlib.sha256).hexdigest()
+
+
+def sign_ledger(ledger: dict, key: bytes) -> dict:
+    """Add a keyed signature over the format, head and entry count. The chain alone only shows the entries are
+    consistent with each other: without a key anyone can edit entries and recompute every hash. With a signature,
+    changing, removing or adding any entry is detected by whoever holds the key (the head no longer matches it)."""
+    return {**ledger, "signature": {"alg": SIG_ALG, "value": _mac(ledger, key)}}
+
+
+def verify_ledger(ledger: dict, pcap: str | None = None, reanalyse: bool = False, key: bytes | None = None) -> dict:
     """Check every hash and link. With `pcap`, also check the capture is the one entry 0 binds. With `reanalyse`, also
     re-run the analysis and require the same head (same capture, same version, same rules => same ledger)."""
     def bad(i, why):
@@ -106,6 +122,15 @@ def verify_ledger(ledger: dict, pcap: str | None = None, reanalyse: bool = False
         return bad(len(entries) - 1, "the head hash does not match the last entry (entries removed from the end?)")
     if entries[0].get("kind") != "capture":
         return bad(0, "entry 0 does not bind a capture")
+    if ledger.get("count") != len(entries):
+        return bad(None, "the entry count does not match the entries")
+    if key is not None:
+        import hmac
+        sig = ledger.get("signature") or {}
+        if sig.get("alg") != SIG_ALG or not isinstance(sig.get("value"), str):
+            return bad(None, "a key was given but the ledger is not signed")
+        if not hmac.compare_digest(sig["value"], _mac(ledger, key)):
+            return bad(None, "the signature does not match: the ledger was changed after signing, or signed with another key")
     if pcap is not None:
         if _sha256_file(pcap) != entries[0]["data"].get("pcap_sha256"):
             return bad(0, "this capture is not the one the ledger was made from (SHA-256 differs)")

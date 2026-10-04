@@ -8,7 +8,11 @@ Why Groq: its free tier contractually does not train on inputs or outputs and re
 also run air-gapped on its own hardware. Plain HTTPS through tunnelscope.net (its chat-completions endpoint follows
 the widely used chat-completions request format); no provider SDK.
 
-Off unless TUNNELSCOPE_NETWORK=on and TUNNELSCOPE_GROQ_API_KEY is set."""
+Off unless TUNNELSCOPE_NETWORK=on and TUNNELSCOPE_GROQ_API_KEY is set.
+
+DEC-055 (owner, 2026-10-04): tunnelscope/rephrase/api.py may also ask this client to REWORD explanation sentences,
+with every IP address replaced by a placeholder before sending and the rephrase fact check applied to each reply;
+only when the operator sets TUNNELSCOPE_REPHRASE_BACKEND=api."""
 from __future__ import annotations
 
 import hashlib
