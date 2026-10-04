@@ -350,7 +350,7 @@ class _Handler(BaseHTTPRequestHandler):
                                  "sites": sites_status(state)})
         elif path == "/api/intel":
             # T-130 part 2: known vulnerabilities for a fingerprinted implementation, only when the dashboard asks
-            # (a button, never automatic). Online only with TUNNELSCOPE_NETWORK=on; otherwise the cache/bundle.
+            # (a button, never automatic). Online unless TUNNELSCOPE_NETWORK=off (on by default, DEC-045); then the cache/bundle.
             from ..intel.lookup import lookup
             from ..intel.sources import PRODUCTS
             impl = (parse_qs(urlparse(self.path).query).get("implementation") or [""])[0]

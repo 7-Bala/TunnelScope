@@ -382,7 +382,7 @@ def cmd_intel(args):
 
 
 def cmd_intel_bundle(args):
-    """T-130: fill a directory with the intel sources for an air-gapped install (needs TUNNELSCOPE_NETWORK=on here)."""
+    """T-130: fill a directory with the intel sources for an air-gapped install (needs the network: the default, unless TUNNELSCOPE_NETWORK=off)."""
     from .intel.lookup import bundle
     m = bundle(args.out)
     print(json.dumps(m["report"], indent=2))

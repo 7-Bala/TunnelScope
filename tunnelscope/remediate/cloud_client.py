@@ -11,7 +11,8 @@ scoped exception (this one file may mention a cloud provider; nothing else may, 
 finding/verdict/risk/anomaly module may import this one).
 
 Off by default, and off unless ALL of:
-  - TUNNELSCOPE_NETWORK=on (DEC-040: the single switch for everything that leaves the machine);
+  - the network is not switched off (TUNNELSCOPE_NETWORK, DEC-040's single switch for everything that leaves the
+    machine; on by default since DEC-045, an air-gapped install sets it off);
   - a Gemini API key is set (never in a committed file; see .env.example). TUNNELSCOPE_KEY_PURPOSE
     (e.g. `dev`, `demo`, `experiment`) picks TUNNELSCOPE_GEMINI_API_KEY_<PURPOSE> if set, else
     TUNNELSCOPE_GEMINI_API_KEY. Keys are separated by job, never rotated to get round a quota
