@@ -11,6 +11,9 @@ pace scaled. Measured on lab D (EXP-43), a lab of tools and ciphers nobody train
 it replaced), 11 of 11 gated answers right; still wrong on interactive sessions there. On a whole family held out of
 training (EXP-42) it averages 0.455: traffic unlike all eight families can still be misread, which is what the abstain
 rule and the out-of-distribution check are for.
+EXP-45 (DEC-057) tested it on a second unseen lab, lab F: macro-F1 0.60 ungated, and 4 of its 6 gated answers right (two bulk
+transfers confidently read as video). So a gated answer is usually, not always, right on traffic from tools it never saw; a nine-family
+candidate did better ungated (0.72) but answered too few sessions to replace it.
 
 What it reports for a capture (DEC-027, superseding DEC-021's "never a label"):
   - attacker_exposure: how SURE and how CONSISTENT the attacker is, 0-100;

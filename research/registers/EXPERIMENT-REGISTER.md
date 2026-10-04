@@ -667,3 +667,15 @@ flagged mixed with K4). Detector retrained on leave-one-family-out probabilities
 P44-1 falsified: best cross-validated catch 78.6% at 2.2% false flags (bar 80%), 28 mixed sessions only. Not shipped; the current
 detector stays. Post-hoc for the owner: the near-miss candidate would answer 15/32 lab-D sessions (all right) instead of 11, letting
 1/12 EXP-05 mixed sessions through. `experiments/exp44-mixed-recalibrate/RESULT.md`
+
+## EXP-45 — More kinds of real traffic: lab E (training) and lab F (final test) — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp45-more-diversity/PREREG.md` (1acd160). Candidates K4/K7/K8/K9, mixed-check retraining with 92 mixed
+sessions, ship rule fixed before any capture. Harness and scorer committed before capture (9477d65).
+
+### EXP-45 — RESULT (2026-10-04)
+Nothing ships. Held: P45-1 (+0.059 on the eight-family held-out mean, K8), P45-2 (lab F 0.724 vs shipped 0.603), P45-3 (interactive
+0.75), P45-4 (83.7% caught / 7.6% flagged in cross-validation), P45-7 (16 of 16 mixed not answered). Failed: P45-5 (new check flags
+32.6% of lab-F singles, bar 25%) and P45-6 (9 of 9 gated answers right but only 9 of 46 answered, bar 50%). The gate, not the
+classifier, is the binding limit. Also found: the shipped model's gated answers on lab F are 4 of 6 right (11 of 11 on lab D).
+`experiments/exp45-more-diversity/RESULT.md`
+
