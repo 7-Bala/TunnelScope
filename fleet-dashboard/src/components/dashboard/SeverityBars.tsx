@@ -28,6 +28,7 @@ export function SeverityBars({ high, medium, informational }: { high: number; me
           dataKey="sev"
           tickLine={false}
           axisLine={false}
+          interval={0}
           width={58}
           tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
         />
