@@ -721,4 +721,11 @@ H1 held (0 wrong handshake values in 16 arms; IKEv2 and IKEv1; DH groups 2-31). 
 candidate set lacked the true DES-CBC+HMAC-SHA-2 family (12 arms). Fixed: names for IANA ids 1, 2, 4-9; three sieve families; after the fix all seven bars pass and nothing else moves
 (corpus: 64 of 418 ESP findings gain the three families, 6 lose the "CBC excluded" refinement). D3 (`pfs=False` asserted when the IKE group is not visible, wrong on a mid-stream ECP-256 PFS capture) fixed on the owner's approval 2026-10-04: UNKNOWN there; 4 corpus records change as predicted (addendum F). Lab faults disclosed (stale peer config, handshake outside the capture). DEC-060.
 `experiments/exp47-fortigate/RESULT.md`
+## EXP-49 — Analysis throughput on one Mac (T-125) — PRE-REGISTRATION (2026-10-04)
+`experiments/exp49-throughput/PREREG.md` before any measurement; addendum A (interleaved A/D check) dated before it ran. Window analysis only, synthetic ESP with ground truth, no live capture (no capture permission).
+Bars: H1 exact packet accounting at every size, H2 loud timeout, H3 damaged file flagged, H6 product untouched; H4/H5 measured and derived; five predictions.
+
+### EXP-49 — RESULT (2026-10-04)
+Apple M4 / 16 GB / macOS 27.0.1. H1 15/15 exact up to 3x10^6 packets; H2 and H3 pass; 32-41 k packets/s = 0.36-0.46 Gbps represented per core; Python memory 1.24 KB/packet; P1-P5 held (P1 by a hair; machine not idle).
+Capture-side drops are silent by code reading (T-165). DEC-062. `experiments/exp49-throughput/RESULT.md`
 

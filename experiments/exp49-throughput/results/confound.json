@@ -1,0 +1,51 @@
+{
+ "rows": [
+  {
+   "scenario": "A",
+   "rep": 1,
+   "load_avg_1m": 4.12158203125,
+   "wall_s": 2.3933972909999284,
+   "exact": true
+  },
+  {
+   "scenario": "D",
+   "rep": 1,
+   "load_avg_1m": 4.03173828125,
+   "wall_s": 2.4515448750007636,
+   "exact": true
+  },
+  {
+   "scenario": "A",
+   "rep": 2,
+   "load_avg_1m": 4.03173828125,
+   "wall_s": 2.4122154590004357,
+   "exact": true
+  },
+  {
+   "scenario": "D",
+   "rep": 2,
+   "load_avg_1m": 3.94873046875,
+   "wall_s": 2.449585250000382,
+   "exact": true
+  },
+  {
+   "scenario": "A",
+   "rep": 3,
+   "load_avg_1m": 3.94873046875,
+   "wall_s": 2.49140720899959,
+   "exact": true
+  },
+  {
+   "scenario": "D",
+   "rep": 3,
+   "load_avg_1m": 4.03271484375,
+   "wall_s": 2.7054996250008116,
+   "exact": true
+  }
+ ],
+ "median_wall_s": {
+  "A": 2.4122154590004357,
+  "D": 2.4515448750007636
+ },
+ "D_over_A": 1.016304271599613
+}
