@@ -60,4 +60,4 @@ line dropped). Fast check: 695 passed, 1 skipped, guard clean.
   was exercised with 3 alerts only. Whether an ECS event is useful to a SOC analyst is not measured here.
 
 ## Decision
-DEC-055: the SIEM export ships (`tunnelscope export`, `--alert-format ecs`); files and stdout only.
+DEC-059: the SIEM export ships (`tunnelscope export`, `--alert-format ecs`); files and stdout only.

@@ -680,6 +680,6 @@ deterministic.
 767 captures + the ten EXP-35 captures under the NIST profile: 11,290 verdict events + 3 alerts. H1 0 violations; H2 11,293
 stored, 0 errors, 0 ignored; H3 0 differences over 73 rule/verdict pairs; H4 11,293 lines, Filebeat 0 errors and 0 differences;
 H5 0 network imports, `assess` byte-identical to origin/main; H6 0 differences. Negative controls tripped (a malformed
-`source.ip` is dropped silently by Elasticsearch; only `_ignored` shows it). 16 mutation checks caught. DEC-055.
+`source.ip` is dropped silently by Elasticsearch; only `_ignored` shows it). 16 mutation checks caught. DEC-059.
 `experiments/exp46-siem-export/RESULT.md`
 
