@@ -17,6 +17,10 @@ from ..evidence.record import EvidenceRecord, Status
 # algorithm -> (primitive, quantum-vulnerable?, note). Primitives are CycloneDX 1.6's own enum values
 # (Diffie-Hellman and ECDH are "key-agree"); the official schema rejects anything else (T-124).
 _ALGO = {
+    **{g: ("key-agree", True, "classical Diffie-Hellman; Shor-breakable") for g in (
+        "MODP-768", "MODP-1024", "MODP-1536", "MODP-6144", "MODP-8192",
+        "MODP-1024-S160", "MODP-2048-S224", "MODP-2048-S256")},
+    **{g: ("key-agree", True, "classical ECDH; Shor-breakable") for g in ("ECP-521", "Curve25519", "Curve448")},
     "MODP-2048": ("key-agree", True, "classical Diffie-Hellman; Shor-breakable"),
     "MODP-3072": ("key-agree", True, "classical Diffie-Hellman; Shor-breakable"),
     "MODP-4096": ("key-agree", True, "classical Diffie-Hellman; Shor-breakable"),
@@ -109,15 +113,27 @@ def record_to_components(rec: EvidenceRecord) -> tuple[list, list, str]:
     return comps, gaps, qs_posture
 
 
+def _has_traffic(rec) -> bool:
+    """The same test report.analyze() uses. They must agree: the per-SA summary is read by position, and skipping an
+    AH-only record here made every report of such a capture fail with an IndexError."""
+    return bool(getattr(rec, "_ike", []) or getattr(rec, "_esp", []) or getattr(rec, "_ah", []))
+
+
+def _no_ike_posture(rec) -> str:
+    if getattr(rec, "_esp", []):
+        return "unknown (ESP-only capture; IKE not observed - SA predates capture)"
+    return "unknown (AH-only capture; IKE not observed - SA predates capture)"
+
+
 def build_cbom(records: list[EvidenceRecord], source: str = "") -> dict:
     sas = []
     all_comps = []
     for rec in records:
-        if not getattr(rec, "_ike", []) and not getattr(rec, "_esp", []):
+        if not _has_traffic(rec):
             continue
         comps, gaps, posture = record_to_components(rec)
         if getattr(rec, "_esp_only", False):
-            posture = "unknown (ESP-only capture; IKE not observed - SA predates capture)"
+            posture = _no_ike_posture(rec)
         all_comps += comps
         sas.append({"sa": rec.key(), "src": rec.src, "dst": rec.dst,
                     "quantum_posture": posture,
@@ -149,12 +165,12 @@ def to_cyclonedx(records: list[EvidenceRecord], source: str = "") -> dict:
     algos: dict[str, dict] = {}
     protocols = []
     for rec in records:
-        if not getattr(rec, "_ike", []) and not getattr(rec, "_esp", []):
+        if not _has_traffic(rec):
             continue
         comps, gaps, posture = record_to_components(rec)
         esp_only = getattr(rec, "_esp_only", False)
         if esp_only:
-            posture = "unknown (ESP-only capture; IKE not observed - SA predates capture)"
+            posture = _no_ike_posture(rec)
         slots: dict[str, list] = {}
         version = None
         for c in comps:

@@ -127,7 +127,8 @@ def _posture_line(sa: dict) -> str:
     return f"Post-quantum posture: {p}."
 
 
-def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool | None = None) -> dict:
+def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool | None = None,
+               api_llm: bool | None = None) -> dict:
     """Stage 1. `sa` is one entry of api.server.analysis_json()['sas']."""
     fails = [v for v in sa["verdicts"] if v["verdict"] == "FAIL"]
     passes = [v for v in sa["verdicts"] if v["verdict"] == "PASS"]
@@ -177,7 +178,28 @@ def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool | None = N
     else:
         use_llm = bool(local_llm)
 
-    if use_llm:
+    # DEC-055: a hosted model may do the same rewording, only when the operator chose it (server-side setting, or the
+    # CLI flag); addresses are masked before anything is sent and every sentence passes the same fact check.
+    if api_llm is None:
+        use_api = os.environ.get("TUNNELSCOPE_REPHRASE_BACKEND", "").strip().lower() == "api"
+    else:
+        use_api = bool(api_llm)
+    if use_api:
+        try:
+            from ..rephrase import api as _api
+            texts = [res["summary"]] + [pt.get("text", "") for pt in res["points"]]
+            outs, meta = _api.rephrase_many(texts)
+            if outs[0] is not None:
+                res["summary_rephrased"] = outs[0]
+            for pt, o in zip(res["points"], outs[1:]):
+                if o is not None:
+                    pt["text_rephrased"] = o
+            if any(o is not None for o in outs):
+                res["rephrase_source"] = "api"
+                res["rephrase_model"] = meta.get("model_id")
+        except Exception:
+            pass
+    elif use_llm:
         try:
             from ..rephrase.rephrase import rephrase
             rephrased_sum = rephrase(res["summary"])
@@ -195,13 +217,14 @@ def explain_sa(sa: dict, anomaly: dict | None = None, local_llm: bool | None = N
 
 def as_text(e: dict) -> str:
     lines = [e.get("summary", "")]
+    how = "rephrased by an API model" if e.get("rephrase_source") == "api" else "rephrased locally"
     if e.get("summary_rephrased"):
-        lines.append(f"  (rephrased locally: {e['summary_rephrased']})")
+        lines.append(f"  ({how}: {e['summary_rephrased']})")
     lines.append("")
     for p in e.get("points", []):
         lines.append(f"- {p.get('text', '')}")
         if p.get("text_rephrased"):
-            lines.append(f"  (rephrased locally: {p['text_rephrased']})")
+            lines.append(f"  ({how}: {p['text_rephrased']})")
     if e.get("unseen"):
         lines += ["", "Not visible in this capture:"] + [f"- {u}" for u in e["unseen"]]
     return "\n".join(lines)

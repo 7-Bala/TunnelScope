@@ -181,9 +181,23 @@ def validate(rep: Any, signed: bool = True) -> None:
         raise ReportError("report: seq must be a positive integer")
     if not isinstance(rep["site"], str) or not rep["site"] or not all(c.isalnum() or c in "-_." for c in rep["site"]):
         raise ReportError("report: site must be letters, digits, '-', '_' or '.'")
+    # Types the collector and `sites` rely on. A signed report is still only as trustworthy as its site: one
+    # malformed report must be quarantined, not crash the status view for every site.
+    if not isinstance(rep["tunnels"], list) or not isinstance(rep["alerts"], list):
+        raise ReportError("report: tunnels and alerts must be lists")
+    ws = rep["window_s"]
+    if isinstance(ws, bool) or not isinstance(ws, (int, float)) or ws <= 0:
+        raise ReportError("report: window_s must be a positive number")
+    for k in ("window_end", "sent_at"):
+        if rep[k] is not None and (isinstance(rep[k], bool) or not isinstance(rep[k], (int, float))):
+            raise ReportError(f"report: {k} must be a number or null")
     for i, t in enumerate(rep["tunnels"]):
         w = f"tunnels[{i}]"
         _only(t, TUNNEL_KEYS, w)
+        if any(k not in t for k in ("src", "dst", "posture", "fails")) or not isinstance(t["fails"], list):
+            raise ReportError(f"{w}: src, dst, posture and a fails list are required")
+        if any(not isinstance(f, dict) or "rule_id" not in f for f in t["fails"]):
+            raise ReportError(f"{w}.fails: each entry needs a rule_id")
         for f in t.get("fails") or []:
             _only(f, FAIL_KEYS, f"{w}.fails")
         for g in t.get("gaps") or []:

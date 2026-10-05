@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from collections import OrderedDict
 from pathlib import Path
 
@@ -267,6 +268,7 @@ def is_truncated(pcap: str) -> bool:
 # --------------------------------------------------------------------------- #
 _CACHE_CAPTURES = int(os.environ.get("TUNNELSCOPE_CACHE_CAPTURES", "8"))
 _CACHE: "OrderedDict[tuple, object]" = OrderedDict()
+_CACHE_LOCK = threading.Lock()    # `serve` analyses uploads on several threads; an OrderedDict is not safe to reorder/evict concurrently
 _MISS = object()
 
 
@@ -291,16 +293,18 @@ def _memo(fn):
             key = (fn.__name__, _fingerprint(pcap))
         except OSError:
             return fn(pcap)   # missing/unstattable: let the reader raise the real error
-        hit = _CACHE.get(key, _MISS)
-        if hit is not _MISS:
+        with _CACHE_LOCK:
+            hit = _CACHE.get(key, _MISS)
+            if hit is not _MISS:
+                _CACHE.move_to_end(key)
+                return hit
+        val = fn(pcap)                 # tshark runs outside the lock
+        with _CACHE_LOCK:
+            _CACHE[key] = val
             _CACHE.move_to_end(key)
-            return hit
-        val = fn(pcap)
-        _CACHE[key] = val
-        _CACHE.move_to_end(key)
-        # three readers per capture, so cap entries at 3x the capture budget
-        while len(_CACHE) > _CACHE_CAPTURES * 3:
-            _CACHE.popitem(last=False)
+            # three readers per capture, so cap entries at 3x the capture budget
+            while len(_CACHE) > _CACHE_CAPTURES * 3:
+                _CACHE.popitem(last=False)
         return val
     return wrapper
 

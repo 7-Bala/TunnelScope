@@ -33,9 +33,9 @@ def cmd_analyze(args):
         print(json.dumps({"summary": summ, "records": [r.to_dict() for r in recs]}, indent=2))
         return
     print(f"# {args.pcap}")
-    print(f"  IKE messages: {summ['n_ike']} | ESP packets: {summ['n_esp']} | exchanges: {', '.join(summ['exchanges']) or 'none'}")
+    print(f"  IKE messages: {summ['n_ike']} | ESP packets: {summ['n_esp']} | AH packets: {summ['n_ah']} | exchanges: {', '.join(summ['exchanges']) or 'none'}")
     for r in recs:
-        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
+        if not (getattr(r, "_ike", []) or getattr(r, "_esp", []) or getattr(r, "_ah", [])):
             continue
         print(f"\n  SA {r.key()}  ({r.src} <-> {r.dst})")
         for attr, f in r.findings.items():
@@ -46,8 +46,10 @@ def cmd_analyze(args):
 
 
 def cmd_ledger(args):
-    from .ledger import build_ledger
+    from .ledger import build_ledger, sign_ledger
     led = build_ledger(args.pcap)
+    if args.key:
+        led = sign_ledger(led, _ledger_key(args.key, create=True))
     out = json.dumps(led, indent=1, ensure_ascii=False)
     if args.out:
         with open(args.out, "w") as fh:
@@ -58,6 +60,19 @@ def cmd_ledger(args):
     return 0
 
 
+def _ledger_key(path: str, create: bool = False) -> bytes:
+    """The signing key (a file readable by its owner only). `ledger --key` creates it on first use."""
+    from pathlib import Path
+    from .sensor.report import ReportError, read_key, write_key
+    if create and not Path(path).exists():
+        write_key(path)
+        print(f"created signing key {path} (keep it secret; the same file verifies the ledger)", file=sys.stderr)
+    try:
+        return read_key(path)
+    except (OSError, ReportError) as e:
+        raise InputError(f"cannot read ledger key {path}: {e}") from None
+
+
 def cmd_ledger_verify(args):
     from .ledger import verify_ledger
     try:
@@ -65,10 +80,23 @@ def cmd_ledger_verify(args):
             led = json.load(fh)
     except (OSError, ValueError) as e:
         raise InputError(f"cannot read ledger {args.ledger}: {e}") from None
-    r = verify_ledger(led, pcap=args.pcap, reanalyse=args.reanalyse)
+    if args.reanalyse and not args.pcap:
+        raise InputError("--reanalyse needs --pcap: there is nothing to re-analyse without the capture")
+    if not isinstance(led, dict):
+        raise InputError(f"{args.ledger} is not a TunnelScope ledger (not a JSON object)")
+    key = _ledger_key(args.key) if args.key else None
+    r = verify_ledger(led, pcap=args.pcap, reanalyse=args.reanalyse, key=key)
     if r["ok"]:
         print(f"OK: {r['count']} entries, head {r['head']}" + (" (capture matches)" if args.pcap else "")
-              + (" (re-analysis matches)" if args.reanalyse else ""))
+              + (" (re-analysis matches)" if args.reanalyse else "") + (" (signature matches)" if key else ""))
+        if key is None and led.get("signature"):
+            print("note: this ledger is signed; pass --key <file> to check the signature.")
+        if not args.reanalyse and key is None:
+            # The chain carries no key or signature: anyone can edit entries and recompute every hash. Only a
+            # re-analysis of the capture (or a head hash kept somewhere else) shows the CONTENT is the original.
+            print("note: this checks the chain is internally consistent. A ledger rebuilt from altered results also "
+                  "passes it; to rule that out run with --pcap <capture> --reanalyse, sign ledgers with --key, or "
+                  "compare the head with one you recorded separately.")
         return 0
     where = "" if r["first_bad"] is None else f" at entry {r['first_bad']}"
     print(f"TAMPERED or MISMATCHED{where}: {r['reason']}")
@@ -88,7 +116,7 @@ def cmd_assess(args):
     recs = build_records(args.pcap)
     all_v = []
     for r in recs:
-        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
+        if not (getattr(r, "_ike", []) or getattr(r, "_esp", []) or getattr(r, "_ah", [])):
             continue
         vs = assess_record(r, baselines)
         all_v += [v.to_dict() for v in vs]
@@ -251,7 +279,7 @@ def cmd_explain(args):
     local_llm = True if getattr(args, "local_llm", False) else None
     a = analyze(args.pcap)
     for sa in analysis_json(a, args.pcap)["sas"]:
-        print(as_text(explain_sa(sa, local_llm=local_llm)))
+        print(as_text(explain_sa(sa, local_llm=local_llm, api_llm=True if getattr(args, "api_llm", False) else None)))
         print()
 
 
@@ -354,7 +382,7 @@ def cmd_intel(args):
 
 
 def cmd_intel_bundle(args):
-    """T-130: fill a directory with the intel sources for an air-gapped install (needs TUNNELSCOPE_NETWORK=on here)."""
+    """T-130: fill a directory with the intel sources for an air-gapped install (needs the network: the default, unless TUNNELSCOPE_NETWORK=off)."""
     from .intel.lookup import bundle
     m = bundle(args.out)
     print(json.dumps(m["report"], indent=2))
@@ -486,10 +514,12 @@ def main(argv=None):
     lg = sub.add_parser("ledger", help="tamper-evident evidence ledger: every finding and verdict, hash-chained to the capture")
     lg.add_argument("pcap")
     lg.add_argument("-o", "--out", help="write the ledger here instead of printing it")
+    lg.add_argument("--key", metavar="FILE", help="sign the ledger with this key file (created if missing), so a rebuilt ledger is detected")
     lg.set_defaults(func=cmd_ledger)
     lv2 = sub.add_parser("ledger-verify", help="check a ledger's hash chain (exit 1 if anything was changed)")
     lv2.add_argument("ledger")
     lv2.add_argument("--pcap", help="also check it describes this capture")
+    lv2.add_argument("--key", metavar="FILE", help="check the ledger's signature with this key file")
     lv2.add_argument("--reanalyse", action="store_true", help="also re-run the analysis and require the same head (needs --pcap)")
     lv2.set_defaults(func=cmd_ledger_verify)
     cb = sub.add_parser("cbom", help="emit a CycloneDX CBOM for a pcap")
@@ -540,6 +570,9 @@ def main(argv=None):
     ex.add_argument("pcap")
     ex.add_argument("--local-llm", action="store_true",
                     help="rephrase findings locally on-device with MLX (Apple Silicon only, DEC-031)")
+    ex.add_argument("--api-llm", action="store_true",
+                    help="rephrase findings with a hosted model instead (needs a hosted-model key and the network not switched off; "
+                         "IP addresses are masked before anything is sent, DEC-055)")
     ex.set_defaults(func=cmd_explain)
     fl = sub.add_parser("fleet", help="scan a directory of captures: one aggregated view, per-tunnel evidence kept intact (role B/D)")
     fl.add_argument("directory")

@@ -1,0 +1,11 @@
+e45d: #32, ESTABLISHED, IKEv2, 36669df5b6a1e2f7_i* a0c79612c5add7b8_r
+  local  'a-e45d' @ 10.10.1.20[4500]
+  remote 'b-e45d' @ 10.10.2.20[4500]
+  AES_GCM_16-256/PRF_HMAC_SHA2_384/ECP_384
+  established 0s ago, rekeying in 13677s
+  e45d: #32, reqid 1, INSTALLED, TUNNEL, ESP:AES_GCM_16-256
+    installed 0s ago, expires in 7200s
+    in  c97083ed,      0 bytes,     0 packets
+    out c39472f6,      0 bytes,     0 packets
+    local  10.10.1.0/24
+    remote 10.10.2.0/24
