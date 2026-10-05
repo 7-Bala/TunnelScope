@@ -29,6 +29,9 @@ PREFIX = "gw:"
 REGISTRY_FILE = "gateways.yaml"
 CONSENT_FILE = "consents.jsonl"
 DEFAULT_GLOBS = ("/etc/swanctl/swanctl.conf", "/etc/swanctl/conf.d/*.conf")
+# DEC-064: a newly registered gateway allows AI-drafted fixes unless the operator opts out. The terms and risks, the
+# per-change sentence, the dry run, the load check on the gateway and the rollback all still apply to every draft.
+DEFAULT_ALLOW_AI_DRAFTS = True
 
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,62}$")
 _HOST = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,252}$")
@@ -139,7 +142,7 @@ def validate_entry(name: Any, entry: Any) -> dict[str, Any]:
     return {"name": name, "host": host, "user": user, "port": port, "connection": conn, "child": child,
             "config_globs": list(globs), "capture_interface": iface, "identity_file": ident,
             "known_hosts_file": known, "peer": peer, "sudo": bool(entry.get("sudo", False)),
-            "allow_ai_drafts": bool(entry.get("allow_ai_drafts", False))}
+            "allow_ai_drafts": bool(entry.get("allow_ai_drafts", DEFAULT_ALLOW_AI_DRAFTS))}
 
 
 def load_registry(history_dir: str | Path | None = None) -> dict[str, dict[str, Any]]:

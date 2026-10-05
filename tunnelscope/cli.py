@@ -750,7 +750,8 @@ def main(argv=None):
     gwp.add_argument("--known-hosts")
     gwp.add_argument("--peer", help="the other end, if it is also a registered gateway")
     gwp.add_argument("--sudo", action="store_true", help="run commands through sudo -n")
-    gwp.add_argument("--allow-ai-drafts", action="store_true")
+    gwp.add_argument("--allow-ai-drafts", action=argparse.BooleanOptionalAction, default=True,
+                     help="allow AI-drafted fixes on this gateway (default on, DEC-064; --no-allow-ai-drafts to opt out)")
     gwp.add_argument("--by", help="who is accepting or withdrawing")
     gwp.add_argument("--typed", help="the acceptance sentence (non-interactive)")
     gwp.set_defaults(func=cmd_gateway)

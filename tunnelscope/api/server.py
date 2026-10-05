@@ -209,9 +209,19 @@ def local_model_available() -> bool:
 
 
 def generator_enabled() -> bool:
-    """DEC-034 D-E: local-model drafts are OFF until EXP-18's H1 and H2 bars pass and a decision
-    row turns them on. Only an explicit TUNNELSCOPE_GENERATOR=1 (lab testing) enables them."""
-    return os.environ.get("TUNNELSCOPE_GENERATOR") == "1"
+    """DEC-064 (replaces DEC-034 D-E): AI drafting is ON by default whenever a cloud model can be called here (an API
+    key is set and the network is not switched off), and never in the public demo. TUNNELSCOPE_GENERATOR=1 forces it
+    on (the on-device model too), TUNNELSCOPE_GENERATOR=0 turns it off. With no key it stays off and the hand-written
+    fix is used. The drafting models are still below the pre-registered ship bar (EXP-18b: 12/16 and 13/16 confirmed);
+    every draft is still checked by code, dry-run, shown for approval and re-verified live with rollback."""
+    if public_demo():
+        return False
+    v = os.environ.get("TUNNELSCOPE_GENERATOR", "").strip()
+    if v == "1":
+        return True
+    if v == "0":
+        return False
+    return cloud_model_available()
 
 
 _CLOUD_MODEL: list[bool] = []
@@ -231,11 +241,13 @@ def cloud_model_available() -> bool:
 
 
 def generator_backend() -> str:
-    """DEC-038: which model drafts, chosen only by this server-side setting — never by a client
-    request. "local" (default, on-device) unless an operator sets
-    TUNNELSCOPE_GENERATOR_BACKEND=cloud (see tunnelscope/remediate/cloud_client.py for which provider)."""
-    b = os.environ.get("TUNNELSCOPE_GENERATOR_BACKEND", "local").strip().lower()
-    return b if b in ("cloud", "chain") else "local"
+    """DEC-038: which model drafts, chosen only by this server-side setting — never by a client request.
+    TUNNELSCOPE_GENERATOR_BACKEND=local|cloud|chain if set. Unset (DEC-064): "chain" (the cloud models in order) when
+    a cloud model can be called here, else "local" (on-device)."""
+    raw = os.environ.get("TUNNELSCOPE_GENERATOR_BACKEND", "").strip().lower()
+    if not raw:
+        return "chain" if cloud_model_available() else "local"
+    return raw if raw in ("cloud", "chain") else "local"
 
 
 # Binding to 127.0.0.1 keeps other MACHINES out, not other web pages in this user's browser: a page can point a
@@ -522,7 +534,8 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if not generator_enabled():
             self._json(403, {"ok": False, "stage": "disabled",
-                             "error": "local-model drafts are off until the EXP-18 evaluation passes (DEC-034)"})
+                             "error": "AI drafting is off here: no cloud API key is set (or the network is switched off, or "
+                                      "TUNNELSCOPE_GENERATOR=0). The hand-written fix is used."})
             return
         try:
             from ..remediate import execute, generate

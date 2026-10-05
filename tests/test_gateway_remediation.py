@@ -255,8 +255,9 @@ def test_tab_indented_connection_is_found_and_a_missing_one_is_refused(monkeypat
 
 
 def test_ai_drafts_need_the_gateway_to_allow_them(gw, tmp_path):
+    # DEC-064: AI drafts are allowed by default, so a gateway that must refuse them opts out explicitly.
     from tunnelscope.remediate import generate
-    _register(tmp_path)
+    _register(tmp_path, allow_ai_drafts=False)
     _accept(tmp_path, "office-a")
     r = generate.generate_plan("RFC8247-ENCR", "gw:office-a", history_dir=tmp_path, force=True)
     assert r["ok"] is False and "allow_ai_drafts" in r["reason"]

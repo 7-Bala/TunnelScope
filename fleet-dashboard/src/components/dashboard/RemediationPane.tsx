@@ -212,7 +212,9 @@ function FixControl({
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<RemediationApplyResult | null>(null)
   const [showDetailed, setShowDetailed] = useState(false)
-  // Local-model draft (DEC-034): shown next to the hand-written fix, which stays the default.
+  // AI draft (DEC-064): when the server can draft, the fix is drafted as soon as the change is approved and the draft
+  // is the preselected plan, shown next to the hand-written fix. If drafting is off, fails a check or is refused, the
+  // hand-written fix stays selected. Nothing is applied before the preview, the approval and (gateways) the sentence.
   const [caps, setCaps] = useState<RemediationCapabilities | null>(null)
   const [draft, setDraft] = useState<GenerateResult | null>(null)
   const [drafting, setDrafting] = useState(false)
@@ -222,6 +224,7 @@ function FixControl({
   const [riskAck, setRiskAck] = useState("")
   const [targetsVersion, setTargetsVersion] = useState(0)
   const draftRequest = useRef(0)
+  const autoDrafted = useRef("") // the rule|target already drafted automatically: one automatic draft per pair
   const busy = useRef(false) // a second click before React re-renders must not send a second request
 
   useEffect(() => {
@@ -295,7 +298,17 @@ function FixControl({
     if (draftRequest.current !== id) return // cancelled, or the target changed meanwhile
     setDraft(r)
     setDrafting(false)
+    if (r.ok) choosePlan("draft") // the checked draft is the default; a refused one leaves the hand-written fix
   }
+
+  useEffect(() => {
+    if (decision !== "approved" || !caps?.generator_enabled || !draftingModel(caps).available) return
+    if (!targets.some((x) => x.name === target && x.running)) return // wait for the real target, one draft only
+    const key = `${ruleId}|${target}`
+    if (autoDrafted.current === key || drafting || draft || busy.current) return
+    autoDrafted.current = key
+    void handleDraft()
+  })
 
   function cancelDraft() {
     draftRequest.current++
@@ -872,7 +885,8 @@ function DraftPanel({
   if (!caps.generator_enabled) {
     return (
       <p className="text-[11px] text-faint">
-        Local-model drafts are switched off until their evaluation (EXP-18) passes. The hand-written fix is used.
+        AI drafting is off on this server (no cloud API key, the network is switched off, or it was turned off). The
+        hand-written fix is used.
       </p>
     )
   }
@@ -894,8 +908,8 @@ function DraftPanel({
     <div className="space-y-2 rounded border border-border/60 bg-background/40 p-2">
       {usingCloud && (
         <p className="text-[11px] leading-relaxed text-warn">
-          This draft comes from a cloud model. Drafting a fix below sends the failing rule and the lab connection&apos;s
-          current settings to that service over the network.
+          This fix is drafted by a cloud model. Drafting sends the failing rule and this connection&apos;s current
+          settings to that service over the network. The draft is checked by code and dry-run before you can apply it.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2">
