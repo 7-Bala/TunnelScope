@@ -200,11 +200,14 @@ def test_the_api_takes_a_vendor_and_rejects_an_unknown_or_non_string_one():
 # ---------------------------------------------------------------------------------------------- the labels match the committed lab result
 def test_a_template_is_labelled_lab_only_if_the_committed_lab_run_passed_for_that_rule():
     f = ROOT / "experiments" / "exp50-vendor-fixes" / "results" / "summary-libreswan.json"
-    if not f.exists():
-        pytest.skip("lab result not committed yet")
+    assert f.exists(), "the Libreswan lab result must be committed with the labels"
     res = json.loads(f.read_text())["rules"]
     for rule, t in V.TEMPLATES["libreswan"].items():
         want = ("lab" if res[rule]["pass"] else "lab-device-state" if res[rule].get("pass_device_state") else "docs-only")
         assert t["verification"] == want, (rule, t["verification"], want)
+    g = ROOT / "experiments" / "exp50-vendor-fixes" / "results" / "summary-mikrotik.json"
+    assert g.exists(), "the RouterOS device result must be committed with the labels"
+    dev = json.loads(g.read_text())["rules"]
     for rule, t in V.TEMPLATES["mikrotik"].items():
-        assert t["verification"] == "docs-only", rule              # no RouterOS device run in this experiment (PREREG H3)
+        want = "lab-device-state" if dev[rule]["pass"] else "docs-only"      # never "lab": no tunnel was negotiated on RouterOS
+        assert t["verification"] == want, (rule, t["verification"], want)

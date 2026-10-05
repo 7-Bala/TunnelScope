@@ -125,6 +125,10 @@ _LIBRESWAN_LAB = {"V-207205": "lab", "V-207193": "lab", "V-207223": "lab", "RFC8
                   "RFC8221-AH-INTEG": "lab-device-state", "RFC8221-ESP-3DES": "lab-device-state"}
 for _rule, _label in _LIBRESWAN_LAB.items():
     TEMPLATES["libreswan"][_rule]["verification"] = _label
+# RouterOS 7.24.4 CHR, one VM (results/summary-mikrotik.json): each template's command text was run unchanged on a device with the weak setting, the setting
+# was read back and the verify command showed it. No tunnel was negotiated on RouterOS, so none of these is "lab".
+for _rule in TEMPLATES["mikrotik"]:
+    TEMPLATES["mikrotik"][_rule]["verification"] = "lab-device-state"
 
 _ROS_NO_PQ = ("the RouterOS IPsec documentation (retrieved 2026-10-05) lists no post-quantum key exchange: dh-group and pfs-group accept "
               "classical groups only (modp and ecp)")
