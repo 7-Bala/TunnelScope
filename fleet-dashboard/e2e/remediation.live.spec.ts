@@ -103,8 +103,18 @@ test("B2-3 a model-drafted fix is previewed and applied through the UI, then con
   await page.getByRole("radio", { name: new RegExp(`^Use the (local|cloud) model's draft for ${R}$`) }).check()
   await page.getByRole("button", { name: `Preview the real change for ${R}` }).click()
   await expect(pane.getByText(/Dry run of the (local|cloud) model's draft/)).toBeVisible()
-  await page.getByRole("button", { name: `Apply remediation in lab for ${R}` }).click()
-  // DifferConcern flows need a second explicit step; the draft for this rule normally agrees with the hand-written fix.
+  const apply = page.getByRole("button", { name: `Apply remediation in lab for ${R}` })
+  const allow = page.getByRole("button", { name: `I have read the concern, allow Apply for ${R}` })
+  // The hosted model reviews its own draft and its verdict changes from run to run. When it raises a concern the
+  // dashboard keeps Apply disabled until a person says they have read it (covered with fixtures by remediation.spec.ts
+  // B1-10), so this flow takes that step too; without a concern it applies directly. Found 2026-10-05: the full check
+  // failed twice on a "concerns" review because this test never took the step.
+  await expect.poll(async () => (await apply.isEnabled()) || (await allow.isVisible()), { timeout: 60_000 }).toBe(true)
+  if (await allow.isVisible()) {
+    await expect(apply).toBeDisabled()
+    await allow.click()
+  }
+  await apply.click()
   await expect(pane.getByText(/Confirmed fixed|rolled back/i).first()).toBeVisible()
   await expect(pane.getByText(/Plan used: the (local|cloud) model's draft \(checked by code\)/)).toBeVisible()
   await page.screenshot({ path: "test-results/live-draft-applied.png" })
