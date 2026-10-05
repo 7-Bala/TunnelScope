@@ -21,7 +21,7 @@ export function Insights({ gateways }: { gateways: Gateway[] }) {
   const sas = gateways.flatMap((g) => (g.detail ? [g.detail] : []))
   if (!sas.length) return null
 
-  const anom = { anomalous: 0, learning: 0, normal: 0 }
+  const anom = { anomalous: 0, learning: 0, normal: 0, no_evidence: 0 }
   sas.forEach((s) => s.anomaly && anom[s.anomaly.status]++)
   const exp = { high: 0, medium: 0, low: 0, none: 0 }
   sas.forEach((s) => {
@@ -51,6 +51,7 @@ export function Insights({ gateways }: { gateways: Gateway[] }) {
               {n(anom.anomalous, "text-neg", "changed")}
               {n(anom.normal, "text-pos", "normal")}
               {n(anom.learning, "text-faint", "learning")}
+              {n(anom.no_evidence, "text-faint", "no evidence")}
             </>
           )}
         </Row>

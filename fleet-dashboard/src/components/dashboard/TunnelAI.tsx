@@ -174,6 +174,7 @@ export function ChangesPane({ sa }: { sa: AnalyzedSA }) {
         {a.status === "learning" && `Learning this tunnel's normal: ${a.observations} of ${a.needed} earlier observations so far. Upload more captures of it.`}
         {a.status === "normal" && `Matches this tunnel's usual behaviour across ${a.observations} earlier observations.`}
         {a.status === "anomalous" && `Different from this tunnel's usual behaviour (${a.observations} earlier observations).`}
+        {a.status === "no_evidence" && "This security association shows no key exchange or traffic, so it cannot be compared with the tunnel's usual behaviour."}
       </p>
       {a.layers && (
         <p className="mt-1 text-[11.5px] text-faint">

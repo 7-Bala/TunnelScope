@@ -302,7 +302,7 @@ def cmd_watch(args):
     else:
         for r in out:
             tag = {"learning": f"learning ({r['observations']}/{r.get('needed', '?')})",
-                   "normal": "normal", "anomalous": "ANOMALOUS"}[r["status"]]
+                   "normal": "normal", "anomalous": "ANOMALOUS", "no_evidence": "no evidence to compare"}[r["status"]]
             print(f"{os.path.basename(r['source'])}  {r['tunnel']}  {tag}")
             for x in r["anomalies"]:
                 print(f"    [{x['severity']}/{x['layer']}] {x['message']}")

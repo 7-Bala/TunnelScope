@@ -102,6 +102,13 @@ def profile(record, verdicts) -> dict:
     }
 
 
+def has_evidence(prof: dict) -> bool:
+    """False for an SA that shows nothing to compare: no crypto value was read, no traffic was measured and no rule
+    failed (for example only the delete exchange of an old tunnel, left in a capture by a restart). Judging such an
+    SA against the tunnel's history would score an empty vector, which is not evidence of a change."""
+    return any(prof.get(k) is not None for k in CRYPTO + NUMERIC) or bool(prof.get("fails"))
+
+
 class History:
     """Append-only JSONL store of observations. One file, readable by hand."""
 
@@ -244,12 +251,18 @@ def observe(history: History, sas: list[dict], source: str, record: bool = True,
     """For each analysed SA ({'record', 'verdicts'} from report.analyze), detect
     against the stored history, then (optionally) record it. Returns one result
     per SA, in order."""
-    rows = history.load()
+    # Observations that showed nothing are kept in the file but never used as a baseline or as a fleet peer.
+    rows = [x for x in history.load() if has_evidence(x.get("profile") or {})]
     results = []
     for sa in sas:
         r = sa["record"]
         tid = tunnel_id(r.src, r.dst)
         prof = profile(r, sa["verdicts"])
+        if not has_evidence(prof):
+            # Not recorded either: an empty profile would drag the tunnel's normal and the fleet towards "nothing".
+            results.append({"tunnel": tid, "status": "no_evidence", "observations": 0, "anomalies": [],
+                            "profile": prof})
+            continue
         past = [x["profile"] for x in rows if x["tunnel"] == tid]
         res = {"tunnel": tid, **detect(prof, past), "profile": prof}
         latest = {}
