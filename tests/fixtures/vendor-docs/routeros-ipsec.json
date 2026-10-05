@@ -300,5 +300,11 @@
    "no",
    "yes"
   ]
- }
+ },
+ "device_verified_extra": {
+  "hash-algorithm": [
+   "sha384"
+  ]
+ },
+ "device_verified_note": "values the page does not list but RouterOS 7.24.4 accepted on the lab device: hash-algorithm=sha384 (EXP-26 M5 negotiated HMAC-SHA2-384-192; EXP-50 chr_check set it through REST and CLI)"
 }

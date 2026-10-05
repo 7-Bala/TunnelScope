@@ -93,13 +93,15 @@ def main():
                 errors.append(r)
         _, after = item(path, field)
         want = t["edits"][0]["set"][field]
+        others = {k: v for k, v in t["edits"][0]["set"].items() if k != field}        # further settings of the same command (e.g. auth-algorithms=null)
+        others_ok = all(norm(item(path, k)[1]) == norm(v) for k, v in others.items())
         verify = t["verify"]
         for k, v in NAMES.items():
             verify = verify.replace(k, v)
         ok_v, rv = ex(verify.split("; ")[0])      # the template's verify command as written; its output is returned as a string
         row = {"weak_set": ok_w, "weak_read": weak_read, "commands": runs, "after_read": after, "expected": want, "verify_cmd": verify.split("; ")[0],
-               "verify_ok": ok_v, "verify_shows_value": bool(ok_v and rv and want in rv), "verify_output": (rv or "")[:300],
-               "pass": bool(ok_w and norm(weak_read) == norm(weak) and not errors and norm(after) == norm(want) and norm(after) != norm(weak_read)
+               "other_settings_ok": others_ok, "verify_ok": ok_v, "verify_shows_value": bool(ok_v and rv and want in rv), "verify_output": (rv or "")[:300],
+               "pass": bool(ok_w and norm(weak_read) == norm(weak) and not errors and others_ok and norm(after) == norm(want) and norm(after) != norm(weak_read)
                             and ok_v and bool(rv) and want in rv)}
         out["rules"][rule] = row
         print(f"{rule:26} weak={weak_read!s:22} after={after!s:14} expected={want!s:14} errors={len(errors)} verify={row['verify_shows_value']} PASS={row['pass']}")

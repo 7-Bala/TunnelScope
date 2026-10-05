@@ -47,7 +47,7 @@ def test_every_routeros_setting_and_value_is_in_the_vendors_documentation(rule, 
         for name, value in pairs:
             assert name in ROS["settings"], (rule, name)
             for v in value.split(","):
-                assert v in ROS["settings"][name], (rule, name, v, ROS["settings"][name])
+                assert v in ROS["settings"][name] or v in ROS["device_verified_extra"].get(name, []), (rule, name, v, ROS["settings"][name])
 
 
 @pytest.mark.parametrize("rule,t", _templates("libreswan"))
@@ -70,11 +70,24 @@ def test_the_fixtures_are_the_pages_that_were_hashed():
     assert "keyexchange" in LSW["keywords"] and "hash-algorithm" in ROS["settings"]
 
 
-def test_routeros_has_no_sha384_so_the_integrity_fix_is_sha512_not_a_copy_of_the_strongswan_fix():
+def test_routeros_page_omits_sha384_but_the_device_accepted_it_and_the_template_says_so():
+    """EXP-50 addendum B: the page lists hash-algorithm without sha384; RouterOS 7.24.4 accepted it (EXP-26 negotiated it, EXP-50 set it)."""
     assert "sha384" not in ROS["settings"]["hash-algorithm"] and "sha384" not in ROS["settings"]["auth-algorithms"]
+    assert "sha384" in ROS["device_verified_extra"]["hash-algorithm"]
     t = V.TEMPLATES["mikrotik"]["V-207223"]
-    assert t["edits"][0]["set"] == {"hash-algorithm": "sha512"}
-    assert "sha384" not in " ".join(t["commands"]).lower()
+    assert t["edits"][0]["set"] == {"hash-algorithm": "sha512"}                 # the documented value is the primary advice
+    assert "sha384" in t["why"] and "omits" in t["why"]
+
+
+def test_routeros_gcm_fix_also_sets_auth_algorithms_null_because_the_device_refuses_gcm_next_to_sha():
+    t = V.TEMPLATES["mikrotik"]["RFC8221-ESP-3DES"]
+    assert t["edits"][0]["set"] == {"enc-algorithms": "aes-256-gcm", "auth-algorithms": "null"}
+    assert "AEAD already provides authentication" in t["why"]
+
+
+def test_routeros_verify_commands_look_for_the_new_value_not_the_old_finder():
+    t = V.TEMPLATES["mikrotik"]["RFC4301-CONFIDENTIALITY"]
+    assert t["verify"] == "/ip ipsec policy print detail where ipsec-protocols=esp"
 
 
 # ---------------------------------------------------------------------------------------------- H5: nothing invented

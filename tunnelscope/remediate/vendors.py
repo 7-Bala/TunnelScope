@@ -52,7 +52,7 @@ def _ros(change, why, edits, verification="docs-only"):
         find = label if "=" in label else f"name=<{label}>"
         cmds.append(f"{menu} set [ find {find} ] " + " ".join(f"{k}={v}" for k, v in settings.items()))
         diff += [f"+ {menu} [{find}] {k}={v}" for k, v in settings.items()]
-    verify = "; ".join(f"{m} print detail where " + (lb if "=" in lb else f"name=<{lb}>") for m, lb, _ in edits)
+    verify = "; ".join(f"{m} print detail where " + (f"{next(iter(st))}={st[next(iter(st))]}" if "=" in lb else f"name=<{lb}>") for m, lb, st in edits)
     return {"change": change, "why": why, "commands": cmds, "config_diff": "\n".join(diff), "verify": verify,
             "verification": verification, "edits": [{"menu": m, "label": lb, "set": dict(s)} for m, lb, s in edits]}
 
@@ -94,7 +94,8 @@ TEMPLATES: dict[str, dict[str, dict]] = {
                          [(PEER, "peer", {"exchange-mode": "ike2"})]),
         "V-207193": _ros("Raise the DH group", "profile dh-group accepts ecp384 and modp4096",
                          [(PROFILE, "profile", {"dh-group": "ecp384"})]),
-        "V-207223": _ros("Raise integrity to SHA-512", "RouterOS profile hash-algorithm accepts md5, sha1, sha256, sha512: there is no SHA-384",
+        "V-207223": _ros("Raise integrity to SHA-512 (or SHA-384)", "the RouterOS page lists hash-algorithm as md5, sha1, sha256, sha512; RouterOS 7.24.4 also accepted sha384 "
+                         "on the lab device (EXP-26 negotiated it, EXP-50 set it) although the page omits it, so sha384 is a valid alternative for 'SHA-384 or higher'",
                          [(PROFILE, "profile", {"hash-algorithm": "sha512"})]),
         "RFC8247-DH-MUST": _ros("Drop a forbidden DH group that was picked", "the profile dh-group list must not contain modp768, modp1024 or modp1536 (groups 1, 2, 5); RouterOS has no groups 22-24",
                                 [(PROFILE, "profile", {"dh-group": "ecp384"})]),
@@ -108,8 +109,9 @@ TEMPLATES: dict[str, dict[str, dict]] = {
                                  [(PROPOSAL, "proposal", {"auth-algorithms": "sha256"})]),
         "RFC8221-AH-LEGACY": _ros("AH integrity off legacy 96-bit", "proposal auth-algorithms accepts sha256 and sha512",
                                   [(PROPOSAL, "proposal", {"auth-algorithms": "sha256"})]),
-        "RFC8221-ESP-3DES": _ros("ESP cipher off 3DES", "proposal enc-algorithms accepts aes-256-gcm (and aes-256-cbc)",
-                                 [(PROPOSAL, "proposal", {"enc-algorithms": "aes-256-gcm"})]),
+        "RFC8221-ESP-3DES": _ros("ESP cipher off 3DES", "AES-GCM already authenticates, so RouterOS refuses it next to an auth-algorithms value other than null "
+                                 "(found on the device, EXP-50: 'AEAD already provides authentication'); alternative without GCM: enc-algorithms=aes-256-cbc with auth-algorithms=sha256",
+                                 [(PROPOSAL, "proposal", {"enc-algorithms": "aes-256-gcm", "auth-algorithms": "null"})]),
     },
 }
 # EXP-50 lab result for the Libreswan 5.4 pair (experiments/exp50-vendor-fixes/results/summary-libreswan.json; a test ties this table to that file).
