@@ -6,7 +6,7 @@ import os
 from ..assess.engine import assess_record, load_baselines
 from ..evidence.extract import build_records
 from ..pq.cbom import build_cbom
-from . import ecs, syslog
+from . import ecs, eve, syslog, zeek
 
 
 def verdicts(pcap: str, profiles: list[str] | None = None, only_fail: bool = False):
@@ -32,4 +32,17 @@ def ecs_documents(pcap: str, profiles=None, only_fail: bool = False, at=None) ->
 def syslog_lines(pcap: str, profiles=None, only_fail: bool = False, at=None, hostname: str | None = None) -> list[str]:
     at = ecs.timestamp(at)
     return [syslog.verdict_line(v, at=at, hostname=hostname, file=ctx["file"], src=ctx["src"], dst=ctx["dst"], sa=ctx["sa"])
+            for v, ctx in verdicts(pcap, profiles, only_fail)]
+
+
+def zeek_log(pcap: str, profiles=None, only_fail: bool = False, at=None) -> str | None:
+    """The whole `tunnelscope.log` text, or None when there is no verdict to write."""
+    at = ecs.timestamp(at)
+    rows = [zeek.row(v, src=ctx["src"], dst=ctx["dst"], sa=ctx["sa"], at=at) for v, ctx in verdicts(pcap, profiles, only_fail)]
+    return zeek.document(rows, at) if rows else None
+
+
+def eve_lines(pcap: str, profiles=None, only_fail: bool = False, at=None) -> list[str]:
+    at = ecs.timestamp(at)
+    return [eve.verdict_line(v, file=ctx["file"], src=ctx["src"], dst=ctx["dst"], sa=ctx["sa"], at=at)
             for v, ctx in verdicts(pcap, profiles, only_fail)]

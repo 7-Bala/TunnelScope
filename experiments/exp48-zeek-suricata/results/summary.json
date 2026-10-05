@@ -1,0 +1,147 @@
+{
+ "H1": {
+  "cli_equals_module": [
+   23,
+   23
+  ],
+  "corpus_rows": 2246,
+  "hostile_rows": 13,
+  "pass": true,
+  "problems": [],
+  "rows_read": 2259,
+  "rows_written": 2259,
+  "zeek_cut_lines": [
+   "2259"
+  ]
+ },
+ "H2": {
+  "all_suricata_ts_match": true,
+  "eve_lines": 2246,
+  "pass": true,
+  "suricata_ike_events": 494,
+  "suricata_ts_pattern": "\\d\\d\\d\\d\\-\\d\\d\\-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d\\d\\d\\d\\d\\d\\+\\d\\d\\d\\d",
+  "suricata_type_signatures": {
+   "str|str|str": 494
+  },
+  "violations": []
+ },
+ "H3": {
+  "explained_ip_misses": [],
+  "explained_spi_misses": {
+   "IKE_SA_INIT not in the capture (SPI pair incomplete)": 10,
+   "Suricata logged no ike event for the capture": 10
+  },
+  "ike_tunnels": 150,
+  "ip_pair_in_zeek_conn": 150,
+  "pass": true,
+  "spi_pair_in_suricata": 130,
+  "unexplained": []
+ },
+ "H4": {
+  "agree": {
+   "ike_dh_group": 125,
+   "ike_encr": 125,
+   "ike_integ": 113,
+   "ike_prf": 125
+  },
+  "compared": {
+   "ike_dh_group": 126,
+   "ike_encr": 126,
+   "ike_integ": 114,
+   "ike_prf": 126
+  },
+  "disagree": [
+   {
+    "attr": "ike_encr",
+    "capture": "cloud/a-start.pcap",
+    "ikev": "2",
+    "suricata": "ENCR_AES_GCM_16",
+    "tunnelscope": "AES-CBC-256"
+   },
+   {
+    "attr": "ike_dh_group",
+    "capture": "cloud/a-start.pcap",
+    "ikev": "2",
+    "suricata": "Modp2048s256",
+    "tunnelscope": "MODP-2048"
+   },
+   {
+    "attr": "ike_prf",
+    "capture": "cloud/a-start.pcap",
+    "ikev": "2",
+    "suricata": "PRF_HMAC_SHA2_512",
+    "tunnelscope": "PRF-HMAC-SHA2-256"
+   },
+   {
+    "attr": "ike_integ",
+    "capture": "cloud/a-start.pcap",
+    "ikev": "2",
+    "suricata": "AUTH_HMAC_SHA2_512_256",
+    "tunnelscope": "HMAC-SHA2-256-128"
+   }
+  ],
+  "finer_in_tunnelscope": 123,
+  "pass": null,
+  "suricata_silent": {
+   "ike_dh_group": 8,
+   "ike_encr": 8,
+   "ike_integ": 8,
+   "ike_prf": 8
+  },
+  "ts_unknown": {
+   "ike_dh_group": 6,
+   "ike_encr": 6,
+   "ike_integ": 9,
+   "ike_prf": 6
+  },
+  "unmapped": []
+ },
+ "H5": {
+  "captures_with_esp_or_ah": 112,
+  "captures_with_esp_or_ah_and_zeek_unknown_transport": 105,
+  "rekey_tunnels": 30,
+  "suricata_anomaly_events": {
+   "unknown_proposal": 14,
+   "weak_crypto_auth": 8,
+   "weak_crypto_dh": 16,
+   "weak_crypto_enc": 2,
+   "weak_crypto_prf": 10
+  },
+  "suricata_createchildsa_events": 18,
+  "suricata_createchildsa_payload_lists": {
+   "": 2,
+   "EncryptedAndAuthenticated+Notify": 8,
+   "EncryptedAndAuthenticated+SecurityAssociation": 8
+  },
+  "suricata_createchildsa_with_keyexchange": 0,
+  "suricata_esp_flows": 232,
+  "suricata_event_types": {
+   "anomaly": 50,
+   "flow": 500,
+   "ike": 494,
+   "stats": 145
+  },
+  "suricata_flow_proto": {
+   "ESP": 232,
+   "UDP": 268
+  },
+  "zeek_udp_ike_conns": 235,
+  "zeek_udp_ike_conns_with_service": 0,
+  "zeek_unknown_transport_conns": 105
+ },
+ "H6": {
+  "banned_imports": [],
+  "ecs_syslog_identical_to_base": [
+   20,
+   20
+  ],
+  "pass": true,
+  "pass_imports": true
+ },
+ "capture_list_sha256": "ea55b21864e749016d1243e04b2b858b4b6e1c8c725cc09e62c75257d31ab79c",
+ "captures": 145,
+ "sensor_images": [
+  "jasonish/suricata sha256:7ca2546f7f2735f621b981b6a5ec84fb962984636f7629a1a2fa6a324d4b6840 jasonish/suricata@sha256:7ca2546f7f2735f621b981b6a5ec84fb962984636f7629a1a2fa6a324d4b6840",
+  "zeek/zeek sha256:70733f4e540ba1608e37e00c6a93d009f79734262c9ec2ba09d90aa9abc16de5 zeek/zeek@sha256:70733f4e540ba1608e37e00c6a93d009f79734262c9ec2ba09d90aa9abc16de5"
+ ]
+}
