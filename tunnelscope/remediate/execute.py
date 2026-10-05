@@ -27,15 +27,29 @@ What happens on apply, in order. Every step that can refuse runs before anything
  8. Otherwise roll back immediately and check the restored files byte for byte. The watchdog's
     own restores are recorded in the audit log the next time this module runs (reconcile).
 Every attempt, refusal, rollback and watchdog restore is appended to remediate.jsonl.
+
+Real gateways (DEC-063, owner decision 2026-09-27). A target named "gw:<name>" is a real strongSwan
+gateway from the registry (gateways.py), reached with `ssh` (argument list, BatchMode, strict host
+key checking; the remote command is built from shell-quoted arguments). The same eight steps run,
+with these differences: the connection, its config files and the capture interface come from the
+registry; the plan's lab connection range is rewritten to the gateway's connection (and the dry run
+still refuses any change outside it); the load check runs on the gateway itself inside a private
+network and mount namespace (`unshare -n -m`), so it tests the gateway's own strongSwan version
+without touching the running daemon; the capture is taken on the gateway (tcpdump, IKE/ESP/AH only)
+and copied back. Two gates exist only for gateways: the terms and risks must be accepted for this
+gateway (gateways.consent_status), and apply needs the exact per-change acknowledgement sentence the
+preview showed, plus the preview digest.
 """
 from __future__ import annotations
 
+import base64
 import difflib
 import hashlib
 import io
 import json
 import os
 import re
+import shlex
 import subprocess
 import tarfile
 import threading
@@ -46,12 +60,15 @@ from typing import Any
 
 import yaml
 
+from . import gateways as gwmod
 from .plan import (
+    _CONNECTION_RANGE,
     CONFIG_GLOBS,
     LAB_CONNECTION,
     LAB_PEERS,
     PEER_PREP_TARGETS,
     is_reload_command,
+    parse_sed_script,
     peer_commands_for,
     plan_for,
     sed_script_of,
@@ -76,14 +93,14 @@ _RANK = {"FAIL": 3, "CONTRADICTORY": 2, "PASS": 1, "NOT_OBSERVABLE": 0, "UNKNOWN
 
 _LIST_CONFIGS_SCRIPT = f"ls -1 {CONFIG_GLOBS} 2>/dev/null"
 _WRITE_MANIFEST_SCRIPT = 'printf "%s\\n" "$@" > "$0"'
-# $1 = seconds, $2 = token. Restores only if the manifest still belongs to this apply.
+# $1 = seconds, $2 = token, $3 = connection, $4 = child SA. Restores only if the manifest still belongs to this apply.
 _WATCHDOG_SCRIPT = (
     'sleep "$1"; m="' + MANIFEST + '"; '
     '[ -f "$m" ] || exit 0; [ "$(head -n 1 "$m")" = "$2" ] || exit 0; '
     'tail -n +2 "$m" | while IFS= read -r f; do [ -f "$f' + SNAP_SUFFIX + '" ] && cp -p "$f' + SNAP_SUFFIX + '" "$f"; done; '
     'first=$(tail -n +2 "$m" | head -n 1); '
     '{ [ -n "$first" ] && swanctl --load-all --file "$first"; } || swanctl --load-all; '
-    'swanctl --terminate --ike ' + LAB_CONNECTION + ' --timeout 3; swanctl --initiate --child ' + LAB_CONNECTION + ' --timeout 5; '
+    'swanctl --terminate --ike "$3" --timeout 3; swanctl --initiate --child "$4" --timeout 5; '
     'tail -n +2 "$m" | while IFS= read -r f; do rm -f "$f' + SNAP_SUFFIX + '"; done; rm -f "$m"; '
     'printf "%s %s\\n" "$2" "$(date +%s)" > "' + WATCHDOG_MARKER + '"'
 )
@@ -94,6 +111,13 @@ _LAB_SIDE = {"sih26-alice-pq": "1", "sih26-bob-pq": "2"}
 TRAFFIC_PINGS = "8"
 # What the last capture on this thread observed per rule (for honest refusal messages).
 _LAST_CAPTURE = threading.local()
+# Gateways: config files are listed from the registry's globs (expanded by the gateway's shell, as
+# arguments to this fixed script); captures carry only IKE/ESP/AH, never the traffic of other services.
+_LIST_GLOBS_SCRIPT = "ls -1 $@ 2>/dev/null"
+GW_CAPTURE = "/tmp/.tunnelscope_capture.pcap"
+GW_CAPTURE_FILTER = "udp port 500 or udp port 4500 or esp or ah"
+# Which history dir (registry, consents) the current preview/apply uses.
+_CTX = threading.local()
 
 
 def _traffic_argv(target: str) -> list[str] | None:
@@ -124,8 +148,58 @@ class _Refusal(Exception):
 
 # ------------------------------------------------------------------ container access
 
-def _exec(target: str, argv: list[str], timeout: float = 10, detach: bool = False) -> subprocess.CompletedProcess:
-    """The one way this module touches a container: `docker exec` with an argument list."""
+def _gw(target: str) -> dict[str, Any] | None:
+    """The registry entry for a "gw:<name>" target (None for a lab container or an unknown gateway)."""
+    if not gwmod.is_gateway(target):
+        return None
+    return gwmod.get(target, _history_dir(getattr(_CTX, "history_dir", None)))
+
+
+def connection_of(target: str) -> str:
+    gw = _gw(target)
+    return gw["connection"] if gw else LAB_CONNECTION
+
+
+def child_of(target: str) -> str:
+    gw = _gw(target)
+    return gw["child"] if gw else LAB_CONNECTION
+
+
+def _ssh_options(gw: dict[str, Any]) -> list[str]:
+    opts = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=yes",
+            "-o", "ServerAliveInterval=5", "-o", "ServerAliveCountMax=3", "-p", str(gw["port"])]
+    if gw.get("identity_file"):
+        opts += ["-i", os.path.expanduser(gw["identity_file"]), "-o", "IdentitiesOnly=yes"]
+    if gw.get("known_hosts_file"):
+        opts += ["-o", "UserKnownHostsFile=" + os.path.expanduser(gw["known_hosts_file"])]
+    return opts
+
+
+def remote_command(gw: dict[str, Any], argv: list[str], detach: bool = False) -> str:
+    """The command line the gateway's login shell runs: every argument shell-quoted, so what the
+    engine means as one argument stays one argument. Detached runs only redirect and background."""
+    words = (["sudo", "-n"] if gw.get("sudo") else []) + [str(a) for a in argv]
+    cmd = " ".join(shlex.quote(w) for w in words)
+    return f"nohup {cmd} >/dev/null 2>&1 </dev/null &" if detach else cmd
+
+
+def _exec(target: str, argv: list[str], timeout: float = 10, detach: bool = False,
+          stdin: bytes | None = None) -> subprocess.CompletedProcess:
+    """The one way this module touches a target: `docker exec` into a lab container, or `ssh` to a
+    registered gateway (DEC-063), always with an argument list, never through a local shell."""
+    if gwmod.is_gateway(target):
+        gw = _gw(target)
+        if gw is None:
+            return subprocess.CompletedProcess([], 255, "", f"{target} is not a registered gateway")
+        dest = f"{gw['user']}@{gw['host']}"
+        remote = remote_command(gw, argv, detach)
+        if stdin is not None:
+            r = subprocess.run(["ssh", *_ssh_options(gw), "--", dest, remote],
+                               input=stdin, capture_output=True, check=False, timeout=timeout)
+            return subprocess.CompletedProcess(["ssh"], r.returncode, (r.stdout or b"").decode(errors="replace"),
+                                               (r.stderr or b"").decode(errors="replace"))
+        return subprocess.run(["ssh", *_ssh_options(gw), "--", dest, remote],
+                              capture_output=True, text=True, check=False, timeout=timeout)
     flags = ["-d"] if detach else []
     return subprocess.run(
         ["docker", "exec", *flags, target, *argv],
@@ -138,7 +212,11 @@ def _exec(target: str, argv: list[str], timeout: float = 10, detach: bool = Fals
 
 def list_config_files(target: str) -> list[str]:
     """Config files present in the container, in `ls` order (the reload uses the first)."""
-    res = _exec(target, ["sh", "-c", _LIST_CONFIGS_SCRIPT], timeout=5)
+    gw = _gw(target)
+    if gw is not None:
+        res = _exec(target, ["sh", "-c", _LIST_GLOBS_SCRIPT, "ls", *gw["config_globs"]], timeout=5)
+    else:
+        res = _exec(target, ["sh", "-c", _LIST_CONFIGS_SCRIPT], timeout=5)
     seen: list[str] = []
     for line in (res.stdout or "").splitlines():
         line = line.strip()
@@ -161,9 +239,62 @@ def _reload(target: str, files: list[str]) -> subprocess.CompletedProcess:
     return _exec(target, ["swanctl", "--load-all"], timeout=15)
 
 
+def _gateway_range(target: str) -> str:
+    """The sed range for the gateway's connection, built from how the connection is actually
+    written in its config (indent of its opening and closing lines). Raises if it is not found, or
+    if two files write it differently."""
+    conn = connection_of(target)
+    shapes = set()
+    for f in list_config_files(target):
+        text = read_file(target, f)
+        if text is None:
+            continue
+        lines = text.splitlines()
+        span = _connection_span(lines, conn)
+        if span is None:
+            continue
+        open_indent = re.match(r"^[ \t]*", lines[span[0]]).group(0)
+        close_indent = re.match(r"^[ \t]*", lines[span[1]]).group(0)
+        if lines[span[1]].strip() != "}":
+            raise RuntimeError(f"the {conn} connection does not end with a line holding only '}}'")
+        shapes.add((open_indent, close_indent))
+    if not shapes:
+        raise RuntimeError(f"the connection {conn!r} was not found in the gateway's configuration")
+    if len(shapes) > 1:
+        raise RuntimeError(f"the connection {conn!r} is written differently in two config files")
+    open_indent, close_indent = shapes.pop()
+    name = conn.replace(".", "\\.")
+    return "/^" + open_indent + name + "[[:space:]]*\\{/,/^" + close_indent + "\\}/"
+
+
+def _script_for(target: str, script: str) -> str:
+    """A plan's sed script as it runs on this target. Lab: unchanged. Gateway: every automated fix
+    is limited to the lab connection's range; that range is replaced by the gateway connection's.
+    A script not limited to the lab connection is refused for a gateway."""
+    if not gwmod.is_gateway(target):
+        return script
+    if not script.startswith(_CONNECTION_RANGE + " "):
+        raise RuntimeError("only fixes limited to one connection can run on a real gateway")
+    out = _gateway_range(target) + script[len(_CONNECTION_RANGE):]
+    parse_sed_script(out)   # the rewritten script must still be inside the allowed grammar
+    return out
+
+
+def _as_run(target: str, cmd: str, files: list[str]) -> str:
+    """The command as it really runs on this target (recorded and shown). Lab: the plan's command
+    string, unchanged. Gateway: the rewritten sed script and the real files, or the real reload."""
+    if not gwmod.is_gateway(target):
+        return cmd
+    script = sed_script_of(cmd)
+    if script is not None:
+        return " ".join(shlex.quote(w) for w in ["sed", "-i", "-E", _script_for(target, script), *files])
+    return "swanctl --load-all" + (f" --file {shlex.quote(files[0])}" if files else "")
+
+
 def _run_plan_command(target: str, cmd: str, files: list[str]) -> subprocess.CompletedProcess:
     script = sed_script_of(cmd)
     if script is not None:
+        script = _script_for(target, script)
         return _exec(target, ["sed", "-i", "-E", script, *files], timeout=15)
     if is_reload_command(cmd):
         return _reload(target, files)
@@ -244,13 +375,126 @@ def record_audit(entry: dict[str, Any], history_dir: str | Path | None = None) -
 
 
 def _peer_for(target: str) -> str | None:
+    if gwmod.is_gateway(target):
+        gw = _gw(target)
+        return gwmod.PREFIX + gw["peer"] if gw and gw.get("peer") else None
     return LAB_PEERS.get(target) if target in PEER_PREP_TARGETS else None
+
+
+# ------------------------------------------------------------------ gateways: consent (DEC-063)
+
+def save_gateway(name: str, entry: dict[str, Any], history_dir: str | Path | None = None) -> dict[str, Any]:
+    """Add or replace one gateway in the registry file. Validated first; a changed definition
+    invalidates its earlier acceptance (the fingerprint changes)."""
+    gw = gwmod.validate_entry(name, entry)
+    path = gwmod.registry_path(_history_dir(history_dir))
+    data: dict[str, Any] = {}
+    if path.is_file():
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    gws = data.setdefault("gateways", {})
+    gws[name] = {k: v for k, v in entry.items() if v is not None}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data, sort_keys=True), encoding="utf-8")
+    record_audit({"timestamp": time.time(), "at": time.time(), "decision": "gateway_registered", "ok": True,
+                  "target": gwmod.PREFIX + name, "gateway": {k: gw[k] for k in ("host", "port", "user", "connection", "peer")},
+                  "gateway_fingerprint": gwmod.fingerprint(gw)}, history_dir)
+    return gw
+
+
+def gateway_list(history_dir: str | Path | None = None) -> list[dict[str, Any]]:
+    """Registered gateways with their consent state, for the dashboard and the CLI."""
+    hd = _history_dir(history_dir)
+    out = []
+    for name, gw in sorted(gwmod.load_registry(hd).items()):
+        st = gwmod.consent_status(gw, hd)
+        out.append({"name": gwmod.PREFIX + name, "host": gw["host"], "user": gw["user"], "connection": gw["connection"],
+                    "peer": gw["peer"], "allow_ai_drafts": gw["allow_ai_drafts"], "accepted": st["accepted"],
+                    "consent": st, "accept_phrase": gwmod.accept_phrase(name)})
+    return out
+
+
+def _append_consent(entry: dict[str, Any], history_dir) -> None:
+    hd = _history_dir(history_dir)
+    hd.mkdir(parents=True, exist_ok=True)
+    with open(hd / gwmod.CONSENT_FILE, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, sort_keys=True) + "\n")
+
+
+def accept_terms(target: str, typed: str, accepted_by: str, history_dir: str | Path | None = None,
+                 terms_sha256: str | None = None) -> dict[str, Any]:
+    """Record acceptance of the terms and risks for one gateway. Refused unless `typed` is exactly
+    the acceptance sentence, `accepted_by` names a person, and (when given) the terms the person
+    saw are the current terms."""
+    hd = _history_dir(history_dir)
+    gw = gwmod.get(target, hd)
+    if gw is None:
+        return {"ok": False, "error": f"{target!r} is not a registered gateway"}
+    phrase = gwmod.accept_phrase(gw["name"])
+    if typed != phrase:
+        return {"ok": False, "error": f"type exactly: {phrase}"}
+    if not isinstance(accepted_by, str) or not accepted_by.strip() or len(accepted_by) > 120:
+        return {"ok": False, "error": "say who is accepting (a name)"}
+    if terms_sha256 is not None and terms_sha256 != gwmod.TERMS_SHA256:
+        return {"ok": False, "error": "the terms changed while you were reading them; read the new version"}
+    now = time.time()
+    entry = {"at": now, "decision": "accepted", "gateway": gw["name"], "gateway_fingerprint": gwmod.fingerprint(gw),
+             "terms_version": gwmod.TERMS_VERSION, "terms_sha256": gwmod.TERMS_SHA256,
+             "accepted_by": accepted_by.strip(), "typed": typed}
+    _append_consent(entry, hd)
+    record_audit({"timestamp": now, **entry, "ok": True, "target": target, "decision": "terms_accepted"}, hd)
+    return {"ok": True, **entry}
+
+
+def withdraw_terms(target: str, by: str, history_dir: str | Path | None = None) -> dict[str, Any]:
+    hd = _history_dir(history_dir)
+    gw = gwmod.get(target, hd)
+    if gw is None:
+        return {"ok": False, "error": f"{target!r} is not a registered gateway"}
+    now = time.time()
+    entry = {"at": now, "decision": "withdrawn", "gateway": gw["name"], "by": str(by)[:120]}
+    _append_consent(entry, hd)
+    record_audit({"timestamp": now, **entry, "ok": True, "target": target, "decision": "terms_withdrawn"}, hd)
+    return {"ok": True, **entry}
+
+
+def _validate_gateway(target: str, plan: dict[str, Any], generated: bool) -> str | None:
+    """Gateway checks before anything is touched. Returns the peer target or None; raises _Refusal."""
+    hd = _history_dir(getattr(_CTX, "history_dir", None))
+    gw = gwmod.get(target, hd)
+    if gw is None:
+        problems = gwmod.registry_problems(hd)
+        raise _Refusal("validate", f"{target!r} is not a registered gateway" + (f" ({'; '.join(problems[:3])})" if problems else ""))
+    peer = _peer_for(target)
+    for t in [target] + ([peer] if peer else []):
+        g = gwmod.get(t, hd)
+        st = gwmod.consent_status(g, hd)
+        if not st["accepted"]:
+            raise _Refusal("consent", f"{t}: {st['reason']}. Nothing was changed.")
+        if generated and not g["allow_ai_drafts"]:
+            raise _Refusal("consent", f"{t}: AI-drafted fixes are not allowed on this gateway (allow_ai_drafts is false)")
+        r = _exec(t, ["swanctl", "--stats"], timeout=10)
+        if r.returncode != 0:
+            raise _Refusal("validate", f"{t}: cannot reach the gateway or run swanctl over SSH "
+                                       f"({(r.stderr or r.stdout or '').strip()[:200]})")
+    return peer
 
 
 def _validate(rule_id: Any, target: Any, compose_path: Path | None,
               plan: dict[str, Any] | None = None) -> tuple[dict, str | None]:
     """Steps 1-2 (no container is touched). Returns (plan, peer) or raises _Refusal. `plan` is a
     stored generated plan (T-104); otherwise the hand-written plan for the rule is used."""
+    if gwmod.is_gateway(target):
+        if plan is None:
+            plan = plan_for(rule_id, include_exec=True)
+        if plan is None:
+            raise _Refusal("validate", f"Unknown rule_id {rule_id!r}")
+        if not plan.get("auto_applicable") or not plan.get("exec_commands"):
+            raise _Refusal("validate", f"Rule {rule_id} has no automated fix")
+        for cmd in plan["exec_commands"]:
+            safe, reason = validate_command_safety(cmd)
+            if not safe:
+                raise _Refusal("lint", f"Command safety check failed: {reason}")
+        return plan, _validate_gateway(target, plan, generated=plan.get("source") == "generated" or "raw_output" in plan)
     allowed = get_allowed_targets(compose_path)
     if not isinstance(target, str) or target not in allowed:
         raise _Refusal("validate", f"Target {target!r} is not an allowed lab container ({sorted(allowed)})")
@@ -315,6 +559,7 @@ def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change:
             script = sed_script_of(cmd)
             if script is None:
                 continue  # the reload would touch the live daemon; it is not dry-run
+            script = _script_for(target, script)
             res = _exec(target, ["sed", "-i", "-E", script, *scratch.values()], timeout=15)
             if res.returncode != 0:
                 return False, f"sed rejected the script: {(res.stderr or '').strip()}", {}
@@ -331,11 +576,11 @@ def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change:
             b, a = before.splitlines(), after.splitlines()
             if len(b) != len(a):
                 problems.append(f"{f}: the change adds or removes lines")
-            span = _connection_span(b)
+            span = _connection_span(b, connection_of(target))
             outside = [i + 1 for i, (bl, al) in enumerate(zip(b, a))
                        if bl != al and (span is None or not span[0] <= i <= span[1])]
             if outside:
-                problems.append(f"{f}: the change reaches outside the {LAB_CONNECTION} connection "
+                problems.append(f"{f}: the change reaches outside the {connection_of(target)} connection "
                                 f"(line {', '.join(map(str, outside[:5]))}), which would not be verified")
             if before.count("{") != after.count("{") or before.count("}") != after.count("}"):
                 problems.append(f"{f}: the change alters the block structure")
@@ -525,6 +770,21 @@ def _parse_clone_output(out: str) -> dict[str, Any] | None:
     return {"blocks": blocks, "rejected_keywords": sorted(set(_NOT_RECOGNIZED.findall(log)))}
 
 
+# Gateways: the same probe, run on the gateway in a private network and mount namespace (no network,
+# a private /run, so a second charon with its own control channel) and removed afterwards. The gateway's
+# running daemon is never contacted. Fixed script; the files arrive as a tar on stdin.
+_GW_LOAD_INNER = (
+    "d=$(mktemp -d) && mount -t tmpfs none /run && mkdir -p /run/charon \"$d/probe\" "
+    "&& tar -x -C \"$d/probe\" || { echo TS_ERR prep; exit 0; }; "
+    "C=/usr/libexec/ipsec/charon; [ -x $C ] || C=/usr/lib/ipsec/charon; $C >\"$d/charon.log\" 2>&1 & pid=$!; "
+    "i=0; until swanctl --stats >/dev/null 2>&1; do i=$((i+1)); [ $i -gt 100 ] && { echo TS_ERR charon; kill $pid; exit 0; }; sleep 0.1; done; "
+    "for f in $(ls \"$d/probe/c\" | sort); do echo \"TS_FILE $f\"; swanctl --load-conns --file \"$d/probe/c/$f\" 2>&1; "
+    "echo TS_END; swanctl --load-conns --file \"$d/probe/empty.conf\" >/dev/null 2>&1; done; "
+    "echo TS_LOG; grep -E 'not recognized|invalid' \"$d/charon.log\"; kill $pid; wait $pid 2>/dev/null; rm -rf \"$d\"; echo TS_DONE"
+)
+GW_LOAD_ARGV = ["unshare", "-n", "-m", "--propagation", "private", "sh", "-c", _GW_LOAD_INNER]
+
+
 def clone_load_check(target: str, before: dict[str, str], after: dict[str, str]) -> dict[str, Any]:
     """Load the before and after version of every changed config file in a throwaway clone of
     the target's image (no network, removed afterwards) and compare. ok only if, for every file,
@@ -536,6 +796,21 @@ def clone_load_check(target: str, before: dict[str, str], after: dict[str, str])
     if not changed:
         res.update(ok=True, note="nothing changed, so nothing was loaded")
         return res
+    if gwmod.is_gateway(target):
+        res["image"] = "gateway (isolated namespace)"
+        try:
+            r = _exec(target, GW_LOAD_ARGV, timeout=CLONE_TIMEOUT_S,
+                      stdin=_clone_tar([(before.get(f, ""), after[f]) for f in changed]))
+            out = r.stdout or ""
+        except subprocess.TimeoutExpired:
+            res["reason"] = f"the load check on the gateway did not finish within {CLONE_TIMEOUT_S} s"
+            return res
+        except Exception as e:
+            res["reason"] = f"the load check could not be started on the gateway: {e}"
+            return res
+        finally:
+            res["seconds"] = round(time.monotonic() - t0, 2)
+        return _judge_load(res, out, changed, after, connection_of(target))
     image = image_of(target)
     res["image"] = image
     if not image:
@@ -557,6 +832,10 @@ def clone_load_check(target: str, before: dict[str, str], after: dict[str, str])
         return res
     finally:
         res["seconds"] = round(time.monotonic() - t0, 2)
+    return _judge_load(res, out, changed, after, LAB_CONNECTION)
+
+
+def _judge_load(res: dict[str, Any], out: str, changed: list[str], after: dict[str, str], conn: str) -> dict[str, Any]:
     parsed = _parse_clone_output(out)
     if parsed is None:
         res["reason"] = "the clone did not report a complete result, so the change is not trusted"
@@ -576,8 +855,8 @@ def clone_load_check(target: str, before: dict[str, str], after: dict[str, str])
             problems.append(f"{f}: connection(s) {', '.join(lost[:5])} loaded before the change and do not load after it")
         if len(a["failed"]) > len(b["failed"]):
             problems.append(f"{f}: {len(a['failed']) - len(b['failed'])} more connection(s) fail to load after the change")
-        if _connection_span(after[f].splitlines()) is not None and LAB_CONNECTION not in a["loaded"]:
-            problems.append(f"{f}: the lab connection {LAB_CONNECTION} does not load after the change")
+        if _connection_span(after[f].splitlines(), conn) is not None and conn not in a["loaded"]:
+            problems.append(f"{f}: the connection {conn} does not load after the change")
     if problems:
         rk = res["rejected_keywords"]
         res["reason"] = "; ".join(problems[:5]) + (f" (strongSwan did not recognise: {', '.join(rk)})" if rk else "")
@@ -615,7 +894,8 @@ def snapshot_configs(target: str, token: str) -> dict[str, str]:
 
 def arm_commit_confirmed_watchdog(target: str, token: str, timeout_s: int = WATCHDOG_TIMEOUT_S) -> None:
     """Detached timer inside the container: restores the snapshot unless disarmed first."""
-    _exec(target, ["sh", "-c", _WATCHDOG_SCRIPT, "tunnelscope-watchdog", str(int(timeout_s)), token], timeout=5, detach=True)
+    _exec(target, ["sh", "-c", _WATCHDOG_SCRIPT, "tunnelscope-watchdog", str(int(timeout_s)), token,
+                   connection_of(target), child_of(target)], timeout=5, detach=True)
 
 
 def disarm_watchdog(target: str, token: str) -> bool:
@@ -688,10 +968,15 @@ def reconcile_watchdog_events(history_dir: str | Path | None = None, compose_pat
     """Record watchdog restores (which happen inside a container, outside this process) in the
     audit log, then clear their markers."""
     events = []
-    for t in sorted(get_allowed_targets(compose_path)):
-        if not is_container_running(t):
+    _CTX.history_dir = history_dir
+    gws = [gwmod.PREFIX + n for n in sorted(gwmod.load_registry(_history_dir(history_dir)))]
+    for t in sorted(get_allowed_targets(compose_path)) + gws:
+        if not gwmod.is_gateway(t) and not is_container_running(t):
             continue
-        marker = read_file(t, WATCHDOG_MARKER)
+        try:
+            marker = read_file(t, WATCHDOG_MARKER)
+        except Exception:
+            continue    # an unreachable gateway is checked again next time
         if not marker or not marker.strip():
             continue
         parts = marker.split()
@@ -764,9 +1049,56 @@ def _prepare_lab_network(target: str, peer: str | None) -> list[str]:
     return done
 
 
+def _analyse_pcap(path: Path) -> tuple[dict[str, str], int]:
+    from ..report import report as _report
+    sas = _report.analyze(str(path)).get("sas", [])
+    _LAST_CAPTURE.observed = _observed_of(sas)
+    return _verdicts_of(sas), len(sas)
+
+
+def _capture_gateway(target: str, phase: str) -> tuple[dict[str, str], int]:
+    """Gateway: capture IKE/ESP/AH on the gateway while the connection re-negotiates, copy the file
+    back (base64 over the same SSH login), analyse it locally, delete both copies."""
+    import tempfile
+    gw = _gw(target)
+    conn, child, peer = gw["connection"], gw["child"], _peer_for(target)
+    local = Path(tempfile.mkdtemp(prefix="tunnelscope-gw-")) / f"remediate_{phase}.pcap"
+    try:
+        _exec(target, ["rm", "-f", GW_CAPTURE], timeout=5)
+        _exec(target, ["swanctl", "--terminate", "--ike", conn, "--timeout", "3"], timeout=8)
+        time.sleep(1)
+        _exec(target, ["tcpdump", "-i", gw["capture_interface"], "-U", "-w", GW_CAPTURE, "-c", CAPTURE_PACKETS,
+                       GW_CAPTURE_FILTER], timeout=5, detach=True)
+        time.sleep(1.5)
+        r = _exec(target, ["swanctl", "--initiate", "--child", child, "--timeout", "8"], timeout=12)
+        if r.returncode != 0 and peer:
+            # this end may be responder-only: let the other registered end start the tunnel
+            _exec(peer, ["swanctl", "--initiate", "--child", _gw(peer)["child"], "--timeout", "8"], timeout=12)
+        time.sleep(1.5)
+        _exec(target, ["pkill", "-f", GW_CAPTURE], timeout=5)
+        time.sleep(0.5)
+        data = _exec(target, ["base64", GW_CAPTURE], timeout=20)
+        if data.returncode != 0 or not (data.stdout or "").strip():
+            return {}, 0
+        local.write_bytes(base64.b64decode(data.stdout))
+        return _analyse_pcap(local)
+    finally:
+        try:
+            _exec(target, ["rm", "-f", GW_CAPTURE], timeout=5)
+        except Exception:
+            pass
+        try:
+            local.unlink(missing_ok=True)
+            local.parent.rmdir()
+        except OSError:
+            pass
+
+
 def _capture_verdicts(target: str, phase: str) -> tuple[dict[str, str], int]:
     """Re-negotiate the lab tunnel while capturing on the router, then analyse the capture.
     Returns ({rule_id: verdict}, number of SAs)."""
+    if gwmod.is_gateway(target):
+        return _capture_gateway(target, phase)
     host = _captures_dir() / f"remediate_{phase}.pcap"
     inside = f"/captures/remediate_{phase}.pcap"
     capture_on = "sih26-router" if is_container_running("sih26-router") else target
@@ -799,6 +1131,12 @@ def _capture_verdicts(target: str, phase: str) -> tuple[dict[str, str], int]:
 
 
 _REKEY_ARGV = (["swanctl", "--rekey", "--ike", LAB_CONNECTION], ["swanctl", "--rekey", "--child", LAB_CONNECTION])
+
+
+def _rekey_argv(target: str) -> tuple[list[str], list[str]]:
+    if not gwmod.is_gateway(target):
+        return _REKEY_ARGV
+    return (["swanctl", "--rekey", "--ike", connection_of(target)], ["swanctl", "--rekey", "--child", child_of(target)])
 _SA_FIELD = re.compile(r"([\w-]+)=([^\s{}\[\]]+)")
 REKEY_NOTE = ("A rekey (CREATE_CHILD_SA) is encrypted under the IKE SA, so a passive capture cannot show which "
               "algorithms it chose: passive result NOT_OBSERVABLE. The algorithms below are what the target's own "
@@ -808,8 +1146,9 @@ REKEY_NOTE = ("A rekey (CREATE_CHILD_SA) is encrypted under the IKE SA, so a pas
 def _sa_fields(target: str) -> dict[str, Any] | None:
     """The lab connection's IKE SA as the daemon reports it (`swanctl --list-sas --raw`):
     {fields..., "child_installed": bool}, or None if there is no such SA."""
-    out = _exec(target, ["swanctl", "--list-sas", "--ike", LAB_CONNECTION, "--raw"], timeout=10).stdout or ""
-    m = re.search(r"\b" + re.escape(LAB_CONNECTION) + r" \{(.*)", out, re.S)
+    conn = connection_of(target)
+    out = _exec(target, ["swanctl", "--list-sas", "--ike", conn, "--raw"], timeout=10).stdout or ""
+    m = re.search(r"\b" + re.escape(conn) + r" \{(.*)", out, re.S)
     if not m:
         return None
     ike_part, _, child_part = m.group(1).partition("child-sas {")
@@ -862,7 +1201,7 @@ def rekey_check(target: str, rule_id: str) -> dict[str, Any]:
                            "rekeyed": None, "endpoint_reported": None}
     try:
         before = _sa_fields(target)
-        for argv in _REKEY_ARGV:
+        for argv in _rekey_argv(target):
             _exec(target, argv, timeout=15)
         time.sleep(2)
         after = _sa_fields(target)
@@ -894,6 +1233,20 @@ def _check_service_restored(target: str, before: dict[str, str]) -> dict[str, An
 
 # ------------------------------------------------------------------ preview and apply
 
+def _live_info(rule_id: str, target: str, peer: str | None, stored: dict[str, Any] | None) -> dict[str, Any]:
+    """What the operator must read and type before a real gateway is changed."""
+    hd = _history_dir(getattr(_CTX, "history_dir", None))
+    gw = gwmod.get(target, hd)
+    pg = gwmod.get(peer, hd) if peer else None
+    generated = stored is not None
+    return {"gateway": gw["name"], "host": gw["host"], "connection": gw["connection"],
+            "peer": pg["name"] if pg else None,
+            "risks": gwmod.change_risks(gw, str(rule_id), generated=generated,
+                                        cloud_backend=bool(stored and stored.get("backend") == "cloud"), peer=pg),
+            "ack_phrase": gwmod.ack_phrase(str(rule_id), gw["name"]),
+            "consent": gwmod.consent_status(gw, hd), "watchdog_timeout_s": WATCHDOG_TIMEOUT_S}
+
+
 def preview_remediation(rule_id: str, target: str, caller: str | None = None,
                         compose_path: Path | None = None, history_dir: str | Path | None = None,
                         plan_id: str | None = None) -> dict[str, Any]:
@@ -904,6 +1257,7 @@ def preview_remediation(rule_id: str, target: str, caller: str | None = None,
     base = {"timestamp": now, "at": now, "rule_id": str(rule_id), "target": str(target),
             "caller": caller or "unknown", "decision": "preview",
             "source": "generated" if plan_id else "hand-written", "plan_id": plan_id}
+    _CTX.history_dir = history_dir
     try:
         stored = _load_generated_for(rule_id, target, plan_id, history_dir) if plan_id is not None else None
         plan, peer = _validate(rule_id, target, compose_path, plan=stored)
@@ -918,13 +1272,15 @@ def preview_remediation(rule_id: str, target: str, caller: str | None = None,
             preport = _take_dry_run_report()
             if not pok:
                 raise _Refusal("dry_run", f"Dry run failed on the lab peer {peer}: {perr}")
-            peer_info = {"container": peer, "diff": pdiffs, "clone_check": preport.get("clone_check"),
+            peer_info = {"container": peer, "diff": pdiffs, "clone_check": preport.get("clone_check"),  # noqa: E501
                          "why": "both ends of a tunnel must agree on a proposal, so the other end gets the same change"}
         digest = preview_digest(plan_id or str(rule_id), target, diffs, peer_info["diff"] if peer_info else None,
                                 report.get("clone_check"), peer_info["clone_check"] if peer_info else None)
         res = {"ok": True, "rule_id": rule_id, "target": target, "diff": diffs, "peer": peer_info,
                "clone_check": report.get("clone_check"), "digest": digest,
                "source": base["source"], "plan_id": plan_id}
+        if gwmod.is_gateway(target):
+            res["live"] = _live_info(rule_id, target, peer, stored)
         record_audit({**base, "ok": True, "digest": digest, "files_changed": sorted(diffs),
                       "peer_files_changed": sorted(peer_info["diff"]) if peer_info else []}, history_dir)
         return res
@@ -944,8 +1300,10 @@ def apply_remediation(
     plan_id: str | None = None,
     digest: str | None = None,
     require_digest: bool = False,
+    risk_ack: str | None = None,
 ) -> dict[str, Any]:
-    """Execute a remediation in a lab container, then prove it or undo it (see module doc).
+    """Execute a remediation in a lab container or on a registered gateway, then prove it or undo it
+    (see module doc). A gateway also needs `risk_ack`: the exact sentence its preview showed.
 
     Returns ok/decision/rule_id/target/commands_run/verdict_before/verdict_after/confirmed_fixed/
     rolled_back plus token, reason, regressions, dry_run_diff, peer, rollback_verified;
@@ -975,6 +1333,15 @@ def apply_remediation(
 
     if confirm is not True:
         return refuse("validate", "Confirmation required (confirm must be True)")
+    _CTX.history_dir = history_dir
+    if gwmod.is_gateway(target):
+        audit_base["live"] = True
+        if not digest:
+            return refuse("validate", "a real gateway is changed only after a preview: send the digest of the preview you approved")
+        gname = gwmod.name_of(target)
+        if risk_ack != gwmod.ack_phrase(str(rule_id), gname):
+            return refuse("consent", f"type exactly: {gwmod.ack_phrase(str(rule_id), gname)}. Nothing was changed.")
+        audit_base["risk_ack"] = risk_ack
     try:
         stored = _load_generated_for(rule_id, target, plan_id, history_dir) if plan_id is not None else None
         plan, peer = _validate(rule_id, target, compose_path, plan=stored)
@@ -1028,7 +1395,7 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
     except Exception as e:
         return refuse("baseline", f"Could not capture a baseline; nothing was changed: {e}")
     if n_before == 0:
-        return refuse("baseline", f"No IKE SA was negotiated on {LAB_CONNECTION} before the change, so the fix "
+        return refuse("baseline", f"No IKE SA was negotiated on {connection_of(target)} before the change, so the fix "
                                   "could not be verified afterwards; nothing was changed")
     vb = before.get(rule_id)
     if vb == "PASS":
@@ -1071,18 +1438,18 @@ def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
     peer_commands_run: list[str] = []
     try:
         for cmd in peer_commands:
-            peer_commands_run.append(cmd)
+            peer_commands_run.append(_as_run(peer, cmd, list(peer_originals)))
             res = _run_plan_command(peer, cmd, list(peer_originals))
             if res.returncode != 0:
                 raise RuntimeError(f"peer command failed ({res.returncode}): {(res.stderr or '').strip()}")
         for cmd in exec_commands:
-            commands_run.append(cmd)
+            commands_run.append(_as_run(target, cmd, list(originals)))
             res = _run_plan_command(target, cmd, list(originals))
             if res.returncode != 0:
                 raise RuntimeError(f"command failed ({res.returncode}): {(res.stderr or '').strip()}")
     except Exception as e:
         rb = undo()
-        result = {"ok": False, "stage": "execute", "decision": "failed", "error": f"Failed executing in the lab: {e}",
+        result = {"ok": False, "stage": "execute", "decision": "failed", "error": f"Failed executing on {target}: {e}",
                   "commands_run": commands_run, "rolled_back": rb["target"]["restored"],
                   "rollback_verified": rb["verified"], "service_restored": rb["service"], "verdict_before": vb}
         record_audit({**audit_base, **result, "peer_commands_run": peer_commands_run, "rollback": rb}, history_dir)

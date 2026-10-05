@@ -37,7 +37,7 @@ from typing import Any
 
 from ..assess.engine import _assert, load_baselines
 from ..rephrase import runtime
-from . import execute, vocab
+from . import execute, gateways as gwmod, vocab
 from .plan import (
     GENERATABLE_RULES,
     LAB_CONNECTION,
@@ -248,7 +248,7 @@ def connection_lines(target: str) -> dict[str, str]:
         if text is None:
             continue
         lines = text.splitlines()
-        span = execute._connection_span(lines)
+        span = execute._connection_span(lines, execute.connection_of(target))
         if span is None:
             continue
         for line in lines[span[0]:span[1] + 1]:
@@ -664,7 +664,7 @@ def generate_plan(rule_id: str, target: str, observed: Any = None, *, compare_wi
                   force: bool = False, critique_rounds: int = 0, self_review_on: bool = False,
                   time_budget_s: float = TIME_BUDGET_S, temperature: float = 0.0,
                   seed: int | None = None, compose_path=None, backend: str = "local",
-                  other_rules: bool = False) -> dict[str, Any]:
+                  other_rules: bool = False, history_dir=None) -> dict[str, Any]:
     """Draft, check and dry-run a fix. Returns {"ok": True, "plan": {...}} or
     {"ok": False, "stage": ..., "reason": ..., "checks": [...], "revisions": [...]}. Never raises.
     `backend`: "local" (default, on-device) or "cloud" (DEC-038, opt-in; see module docstring).
@@ -682,16 +682,32 @@ def generate_plan(rule_id: str, target: str, observed: Any = None, *, compare_wi
         if hand.get("exec_commands") and not (compare_with_handwritten or force):
             return {**base, "ok": False, "stage": "scope",
                     "reason": "a hand-written, tested fix exists for this rule; use it, or ask for a side-by-side draft"}
-        if (target not in LAB_PEERS or target not in execute.get_allowed_targets(compose_path)
-                or not execute.is_container_running(target)):
-            return {**base, "ok": False, "stage": "target",
-                    "reason": f"{target!r} is not a running end of the lab tunnel ({', '.join(sorted(LAB_PEERS))})"}
-        peer = execute._peer_for(target)
-        if peer and not execute.is_container_running(peer):
-            return {**base, "ok": False, "stage": "target", "reason": f"the lab peer {peer!r} is not running"}
-        bad_image = vocab.check_image(execute.image_of(target))
-        if bad_image:
-            return {**base, "ok": False, "stage": "vocabulary", "reason": bad_image}
+        if gwmod.is_gateway(target):
+            # DEC-063: a real gateway, only if it allows AI drafts and its terms are accepted. The
+            # keyword list is the lab's strongSwan; the load check on the gateway itself decides.
+            execute._CTX.history_dir = history_dir
+            hd = execute._history_dir(history_dir)
+            gw = gwmod.get(target, hd)
+            if gw is None:
+                return {**base, "ok": False, "stage": "target", "reason": f"{target!r} is not a registered gateway"}
+            if not gw["allow_ai_drafts"]:
+                return {**base, "ok": False, "stage": "target",
+                        "reason": f"AI-drafted fixes are not allowed on {gw['name']} (allow_ai_drafts is false)"}
+            st = gwmod.consent_status(gw, hd)
+            if not st["accepted"]:
+                return {**base, "ok": False, "stage": "consent", "reason": st["reason"]}
+            peer = execute._peer_for(target)
+        else:
+            if (target not in LAB_PEERS or target not in execute.get_allowed_targets(compose_path)
+                    or not execute.is_container_running(target)):
+                return {**base, "ok": False, "stage": "target",
+                        "reason": f"{target!r} is not a running end of the lab tunnel ({', '.join(sorted(LAB_PEERS))})"}
+            peer = execute._peer_for(target)
+            if peer and not execute.is_container_running(peer):
+                return {**base, "ok": False, "stage": "target", "reason": f"the lab peer {peer!r} is not running"}
+            bad_image = vocab.check_image(execute.image_of(target))
+            if bad_image:
+                return {**base, "ok": False, "stage": "vocabulary", "reason": bad_image}
         rule = rule_text(rule_id)
         try:
             lines = connection_lines(target)
@@ -798,9 +814,10 @@ def recheck(record: dict[str, Any], target: str) -> str | None:
         rule_id = record.get("rule_id")
         if rule_id not in GENERATABLE_RULES:
             return "outside the generator's scope"
-        bad_image = vocab.check_image(execute.image_of(target))
-        if bad_image:
-            return bad_image
+        if not gwmod.is_gateway(target):
+            bad_image = vocab.check_image(execute.image_of(target))
+            if bad_image:
+                return bad_image
         lines = connection_lines(target)
         ans = parse_answer(record.get("raw_output"))
         key, _new = check_meaning(rule_id, ans, lines)

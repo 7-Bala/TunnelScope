@@ -444,6 +444,87 @@ def cmd_fleet(args):
     return 0
 
 
+def cmd_gateway(args):
+    """DEC-063: register real strongSwan gateways, read and accept the terms and risks."""
+    from .remediate import execute, gateways
+    hd = args.history
+    if args.action == "add":
+        entry = {"host": args.host, "user": args.user, "port": args.port, "connection": args.connection,
+                 "child": args.child or args.connection, "capture_interface": args.interface,
+                 "identity_file": args.identity_file, "known_hosts_file": args.known_hosts, "peer": args.peer,
+                 "sudo": args.sudo, "allow_ai_drafts": args.allow_ai_drafts}
+        if args.config_glob:
+            entry["config_globs"] = args.config_glob
+        try:
+            gw = execute.save_gateway(args.name, entry, hd)
+        except ValueError as e:
+            raise TunnelScopeError(str(e))
+        print(f"registered {gateways.PREFIX}{gw['name']} ({gw['user']}@{gw['host']}:{gw['port']}, connection {gw['connection']})")
+        print(f"before any change: tunnelscope gateway terms, then tunnelscope gateway accept {gw['name']}")
+        return 0
+    if args.action == "list":
+        rows = execute.gateway_list(hd)
+        for p in gateways.registry_problems(execute._history_dir(hd)):
+            print(f"  ! {p}")
+        if not rows:
+            print("no gateways registered (tunnelscope gateway add ...)")
+        for r in rows:
+            state = "terms accepted by " + str(r["consent"].get("by")) if r["accepted"] else "NOT accepted: " + r["consent"]["reason"]
+            print(f"{r['name']}  {r['user']}@{r['host']}  connection {r['connection']}"
+                  f"{'  peer ' + r['peer'] if r['peer'] else ''}  AI drafts {'on' if r['allow_ai_drafts'] else 'off'}  {state}")
+        return 0
+    if args.action == "terms":
+        t = gateways.terms()
+        print(f"{t['title']} (version {t['version']}, sha256 {t['sha256'][:16]})\n")
+        for i, c in enumerate(t["clauses"], 1):
+            print(f"{i}. {c}\n")
+        return 0
+    target = args.name if args.name.startswith(gateways.PREFIX) else gateways.PREFIX + args.name
+    if args.action == "accept":
+        by = args.by or input("Your name: ").strip()
+        phrase = gateways.accept_phrase(gateways.name_of(target))
+        typed = args.typed if args.typed is not None else input(f"Read `tunnelscope gateway terms` first. To accept, type exactly:\n  {phrase}\n> ")
+        res = execute.accept_terms(target, typed, by, hd)
+    else:
+        res = execute.withdraw_terms(target, args.by or "cli", hd)
+    if not res.get("ok"):
+        raise TunnelScopeError(res.get("error", "refused"))
+    print(f"{res['decision']}: {target}")
+    return 0
+
+
+def cmd_fix(args):
+    """Preview a fix, show the exact change and its risks, then apply it only after the typed
+    confirmation (real gateways) and roll it back automatically if verification fails."""
+    import json as _json
+    from .remediate import execute, gateways
+    pv = execute.preview_remediation(args.rule, args.target, caller="cli", history_dir=args.history, plan_id=args.plan_id)
+    if not pv.get("ok"):
+        raise TunnelScopeError(f"preview refused at {pv.get('stage')}: {pv.get('error')}")
+    for f, d in (pv.get("diff") or {}).items():
+        print(d)
+    if pv.get("peer"):
+        for f, d in (pv["peer"].get("diff") or {}).items():
+            print(f"(other end {pv['peer']['container']})\n{d}")
+    cc = pv.get("clone_check") or {}
+    print(f"load check: {'ok' if cc.get('ok') else 'FAILED'} ({cc.get('image')})")
+    ack = None
+    if gateways.is_gateway(args.target):
+        live = pv["live"]
+        print(f"\nRISKS of changing the real gateway {live['gateway']} ({live['host']}):")
+        for r in live["risks"]:
+            print(f"  - {r}")
+        ack = args.ack if args.ack is not None else input(f"\nTo apply, type exactly:\n  {live['ack_phrase']}\n> ")
+    elif not args.yes and input("Apply this change in the lab? [y/N] ").strip().lower() != "y":
+        print("not applied")
+        return 0
+    res = execute.apply_remediation(args.rule, args.target, confirm=True, caller="cli", history_dir=args.history,
+                                    plan_id=args.plan_id, digest=pv["digest"], require_digest=True, risk_ack=ack)
+    print(_json.dumps({k: res.get(k) for k in ("decision", "stage", "error", "verdict_before", "verdict_after",
+                                               "confirmed_fixed", "rolled_back", "rollback_verified", "reason")}, indent=2))
+    return 0 if res.get("confirmed_fixed") else 4
+
+
 def cmd_sensor_key(args):
     """Create a site key file (0600). The same file goes to the site's sensor and to the collector's keys dir."""
     from pathlib import Path
@@ -645,6 +726,33 @@ def main(argv=None):
     cf.add_argument("file")
     cf.add_argument("--json", action="store_true")
     cf.set_defaults(func=cmd_config)
+    gwp = sub.add_parser("gateway", help="real strongSwan gateways for live fixes (DEC-063): add, list, terms, accept, withdraw")
+    gwp.add_argument("action", choices=["add", "list", "terms", "accept", "withdraw"])
+    gwp.add_argument("name", nargs="?", default="")
+    gwp.add_argument("--history", default=".tunnelscope-history")
+    gwp.add_argument("--host")
+    gwp.add_argument("--user", default="root")
+    gwp.add_argument("--port", type=int, default=22)
+    gwp.add_argument("--connection", help="the swanctl connection a fix may change")
+    gwp.add_argument("--child", help="child SA name used to restart the tunnel (default: the connection name)")
+    gwp.add_argument("--config-glob", action="append", help="config file(s) on the gateway (repeatable)")
+    gwp.add_argument("--interface", default="any", help="interface tcpdump captures on")
+    gwp.add_argument("--identity-file")
+    gwp.add_argument("--known-hosts")
+    gwp.add_argument("--peer", help="the other end, if it is also a registered gateway")
+    gwp.add_argument("--sudo", action="store_true", help="run commands through sudo -n")
+    gwp.add_argument("--allow-ai-drafts", action="store_true")
+    gwp.add_argument("--by", help="who is accepting or withdrawing")
+    gwp.add_argument("--typed", help="the acceptance sentence (non-interactive)")
+    gwp.set_defaults(func=cmd_gateway)
+    fx = sub.add_parser("fix", help="preview, approve and apply one fix to a lab container or a registered gateway, with automatic rollback")
+    fx.add_argument("rule")
+    fx.add_argument("--target", required=True, help="lab container, or gw:<name>")
+    fx.add_argument("--plan-id", help="a stored AI-drafted plan instead of the hand-written fix")
+    fx.add_argument("--history", default=".tunnelscope-history")
+    fx.add_argument("--ack", help="the per-change sentence for a gateway (non-interactive)")
+    fx.add_argument("--yes", action="store_true", help="lab only: skip the y/N question")
+    fx.set_defaults(func=cmd_fix)
     sk = sub.add_parser("sensor-key", help="create a site key for a sensor and the collector (T-139)")
     sk.add_argument("--site", required=True)
     sk.add_argument("--out", required=True, metavar="DIR", help="directory for <site>.key")
@@ -690,7 +798,7 @@ def main(argv=None):
     try:
         # Verify the stack before trusting anything derived from it. Cached per
         # process, so a 70-capture fleet scan pays this once, not per capture.
-        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_sensor_key, cmd_sensor_mask, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
+        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_gateway, cmd_sensor_key, cmd_sensor_mask, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
             preflight()
         return args.func(args) or 0
     except TunnelScopeError as e:

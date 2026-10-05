@@ -359,8 +359,13 @@ class _Handler(BaseHTTPRequestHandler):
             else:
                 self._json(200, {"ok": True, **lookup(impl)})
         elif path == "/api/remediate/targets":
-            from ..remediate.execute import lab_targets
-            self._json(200, {"ok": True, "targets": lab_targets(), "recommended": "sih26-alice-pq"})
+            from ..remediate.execute import gateway_list, lab_targets
+            self._json(200, {"ok": True, "targets": lab_targets(), "recommended": "sih26-alice-pq",
+                             "gateways": gateway_list(HISTORY_DIR)})
+        elif path == "/api/remediate/terms":
+            # DEC-063: the terms and risks a person must accept before a real gateway can be changed
+            from ..remediate import gateways
+            self._json(200, {"ok": True, **gateways.terms()})
         elif path.startswith("/api/"):
             self._json(404, {"ok": False, "error": "not found"})
         elif path == "/basic" or not self._static(path):
@@ -447,6 +452,7 @@ class _Handler(BaseHTTPRequestHandler):
                 plan_id=body.get("plan_id"),
                 digest=body.get("digest"),
                 require_digest=True,   # T-104: the dashboard applies only what it previewed
+                risk_ack=body.get("risk_ack") if isinstance(body.get("risk_ack"), str) else None,
             )
             # A refusal is the caller's to fix (400). A change that ran and was rolled back
             # is a real outcome, reported with 200 like a successful one.
@@ -523,7 +529,7 @@ class _Handler(BaseHTTPRequestHandler):
             backend = generator_backend()
             res = generate.generate_plan(body["rule_id"], body["target"], body.get("observed"),
                                          compare_with_handwritten=True, backend=backend,
-                                         **generate.shipped_settings(backend))
+                                         history_dir=HISTORY_DIR, **generate.shipped_settings(backend))
             if res.get("ok"):
                 res["plan_id"] = execute.store_generated_plan(res["plan"], body["target"], HISTORY_DIR)
             plan = res.get("plan") or {}
@@ -537,6 +543,25 @@ class _Handler(BaseHTTPRequestHandler):
         except Exception as e:
             sys.stderr.write(f"[tunnelscope serve] remediate generate error: {e}\n")
             self._json(500, {"ok": False, "stage": "internal", "error": "unexpected server error while drafting"})
+
+    def _remediate_terms(self, action: str) -> None:
+        """DEC-063: accept or withdraw the terms and risks for one registered gateway."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        target = body.get("target")
+        if not isinstance(target, str) or not target:
+            self._json(400, {"ok": False, "error": "target is required"})
+            return
+        from ..remediate import execute
+        if action == "accept":
+            res = execute.accept_terms(target, body.get("typed") if isinstance(body.get("typed"), str) else "",
+                                       body.get("accepted_by") if isinstance(body.get("accepted_by"), str) else "",
+                                       HISTORY_DIR, terms_sha256=body.get("terms_sha256") if isinstance(body.get("terms_sha256"), str) else None)
+        else:
+            res = execute.withdraw_terms(target, body.get("by") if isinstance(body.get("by"), str) else self.address_string(),
+                                         HISTORY_DIR)
+        self._json(200 if res.get("ok") else 400, res)
 
     def do_POST(self):  # noqa: N802
         if self._refuse_foreign():
@@ -557,6 +582,9 @@ class _Handler(BaseHTTPRequestHandler):
         self._upload(url)
 
     def _upload(self, url) -> None:
+        if url.path in ("/api/remediate/terms/accept", "/api/remediate/terms/withdraw"):
+            self._remediate_terms("accept" if url.path.endswith("accept") else "withdraw")
+            return
         if url.path == "/api/remediate/plan":
             self._remediate_plan()
             return
