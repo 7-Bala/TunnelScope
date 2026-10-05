@@ -198,7 +198,9 @@ def _exec(target: str, argv: list[str], timeout: float = 10, detach: bool = Fals
                                input=stdin, capture_output=True, check=False, timeout=timeout)
             return subprocess.CompletedProcess(["ssh"], r.returncode, (r.stdout or b"").decode(errors="replace"),
                                                (r.stderr or b"").decode(errors="replace"))
-        return subprocess.run(["ssh", *_ssh_options(gw), "--", dest, remote],
+        # stdin is closed on purpose: ssh forwards whatever it can read to the remote command, so an
+        # inherited stdin would swallow the confirmation sentence the operator pipes or types next.
+        return subprocess.run(["ssh", *_ssh_options(gw), "--", dest, remote], stdin=subprocess.DEVNULL,
                               capture_output=True, text=True, check=False, timeout=timeout)
     flags = ["-d"] if detach else []
     return subprocess.run(

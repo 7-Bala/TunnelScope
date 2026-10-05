@@ -481,9 +481,9 @@ def cmd_gateway(args):
         return 0
     target = args.name if args.name.startswith(gateways.PREFIX) else gateways.PREFIX + args.name
     if args.action == "accept":
-        by = args.by or input("Your name: ").strip()
+        by = args.by or _typed("Your name: ", "--by").strip()
         phrase = gateways.accept_phrase(gateways.name_of(target))
-        typed = args.typed if args.typed is not None else input(f"Read `tunnelscope gateway terms` first. To accept, type exactly:\n  {phrase}\n> ")
+        typed = args.typed if args.typed is not None else _typed(f"Read `tunnelscope gateway terms` first. To accept, type exactly:\n  {phrase}\n> ", "--typed")
         res = execute.accept_terms(target, typed, by, hd)
     else:
         res = execute.withdraw_terms(target, args.by or "cli", hd)
@@ -491,6 +491,15 @@ def cmd_gateway(args):
         raise TunnelScopeError(res.get("error", "refused"))
     print(f"{res['decision']}: {target}")
     return 0
+
+
+def _typed(prompt: str, flag: str) -> str:
+    """One typed answer. When the input has ended (a script, a closed pipe) nothing was confirmed:
+    say so and name the flag a script should use, instead of ending in a traceback."""
+    try:
+        return input(prompt)
+    except EOFError:
+        raise TunnelScopeError(f"nothing was typed (the input ended), so nothing was changed. In a script, pass {flag}.") from None
 
 
 def cmd_fix(args):
@@ -514,8 +523,8 @@ def cmd_fix(args):
         print(f"\nRISKS of changing the real gateway {live['gateway']} ({live['host']}):")
         for r in live["risks"]:
             print(f"  - {r}")
-        ack = args.ack if args.ack is not None else input(f"\nTo apply, type exactly:\n  {live['ack_phrase']}\n> ")
-    elif not args.yes and input("Apply this change in the lab? [y/N] ").strip().lower() != "y":
+        ack = args.ack if args.ack is not None else _typed(f"\nTo apply, type exactly:\n  {live['ack_phrase']}\n> ", "--ack")
+    elif not args.yes and _typed("Apply this change in the lab? [y/N] ", "--yes").strip().lower() != "y":
         print("not applied")
         return 0
     res = execute.apply_remediation(args.rule, args.target, confirm=True, caller="cli", history_dir=args.history,
