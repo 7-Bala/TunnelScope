@@ -25,11 +25,16 @@ def test_padding_implementation_gives_unknown_pfs_never_a_guess(arm):
 
 
 @pytest.mark.parametrize("path,want", [("rekey-cs-pfs-on-aes256gcm16-run2.pcap", True),
-                                       ("rekey-cs-pfs-off-aes256gcm16-run2.pcap", False),
                                        ("exp07/e7-pfs-off.pcap", False)])
 def test_minimal_padding_implementations_keep_their_answer(path, want):
     fs = [f for f in _pfs(path) if f.status.value == "INFERRED"]
     assert fs and all(f.value is want for f in fs), [(f.status, f.value) for f in _pfs(path)]
+
+
+def test_rekey_only_capture_cannot_say_pfs_off_when_the_group_is_invisible():
+    """EXP-47 addendum F: the same capture used to read INFERRED False; without the IKE_SA_INIT the group is unknown."""
+    (f,) = _pfs("rekey-cs-pfs-off-aes256gcm16-run2.pcap")
+    assert f.status.value == "UNKNOWN" and f.value is None, (f.status, f.value)
 
 
 def test_minimum_empty_message_size_follows_rfc_7296():

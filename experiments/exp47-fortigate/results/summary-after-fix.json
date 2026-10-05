@@ -1,0 +1,1529 @@
+{
+ "H1": {
+  "failing_arms": [],
+  "pass": true
+ },
+ "H2": {
+  "failing_arms": [],
+  "pass": true,
+  "values": [
+   "DES",
+   "DES-CBC"
+  ]
+ },
+ "H3": {
+  "failing_arms": [],
+  "pass": true
+ },
+ "H4": {
+  "arms_scored": [
+   "P01",
+   "P02",
+   "P03"
+  ],
+  "failing_arms": [],
+  "pass": true
+ },
+ "H5": {
+  "pass": true,
+  "values": [
+   "null",
+   "{\"initiator\": \"strongSwan\", \"responder\": null}"
+  ]
+ },
+ "H6": {
+  "failing_arms": [],
+  "pass": true
+ },
+ "H7": {
+  "arms": {
+   "X01": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "ike-proposal-mismatch"
+   },
+   "X02": {
+    "pass": true,
+    "status": "INFERRED",
+    "value": "auth-or-child-failure"
+   }
+  },
+  "pass": true
+ },
+ "arms": {
+  "P01": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-2048"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H4": {
+    "expected": true,
+    "pass": true,
+    "status": "INFERRED",
+    "value": true
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "P01",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 2,
+    "keylife": 120,
+    "record": 330
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "MEASURED",
+     {
+      "intervals_s": [
+       89.0,
+       91.0
+      ],
+      "mean_interval_s": 90.0,
+      "n_rekeys": 3
+     }
+    ]
+   }
+  },
+  "P02": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-2048"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H4": {
+    "expected": false,
+    "pass": true,
+    "status": "INFERRED",
+    "value": false
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "P02",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 2,
+    "keylife": 120,
+    "pfs": false,
+    "record": 330
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "MEASURED",
+     {
+      "intervals_s": [
+       89.0,
+       93.01
+      ],
+      "mean_interval_s": 91.0,
+      "n_rekeys": 3
+     }
+    ]
+   }
+  },
+  "P03": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "ECP-256"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H4": {
+    "expected": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "P03",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 19,
+    "hash": "sha256",
+    "ike": 2,
+    "keylife": 120,
+    "record": 330
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "MEASURED",
+     {
+      "intervals_s": [
+       92.0,
+       92.0
+      ],
+      "mean_interval_s": 92.0,
+      "n_rekeys": 3
+     }
+    ]
+   }
+  },
+  "R01": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-2048"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "responder",
+    "fortigate_side": null,
+    "literal_reading_pass": false,
+    "pass": true,
+    "status": "INFERRED",
+    "value": {
+     "initiator": "strongSwan",
+     "responder": null
+    }
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "R01",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 2,
+    "role": "responder"
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S01": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-1024"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-MD5-96"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-MD5"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA1-96",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "3DES-CBC+HMAC-SHA1-96",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-96",
+     "Blowfish-CBC+HMAC-96",
+     "Twofish-CBC+HMAC-96",
+     "CAST-CBC+HMAC-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-96"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S01",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 2,
+    "hash": "md5",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S02": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-1536"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA1-96"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA1"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA1-96",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "3DES-CBC+HMAC-SHA1-96",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-96",
+     "Blowfish-CBC+HMAC-96",
+     "Twofish-CBC+HMAC-96",
+     "CAST-CBC+HMAC-96",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-96"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S02",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 5,
+    "hash": "sha1",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S03": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-2048"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S03",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S04": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-3072"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-384-192"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-384"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA384-192",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA384-192"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S04",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 15,
+    "hash": "sha384",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S05": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-4096"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-512-256"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-512"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA512-256"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S05",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 16,
+    "hash": "sha512",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S06": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "ECP-256"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S06",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 19,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S07": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "ECP-384"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S07",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 20,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S08": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "ECP-521"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S08",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 21,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S09": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "Curve25519"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S09",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 31,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "S10": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "dh-28"
+    ],
+    "ike_integ": [
+     "ok",
+     "HMAC-SHA2-256-128"
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv2"
+    ],
+    "pq_key_exchange": [
+     "ok",
+     "classical-only"
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES"
+   },
+   "H3": {
+    "candidates": [
+     "AES-CBC+HMAC-SHA256-128",
+     "AES-CTR+HMAC-SHA256-128",
+     "AES-GCM-16",
+     "AES-CCM-16",
+     "ChaCha20-Poly1305",
+     "AES-CBC+HMAC-SHA512-256",
+     "AES-CTR+HMAC-SHA1-96",
+     "DES-CBC+HMAC-SHA256-128",
+     "DES-CBC+HMAC-SHA384-192",
+     "DES-CBC+HMAC-SHA512-256",
+     "NULL+HMAC-96",
+     "NULL+HMAC-SHA256-128"
+    ],
+    "contains_truth": true,
+    "pass": true,
+    "status": "INFERRED",
+    "truth": "DES-CBC+HMAC-SHA256-128"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "S10",
+   "esp_spis_on_wire_match_fortigate": true,
+   "established": true,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 28,
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "OBSERVED",
+     [
+      "ESP"
+     ]
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "V01": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-2048"
+    ],
+    "ike_integ": [
+     "skip (IKEv1 has no integrity transform)",
+     null
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv1"
+    ],
+    "pq_key_exchange": [
+     "unknown",
+     null
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES-CBC"
+   },
+   "H3": {
+    "note": "no child SA formed, nothing to be wrong about ESP",
+    "pass": true,
+    "status": "UNKNOWN"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "V01",
+   "child_sa_failed": true,
+   "esp_spis_on_wire_match_fortigate": null,
+   "established": false,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 1,
+    "mode": "main"
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "UNKNOWN",
+     null
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "V02": {
+   "H1": {
+    "ike_dh_group": [
+     "ok",
+     "MODP-2048"
+    ],
+    "ike_integ": [
+     "skip (IKEv1 has no integrity transform)",
+     null
+    ],
+    "ike_prf": [
+     "ok",
+     "PRF-HMAC-SHA2-256"
+    ],
+    "ike_version": [
+     "ok",
+     "IKEv1"
+    ],
+    "pq_key_exchange": [
+     "unknown",
+     null
+    ]
+   },
+   "H1_pass": true,
+   "H2": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "DES-CBC"
+   },
+   "H3": {
+    "note": "no child SA formed, nothing to be wrong about ESP",
+    "pass": true,
+    "status": "UNKNOWN"
+   },
+   "H5": {
+    "fortigate_role": "initiator",
+    "fortigate_side": null,
+    "literal_reading_pass": true,
+    "pass": true,
+    "status": "UNKNOWN",
+    "value": null
+   },
+   "H6": {
+    "differences": {},
+    "pass": true
+   },
+   "arm": "V02",
+   "child_sa_failed": true,
+   "esp_spis_on_wire_match_fortigate": null,
+   "established": false,
+   "ground_truth_agrees_with_table": true,
+   "handshake_in_capture": true,
+   "ike_sa_established_on_both_ends": true,
+   "params": {
+    "dh": 14,
+    "hash": "sha256",
+    "ike": 1,
+    "mode": "aggressive"
+   },
+   "records": 1,
+   "reported": {
+    "ipsec_protocols": [
+     "UNKNOWN",
+     null
+    ],
+    "rekey_cadence": [
+     "NOT_OBSERVABLE",
+     null
+    ]
+   }
+  },
+  "X01": {
+   "H7": {
+    "pass": true,
+    "status": "OBSERVED",
+    "value": "ike-proposal-mismatch"
+   },
+   "arm": "X01",
+   "established": false,
+   "established_by_device": false,
+   "params": {
+    "dh": 32,
+    "fail": "no-proposal",
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 6
+  },
+  "X02": {
+   "H7": {
+    "pass": true,
+    "status": "INFERRED",
+    "value": "auth-or-child-failure"
+   },
+   "arm": "X02",
+   "established": false,
+   "established_by_device": false,
+   "params": {
+    "dh": 14,
+    "fail": "bad-psk",
+    "hash": "sha256",
+    "ike": 2
+   },
+   "records": 242
+  }
+ },
+ "capture_sha256": {
+  "P01": "ff912f8aa867ea26148cebe4364c504fb973c2eca9e7d6282410d9c4e5d4b32c",
+  "P02": "d4f67ddf97cf75d43b53668f8dc09138f738b6c974a062c54fec0cde2b69d996",
+  "P03": "5518365bf2ae43b8d8c039ce85c4e9a7910315d66837dcc1989d0518bded62da",
+  "R01": "b1a665941f54f30fe3b96553a86de5faa516b18432184a13975726784fb0354c",
+  "S01": "7fc9ed8ee682dce76f32258f95f5e240a7234f4c6839f4967c6d8f5d524facd1",
+  "S02": "0cd8e70a173675be92705e0832380aa6b96526ed5261f5dfb9b5105b07d904e4",
+  "S03": "2a1c8d4a15cef669a742a8205d2af4fdc63f5ad0cf273e1d9f7e6d3cb4492233",
+  "S04": "552e03558625fa36dde637183f430a9841df692d7ccb678b14e78b46962c133a",
+  "S05": "12500c4991f1d3f272e3cb0a5cb96f2e3446f86bd78d41bcaced7d99147322f5",
+  "S06": "113256bf93ee7acbbbde180c34fe86a55ab8fd8585f35f24d2bc8d22c531911c",
+  "S07": "bdbc9600b542387c70bdbf90d2520699634fa59f649652e9e0577acd0116df99",
+  "S08": "6827d67f41a83480aa8a27ee229e2b968ceda27b32a42f92dcc10b44c4f0a300",
+  "S09": "b4229743f0ba184401514dbf8468ac3281c086aefb8a5d22760c7fc4b868f002",
+  "S10": "e7b7e7ec154950c5e9909cf951b7c0e81c0922d33c8a19417cc7b7692b9fc005",
+  "V01": "6d8247f9e7109e7f2bc39e7d21fb9bfe0c36af485b751c261635028862f412a3",
+  "V02": "dc9f1b6bbf565042412e2ae51a5297fa020a9ce6d4b161c2087ff9f229bfa849",
+  "X01": "822dc35ec954443c0439e25c61c4cbfa0a90643753f5175a5c96796023e0ff51",
+  "X02": "e067abe3a851a04c889cd08303f4a1df7e6f92cf87250ff83dd91e669e9db342"
+ },
+ "established_scored": 16,
+ "label": "after-fix",
+ "mid_stream": [],
+ "scored_with_handshake": [
+  "S01",
+  "S02",
+  "S03",
+  "S04",
+  "S05",
+  "S06",
+  "S07",
+  "S08",
+  "S09",
+  "S10",
+  "V01",
+  "V02",
+  "R01",
+  "P01",
+  "P02",
+  "P03"
+ ],
+ "stopped_ground_truth_disagrees": [],
+ "unnegotiable": []
+}

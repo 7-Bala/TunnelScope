@@ -39,3 +39,8 @@ cloud/c-v1.pcap :: ike_prf  # T-151 / EXP-40 / DEC-051: agrees with swanctl (PRF
 cloud/c-v1.pcap :: ike_dh_group  # T-151 / EXP-40 / DEC-051: agrees with swanctl (MODP_1024)
 * :: traffic_type  # T-158 / DEC-054: classifier replaced by EXP-42's K4 (v2 features, eight families, balanced); lab D 0.42 -> 0.83 (EXP-43)
 * :: attacker_exposure  # T-158 / DEC-054: same model change; exposure score comes from the new model's confidence and agreement
+exp47/* :: ike_encr  # T-118 / EXP-47 / DEC-060: IKEv2 encryption ids 1,2,4-9 named from the IANA registry; the FortiGate captures print DES instead of the unnamed encr-2
+exp47/first-run-midstream/P02.pcap :: pfs  # T-118 / EXP-47 addendum F / DEC-060: IKE group invisible and a short request, so PFS-off cannot be told from an ECP/Curve25519 PFS rekey; was INFERRED False
+exp47/first-run-midstream/P03.pcap :: pfs  # T-118 / EXP-47 addendum F / DEC-060: same; this one was a PFS-on ECP-256 rekey wrongly read as PFS-off (D3)
+rekey-cs-pfs-off-aes256gcm16-run2.pcap :: pfs  # T-118 / EXP-47 addendum F / DEC-060: rekey-only capture, group invisible; was INFERRED False, now UNKNOWN
+synthetic/cve-2026-78135-plaintext-positive.pcap :: pfs  # T-118 / EXP-47 addendum F / DEC-060: synthetic capture without the IKE_SA_INIT; same rule
