@@ -79,9 +79,9 @@ def test_routeros_page_omits_sha384_but_the_device_accepted_it_and_the_template_
     assert "sha384" in t["why"] and "omits" in t["why"]
 
 
-def test_routeros_gcm_fix_also_sets_auth_algorithms_null_because_the_device_refuses_gcm_next_to_sha():
+def test_routeros_gcm_fix_also_empties_auth_algorithms_because_the_device_refuses_gcm_next_to_any_value():
     t = V.TEMPLATES["mikrotik"]["RFC8221-ESP-3DES"]
-    assert t["edits"][0]["set"] == {"enc-algorithms": "aes-256-gcm", "auth-algorithms": "null"}
+    assert t["edits"][0]["set"] == {"enc-algorithms": "aes-256-gcm", "auth-algorithms": '""'}      # empty, not the documented "null": the device refuses null
     assert "AEAD already provides authentication" in t["why"]
 
 

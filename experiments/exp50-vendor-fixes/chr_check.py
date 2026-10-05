@@ -70,7 +70,7 @@ def item(path, field):
 
 
 def norm(v):
-    return ",".join(sorted(str(v).split(","))) if v is not None else None
+    return ",".join(sorted(str(v).strip('"').split(","))) if v is not None else None
 
 
 def main():

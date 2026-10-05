@@ -109,9 +109,10 @@ TEMPLATES: dict[str, dict[str, dict]] = {
                                  [(PROPOSAL, "proposal", {"auth-algorithms": "sha256"})]),
         "RFC8221-AH-LEGACY": _ros("AH integrity off legacy 96-bit", "proposal auth-algorithms accepts sha256 and sha512",
                                   [(PROPOSAL, "proposal", {"auth-algorithms": "sha256"})]),
-        "RFC8221-ESP-3DES": _ros("ESP cipher off 3DES", "AES-GCM already authenticates, so RouterOS refuses it next to an auth-algorithms value other than null "
-                                 "(found on the device, EXP-50: 'AEAD already provides authentication'); alternative without GCM: enc-algorithms=aes-256-cbc with auth-algorithms=sha256",
-                                 [(PROPOSAL, "proposal", {"enc-algorithms": "aes-256-gcm", "auth-algorithms": "null"})]),
+        "RFC8221-ESP-3DES": _ros("ESP cipher off 3DES", "AES-GCM already authenticates, so RouterOS refuses it next to any auth-algorithms value, including the documented "
+                                 "`null` (device answer, EXP-50: 'AEAD already provides authentication'); an EMPTY auth-algorithms is what it accepts. Alternative "
+                                 "without GCM: enc-algorithms=aes-256-cbc with auth-algorithms=sha256",
+                                 [(PROPOSAL, "proposal", {"enc-algorithms": "aes-256-gcm", "auth-algorithms": '""'})]),
     },
 }
 # EXP-50 lab result for the Libreswan 5.4 pair (experiments/exp50-vendor-fixes/results/summary-libreswan.json; a test ties this table to that file).
