@@ -430,10 +430,6 @@ function FixControl({
           className="flex items-center gap-1.5 text-[11.5px] font-medium text-violet transition-colors hover:underline focus:outline-none"
         >
           <span>{showDetailed ? "▾ Hide detailed plan" : "▸ View detailed plan"}</span>
-          {/* Honest label: every plan is written by hand. No language model generates plans or commands. */}
-          <span className="rounded bg-violet/10 px-1.5 py-0.5 font-mono text-[10px] text-violet">
-            Hand-written plan · checked before and after
-          </span>
         </button>
 
         {showDetailed && (
