@@ -176,6 +176,8 @@ def threats(record, verdicts, anomaly: dict | None = None) -> list[Threat]:
         t.evidence, t.reason = ["anomaly"], "; ".join(a["message"] for a in real[:3])
     elif anomaly and anomaly.get("status") == "normal":
         t.status, t.reason, t.evidence = "mitigated", "matches this tunnel's learned normal", ["anomaly"]
+    elif anomaly and anomaly.get("status") == "no_evidence":
+        t.reason = "this SA shows no key exchange or traffic to compare, so drift cannot be judged"
     else:
         t.reason = ("still learning this tunnel's normal" if anomaly else
                     "anomaly history is off (start the engine with --history)")

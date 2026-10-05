@@ -209,7 +209,7 @@ export interface Anomaly {
 
 export interface AnomalyResult {
   tunnel: string
-  status: "learning" | "normal" | "anomalous"
+  status: "learning" | "normal" | "anomalous" | "no_evidence"
   observations: number
   needed?: number
   anomalies: Anomaly[]
