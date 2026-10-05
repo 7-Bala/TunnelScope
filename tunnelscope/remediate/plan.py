@@ -553,10 +553,18 @@ REMEDIATION = {
 }
 
 
-def plan_for(rule_id: str, observed=None, include_exec: bool = False, detailed: bool = False) -> dict | None:
-    """Return a deterministic remediation plan for `rule_id`, or None if unknown."""
+def plan_for(rule_id: str, observed=None, include_exec: bool = False, detailed: bool = False, vendor: str | None = None) -> dict | None:
+    """Return a deterministic remediation plan for `rule_id`, or None if unknown.
+
+    `vendor` None or "strongswan" gives the plan below, unchanged. "libreswan" or "mikrotik" gives advice in that vendor's own syntax
+    (T-123, `vendors.py`); anything else is a ValueError, never silently the strongSwan plan."""
+    from .vendors import SUPPORTED, vendor_plan
+    if vendor is not None and vendor not in SUPPORTED:
+        raise ValueError(f"unknown vendor {vendor!r}; supported: {', '.join(SUPPORTED)}")
     if not isinstance(rule_id, str):
         return None
+    if vendor not in (None, "strongswan"):
+        return vendor_plan(rule_id, vendor, observed=observed, detailed=detailed)
     entry = REMEDIATION.get(rule_id)
     if not entry:
         return None

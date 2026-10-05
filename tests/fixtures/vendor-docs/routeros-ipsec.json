@@ -1,0 +1,304 @@
+{
+ "source": "https://help.mikrotik.com/docs/spaces/ROS/pages/11993097/IPsec",
+ "retrieved": "2026-10-05",
+ "page_bytes": 279344,
+ "page_sha256": "8090765cf281cb6c0dab3579b1bb125d29b4261399f35d14a4299571ef066958",
+ "note": "setting name -> allowed values exactly as printed in the setting tables (values 'string' etc. are types; the page prints aes-128-cbc twice and aes-128gcm). A name in several tables is the union.",
+ "settings": {
+  "accounting": [
+   "no",
+   "yes"
+  ],
+  "action": [
+   "discard",
+   "encrypt",
+   "none"
+  ],
+  "address": [
+   "IP/IPv6 Prefix",
+   "none",
+   "string"
+  ],
+  "address-pool": [
+   "none",
+   "string"
+  ],
+  "address-prefix-length": [
+   "integer [1..32]"
+  ],
+  "auth-algorithms": [
+   "md5",
+   "null",
+   "sha1",
+   "sha256",
+   "sha512"
+  ],
+  "auth-method": [
+   "digital-signature",
+   "eap",
+   "eap-radius",
+   "pre-shared-key",
+   "pre-shared-key-xauth",
+   "rsa-key",
+   "rsa-signature-hybrid"
+  ],
+  "certificate": [
+   "string"
+  ],
+  "comment": [
+   "string"
+  ],
+  "dh-group": [
+   "ecp256",
+   "ecp384",
+   "ecp521",
+   "modp1024",
+   "modp1536",
+   "modp2048",
+   "modp3072",
+   "modp4096",
+   "modp6144",
+   "modp768",
+   "modp8192"
+  ],
+  "disabled": [
+   "no",
+   "yes"
+  ],
+  "dpd-interval": [
+   "disable-dpd",
+   "time"
+  ],
+  "dpd-maximum-failures": [
+   "integer: 1..100"
+  ],
+  "dst-address": [
+   "IP/IPv6 prefix"
+  ],
+  "dst-port": [
+   "any",
+   "integer:0..65535"
+  ],
+  "eap-methods": [
+   "eap-mschapv2",
+   "eap-peap",
+   "eap-tls",
+   "eap-ttls"
+  ],
+  "enc-algorithm": [
+   "3des",
+   "aes-128",
+   "aes-192",
+   "aes-256",
+   "blowfish",
+   "camellia-128",
+   "camellia-192",
+   "camellia-256",
+   "des"
+  ],
+  "enc-algorithms": [
+   "3des",
+   "aes-128-cbc",
+   "aes-128gcm",
+   "aes-192-cbc",
+   "aes-192-ctr",
+   "aes-192-gcm",
+   "aes-256-cbc",
+   "aes-256-ctr",
+   "aes-256-gcm",
+   "blowfish",
+   "camellia-128",
+   "camellia-192",
+   "camellia-256",
+   "des",
+   "null",
+   "twofish"
+  ],
+  "exchange-mode": [
+   "aggressive",
+   "base",
+   "ike2",
+   "main"
+  ],
+  "generate-policy": [
+   "no",
+   "port-override",
+   "port-strict"
+  ],
+  "group": [
+   "string"
+  ],
+  "hash-algorithm": [
+   "md5",
+   "sha1",
+   "sha256",
+   "sha512"
+  ],
+  "interim-update": [
+   "time"
+  ],
+  "ipsec-protocols": [
+   "ah",
+   "esp"
+  ],
+  "key": [
+   "string"
+  ],
+  "level": [
+   "require",
+   "unique",
+   "use"
+  ],
+  "lifebytes": [
+   "Integer: 0..4294967295"
+  ],
+  "lifetime": [
+   "time"
+  ],
+  "local-address": [
+   "IP/IPv6 Address"
+  ],
+  "match-by": [
+   "certificate",
+   "remote-id"
+  ],
+  "mode-config": [
+   "*request-only",
+   "none",
+   "string"
+  ],
+  "my-id": [
+   "address",
+   "auto",
+   "fqdn",
+   "key-id",
+   "user-fqdn"
+  ],
+  "name": [
+   "string"
+  ],
+  "nat-traversal": [
+   "no",
+   "yes"
+  ],
+  "notrack-chain": [
+   "string"
+  ],
+  "passive": [
+   "no",
+   "yes"
+  ],
+  "password": [
+   "string"
+  ],
+  "peer": [
+   "string"
+  ],
+  "pfs-group": [
+   "ecp256",
+   "ecp384",
+   "ecp521",
+   "modp1024",
+   "modp1536",
+   "modp2048",
+   "modp3072",
+   "modp4096",
+   "modp6144",
+   "modp768",
+   "modp8192",
+   "none"
+  ],
+  "policy-template-group": [
+   "none",
+   "string"
+  ],
+  "port": [
+   "integer:0..65535"
+  ],
+  "profile": [
+   "string"
+  ],
+  "proposal": [
+   "string"
+  ],
+  "proposal-check": [
+   "claim",
+   "exact",
+   "obey",
+   "strict"
+  ],
+  "protocol": [
+   "...",
+   "all",
+   "egp",
+   "ggp",
+   "icmp",
+   "igmp"
+  ],
+  "remote-certificate": [
+   "string"
+  ],
+  "remote-id": [
+   "auto",
+   "fqdn",
+   "ignore",
+   "key-id",
+   "user-fqdn"
+  ],
+  "remote-key": [
+   "string"
+  ],
+  "responder": [
+   "no",
+   "yes"
+  ],
+  "sa-dst-address": [
+   "ip/ipv6 address"
+  ],
+  "sa-src-address": [
+   "ip/ipv6 address"
+  ],
+  "secret": [
+   "string"
+  ],
+  "send-initial-contact": [
+   "no",
+   "yes"
+  ],
+  "split-include": [
+   "list of IP prefix"
+  ],
+  "src-address": [
+   "ip/ipv6 prefix"
+  ],
+  "src-address-list": [
+   "address list"
+  ],
+  "src-port": [
+   "any",
+   "integer:0..65535"
+  ],
+  "static-dns": [
+   "list of IP"
+  ],
+  "system-dns": [
+   "no",
+   "yes"
+  ],
+  "template": [
+   "no",
+   "yes"
+  ],
+  "tunnel": [
+   "no",
+   "yes"
+  ],
+  "username": [
+   "string"
+  ],
+  "xauth-use-radius": [
+   "no",
+   "yes"
+  ]
+ }
+}
