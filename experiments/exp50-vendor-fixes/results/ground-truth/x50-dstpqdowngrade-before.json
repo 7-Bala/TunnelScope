@@ -1,0 +1,17 @@
+{
+ "add_a": "\"x50-dstpqdowngrade-before\": added oriented IKEv2 connection",
+ "add_b": "\"x50-dstpqdowngrade-before\": added oriented IKEv2 connection",
+ "arm": "x50-dstpqdowngrade-before",
+ "ping_ok": {
+  "1000": true,
+  "200": true,
+  "56": true
+ },
+ "rule": "DST-PQ-DOWNGRADE",
+ "seconds": 4,
+ "state": "before",
+ "status_a": "\"x50-dstpqdowngrade-before\": 10.10.1.65[@a-x50-dstpqdowngrade-before]...10.10.2.65[@b-x50-dstpqdowngrade-before]; routed-tunnel; my_ip=unset; their_ip=unset;\n\"x50-dstpqdowngrade-before\":   host: oriented; local: 10.10.1.65; remote: 10.10.2.65; established IKE SA: #35;\n\"x50-dstpqdowngrade-before\":   my_updown=ipsec _updown; my_updown-config=noasync,noexec;\n\"x50-dstpqdowngrade-before\":   xauth us:none, xauth them:none, my_username=[any]; their_username=[any]\n\"x50-dstpqdowngrade-before\":   our auth:secret, their auth:secret, our autheap:none, their autheap:none, send-supported-auth-methods:no;\n\"x50-dstpqdowngrade-before\":   modecfg info: us:none, them:none, modecfg policy:push, dns:unset, domains:unset, cat:unset;\n\"x50-dstpqdowngrade-before\":   cisco-split: no; cisco-unity: no; cisco-peer: no; nm-configured: no;\n\"x50-dstpqdowngrade-before\":   sec_label:unset;\n\"x50-dstpqdowngrade-before\":   ike_life: 28800s; ipsec_life: 28800s; ipsec_max_bytes: 2^63B; ipsec_max_packets: 2^63; replay_window: 128; rekey_margin: 540s; rekey_fuzz: 100%; clones: no (unset);\n\"x50-dstpqdowngrade-before\":   iptfs: no; fragmentation: yes; packet-size: 0; max-queue-size: 0; drop-time: 0; init-delay: 0; reorder-window: 0;\n\"x50-dstpqdowngrade-before\":   retransmit-interval: 500ms; retransmit-timeout: 30s; iketcp:no; iketcp-port:4500;\n\"x50-dstpqdowngrade-before\":   initial-contact:no; fake-strongswan:no; send-vendorid:no; send-no-esp-tfc:no;",
+ "trafficstatus_a": "#36: \"x50-dstpqdowngrade-before\", type=ESP, add_time=1791170691, inBytes=6700, outBytes=6700, maxBytes=2^63B, id='@b-x50-dstpqdowngrade-before'",
+ "up_log": "\"x50-dstpqdowngrade-before\" #35: initiating IKEv2 connection to 10.10.2.65 using UDP\n\"x50-dstpqdowngrade-before\" #35: sent IKE_SA_INIT request to 10.10.2.65:UDP/500\n\"x50-dstpqdowngrade-before\" #35: processed IKE_SA_INIT response from 10.10.2.65:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_384_192 prf=HMAC_SHA2_384 ke=DH20}, initiating IKE_AUTH\n\"x50-dstpqdowngrade-before\" #35: sent IKE_AUTH request to 10.10.2.65:UDP/500 with shared-key-mac and FQDN '@a-x50-dstpqdowngrade-before'; Child SA #36 {ESP <0x7cf6e665} [10.10.1.65/32===10.10.2.65/32]\n\"x50-dstpqdowngrade-before\" #35: processing IKE_AUTH response from 10.10.2.65:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}\n\"x50-dstpqdowngrade-before\" #35: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-x50-dstpqdowngrade-before'\n\"x50-dstpqdowngrade-before\" #36: initiator established Child SA using #35; IPsec tunnel [10.10.1.65/32===10.10.2.65/32] {ESP/ESN=>0x909d1832 <0x7cf6e665 xfrm=AES_GCM_16_256 DPD=passive}",
+ "up_rc": 0
+}

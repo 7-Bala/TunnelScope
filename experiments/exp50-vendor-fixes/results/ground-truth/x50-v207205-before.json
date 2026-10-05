@@ -1,0 +1,17 @@
+{
+ "add_a": "\"x50-v207205-before\": added oriented IKEv1 connection",
+ "add_b": "\"x50-v207205-before\": added oriented IKEv1 connection",
+ "arm": "x50-v207205-before",
+ "ping_ok": {
+  "1000": true,
+  "200": true,
+  "56": true
+ },
+ "rule": "V-207205",
+ "seconds": 5,
+ "state": "before",
+ "status_a": "\"x50-v207205-before\": 10.10.1.51[@a-x50-v207205-before]...10.10.2.51[@b-x50-v207205-before]; routed-tunnel; my_ip=unset; their_ip=unset;\n\"x50-v207205-before\":   host: oriented; local: 10.10.1.51; remote: 10.10.2.51; established ISAKMP SA: #3;\n\"x50-v207205-before\":   my_updown=ipsec _updown; my_updown-config=noasync,noexec;\n\"x50-v207205-before\":   xauth us:none, xauth them:none, my_username=[any]; their_username=[any]\n\"x50-v207205-before\":   our auth:secret, their auth:secret, our autheap:none, their autheap:none, send-supported-auth-methods:no;\n\"x50-v207205-before\":   modecfg info: us:none, them:none, modecfg policy:push, dns:unset, domains:unset, cat:unset;\n\"x50-v207205-before\":   cisco-split: no; cisco-unity: no; cisco-peer: no; nm-configured: no;\n\"x50-v207205-before\":   sec_label:unset;\n\"x50-v207205-before\":   ike_life: 28800s; ipsec_life: 28800s; ipsec_max_bytes: 2^63B; ipsec_max_packets: 2^63; replay_window: 128; rekey_margin: 540s; rekey_fuzz: 100%; clones: no (unset);\n\"x50-v207205-before\":   iptfs: no; fragmentation: yes; packet-size: 0; max-queue-size: 0; drop-time: 0; init-delay: 0; reorder-window: 0;\n\"x50-v207205-before\":   retransmit-interval: 500ms; retransmit-timeout: 30s; iketcp:no; iketcp-port:4500;\n\"x50-v207205-before\":   initial-contact:no; fake-strongswan:no; send-vendorid:no; send-no-esp-tfc:no;",
+ "trafficstatus_a": "#6: \"x50-rfc8221esp3des-before\", type=ESP, add_time=1791170618, inBytes=252, outBytes=252, maxBytes=2^63B, id='@b-x50-rfc8221esp3des-before'\n#4: \"x50-v207205-before\", type=ESP, add_time=1791170613, inBytes=6700, outBytes=6700, maxBytes=2^63B, id='@b-x50-v207205-before'",
+ "up_log": "\"x50-v207205-before\" #3: initiating IKEv1 Main Mode connection\n\"x50-v207205-before\" #3: sent Main Mode request\n\"x50-v207205-before\" #3: sent Main Mode I2\n\"x50-v207205-before\" #3: sent Main Mode I3\n\"x50-v207205-before\" #3: Peer ID is FQDN: '@b-x50-v207205-before'\n\"x50-v207205-before\" #3: ISAKMP SA established {auth=PRESHARED_KEY cipher=AES_CBC_256 integ=HMAC_SHA2_384 group=DH20}\n\"x50-v207205-before\" #4: initiating Quick Mode IKEv1+PSK+ENCRYPT+TUNNEL+DONT_REKEY+UP+IKE_FRAG_ALLOW+ESN_NO+ESN_YES {using isakmp#3 msgid:889e8af3 proposal=AES_GCM_16_256 pfsgroup=no-pfs 10.10.1.51/32===10.10.2.51/32}\n\"x50-v207205-before\" #4: sent Quick Mode request\n\"x50-v207205-before\" #4: IPsec SA established tunnel mode {ESP=>0x7d1d0838 <0xde754f74 xfrm=AES_GCM_16_256 DPD=passive}",
+ "up_rc": 0
+}

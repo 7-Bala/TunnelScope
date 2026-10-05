@@ -1,0 +1,17 @@
+{
+ "add_a": "\"x50-v207193-after\": added oriented IKEv2 connection",
+ "add_b": "\"x50-v207193-after\": added oriented IKEv2 connection",
+ "arm": "x50-v207193-after",
+ "ping_ok": {
+  "1000": true,
+  "200": true,
+  "56": true
+ },
+ "rule": "V-207193",
+ "seconds": 4,
+ "state": "after",
+ "status_a": "\"x50-v207193-after\": 10.10.1.54[@a-x50-v207193-after]...10.10.2.54[@b-x50-v207193-after]; routed-tunnel; my_ip=unset; their_ip=unset;\n\"x50-v207193-after\":   host: oriented; local: 10.10.1.54; remote: 10.10.2.54; established IKE SA: #13;\n\"x50-v207193-after\":   my_updown=ipsec _updown; my_updown-config=noasync,noexec;\n\"x50-v207193-after\":   xauth us:none, xauth them:none, my_username=[any]; their_username=[any]\n\"x50-v207193-after\":   our auth:secret, their auth:secret, our autheap:none, their autheap:none, send-supported-auth-methods:no;\n\"x50-v207193-after\":   modecfg info: us:none, them:none, modecfg policy:push, dns:unset, domains:unset, cat:unset;\n\"x50-v207193-after\":   cisco-split: no; cisco-unity: no; cisco-peer: no; nm-configured: no;\n\"x50-v207193-after\":   sec_label:unset;\n\"x50-v207193-after\":   ike_life: 28800s; ipsec_life: 28800s; ipsec_max_bytes: 2^63B; ipsec_max_packets: 2^63; replay_window: 128; rekey_margin: 540s; rekey_fuzz: 100%; clones: no (unset);\n\"x50-v207193-after\":   iptfs: no; fragmentation: yes; packet-size: 0; max-queue-size: 0; drop-time: 0; init-delay: 0; reorder-window: 0;\n\"x50-v207193-after\":   retransmit-interval: 500ms; retransmit-timeout: 30s; iketcp:no; iketcp-port:4500;\n\"x50-v207193-after\":   initial-contact:no; fake-strongswan:no; send-vendorid:no; send-no-esp-tfc:no;",
+ "trafficstatus_a": "#14: \"x50-v207193-after\", type=ESP, add_time=1791170631, inBytes=6700, outBytes=6700, maxBytes=2^63B, id='@b-x50-v207193-after'",
+ "up_log": "\"x50-v207193-after\" #13: initiating IKEv2 connection to 10.10.2.54 using UDP\n\"x50-v207193-after\" #13: sent IKE_SA_INIT request to 10.10.2.54:UDP/500\n\"x50-v207193-after\" #13: processed IKE_SA_INIT response from 10.10.2.54:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_384_192 prf=HMAC_SHA2_384 ke=DH20}, initiating IKE_AUTH\n\"x50-v207193-after\" #13: sent IKE_AUTH request to 10.10.2.54:UDP/500 with shared-key-mac and FQDN '@a-x50-v207193-after'; Child SA #14 {ESP <0xdaced4df} [10.10.1.54/32===10.10.2.54/32]\n\"x50-v207193-after\" #13: processing IKE_AUTH response from 10.10.2.54:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}\n\"x50-v207193-after\" #13: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-x50-v207193-after'\n\"x50-v207193-after\" #14: initiator established Child SA using #13; IPsec tunnel [10.10.1.54/32===10.10.2.54/32] {ESP/ESN=>0x3db1cb83 <0xdaced4df xfrm=AES_GCM_16_256 DPD=passive}",
+ "up_rc": 0
+}
