@@ -49,7 +49,7 @@ P5 tshark more than half of the time: **held** in every run (51-92%); its share 
 
 ## Reported from code reading, not measured: capture-side drops are silent
 `tunnelscope/live/live.py` starts `dumpcap` with `-q` and `stdout=DEVNULL`; its stderr is read only if it exits within the first second. A packet that `dumpcap` drops because the kernel buffer filled is therefore not reported
-by live mode. The analysis side is not silent (H1-H3); the capture side is, by this reading. Proposed as a separate task (T-161 in TODO), not done here.
+by live mode. The analysis side is not silent (H1-H3); the capture side is, by this reading. Proposed as a separate task (T-165 in TODO), not done here.
 
 ## Not shown
 Live capture rate, SPAN/TAP, NICs, any Linux server, multi-core or multi-process scaling (the analysis is one Python process; tshark is single-threaded per pass; running windows in parallel could multiply the packet rate and the memory), IPv6, AH, ESP-in-UDP, a

@@ -674,5 +674,5 @@ Bars: H1 exact packet accounting at every size, H2 loud timeout, H3 damaged file
 
 ### EXP-49 — RESULT (2026-10-04)
 Apple M4 / 16 GB / macOS 27.0.1. H1 15/15 exact up to 3x10^6 packets; H2 and H3 pass; 32-41 k packets/s = 0.36-0.46 Gbps represented per core; Python memory 1.24 KB/packet; P1-P5 held (P1 by a hair; machine not idle).
-Capture-side drops are silent by code reading (T-161). DEC-058. `experiments/exp49-throughput/RESULT.md`
+Capture-side drops are silent by code reading (T-165). DEC-062. `experiments/exp49-throughput/RESULT.md`
 
