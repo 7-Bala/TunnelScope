@@ -6,6 +6,7 @@ Medium changes, traffic shifts and model outliers stay in the analysis output; t
 
 Formats, one alert per line, appended to a file a SIEM can tail:
 - jsonl: one JSON object per line;
+- ecs: Elastic Common Schema JSON (T-129, `siem/ecs.py`);
 - syslog: RFC 5424, facility 13 (log audit), severity 3 (error), structured data under the enterprise number
   32473 reserved for documentation (RFC 5612) until the project has its own.
 Nothing leaves the machine: TunnelScope writes the file; shipping it is the operator's choice.
@@ -47,7 +48,10 @@ def format_alert(alert: dict, fmt: str = "jsonl", hostname: str | None = None) -
         sd = " ".join(f'{k}="{_sd_value(alert[k])}"' for k in ("tunnel", "kind", "attribute", "usual", "now"))
         return (f"<{FACILITY * 8 + SEVERITY}>1 {alert['time']} {host} tunnelscope - {alert['kind'].upper()} "
                 f"[tunnelscope@{PEN} {sd}] {alert['message']}")
-    raise ValueError(f"unknown alert format {fmt!r} (jsonl or syslog)")
+    if fmt == "ecs":                           # T-129: Elastic Common Schema JSON, one document per line
+        from ..siem import ecs
+        return ecs.dumps(ecs.alert_event(alert))
+    raise ValueError(f"unknown alert format {fmt!r} (jsonl, syslog or ecs)")
 
 
 def write_alerts(alerts: list[dict], path: str, fmt: str = "jsonl") -> int:

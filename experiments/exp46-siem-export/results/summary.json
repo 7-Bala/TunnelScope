@@ -1,0 +1,106 @@
+{
+ "H1_schema": {
+  "documents": 11293,
+  "first": [],
+  "pass": true,
+  "violations": 0
+ },
+ "H2_elasticsearch_accepts": {
+  "bulk_item_errors": 0,
+  "documents_with_ignored_field": 0,
+  "in_elasticsearch": 11293,
+  "mapping": {
+   "@timestamp": [
+    "date",
+    "date"
+   ],
+   "destination.ip": [
+    "ip",
+    "ip"
+   ],
+   "event.kind": [
+    "keyword",
+    "keyword"
+   ],
+   "event.severity": [
+    "long",
+    "long"
+   ],
+   "rule.id": [
+    "keyword",
+    "keyword"
+   ],
+   "source.ip": [
+    "ip",
+    "ip"
+   ]
+  },
+  "pass": true,
+  "sent": 11293
+ },
+ "H3_counts_agree": {
+  "differences": [],
+  "pass": true,
+  "rule_verdict_pairs": 73,
+  "verdict_events_cli": 11290,
+  "verdict_events_elasticsearch": 11290
+ },
+ "H4_syslog": {
+  "fields_missing_or_different": 0,
+  "fields_unexpected": 0,
+  "filebeat_error_message": 0,
+  "filebeat_events": 11293,
+  "filebeat_ignored": 0,
+  "lines": 11293,
+  "pass": true,
+  "strict_parser_rejected": [],
+  "strict_parser_rejected_count": 0
+ },
+ "H5_no_network_no_side_effects": {
+  "assess_json_differs_from_origin_main": [],
+  "network_imports_in_siem": [],
+  "origin_main": "7539ca3",
+  "pass": true
+ },
+ "H6_deterministic": {
+  "captures": 20,
+  "differences": [],
+  "pass": true,
+  "runs_each": 2
+ },
+ "all_pass": true,
+ "corpus": {
+  "alert_documents": 3,
+  "alert_lines": 3,
+  "capture_dir": "/Users/bala/Documents/SIH 2026/testbed/captures",
+  "capture_errors": [],
+  "captures": 767,
+  "documents": 11290,
+  "export_jobs": 777,
+  "name_list_sha256": "fd2367f5022de0d28277576cc05f6dcf063a9be6ef3069af27579b83bc70b69c",
+  "syslog_lines": 11290
+ },
+ "negative_controls": {
+  "elasticsearch": {
+   "bulk_errors": false,
+   "documents_with_ignored_field": 1,
+   "schema_checker_flags_it": true
+  },
+  "filebeat": {
+   "events": 1,
+   "events_with_error_message": 1,
+   "strict_parser_rejects_it": true
+  },
+  "pass": true
+ },
+ "seconds": 4181,
+ "versions": {
+  "ecs_reference": "v9.5.0",
+  "elasticsearch": "9.5.4",
+  "filebeat": "filebeat version 9.5.4 (arm64), libbeat 9.5.4 [ccdfcad1de773e22e494089f508162c52b027ee2 built 2026-09-09 20:24:03 +0000 UTC] (FIPS-distribution: false)",
+  "images": {
+   "docker.elastic.co/beats/filebeat:9.5.4": "docker.elastic.co/beats/filebeat@sha256:2dd1d5252f3d5d3f3104f8e908b88cb9dfb53faeab5beb8a01ce1593a8fc149d",
+   "docker.elastic.co/elasticsearch/elasticsearch:9.5.4": "docker.elastic.co/elasticsearch/elasticsearch@sha256:82ac14f43fe701992e601f4cc81e1c0d7dbc5a2576d8cd736006452925df4026"
+  }
+ }
+}

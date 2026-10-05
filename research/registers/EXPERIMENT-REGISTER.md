@@ -687,4 +687,18 @@ classifier, is the binding limit. Also found: the shipped model's gated answers 
 Libreswan 5.4: 12 of 12 (10 `lab`, 2 `lab-device-state` because the wire cannot show the weak state). RouterOS 7.24.4 CHR: 10 of 10 on the third run (8, 9 before; faults were in the templates), `lab-device-state`, no tunnel negotiated. 34 strongSwan plan hashes identical to the base.
 Found by the labs, not by the documentation: RouterOS accepts `hash-algorithm=sha384` (page omits it); RouterOS refuses GCM next to `auth-algorithms=null` (an empty value works); Libreswan `ipsec replace` (not `ipsec auto`), `keyexchange=`; no post-quantum key exchange on RouterOS 7.24.4. DEC-058.
 `experiments/exp50-vendor-fixes/RESULT.md`
+## EXP-46 — SIEM export: Elastic ECS JSON and RFC 5424 syslog (T-129) — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp46-siem-export/PREREG.md` (991e939) before any code and any run; ADDENDUM A (cb1c69f)
+before the run that counts. One event per verdict as ECS 9.5.0 JSON or RFC 5424 syslog, verified against Elasticsearch 9.5.4
+and Filebeat 9.5.4 in Docker. Bars: every non-`tunnelscope.*` field valid against the official `ecs_flat.yml`; Elasticsearch
+accepts everything with 0 errors and 0 `_ignored` fields; per-rule counts equal the CLI's independent `assess --json`; every
+syslog line parses in a strict RFC 5424 parser and in Filebeat with no error and no field changed; no network code; output
+deterministic.
+
+### EXP-46 — RESULT (2026-10-02)
+767 captures + the ten EXP-35 captures under the NIST profile: 11,290 verdict events + 3 alerts. H1 0 violations; H2 11,293
+stored, 0 errors, 0 ignored; H3 0 differences over 73 rule/verdict pairs; H4 11,293 lines, Filebeat 0 errors and 0 differences;
+H5 0 network imports, `assess` byte-identical to origin/main; H6 0 differences. Negative controls tripped (a malformed
+`source.ip` is dropped silently by Elasticsearch; only `_ignored` shows it). 16 mutation checks caught. DEC-059.
+`experiments/exp46-siem-export/RESULT.md`
 
