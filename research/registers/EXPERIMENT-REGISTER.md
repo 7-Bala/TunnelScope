@@ -676,6 +676,6 @@ responder, three rekey arms, two failures), ground truth from the device's own d
 ### EXP-47 — RESULT (2026-10-04)
 H1 held (0 wrong handshake values in 16 arms; IKEv2 and IKEv1; DH groups 2-31). Predicted failures confirmed: IKE cipher DES printed as `encr-2` (14 IKEv2 arms), and the ESP
 candidate set lacked the true DES-CBC+HMAC-SHA-2 family (12 arms). Fixed: names for IANA ids 1, 2, 4-9; three sieve families; after the fix all seven bars pass and nothing else moves
-(corpus: 64 of 418 ESP findings gain the three families, 6 lose the "CBC excluded" refinement). D3 (`pfs=False` asserted when the IKE group is not visible, wrong on a mid-stream ECP-256 PFS capture) fixed on the owner's approval 2026-10-04: UNKNOWN there; 4 corpus records change as predicted (addendum F). Lab faults disclosed (stale peer config, handshake outside the capture). DEC-056.
+(corpus: 64 of 418 ESP findings gain the three families, 6 lose the "CBC excluded" refinement). D3 (`pfs=False` asserted when the IKE group is not visible, wrong on a mid-stream ECP-256 PFS capture) fixed on the owner's approval 2026-10-04: UNKNOWN there; 4 corpus records change as predicted (addendum F). Lab faults disclosed (stale peer config, handshake outside the capture). DEC-060.
 `experiments/exp47-fortigate/RESULT.md`
 

@@ -20,7 +20,7 @@ def _main(pcap):
     ("exp06r2/exp06r2-f01-rep1.pcap", "negotiation_outcome", "OBSERVED", "ike-proposal-mismatch"),
     ("exp06r2/exp06r2-f06-rep1.pcap", "negotiation_outcome", "OBSERVED", "peer-unreachable"),
     ("rekey-cs-pfs-on-aes256gcm16-run2.pcap", "pfs", "INFERRED", True),
-    # EXP-47 addendum F / DEC-056: this capture is rekey-only (IKE group invisible); a short request there cannot
+    # EXP-47 addendum F / DEC-060: this capture is rekey-only (IKE group invisible); a short request there cannot
     # tell PFS-off from an ECP/Curve25519 PFS rekey, so it was INFERRED False and is now UNKNOWN.
     ("rekey-cs-pfs-off-aes256gcm16-run2.pcap", "pfs", "UNKNOWN", None),
     # T-048/EXP-11: peer_auth_method is NOT_OBSERVABLE everywhere (the actual

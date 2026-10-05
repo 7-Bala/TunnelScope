@@ -100,7 +100,7 @@ NIC (no hardware offload); PSK only, no NAT-T; one peer implementation (strongSw
 is dropped: the owner could not register, Juniper requires a company email).
 
 ## Decision
-DEC-056: FortiOS (unlicensed evaluation image 7.6.7, DES-only) is added to the validated implementations for the handshake, IKEv1, rekey and failure findings; F1
+DEC-060: FortiOS (unlicensed evaluation image 7.6.7, DES-only) is added to the validated implementations for the handshake, IKEv1, rekey and failure findings; F1
 and F2 ship; **D3 awaits the owner's decision** (apply the `elif` and change the two pinned expectations, or keep the current rule and document the limit).
 
 ## Addendum, 2026-10-04: D3 resolved by the owner (option a)
