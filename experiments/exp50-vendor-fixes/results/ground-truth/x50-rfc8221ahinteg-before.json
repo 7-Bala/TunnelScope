@@ -1,0 +1,21 @@
+{
+ "add_a": "\"x50-rfc8221ahinteg-before\": added oriented IKEv2 connection",
+ "add_b": "\"x50-rfc8221ahinteg-before\": added oriented IKEv2 connection",
+ "arm": "x50-rfc8221ahinteg-before",
+ "capture_attempts": 1,
+ "capture_packets": "34",
+ "ping_ok": {
+  "1000": true,
+  "200": true,
+  "56": true
+ },
+ "replace_out": "E SA (ESTABLISHED_IKE_SA) aged 3.727071s and sending notification\n\"x50-rfc8221ahinteg-before\" #38: AH traffic information: in=6KiB out=6KiB\n\"x50-rfc8221ahinteg-before\": added oriented IKEv2 connection",
+ "replace_rc": 0,
+ "rule": "RFC8221-AH-INTEG",
+ "seconds": 4,
+ "state": "before",
+ "status_a": "\"x50-rfc8221ahinteg-before\": 10.10.1.69[@a-x50-rfc8221ahinteg-before]...10.10.2.69[@b-x50-rfc8221ahinteg-before]; unrouted; my_ip=unset; their_ip=unset;\n\"x50-rfc8221ahinteg-before\":   host: oriented; local: 10.10.1.69; remote: 10.10.2.69;\n\"x50-rfc8221ahinteg-before\":   my_updown=ipsec _updown; my_updown-config=noasync,noexec;\n\"x50-rfc8221ahinteg-before\":   xauth us:none, xauth them:none, my_username=[any]; their_username=[any]\n\"x50-rfc8221ahinteg-before\":   our auth:secret, their auth:secret, our autheap:none, their autheap:none, send-supported-auth-methods:no;\n\"x50-rfc8221ahinteg-before\":   modecfg info: us:none, them:none, modecfg policy:push, dns:unset, domains:unset, cat:unset;\n\"x50-rfc8221ahinteg-before\":   cisco-split: no; cisco-unity: no; cisco-peer: no; nm-configured: no;\n\"x50-rfc8221ahinteg-before\":   sec_label:unset;\n\"x50-rfc8221ahinteg-before\":   ike_life: 28800s; ipsec_life: 28800s; ipsec_max_bytes: 2^63B; ipsec_max_packets: 2^63; replay_window: 128; rekey_margin: 540s; rekey_fuzz: 100%; clones: no (unset);\n\"x50-rfc8221ahinteg-before\":   iptfs: no; fragmentation: yes; packet-size: 0; max-queue-size: 0; drop-time: 0; init-delay: 0; reorder-window: 0;\n\"x50-rfc8221ahinteg-before\":   retransmit-interval: 500ms; retransmit-timeout: 30s; iketcp:no; iketcp-port:4500;\n\"x50-rfc8221ahinteg-before\":   initial-contact:no; fake-strongswan:no; send-vendorid:no; send-no-esp-tfc:no;",
+ "trafficstatus_a": "",
+ "up_log": "\"x50-rfc8221ahinteg-before\" #37: initiating IKEv2 connection to 10.10.2.69 using UDP\n\"x50-rfc8221ahinteg-before\" #37: sent IKE_SA_INIT request to 10.10.2.69:UDP/500\n\"x50-rfc8221ahinteg-before\" #37: processed IKE_SA_INIT response from 10.10.2.69:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_384_192 prf=HMAC_SHA2_384 ke=DH20}, initiating IKE_AUTH\n\"x50-rfc8221ahinteg-before\" #37: sent IKE_AUTH request to 10.10.2.69:UDP/500 with shared-key-mac and FQDN '@a-x50-rfc8221ahinteg-before'; Child SA #38 {AH <0x750b52db} [10.10.1.69/32===10.10.2.69/32]\n\"x50-rfc8221ahinteg-before\" #37: processing IKE_AUTH response from 10.10.2.69:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}\n\"x50-rfc8221ahinteg-before\" #37: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-x50-rfc8221ahinteg-before'\n\"x50-rfc8221ahinteg-before\" #38: initiator established Child SA using #37; IPsec tunnel [10.10.1.69/32===10.10.2.69/32] {AH/ESN=>0x75efc5bc <0x750b52db xfrm=HMAC_MD5_96 DPD=passive}",
+ "up_rc": 0
+}

@@ -679,3 +679,12 @@ Nothing ships. Held: P45-1 (+0.059 on the eight-family held-out mean, K8), P45-2
 classifier, is the binding limit. Also found: the shipped model's gated answers on lab F are 4 of 6 right (11 of 11 on lab D).
 `experiments/exp45-more-diversity/RESULT.md`
 
+## EXP-50 — Per-vendor fix templates: Libreswan and MikroTik RouterOS (T-123) — PRE-REGISTRATION (2026-10-05)
+`experiments/exp50-vendor-fixes/PREREG.md` before any template, test or lab run; addenda A-E each dated before the run it governs. 12 config rules x {Libreswan, MikroTik}; the five patch rules get no template. Bars: H1 every keyword documented, H2 Libreswan closed loop
+(weak state FAIL on the wire, template applied as written, tunnel up, rule PASS, no PASS -> FAIL elsewhere), H3 RouterOS device check, H4 strongSwan plans byte-identical, H5 provenance on every template, H6 unknown vendor is an error.
+
+### EXP-50 — RESULT (2026-10-05)
+Libreswan 5.4: 12 of 12 (10 `lab`, 2 `lab-device-state` because the wire cannot show the weak state). RouterOS 7.24.4 CHR: 10 of 10 on the third run (8, 9 before; faults were in the templates), `lab-device-state`, no tunnel negotiated. 34 strongSwan plan hashes identical to the base.
+Found by the labs, not by the documentation: RouterOS accepts `hash-algorithm=sha384` (page omits it); RouterOS refuses GCM next to `auth-algorithms=null` (an empty value works); Libreswan `ipsec replace` (not `ipsec auto`), `keyexchange=`; no post-quantum key exchange on RouterOS 7.24.4. DEC-058.
+`experiments/exp50-vendor-fixes/RESULT.md`
+

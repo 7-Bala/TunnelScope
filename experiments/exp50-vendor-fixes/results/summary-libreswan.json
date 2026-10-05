@@ -1,0 +1,722 @@
+{
+ "rules": {
+  "DST-PQ-DOWNGRADE": {
+   "after": {
+    "add_a": "\"x50-dstpqdowngrade-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "PASS",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-dstpqdowngrade-after",
+    "before": "x50-dstpqdowngrade-before"
+   },
+   "before": {
+    "add_a": "\"x50-dstpqdowngrade-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "FAIL",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "DST-PQ-KE": {
+   "after": {
+    "add_a": "\"x50-dstpqke-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "PASS",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-dstpqke-after",
+    "before": "x50-dstpqke-before"
+   },
+   "before": {
+    "add_a": "\"x50-dstpqke-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "RFC4301-CONFIDENTIALITY": {
+   "after": {
+    "add_a": "\"x50-rfc4301confidentiality-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-rfc4301confidentiality-after",
+    "before": "x50-rfc4301confidentiality-before"
+   },
+   "before": {
+    "add_a": "\"x50-rfc4301confidentiality-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "FAIL",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-AH-INTEG": "PASS",
+     "RFC8221-AH-LEGACY": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "RFC8221-AH-INTEG": {
+   "after": {
+    "add_a": "\"x50-rfc8221ahinteg-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "FAIL",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-AH-INTEG": "PASS",
+     "RFC8221-AH-LEGACY": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-rfc8221ahinteg-after",
+    "before": "x50-rfc8221ahinteg-before"
+   },
+   "before": {
+    "add_a": "\"x50-rfc8221ahinteg-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "UNKNOWN",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "FAIL",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-AH-INTEG": "UNKNOWN",
+     "RFC8221-AH-LEGACY": "FAIL",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "device_state": {
+    "after_has": true,
+    "before_has": true,
+    "before_lacks_after_alg": true,
+    "expected": [
+     "HMAC_MD5_96",
+     "HMAC_SHA2_256_128"
+    ]
+   },
+   "fixed": true,
+   "pass": false,
+   "pass_device_state": true,
+   "regressions": [],
+   "reproduced": false
+  },
+  "RFC8221-AH-LEGACY": {
+   "after": {
+    "add_a": "\"x50-rfc8221ahlegacy-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "FAIL",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-AH-INTEG": "PASS",
+     "RFC8221-AH-LEGACY": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-rfc8221ahlegacy-after",
+    "before": "x50-rfc8221ahlegacy-before"
+   },
+   "before": {
+    "add_a": "\"x50-rfc8221ahlegacy-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "FAIL",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-AH-INTEG": "UNKNOWN",
+     "RFC8221-AH-LEGACY": "FAIL",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "RFC8221-ESP-3DES": {
+   "after": {
+    "add_a": "\"x50-rfc8221esp3des-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-rfc8221esp3des-after",
+    "before": "x50-rfc8221esp3des-before"
+   },
+   "before": {
+    "add_a": "\"x50-rfc8221esp3des-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "UNKNOWN",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "UNKNOWN",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "device_state": {
+    "after_has": true,
+    "before_has": true,
+    "before_lacks_after_alg": true,
+    "expected": [
+     "3DES_CBC",
+     "AES_GCM_16_256"
+    ]
+   },
+   "fixed": true,
+   "pass": false,
+   "pass_device_state": true,
+   "regressions": [],
+   "reproduced": false
+  },
+  "RFC8247-DH-MUST": {
+   "after": {
+    "add_a": "\"x50-rfc8247dhmust-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-rfc8247dhmust-after",
+    "before": "x50-rfc8247dhmust-before"
+   },
+   "before": {
+    "add_a": "\"x50-rfc8247dhmust-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "FAIL",
+     "RFC8247-DH-OFFER": "FAIL",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "FAIL",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "RFC8247-DH-OFFER": {
+   "after": {
+    "add_a": "\"x50-rfc8247dhoffer-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-rfc8247dhoffer-after",
+    "before": "x50-rfc8247dhoffer-before"
+   },
+   "before": {
+    "add_a": "\"x50-rfc8247dhoffer-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "FAIL",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "RFC8247-ENCR": {
+   "after": {
+    "add_a": "\"x50-rfc8247encr-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-rfc8247encr-after",
+    "before": "x50-rfc8247encr-before"
+   },
+   "before": {
+    "add_a": "\"x50-rfc8247encr-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "FAIL",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "V-207193": {
+   "after": {
+    "add_a": "\"x50-v207193-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-v207193-after",
+    "before": "x50-v207193-before"
+   },
+   "before": {
+    "add_a": "\"x50-v207193-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "FAIL",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "V-207205": {
+   "after": {
+    "add_a": "\"x50-v207205-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-v207205-after",
+    "before": "x50-v207205-before"
+   },
+   "before": {
+    "add_a": "\"x50-v207205-before\": added oriented IKEv1 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "UNKNOWN",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "UNKNOWN",
+     "CVE-WATCH-INIT-PAYLOADS": "UNKNOWN",
+     "CVE-WATCH-KE-MALFORMED": "UNKNOWN",
+     "DST-PQ-DOWNGRADE": "UNKNOWN",
+     "DST-PQ-KE": "UNKNOWN",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "FAIL",
+     "V-207223": "UNKNOWN"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  },
+  "V-207223": {
+   "after": {
+    "add_a": "\"x50-v207223-after\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "PASS",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
+   },
+   "arms": {
+    "after": "x50-v207223-after",
+    "before": "x50-v207223-before"
+   },
+   "before": {
+    "add_a": "\"x50-v207223-before\": added oriented IKEv2 connection",
+    "n_records": 1,
+    "ping_ok": true,
+    "rule_verdict": "FAIL",
+    "up": true,
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "FAIL"
+    }
+   },
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
+   "reproduced": true
+  }
+ }
+}

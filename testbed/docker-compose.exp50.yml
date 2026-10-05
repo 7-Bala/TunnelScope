@@ -1,0 +1,11 @@
+# EXP-50 override: the Libreswan pair reads the fix-template arms (before/after of each template).
+#   docker compose -f docker-compose.yml -f docker-compose.exp50.yml up -d router lsw-a lsw-b
+services:
+  lsw-a:
+    volumes:
+      - ./configs/exp50/ipsec.conf:/etc/ipsec.conf:ro
+      - ./configs/exp50/ipsec.secrets:/etc/ipsec.secrets:ro
+  lsw-b:
+    volumes:
+      - ./configs/exp50/ipsec.conf.b:/etc/ipsec.conf:ro
+      - ./configs/exp50/ipsec.secrets:/etc/ipsec.secrets:ro

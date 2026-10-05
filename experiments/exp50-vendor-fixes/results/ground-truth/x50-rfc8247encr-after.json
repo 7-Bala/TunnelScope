@@ -1,0 +1,21 @@
+{
+ "add_a": "\"x50-rfc8247encr-after\": added oriented IKEv2 connection",
+ "add_b": "\"x50-rfc8247encr-after\": added oriented IKEv2 connection",
+ "arm": "x50-rfc8247encr-after",
+ "capture_attempts": 1,
+ "capture_packets": "34",
+ "ping_ok": {
+  "1000": true,
+  "200": true,
+  "56": true
+ },
+ "replace_out": "ting IKE SA (ESTABLISHED_IKE_SA) aged 3.736433s and sending notification\n\"x50-rfc8247encr-after\" #24: ESP traffic information: in=6KiB out=6KiB\n\"x50-rfc8247encr-after\": added oriented IKEv2 connection",
+ "replace_rc": 0,
+ "rule": "RFC8247-ENCR",
+ "seconds": 4,
+ "state": "after",
+ "status_a": "\"x50-rfc8247encr-after\": 10.10.1.62[@a-x50-rfc8247encr-after]...10.10.2.62[@b-x50-rfc8247encr-after]; unrouted; my_ip=unset; their_ip=unset;\n\"x50-rfc8247encr-after\":   host: oriented; local: 10.10.1.62; remote: 10.10.2.62;\n\"x50-rfc8247encr-after\":   my_updown=ipsec _updown; my_updown-config=noasync,noexec;\n\"x50-rfc8247encr-after\":   xauth us:none, xauth them:none, my_username=[any]; their_username=[any]\n\"x50-rfc8247encr-after\":   our auth:secret, their auth:secret, our autheap:none, their autheap:none, send-supported-auth-methods:no;\n\"x50-rfc8247encr-after\":   modecfg info: us:none, them:none, modecfg policy:push, dns:unset, domains:unset, cat:unset;\n\"x50-rfc8247encr-after\":   cisco-split: no; cisco-unity: no; cisco-peer: no; nm-configured: no;\n\"x50-rfc8247encr-after\":   sec_label:unset;\n\"x50-rfc8247encr-after\":   ike_life: 28800s; ipsec_life: 28800s; ipsec_max_bytes: 2^63B; ipsec_max_packets: 2^63; replay_window: 128; rekey_margin: 540s; rekey_fuzz: 100%; clones: no (unset);\n\"x50-rfc8247encr-after\":   iptfs: no; fragmentation: yes; packet-size: 0; max-queue-size: 0; drop-time: 0; init-delay: 0; reorder-window: 0;\n\"x50-rfc8247encr-after\":   retransmit-interval: 500ms; retransmit-timeout: 30s; iketcp:no; iketcp-port:4500;\n\"x50-rfc8247encr-after\":   initial-contact:no; fake-strongswan:no; send-vendorid:no; send-no-esp-tfc:no;",
+ "trafficstatus_a": "",
+ "up_log": "\"x50-rfc8247encr-after\" #23: initiating IKEv2 connection to 10.10.2.62 using UDP\n\"x50-rfc8247encr-after\" #23: sent IKE_SA_INIT request to 10.10.2.62:UDP/500\n\"x50-rfc8247encr-after\" #23: processed IKE_SA_INIT response from 10.10.2.62:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_384_192 prf=HMAC_SHA2_384 ke=DH20}, initiating IKE_AUTH\n\"x50-rfc8247encr-after\" #23: sent IKE_AUTH request to 10.10.2.62:UDP/500 with shared-key-mac and FQDN '@a-x50-rfc8247encr-after'; Child SA #24 {ESP <0x0094ff1a} [10.10.1.62/32===10.10.2.62/32]\n\"x50-rfc8247encr-after\" #23: processing IKE_AUTH response from 10.10.2.62:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}\n\"x50-rfc8247encr-after\" #23: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-x50-rfc8247encr-after'\n\"x50-rfc8247encr-after\" #24: initiator established Child SA using #23; IPsec tunnel [10.10.1.62/32===10.10.2.62/32] {ESP/ESN=>0x71b4977d <0x0094ff1a xfrm=AES_GCM_16_256 DPD=passive}",
+ "up_rc": 0
+}

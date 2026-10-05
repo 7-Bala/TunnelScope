@@ -1,0 +1,21 @@
+{
+ "add_a": "\"x50-dstpqke-before\": added oriented IKEv2 connection",
+ "add_b": "\"x50-dstpqke-before\": added oriented IKEv2 connection",
+ "arm": "x50-dstpqke-before",
+ "capture_attempts": 1,
+ "capture_packets": "34",
+ "ping_ok": {
+  "1000": true,
+  "200": true,
+  "56": true
+ },
+ "replace_out": ": deleting IKE SA (ESTABLISHED_IKE_SA) aged 3.734144s and sending notification\n\"x50-dstpqke-before\" #26: ESP traffic information: in=6KiB out=6KiB\n\"x50-dstpqke-before\": added oriented IKEv2 connection",
+ "replace_rc": 0,
+ "rule": "DST-PQ-KE",
+ "seconds": 4,
+ "state": "before",
+ "status_a": "\"x50-dstpqke-before\": 10.10.1.63[@a-x50-dstpqke-before]...10.10.2.63[@b-x50-dstpqke-before]; unrouted; my_ip=unset; their_ip=unset;\n\"x50-dstpqke-before\":   host: oriented; local: 10.10.1.63; remote: 10.10.2.63;\n\"x50-dstpqke-before\":   my_updown=ipsec _updown; my_updown-config=noasync,noexec;\n\"x50-dstpqke-before\":   xauth us:none, xauth them:none, my_username=[any]; their_username=[any]\n\"x50-dstpqke-before\":   our auth:secret, their auth:secret, our autheap:none, their autheap:none, send-supported-auth-methods:no;\n\"x50-dstpqke-before\":   modecfg info: us:none, them:none, modecfg policy:push, dns:unset, domains:unset, cat:unset;\n\"x50-dstpqke-before\":   cisco-split: no; cisco-unity: no; cisco-peer: no; nm-configured: no;\n\"x50-dstpqke-before\":   sec_label:unset;\n\"x50-dstpqke-before\":   ike_life: 28800s; ipsec_life: 28800s; ipsec_max_bytes: 2^63B; ipsec_max_packets: 2^63; replay_window: 128; rekey_margin: 540s; rekey_fuzz: 100%; clones: no (unset);\n\"x50-dstpqke-before\":   iptfs: no; fragmentation: yes; packet-size: 0; max-queue-size: 0; drop-time: 0; init-delay: 0; reorder-window: 0;\n\"x50-dstpqke-before\":   retransmit-interval: 500ms; retransmit-timeout: 30s; iketcp:no; iketcp-port:4500;\n\"x50-dstpqke-before\":   initial-contact:no; fake-strongswan:no; send-vendorid:no; send-no-esp-tfc:no;",
+ "trafficstatus_a": "",
+ "up_log": "\"x50-dstpqke-before\" #25: initiating IKEv2 connection to 10.10.2.63 using UDP\n\"x50-dstpqke-before\" #25: sent IKE_SA_INIT request to 10.10.2.63:UDP/500\n\"x50-dstpqke-before\" #25: processed IKE_SA_INIT response from 10.10.2.63:UDP/500 {cipher=AES_CBC_256 integ=HMAC_SHA2_384_192 prf=HMAC_SHA2_384 ke=DH20}, initiating IKE_AUTH\n\"x50-dstpqke-before\" #25: sent IKE_AUTH request to 10.10.2.63:UDP/500 with shared-key-mac and FQDN '@a-x50-dstpqke-before'; Child SA #26 {ESP <0xc76a9372} [10.10.1.63/32===10.10.2.63/32]\n\"x50-dstpqke-before\" #25: processing IKE_AUTH response from 10.10.2.63:UDP/500 containing SK{IDr,AUTH,SA,TSi,TSr}\n\"x50-dstpqke-before\" #25: initiator established IKE SA; authenticated peer using authby=secret and FQDN '@b-x50-dstpqke-before'\n\"x50-dstpqke-before\" #26: initiator established Child SA using #25; IPsec tunnel [10.10.1.63/32===10.10.2.63/32] {ESP/ESN=>0x6078e7b7 <0xc76a9372 xfrm=AES_GCM_16_256 DPD=passive}",
+ "up_rc": 0
+}
