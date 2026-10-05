@@ -41,7 +41,10 @@ def ros(method, path, body=None):
 
 
 def ex(cmd):
-    return ros("POST", "execute", {"script": cmd})
+    """Run CLI text synchronously (`as-string`): without it RouterOS starts a background job and returns its id, and a read-back right after can
+    race it. A `set` that succeeds returns an empty string; anything else in `ret` is the device's error text."""
+    ok, r = ros("POST", "execute", {"script": cmd, "as-string": ""})
+    return ok, (r.get("ret") if ok and isinstance(r, dict) else r)
 
 
 def reset():
@@ -61,7 +64,7 @@ def item(path, field):
     ok, items = ros("GET", path)
     name = {"ip/ipsec/profile": "p50", "ip/ipsec/proposal": "pr50", "ip/ipsec/peer": "peer50"}.get(path)
     for it in items:
-        if name is None or it.get("name") == name:
+        if (name is not None and it.get("name") == name) or (name is None and it.get("peer") == "peer50"):    # policies have no name: ours uses peer50
             return it, it.get(field)
     return None, None
 
@@ -86,18 +89,18 @@ def main():
                 cmd = cmd.replace(k, v)
             ok, r = ex(cmd)
             runs.append({"cmd": cmd, "ok": ok, "ret": r})
-            if not ok:
+            if not ok or r:
                 errors.append(r)
         _, after = item(path, field)
         want = t["edits"][0]["set"][field]
         verify = t["verify"]
         for k, v in NAMES.items():
             verify = verify.replace(k, v)
-        ok_v, rv = ex(verify.split("; ")[0])
+        ok_v, rv = ex(verify.split("; ")[0])      # the template's verify command as written; its output is returned as a string
         row = {"weak_set": ok_w, "weak_read": weak_read, "commands": runs, "after_read": after, "expected": want, "verify_cmd": verify.split("; ")[0],
-               "verify_ok": ok_v, "verify_shows_value": ok_v and want in json.dumps(rv),
+               "verify_ok": ok_v, "verify_shows_value": bool(ok_v and rv and want in rv), "verify_output": (rv or "")[:300],
                "pass": bool(ok_w and norm(weak_read) == norm(weak) and not errors and norm(after) == norm(want) and norm(after) != norm(weak_read)
-                            and ok_v and want in json.dumps(rv))}
+                            and ok_v and bool(rv) and want in rv)}
         out["rules"][rule] = row
         print(f"{rule:26} weak={weak_read!s:22} after={after!s:14} expected={want!s:14} errors={len(errors)} verify={row['verify_shows_value']} PASS={row['pass']}")
     # probes: the documentation says no sha384; PQ names
@@ -107,7 +110,8 @@ def main():
         ok, r = ros("PATCH", f"ip/ipsec/profile/{it['.id']}", {"hash-algorithm": v})
         out["probes"][f"profile hash-algorithm={v}"] = {"accepted": ok, "read_back": item("ip/ipsec/profile", "hash-algorithm")[1], "reply": r if not ok else None}
     ok, r = ex("/ip ipsec profile set [ find name=p50 ] hash-algorithm=sha384")
-    out["probes"]["cli: /ip ipsec profile set hash-algorithm=sha384"] = {"accepted": ok, "reply": r if not ok else None}
+    out["probes"]["cli: /ip ipsec profile set hash-algorithm=sha384"] = {"accepted": bool(ok and not r), "reply": r or None,
+                                                                          "read_back": item("ip/ipsec/profile", "hash-algorithm")[1]}
     for val in ("mlkem768", "ml-kem-768", "kyber768"):
         for path, name, field in (("ip/ipsec/profile", "p50", "dh-group"), ("ip/ipsec/proposal", "pr50", "pfs-group")):
             it, _ = item(path, field)

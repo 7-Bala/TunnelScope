@@ -171,11 +171,8 @@
     }
    },
    "fixed": true,
-   "pass": false,
-   "regressions": [
-    "RFC8221-AH-INTEG",
-    "RFC8221-AH-LEGACY"
-   ],
+   "pass": true,
+   "regressions": [],
    "reproduced": true
   },
   "RFC8221-AH-INTEG": {
@@ -233,8 +230,18 @@
      "V-207223": "PASS"
     }
    },
+   "device_state": {
+    "after_has": true,
+    "before_has": true,
+    "before_lacks_after_alg": true,
+    "expected": [
+     "HMAC_MD5_96",
+     "HMAC_SHA2_256_128"
+    ]
+   },
    "fixed": true,
    "pass": false,
+   "pass_device_state": true,
    "regressions": [],
    "reproduced": false
   },
@@ -351,8 +358,18 @@
      "V-207223": "PASS"
     }
    },
+   "device_state": {
+    "after_has": true,
+    "before_has": true,
+    "before_lacks_after_alg": true,
+    "expected": [
+     "3DES_CBC",
+     "AES_GCM_16_256"
+    ]
+   },
    "fixed": true,
    "pass": false,
+   "pass_device_state": true,
    "regressions": [],
    "reproduced": false
   },
@@ -591,11 +608,27 @@
   "V-207205": {
    "after": {
     "add_a": "\"x50-v207205-after\": added oriented IKEv2 connection",
-    "n_records": 0,
+    "n_records": 1,
     "ping_ok": true,
-    "rule_verdict": null,
+    "rule_verdict": "PASS",
     "up": true,
-    "verdicts": {}
+    "verdicts": {
+     "CVE-2026-78135": "PASS",
+     "CVE-WATCH-INFO-BEFORE-AUTH": "PASS",
+     "CVE-WATCH-INIT-PAYLOADS": "PASS",
+     "CVE-WATCH-KE-MALFORMED": "PASS",
+     "DST-PQ-DOWNGRADE": "PASS",
+     "DST-PQ-KE": "FAIL",
+     "RFC4301-CONFIDENTIALITY": "PASS",
+     "RFC4303-SEQ": "PASS",
+     "RFC8221-ESP-3DES": "PASS",
+     "RFC8247-DH-MUST": "PASS",
+     "RFC8247-DH-OFFER": "PASS",
+     "RFC8247-ENCR": "PASS",
+     "V-207193": "PASS",
+     "V-207205": "PASS",
+     "V-207223": "PASS"
+    }
    },
    "arms": {
     "after": "x50-v207205-after",
@@ -622,14 +655,9 @@
      "V-207223": "UNKNOWN"
     }
    },
-   "fixed": false,
-   "pass": false,
-   "regressions": [
-    "RFC4301-CONFIDENTIALITY",
-    "RFC4303-SEQ",
-    "RFC8221-ESP-3DES",
-    "V-207193"
-   ],
+   "fixed": true,
+   "pass": true,
+   "regressions": [],
    "reproduced": true
   },
   "V-207223": {
