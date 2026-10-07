@@ -87,3 +87,23 @@ the best wins. **Ship rule:** P51-5, P51-6 and P51-7 all hold on lab G. Otherwis
 Deep or pretrained traffic models (rejected earlier; one 2025 cross-data-set study, arXiv 2507.06430, as summarised by a fetch tool
 and not read in full, reports a transformer at 0.28 transferred accuracy against 0.24 for one-nearest-neighbour). Relabelling USBVPN. New public data sets: none found with labelled IPsec packets; Dalhousie NIMS VPN 2024
 is flow records behind a subscription, so not usable.
+
+## Addendum A (2026-10-08, after R0 to R4 were scored, while lab H is being captured and before any model has seen a lab-H table)
+R0 to R4 are in `results/partial.json`: eight-family means 0.514, 0.467, 0.449, 0.520, 0.445; P51-1 and P51-2 are falsified; R4's
+session stage scores 0.609 grouped by session, so R4 fails P51-4 and R5 (R4 plus lab H) is expected to fail it too. The PREREG ties lab H
+only to that recipe. Two candidates are added so that lab H is also tested with the recipes that kept the guards or the mean:
+
+| | Change |
+|---|---|
+| R6 | R0 + lab H in training (v2 features, EXP-42's two copies, ten families) |
+| R7 | R3 + lab H in training (v3 features, speed copies, ten families) |
+
+They come after R5 in the table (so an earlier row within 0.01 still wins), and are judged by the same choice rule, guard, gate procedure and
+ship rule. Nothing else changes; R5 is still scored. This addendum was written knowing R0 to R4's numbers (including their lab-D and lab-F
+guard scores) and knowing nothing about how any model does on lab H or lab G.
+
+Also recorded here, both fixed in commit `2c3cad2` before any scored capture: lab H's `voip.amrnb` is dropped (the image has no AMR encoder),
+so lab H has 23 variants; its third link profile is 100 Mbit/s, not unshaped (an unshaped download is about 55,000 packets/s, a table far
+over the repository's 5 MB limit). Lab H's pages are generated locally (pages with scripts, styles, fonts and images of 1.5 kB to 400 kB),
+not mirrored from the internet. Lab G's `voip.g7231` was replaced by `voip.siren` (ffmpeg cannot send G.723.1 over RTP) and `icmp.pinga`
+by `icmp.ping200` (adaptive ping floods an unshaped link) after a smoke test that looked at packet counts only.

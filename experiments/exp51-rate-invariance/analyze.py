@@ -103,6 +103,9 @@ CANDIDATES = {
     "R3": dict(version="v3", aug="speed", stage2=False, lab_h=False),
     "R4": dict(version="v3", aug="speed", stage2=True, lab_h=False),
     "R5": dict(version="v3", aug="speed", stage2=True, lab_h=True),
+    # Addendum A (PREREG), added after R0-R4 were scored and before any model saw lab H
+    "R6": dict(version="v2", aug="e42", stage2=False, lab_h=True),
+    "R7": dict(version="v3", aug="speed", stage2=False, lab_h=True),
 }
 
 
