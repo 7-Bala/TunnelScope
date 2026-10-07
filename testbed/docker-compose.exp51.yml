@@ -1,0 +1,29 @@
+# EXP-51 labs H and G: two hosts behind the PQ gateways (as labs C to F); gateways send no ICMP redirects.
+#   docker compose -f docker-compose.yml -f docker-compose.exp51.yml up -d router alice-pq bob-pq labg-a labg-b
+services:
+  alice-pq:
+    sysctls: { net.ipv4.ip_forward: 1, net.ipv4.conf.all.rp_filter: 0, net.ipv4.conf.default.rp_filter: 0,
+               net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }
+  bob-pq:
+    sysctls: { net.ipv4.ip_forward: 1, net.ipv4.conf.all.rp_filter: 0, net.ipv4.conf.default.rp_filter: 0,
+               net.ipv4.conf.all.send_redirects: 0, net.ipv4.conf.default.send_redirects: 0 }
+  labg-a:
+    build: { context: ./images/labgh }
+    image: sih26-labgh
+    container_name: sih26-labg-a
+    hostname: labg-a
+    shm_size: 512m
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-a: { ipv4_address: 10.10.1.54 }
+    environment: { ROUTE_CIDR: 10.10.2.0/24, ROUTE_GW: 10.10.1.20 }
+    depends_on: [alice-pq]
+  labg-b:
+    image: sih26-labgh
+    container_name: sih26-labg-b
+    hostname: labg-b
+    cap_add: [NET_ADMIN, NET_RAW]
+    networks:
+      net-b: { ipv4_address: 10.10.2.54 }
+    environment: { ROUTE_CIDR: 10.10.1.0/24, ROUTE_GW: 10.10.2.20 }
+    depends_on: [bob-pq, labg-a]
