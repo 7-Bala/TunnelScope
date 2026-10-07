@@ -1,0 +1,22 @@
+e51a: #10, ESTABLISHED, IKEv2, a52bdc078c4c7409_i* 81f101a4076aacdf_r
+  local  'a-e51a' @ 10.10.1.20[4500]
+  remote 'b-e51a' @ 10.10.2.20[4500]
+  AES_CBC-128/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048
+  established 0s ago, rekeying in 12965s
+  e51a: #10, reqid 2, INSTALLED, TUNNEL, ESP:AES_GCM_16-256
+    installed 0s ago, expires in 7200s
+    in  c00f24bc,      0 bytes,     0 packets
+    out c33f154f,      0 bytes,     0 packets
+    local  10.10.1.0/24
+    remote 10.10.2.0/24
+t-tun: #9, ESTABLISHED, IKEv2, 46a4ffc2e8b1ba4f_i* ee51ca14191cd3e1_r
+  local  'a-t-tun' @ 10.10.1.210[4500]
+  remote 'b-t-tun' @ 10.10.2.210[4500]
+  AES_CBC-256/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048
+  established 130s ago, rekeying in 13312s
+  t-tun: #9, reqid 1, INSTALLED, TUNNEL, ESP:AES_GCM_16-256
+    installed 130s ago, expires in 7070s
+    in  c445fe5c,      0 bytes,     0 packets
+    out c1664f3f,      0 bytes,     0 packets
+    local  10.10.1.210/32
+    remote 10.10.2.210/32

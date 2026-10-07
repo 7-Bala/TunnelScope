@@ -93,3 +93,4 @@ testbed/captures/exp17/exp17-*.pcap
 demo-video/out/
 video_generator/
 brag-output/
+experiments/exp51-rate-invariance/results/*.pkl
