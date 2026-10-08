@@ -35,8 +35,8 @@ TypeScript** and **shadcn/ui** primitives (Collapsible, restyled crisp).
 The top bar switches between three views:
 
 - **Your captures** (default): drop `.pcap`/`.pcapng` files anywhere on the page. Each is sent to the
-  engine's `POST /api/analyze`, analysed by the real pipeline, and deleted right after. Results
-  include every verdict, every finding with its status and vantage, and what the capture can't show.
+  engine's `POST /api/analyze` and analysed by the real pipeline. Results
+  include every verdict, every finding with its status and vantage, the threat matrix, the risk score and the fixes.
 - **Live**: windows of a live stream the engine analyses as they close (`tunnelscope serve --live-...`).
 - **Sites**: each remote site's sensor status and posture, read from a collector
   (`TUNNELSCOPE_COLLECTOR_STATE`).
@@ -44,7 +44,7 @@ The top bar switches between three views:
 ```bash
 # the normal way: build once, then one command serves the dashboard and the engine
 npm install && npm run build      # writes dist/
-tunnelscope serve                 # http://127.0.0.1:8765, 127.0.0.1 only
+tunnelscope serve                 # http://127.0.0.1:8765
 
 # while working on the UI: Vite dev server, proxied to the engine
 tunnelscope serve --no-browser    # terminal 1
