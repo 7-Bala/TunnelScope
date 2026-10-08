@@ -75,10 +75,17 @@ class LiveMonitor:
             raise DependencyError("live --interface needs dumpcap (it ships with Wireshark/tshark)")
         self.dir.mkdir(parents=True, exist_ok=True)
         cmd = capture_command(dumpcap, self.interface, str(self.dir / "live.pcapng"), self.window, self.headers_only)
-        self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        # stderr goes to a file, not a pipe: nothing reads a pipe while the capture runs, so once it filled dumpcap
+        # would block on its next message and the capture would stall silently.
+        self._errlog = self.dir / "dumpcap.log"
+        with open(self._errlog, "w") as errfh:
+            self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=errfh, text=True)
         time.sleep(1.0)
         if self.proc.poll() is not None:
-            err = (self.proc.stderr.read() if self.proc.stderr else "").strip()
+            try:
+                err = self._errlog.read_text().strip()
+            except OSError:
+                err = ""
             raise DependencyError(
                 f"live: cannot capture on '{self.interface}': {err or 'dumpcap exited'}. "
                 "Capturing needs permission: on macOS install Wireshark's ChmodBPF, on Linux "
@@ -92,12 +99,23 @@ class LiveMonitor:
 
     # ---------------------------------------------------------------- windows
     def ready_files(self) -> list[Path]:
-        files = sorted((p for p in self.dir.iterdir() if p.suffix in EXTS and p.name not in self.done),
-                       key=lambda p: (p.stat().st_mtime, p.name))
-        if not files:
+        # A capture process (dumpcap's ring buffer, a sensor's rotation) can remove a file between the listing and
+        # the stat; an unhandled error here used to end the monitor thread for good, with /api/live still "enabled".
+        seen = []
+        try:
+            for p in self.dir.iterdir():
+                if p.suffix in EXTS and p.name not in self.done:
+                    try:
+                        seen.append((p.stat().st_mtime, p.name, p))
+                    except OSError:
+                        continue
+        except OSError:
             return []
-        newest = files[-1]
-        idle = time.time() - newest.stat().st_mtime > 2 * self.window
+        seen.sort(key=lambda x: (x[0], x[1]))
+        if not seen:
+            return []
+        files = [p for _, _, p in seen]
+        idle = time.time() - seen[-1][0] > 2 * self.window
         return files if idle else files[:-1]
 
     def process(self, path: Path) -> dict:
@@ -105,13 +123,17 @@ class LiveMonitor:
         from ..report.report import analyze
         from ..anomaly.anomaly import History, observe
         t0 = time.time()
-        row = {"file": path.name, "at": path.stat().st_mtime, "ok": True}
+        try:
+            at = path.stat().st_mtime
+        except OSError:
+            at = time.time()
+        row = {"file": path.name, "at": at, "ok": True}
         try:
             a = analyze(str(path))
             anomalies = observe(History(self.history), a["sas"], f"live:{path.name}") if self.history else None
             if anomalies:
                 from ..anomaly.alerts import alerts_from, write_alerts
-                items = alerts_from(anomalies, f"live:{path.name}", path.stat().st_mtime)
+                items = alerts_from(anomalies, f"live:{path.name}", at)
                 if items:
                     row["alert_items"] = items             # T-139: the site sensor forwards these
                 if self.alerts:

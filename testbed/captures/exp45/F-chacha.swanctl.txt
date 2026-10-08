@@ -1,0 +1,11 @@
+e45c: #31, ESTABLISHED, IKEv2, 1069d3fcb6452042_i* 95c3ccdc3b778e90_r
+  local  'a-e45c' @ 10.10.1.20[4500]
+  remote 'b-e45c' @ 10.10.2.20[4500]
+  AES_GCM_16-256/PRF_HMAC_SHA2_384/ECP_384
+  established 0s ago, rekeying in 13169s
+  e45c: #31, reqid 2, INSTALLED, TUNNEL, ESP:CHACHA20_POLY1305
+    installed 0s ago, expires in 7200s
+    in  c7f4c2eb,      0 bytes,     0 packets
+    out c72ae7a7,      0 bytes,     0 packets
+    local  10.10.1.0/24
+    remote 10.10.2.0/24

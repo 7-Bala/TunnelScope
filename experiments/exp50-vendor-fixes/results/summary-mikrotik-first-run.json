@@ -1,0 +1,239 @@
+{
+ "probes": {
+  "cli: /ip ipsec profile set hash-algorithm=sha384": {
+   "accepted": true,
+   "read_back": "sha384",
+   "reply": null
+  },
+  "dh-group=kyber768": {
+   "accepted": false,
+   "reply": {
+    "body": "{\"detail\":\"invalid value for argument dh-group\",\"error\":400,\"message\":\"Bad Request\"}",
+    "http": 400
+   }
+  },
+  "dh-group=ml-kem-768": {
+   "accepted": false,
+   "reply": {
+    "body": "{\"detail\":\"invalid value for argument dh-group\",\"error\":400,\"message\":\"Bad Request\"}",
+    "http": 400
+   }
+  },
+  "dh-group=mlkem768": {
+   "accepted": false,
+   "reply": {
+    "body": "{\"detail\":\"invalid value for argument dh-group\",\"error\":400,\"message\":\"Bad Request\"}",
+    "http": 400
+   }
+  },
+  "pfs-group=kyber768": {
+   "accepted": false,
+   "reply": {
+    "body": "{\"detail\":\"input does not match any value of pfs-group\",\"error\":400,\"message\":\"Bad Request\"}",
+    "http": 400
+   }
+  },
+  "pfs-group=ml-kem-768": {
+   "accepted": false,
+   "reply": {
+    "body": "{\"detail\":\"input does not match any value of pfs-group\",\"error\":400,\"message\":\"Bad Request\"}",
+    "http": 400
+   }
+  },
+  "pfs-group=mlkem768": {
+   "accepted": false,
+   "reply": {
+    "body": "{\"detail\":\"input does not match any value of pfs-group\",\"error\":400,\"message\":\"Bad Request\"}",
+    "http": 400
+   }
+  },
+  "profile hash-algorithm=sha384": {
+   "accepted": true,
+   "read_back": "sha384",
+   "reply": null
+  }
+ },
+ "rules": {
+  "RFC4301-CONFIDENTIALITY": {
+   "after_read": "esp",
+   "commands": [
+    {
+     "cmd": "/ip ipsec policy set [ find ipsec-protocols=ah ] ipsec-protocols=esp",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "esp",
+   "pass": false,
+   "verify_cmd": "/ip ipsec policy print detail where ipsec-protocols=ah",
+   "verify_ok": true,
+   "verify_output": "",
+   "verify_shows_value": false,
+   "weak_read": "ah",
+   "weak_set": true
+  },
+  "RFC8221-AH-INTEG": {
+   "after_read": "sha256",
+   "commands": [
+    {
+     "cmd": "/ip ipsec proposal set [ find name=pr50 ] auth-algorithms=sha256",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "sha256",
+   "pass": true,
+   "verify_cmd": "/ip ipsec proposal print detail where name=pr50",
+   "verify_ok": true,
+   "verify_output": "1  name=\"pr50\" auth-algorithms=sha256\r\n   enc-algorithms=aes-256-cbc,aes-192-cbc,aes-128-cbc lifetime=30m\r\n   pfs-group=modp1024",
+   "verify_shows_value": true,
+   "weak_read": "md5",
+   "weak_set": true
+  },
+  "RFC8221-AH-LEGACY": {
+   "after_read": "sha256",
+   "commands": [
+    {
+     "cmd": "/ip ipsec proposal set [ find name=pr50 ] auth-algorithms=sha256",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "sha256",
+   "pass": true,
+   "verify_cmd": "/ip ipsec proposal print detail where name=pr50",
+   "verify_ok": true,
+   "verify_output": "2  name=\"pr50\" auth-algorithms=sha256\r\n   enc-algorithms=aes-256-cbc,aes-192-cbc,aes-128-cbc lifetime=30m\r\n   pfs-group=modp1024",
+   "verify_shows_value": true,
+   "weak_read": "sha1",
+   "weak_set": true
+  },
+  "RFC8221-ESP-3DES": {
+   "after_read": "3des",
+   "commands": [
+    {
+     "cmd": "/ip ipsec proposal set [ find name=pr50 ] enc-algorithms=aes-256-gcm",
+     "ok": true,
+     "ret": "failure: AEAD already provides authentication (/ip/ipsec/proposal/set *0 = default) (/ip/ipsec/proposal/set; line 1)"
+    }
+   ],
+   "expected": "aes-256-gcm",
+   "pass": false,
+   "verify_cmd": "/ip ipsec proposal print detail where name=pr50",
+   "verify_ok": true,
+   "verify_output": "3  name=\"pr50\" auth-algorithms=sha1 enc-algorithms=3des lifetime=30m\r\n   pfs-group=modp1024",
+   "verify_shows_value": false,
+   "weak_read": "3des",
+   "weak_set": true
+  },
+  "RFC8247-DH-MUST": {
+   "after_read": "ecp384",
+   "commands": [
+    {
+     "cmd": "/ip ipsec profile set [ find name=p50 ] dh-group=ecp384",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "ecp384",
+   "pass": true,
+   "verify_cmd": "/ip ipsec profile print detail where name=p50",
+   "verify_ok": true,
+   "verify_output": "2  name=\"p50\" hash-algorithm=sha1 enc-algorithm=aes-128,3des dh-group=ecp384\r\n   lifetime=1d proposal-check=obey nat-traversal=yes ppk=no dpd-interval=8s\r\n   dpd-maximum-failures=4",
+   "verify_shows_value": true,
+   "weak_read": "modp1024",
+   "weak_set": true
+  },
+  "RFC8247-DH-OFFER": {
+   "after_read": "ecp384",
+   "commands": [
+    {
+     "cmd": "/ip ipsec profile set [ find name=p50 ] dh-group=ecp384",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "ecp384",
+   "pass": true,
+   "verify_cmd": "/ip ipsec profile print detail where name=p50",
+   "verify_ok": true,
+   "verify_output": "3  name=\"p50\" hash-algorithm=sha1 enc-algorithm=aes-128,3des dh-group=ecp384\r\n   lifetime=1d proposal-check=obey nat-traversal=yes ppk=no dpd-interval=8s\r\n   dpd-maximum-failures=4",
+   "verify_shows_value": true,
+   "weak_read": "modp2048,modp1024",
+   "weak_set": true
+  },
+  "RFC8247-ENCR": {
+   "after_read": "aes-256",
+   "commands": [
+    {
+     "cmd": "/ip ipsec profile set [ find name=p50 ] enc-algorithm=aes-256",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "aes-256",
+   "pass": true,
+   "verify_cmd": "/ip ipsec profile print detail where name=p50",
+   "verify_ok": true,
+   "verify_output": "4  name=\"p50\" hash-algorithm=sha1 enc-algorithm=aes-256\r\n   dh-group=modp2048,modp1024 lifetime=1d proposal-check=obey nat-traversal=yes\r\n   ppk=no dpd-interval=8s dpd-maximum-failures=4",
+   "verify_shows_value": true,
+   "weak_read": "3des",
+   "weak_set": true
+  },
+  "V-207193": {
+   "after_read": "ecp384",
+   "commands": [
+    {
+     "cmd": "/ip ipsec profile set [ find name=p50 ] dh-group=ecp384",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "ecp384",
+   "pass": true,
+   "verify_cmd": "/ip ipsec profile print detail where name=p50",
+   "verify_ok": true,
+   "verify_output": "0  name=\"p50\" hash-algorithm=sha1 enc-algorithm=aes-128,3des dh-group=ecp384\r\n   lifetime=1d proposal-check=obey nat-traversal=yes ppk=no dpd-interval=8s\r\n   dpd-maximum-failures=4",
+   "verify_shows_value": true,
+   "weak_read": "modp2048",
+   "weak_set": true
+  },
+  "V-207205": {
+   "after_read": "ike2",
+   "commands": [
+    {
+     "cmd": "/ip ipsec peer set [ find name=peer50 ] exchange-mode=ike2",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "ike2",
+   "pass": true,
+   "verify_cmd": "/ip ipsec peer print detail where name=peer50",
+   "verify_ok": true,
+   "verify_output": "0  name=\"peer50\" address=10.99.0.2/32 profile=p50 exchange-mode=ike2\r\n   send-initial-contact=yes",
+   "verify_shows_value": true,
+   "weak_read": "main",
+   "weak_set": true
+  },
+  "V-207223": {
+   "after_read": "sha512",
+   "commands": [
+    {
+     "cmd": "/ip ipsec profile set [ find name=p50 ] hash-algorithm=sha512",
+     "ok": true,
+     "ret": ""
+    }
+   ],
+   "expected": "sha512",
+   "pass": true,
+   "verify_cmd": "/ip ipsec profile print detail where name=p50",
+   "verify_ok": true,
+   "verify_output": "1  name=\"p50\" hash-algorithm=sha512 enc-algorithm=aes-128,3des\r\n   dh-group=modp2048,modp1024 lifetime=1d proposal-check=obey nat-traversal=yes\r\n   ppk=no dpd-interval=8s dpd-maximum-failures=4",
+   "verify_shows_value": true,
+   "weak_read": "sha256",
+   "weak_set": true
+  }
+ },
+ "version": "7.24.4 (stable)"
+}

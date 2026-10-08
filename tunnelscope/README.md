@@ -28,7 +28,8 @@ names the rule and the standard behind it.
 | Endpoint cross-check | endpoint telemetry reconciled with the wire findings (`build/02-CROSSTIER.md`) |
 | Compliance | versioned YAML baselines: DISA VPN SRG, RFC 8247, RFC 8221/4303, DST/NQM post-quantum |
 | Threat matrix and risk score | threats rated by likelihood and impact, one 0-100 score |
-| Fixes | remediation plan for every failed rule; automatic apply and verify for strongSwan settings |
+| Fixes | remediation plan for every failed rule; automatic apply and verify for strongSwan settings, in the lab or on a real gateway over SSH |
+| SIEM export | Elastic ECS, RFC 5424 syslog, Zeek log, Suricata EVE-style JSON |
 | CBOM | CycloneDX 1.6 |
 | Evidence ledger | hash-chained findings and verdicts, verifiable later |
 
@@ -46,6 +47,7 @@ tunnelscope assess   capture.pcap          # verdicts vs named baselines
 tunnelscope explain  capture.pcap          # the verdicts in plain English
 tunnelscope cbom     capture.pcap          # CycloneDX CBOM (JSON)
 tunnelscope report   capture.pcap          # executive + technical report
+tunnelscope export   capture.pcap --format ecs   # SIEM export (also syslog, zeek, eve)
 tunnelscope ledger   capture.pcap          # tamper-evident evidence ledger
 tunnelscope ledger-verify ledger.json      # check the ledger's hash chain
 tunnelscope dashboard capture.pcap -o d.html  # self-contained HTML dashboard
@@ -56,6 +58,8 @@ tunnelscope live --follow DIR              # analyse a live stream window by win
 tunnelscope config swanctl.conf            # read a config file: its crypto in the same names as the wire findings
 tunnelscope reconcile capture.pcap swanctl.conf --conn NAME   # does the traffic match the config?
 tunnelscope analyze  capture.pcap --json   # machine-readable
+tunnelscope fix RULE --target gw:NAME      # apply and verify a fix (lab container or a real gateway)
+tunnelscope gateway list                   # real strongSwan gateways: add, terms, accept, withdraw
 tunnelscope doctor                         # check the stack
 tunnelscope serve                          # local dashboard at http://127.0.0.1:8765
 ```

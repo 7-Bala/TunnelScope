@@ -1,0 +1,18 @@
+{
+ "arm": "V02",
+ "established": false,
+ "ground_truth": {
+  "fortigate_ike_gateway": "vd: root/0\nname: tsc-p1\nversion: 1\ninterface: port2 4\naddr: 10.50.0.1:500 -> 10.50.0.2:500\ntun_id: 10.50.0.2/::10.50.0.2\nremote_location: 0.0.0.0\nnetwork-id: 0\ntransport: UDP\ncreated: 119s ago\npeer-id: 10.50.0.2\npeer-id-auth: no\npending-queue: 0\nIKE SA: created 1/1  established 1/1  time 10/10/10 ms\nIPsec SA: created 0/0\n\n  id/spi: 958 413d4ef973215c25/8fc894ed10482e5c\n  direction: initiator\n  status: established 119-119s ago = 10ms\n  proposal: des-sha256\n  key: <redacted>\n  QKD: no\n  PQC-KEM (IKE): no\n  PQC-KEM (all IPsec): no SAs\n  lifetime/rekey: 86400/85980\n  DPD sent/recv: 00000000/00000000\n  peer-id: 10.50.0.2",
+  "fortigate_tunnel": "list ipsec tunnel by names in vd 0\n------------------------------------------------------\nname=tsc-p1 ver=1 serial=1 10.50.0.1:0->10.50.0.2:0 nexthop=0.0.0.0 tun_id=10.50.0.2 tun_id6=::10.50.0.2 status=up dst_mtu=1500 weight=1\nbound_if=4 real_if=4 lgwy=static/1 tun=intf mode=auto/1 encap=none/552 options[0228]=npu frag-rfc  run_state=0 role=primary accept_traffic=0 overlay_id=0\n\nproxyid_num=1 child_num=0 refcnt=5 ilast=1738 olast=1738 ad=/0\nstat: rxp=0 txp=0 rxb=0 txb=0\ndpd: mode=on-demand on=1 status=ok idle=20000ms retry=3 count=0 seqno=0\nnatt: mode=none draft=0 interval=0 remote_port=0\nfec: egress=0 ingress=0\nproxyid=tsc-p2 proto=0 sa=0 ref=1 serial=23\n  src: 0:10.61.0.0-10.61.0.255:0\n  dst: 0:10.62.0.0-10.62.0.255:0",
+  "peer_log": "'received packet|sending packet' | head -60 | cut -c17-200\npeer daemon.info : 15[ENC] parsed AGGRESSIVE request 0 [ SA KE No ID V V V V V V V V V V ]\npeer daemon.info : 15[IKE] received NAT-T (RFC 3947) vendor ID\npeer daemon.info : 15[IKE] received draft-ietf-ipsec-nat-t-ike-03 vendor ID\npeer daemon.info : 15[IKE] received draft-ietf-ipsec-nat-t-ike-02 vendor ID\npeer daemon.info : 15[IKE] received draft-ietf-ipsec-nat-t-ike-02\\n vendor ID\npeer daemon.info : 15[ENC] received unknown vendor ID: 16:f6:ca:16:e4:a4:06:6d:83:82:1a:0f:0a:ea:a8:62\npeer daemon.info : 15[IKE] received draft-ietf-ipsec-nat-t-ike-00 vendor ID\npeer daemon.info : 15[IKE] received DPD vendor ID\npeer daemon.info : 15[IKE] received FRAGMENTATION vendor ID\npeer daemon.info : 15[IKE] received FRAGMENTATION vendor ID\npeer daemon.info : 15[ENC] received unknown vendor ID: 82:99:03:17:57:a3:60:82:c6:a6:21:de:00:00:00:00\npeer daemon.info : 15[IKE] 10.50.0.1 is initiating a Aggressive Mode IKE_SA\npeer authpriv.info : 15[IKE] 10.50.0.1 is initiating a Aggressive Mode IKE_SA\npeer daemon.info : 15[CFG] selected proposal: IKE:DES_CBC/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048\npeer daemon.info : 15[CFG] looking for pre-shared key peer configs matching 10.50.0.2...10.50.0.1[fgt]\npeer daemon.info : 15[CFG] selected peer config \"fgt\"\npeer daemon.info : 15[ENC] generating AGGRESSIVE response 0 [ SA KE No ID V V V V NAT-D NAT-D HASH ]\npeer daemon.info : 10[ENC] parsed AGGRESSIVE request 0 [ HASH NAT-D NAT-D N(INITIAL_CONTACT) ]\npeer daemon.info : 10[IKE] IKE_SA fgt[17] established between 10.50.0.2[10.50.0.2]...10.50.0.1[fgt]\npeer authpriv.info : 10[IKE] IKE_SA fgt[17] established between 10.50.0.2[10.50.0.2]...10.50.0.1[fgt]\npeer daemon.info : 10[IKE] scheduling rekeying in 14110s\npeer daemon.info : 10[IKE] maximum IKE_SA lifetime 15550s",
+  "peer_sas": "fgt: #17, ESTABLISHED, IKEv1, 413d4ef973215c25_i 8fc894ed10482e5c_r*\n  local  '10.50.0.2' @ 10.50.0.2[500]\n  remote 'fgt' @ 10.50.0.1[500]\n  DES_CBC/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048\n  established 121s ago, rekeying in 13989s"
+ },
+ "params": {
+  "dh": 14,
+  "hash": "sha256",
+  "ike": 1,
+  "mode": "aggressive"
+ },
+ "pings": null,
+ "seconds": 131
+}

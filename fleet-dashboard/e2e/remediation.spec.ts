@@ -110,7 +110,7 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         await approve(page)
         await expect(page.getByRole("button", { name: `Apply remediation in lab for ${RULE}` })).toBeDisabled()
         await expect(page.getByRole("button", { name: `Preview the real change for ${RULE}` })).toBeEnabled()
-        await expect(pane.getByText("Local-model drafts are switched off")).toBeVisible()
+        await expect(pane.getByText("AI drafting is off on this server")).toBeVisible()
         await expect(page.getByRole("button", { name: `Draft a fix with the local model for ${RULE}` })).toHaveCount(0)
         await invariants(page, seen)
       })
@@ -252,8 +252,8 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         })
         const pane = await openPane(page)
         await approve(page)
-        await expect(pane.getByText(/sends the failing rule and the lab connection.s current settings to that service/)).toBeVisible()
-        await page.getByRole("button", { name: `Draft a fix with the cloud model for ${RULE}` }).click()
+        await expect(pane.getByText(/sends the failing rule and this connection.s current settings to that service/)).toBeVisible()
+        // DEC-064: no click: approving the change starts the draft, once
         await expect(pane.getByText("Cloud model's draft", { exact: true })).toBeVisible()
         await expect(pane.getByText(/Drafted by a cloud model this machine sent a request to/)).toBeVisible()
         await expect(page.getByRole("radio", { name: `Use the cloud model's draft for ${RULE}` })).toBeVisible()
@@ -270,8 +270,8 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         const pane = await openPane(page)
         await approve(page)
         await expect(pane.getByText("The local model is not available on this machine.")).toHaveCount(0)
-        await expect(pane.getByText(/sends the failing rule and the lab connection.s current settings to that service/)).toBeVisible()
-        await page.getByRole("button", { name: `Draft a fix with the cloud model for ${RULE}` }).click()
+        await expect(pane.getByText(/sends the failing rule and this connection.s current settings to that service/)).toBeVisible()
+        // DEC-064: no click: approving the change starts the draft, once
         await expect(page.getByRole("radio", { name: `Use the cloud model's draft for ${RULE}` })).toBeVisible()
         expect(seen.generate).toBe(1)
         await invariants(page, seen)
@@ -387,6 +387,19 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         await invariants(page, seen)
       })
 
+      test("B1-31 the automatic draft is refused: the hand-written fix stays selected and is what gets previewed", async ({ page }) => {
+        const seen = await mockEngine(page, { caps: CAPS_ON, generate: DRAFT_REFUSED_V4 })
+        const pane = await openPane(page)
+        await approve(page)
+        await expect(pane.getByText("The local model's draft did not pass the checks.")).toBeVisible()
+        expect(seen.generate).toBe(1)
+        await expect(page.getByRole("radio", { name: `Use the local model's draft for ${RULE}` })).toHaveCount(0)
+        await page.getByRole("button", { name: `Preview the real change for ${RULE}` }).click()
+        await expect(pane.getByText("+        proposals = aes128-sha1-modp4096").first()).toBeVisible()
+        expect(seen.preview[0]).toMatchObject({ rule_id: RULE, plan_id: null })
+        await invariants(page, seen)
+      })
+
       test("B1-09 draft agrees: both columns, all checks listed, draft previewed and applied by its id", async ({ page }) => {
         const seen = await mockEngine(page, {
           caps: CAPS_ON,
@@ -396,14 +409,15 @@ for (const vp of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
         })
         const pane = await openPane(page)
         await approve(page)
-        await page.getByRole("button", { name: `Draft a fix with the local model for ${RULE}` }).click()
+        // DEC-064: approving the change starts the draft by itself
         await expect(pane.getByText("Both make the same change.")).toBeVisible()
         await expect(pane.getByText("Hand-written fix", { exact: true })).toBeVisible()
         await expect(pane.getByText("Local model's draft", { exact: true })).toBeVisible()
         await expect(pane.getByText(/Drafted on this Mac by a local language model/)).toBeVisible()
         await expect(pane.locator("li", { hasText: "passed" })).toHaveCount(10)
-        await expect(page.getByRole("radio", { name: `Use the hand-written fix for ${RULE}` })).toBeChecked()
-        await page.getByRole("radio", { name: `Use the local model's draft for ${RULE}` }).check()
+        await expect(page.getByRole("radio", { name: `Use the local model's draft for ${RULE}` })).toBeChecked()
+        await expect(page.getByRole("radio", { name: `Use the hand-written fix for ${RULE}` })).not.toBeChecked()
+        expect(seen.generate).toBe(1)
         await page.getByRole("button", { name: `Preview the real change for ${RULE}` }).click()
         await page.getByRole("button", { name: `Apply remediation in lab for ${RULE}` }).click()
         await expect(pane.getByText("Plan used: the local model's draft (checked by code)")).toBeVisible()

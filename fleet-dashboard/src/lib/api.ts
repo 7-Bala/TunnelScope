@@ -209,7 +209,7 @@ export interface Anomaly {
 
 export interface AnomalyResult {
   tunnel: string
-  status: "learning" | "normal" | "anomalous"
+  status: "learning" | "normal" | "anomalous" | "no_evidence"
   observations: number
   needed?: number
   anomalies: Anomaly[]
@@ -393,6 +393,16 @@ export type RemediationPreview = {
   digest?: string
   source?: "hand-written" | "generated"
   plan_id?: string | null
+  /** DEC-063: present only for a real gateway. Apply needs `ack_phrase` typed back exactly. */
+  live?: {
+    gateway: string
+    host: string
+    connection: string
+    peer: string | null
+    risks: string[]
+    ack_phrase: string
+    watchdog_timeout_s: number
+  }
 }
 
 export type RemediationCapabilities = {
@@ -472,15 +482,76 @@ export async function generateRemediation(ruleId: string, target: string, observ
   }
 }
 
-export type LabTarget = { name: string; running: boolean }
+export type LabTarget = {
+  name: string
+  running: boolean
+  /** DEC-063: a real gateway reached over SSH, not a lab container */
+  live?: boolean
+  host?: string
+  connection?: string
+  /** the terms and risks are accepted for this gateway (and still valid) */
+  accepted?: boolean
+  accept_phrase?: string
+  consent_reason?: string | null
+}
+
+type GatewayRow = {
+  name: string
+  host: string
+  connection: string
+  accepted: boolean
+  accept_phrase: string
+  consent: { accepted: boolean; reason: string | null }
+}
 
 export async function remediationTargets(): Promise<{ targets: LabTarget[]; recommended: string } | null> {
   try {
     const res = await fetch("/api/remediate/targets", { cache: "no-store" })
     if (!res.ok) return null
-    return (await res.json()) as { targets: LabTarget[]; recommended: string }
+    const b = (await res.json()) as { targets: LabTarget[]; recommended: string; gateways?: GatewayRow[] }
+    const gws: LabTarget[] = (b.gateways ?? []).map((g) => ({
+      name: g.name,
+      running: true,
+      live: true,
+      host: g.host,
+      connection: g.connection,
+      accepted: g.accepted,
+      accept_phrase: g.accept_phrase,
+      consent_reason: g.consent?.reason ?? null,
+    }))
+    return { targets: [...b.targets, ...gws], recommended: b.recommended }
   } catch {
     return null
+  }
+}
+
+export type GatewayTerms = { version: string; title: string; clauses: string[]; sha256: string }
+
+export async function gatewayTerms(): Promise<GatewayTerms | null> {
+  try {
+    const res = await fetch("/api/remediate/terms", { cache: "no-store" })
+    if (!res.ok) return null
+    return (await res.json()) as GatewayTerms
+  } catch {
+    return null
+  }
+}
+
+export async function acceptGatewayTerms(
+  target: string,
+  typed: string,
+  acceptedBy: string,
+  termsSha256: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch("/api/remediate/terms/accept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target, typed, accepted_by: acceptedBy, terms_sha256: termsSha256 }),
+    })
+    return (await res.json()) as { ok: boolean; error?: string }
+  } catch (e) {
+    return { ok: false, error: String(e) }
   }
 }
 
@@ -501,14 +572,21 @@ export async function applyRemediation(
   ruleId: string,
   target: string,
   confirm: boolean = true,
-  opts: { digest?: string; planId?: string | null } = {},
+  opts: { digest?: string; planId?: string | null; riskAck?: string | null } = {},
 ): Promise<RemediationApplyResult> {
   let res: Response
   try {
     res = await fetch("/api/remediate/apply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rule_id: ruleId, target, confirm, digest: opts.digest ?? null, plan_id: opts.planId ?? null }),
+      body: JSON.stringify({
+        rule_id: ruleId,
+        target,
+        confirm,
+        digest: opts.digest ?? null,
+        plan_id: opts.planId ?? null,
+        risk_ack: opts.riskAck ?? null,
+      }),
     })
   } catch (e) {
     // The request may already have reached the engine and changed the lab before the connection

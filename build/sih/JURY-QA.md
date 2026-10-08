@@ -48,7 +48,9 @@ No. Every failed check gets a remediation plan with the exact change. For weak s
 TunnelScope applies the fix itself: the command is checked against an allowlist, the change is tried on
 a copy and loaded in a throwaway copy of the VPN, the current state is saved, the fix is applied, and a
 fresh capture confirms the rule now passes and nothing else got worse. If anything fails it rolls back
-automatically, and every step goes into an audit log.
+automatically, and every step goes into an audit log. It works in the lab and on real strongSwan
+gateways over SSH, where a named person accepts written terms for the gateway first and confirms each
+change with the exact sentence the preview shows.
 
 ## About trust
 

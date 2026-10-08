@@ -667,3 +667,65 @@ flagged mixed with K4). Detector retrained on leave-one-family-out probabilities
 P44-1 falsified: best cross-validated catch 78.6% at 2.2% false flags (bar 80%), 28 mixed sessions only. Not shipped; the current
 detector stays. Post-hoc for the owner: the near-miss candidate would answer 15/32 lab-D sessions (all right) instead of 11, letting
 1/12 EXP-05 mixed sessions through. `experiments/exp44-mixed-recalibrate/RESULT.md`
+
+## EXP-45 — More kinds of real traffic: lab E (training) and lab F (final test) — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp45-more-diversity/PREREG.md` (1acd160). Candidates K4/K7/K8/K9, mixed-check retraining with 92 mixed
+sessions, ship rule fixed before any capture. Harness and scorer committed before capture (9477d65).
+
+### EXP-45 — RESULT (2026-10-04)
+Nothing ships. Held: P45-1 (+0.059 on the eight-family held-out mean, K8), P45-2 (lab F 0.724 vs shipped 0.603), P45-3 (interactive
+0.75), P45-4 (83.7% caught / 7.6% flagged in cross-validation), P45-7 (16 of 16 mixed not answered). Failed: P45-5 (new check flags
+32.6% of lab-F singles, bar 25%) and P45-6 (9 of 9 gated answers right but only 9 of 46 answered, bar 50%). The gate, not the
+classifier, is the binding limit. Also found: the shipped model's gated answers on lab F are 4 of 6 right (11 of 11 on lab D).
+`experiments/exp45-more-diversity/RESULT.md`
+
+## EXP-50 — Per-vendor fix templates: Libreswan and MikroTik RouterOS (T-123) — PRE-REGISTRATION (2026-10-05)
+`experiments/exp50-vendor-fixes/PREREG.md` before any template, test or lab run; addenda A-E each dated before the run it governs. 12 config rules x {Libreswan, MikroTik}; the five patch rules get no template. Bars: H1 every keyword documented, H2 Libreswan closed loop
+(weak state FAIL on the wire, template applied as written, tunnel up, rule PASS, no PASS -> FAIL elsewhere), H3 RouterOS device check, H4 strongSwan plans byte-identical, H5 provenance on every template, H6 unknown vendor is an error.
+
+### EXP-50 — RESULT (2026-10-05)
+Libreswan 5.4: 12 of 12 (10 `lab`, 2 `lab-device-state` because the wire cannot show the weak state). RouterOS 7.24.4 CHR: 10 of 10 on the third run (8, 9 before; faults were in the templates), `lab-device-state`, no tunnel negotiated. 34 strongSwan plan hashes identical to the base.
+Found by the labs, not by the documentation: RouterOS accepts `hash-algorithm=sha384` (page omits it); RouterOS refuses GCM next to `auth-algorithms=null` (an empty value works); Libreswan `ipsec replace` (not `ipsec auto`), `keyexchange=`; no post-quantum key exchange on RouterOS 7.24.4. DEC-058.
+`experiments/exp50-vendor-fixes/RESULT.md`
+## EXP-46 — SIEM export: Elastic ECS JSON and RFC 5424 syslog (T-129) — PRE-REGISTRATION (2026-10-02)
+Pre-registered in `experiments/exp46-siem-export/PREREG.md` (991e939) before any code and any run; ADDENDUM A (cb1c69f)
+before the run that counts. One event per verdict as ECS 9.5.0 JSON or RFC 5424 syslog, verified against Elasticsearch 9.5.4
+and Filebeat 9.5.4 in Docker. Bars: every non-`tunnelscope.*` field valid against the official `ecs_flat.yml`; Elasticsearch
+accepts everything with 0 errors and 0 `_ignored` fields; per-rule counts equal the CLI's independent `assess --json`; every
+syslog line parses in a strict RFC 5424 parser and in Filebeat with no error and no field changed; no network code; output
+deterministic.
+
+### EXP-46 — RESULT (2026-10-02)
+767 captures + the ten EXP-35 captures under the NIST profile: 11,290 verdict events + 3 alerts. H1 0 violations; H2 11,293
+stored, 0 errors, 0 ignored; H3 0 differences over 73 rule/verdict pairs; H4 11,293 lines, Filebeat 0 errors and 0 differences;
+H5 0 network imports, `assess` byte-identical to origin/main; H6 0 differences. Negative controls tripped (a malformed
+`source.ip` is dropped silently by Elasticsearch; only `_ignored` shows it). 16 mutation checks caught. DEC-059.
+`experiments/exp46-siem-export/RESULT.md`
+
+## EXP-48 — Zeek and Suricata bridge (T-128) — PRE-REGISTRATION (2026-10-04)
+`experiments/exp48-zeek-suricata/PREREG.md` before any code or scored run; addenda A-C dated before the scored run. `export --format zeek|eve`; bars H1 (real Zeek reader reads every
+row back, hostile values included), H2 (EVE envelope equals Suricata's), H3 (join keys, misses explained), H4 (cross-check with Suricata's IKE algorithms, 0 undiagnosed), H5
+(what the sensors cannot see, reported), H6 (no side effects).
+
+### EXP-48 — RESULT (2026-10-04)
+145 captures, Suricata 8.0.7 and Zeek 9.0.0 in Docker. H1 2,259/2,259 rows read back exactly; H2 0 violations in 2,246 lines; H3 150/150 by address pair, 130/150 by SPI pair (20 explained);
+H4 125 of 126 SAs agree, 1 disagreement diagnosed (Suricata logs the retried offer's last transforms; TunnelScope right); H5 Zeek `service` empty on 235/235 IKE connections, no
+KeyExchange payload visible in 18 Suricata CREATE_CHILD_SA events; H6 ecs/syslog byte-identical. DEC-061. `experiments/exp48-zeek-suricata/RESULT.md`
+## EXP-47 — A FortiGate-VM (FortiOS 7.6.7) as an independent IKE implementation (T-118 step 2) — PRE-REGISTRATION (2026-10-03)
+Pre-registered in `experiments/exp47-fortigate/PREREG.md` (28d7ed0) before any scored capture; addenda A-E before the runs they govern. A FortiGate-VM ARM64
+(unlicensed, DES-only evaluation state) against a strongSwan peer on a virtual wire, 18 arms (10 IKEv2 suites, IKEv1 main and aggressive, FortiGate as
+responder, three rekey arms, two failures), ground truth from the device's own diagnostics. Bar: every finding equals the device's report or is UNKNOWN, never wrong.
+
+### EXP-47 — RESULT (2026-10-04)
+H1 held (0 wrong handshake values in 16 arms; IKEv2 and IKEv1; DH groups 2-31). Predicted failures confirmed: IKE cipher DES printed as `encr-2` (14 IKEv2 arms), and the ESP
+candidate set lacked the true DES-CBC+HMAC-SHA-2 family (12 arms). Fixed: names for IANA ids 1, 2, 4-9; three sieve families; after the fix all seven bars pass and nothing else moves
+(corpus: 64 of 418 ESP findings gain the three families, 6 lose the "CBC excluded" refinement). D3 (`pfs=False` asserted when the IKE group is not visible, wrong on a mid-stream ECP-256 PFS capture) fixed on the owner's approval 2026-10-04: UNKNOWN there; 4 corpus records change as predicted (addendum F). Lab faults disclosed (stale peer config, handshake outside the capture). DEC-060.
+`experiments/exp47-fortigate/RESULT.md`
+## EXP-49 — Analysis throughput on one Mac (T-125) — PRE-REGISTRATION (2026-10-04)
+`experiments/exp49-throughput/PREREG.md` before any measurement; addendum A (interleaved A/D check) dated before it ran. Window analysis only, synthetic ESP with ground truth, no live capture (no capture permission).
+Bars: H1 exact packet accounting at every size, H2 loud timeout, H3 damaged file flagged, H6 product untouched; H4/H5 measured and derived; five predictions.
+
+### EXP-49 — RESULT (2026-10-04)
+Apple M4 / 16 GB / macOS 27.0.1. H1 15/15 exact up to 3x10^6 packets; H2 and H3 pass; 32-41 k packets/s = 0.36-0.46 Gbps represented per core; Python memory 1.24 KB/packet; P1-P5 held (P1 by a hair; machine not idle).
+Capture-side drops are silent by code reading (T-165). DEC-062. `experiments/exp49-throughput/RESULT.md`
+

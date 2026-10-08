@@ -1,0 +1,34 @@
+{
+ "python": {
+  "label": "Python",
+  "ratio": 1
+ },
+ "sklearn": {
+  "label": "scikit-learn",
+  "ratio": 1.848
+ },
+ "wireshark": {
+  "label": "Wireshark (tshark)",
+  "ratio": 1
+ },
+ "strongswan": {
+  "label": "strongSwan",
+  "ratio": 1.766
+ },
+ "react": {
+  "label": "React",
+  "ratio": 1.123
+ },
+ "typescript": {
+  "label": "TypeScript",
+  "ratio": 1
+ },
+ "docker": {
+  "label": "Docker",
+  "ratio": 1.391
+ },
+ "linux": {
+  "label": "Linux",
+  "ratio": 0.824
+ }
+}

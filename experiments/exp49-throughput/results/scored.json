@@ -1,0 +1,243 @@
+{
+ "bars": {
+  "H1": {
+   "failures": [],
+   "pass": true,
+   "runs": 15
+  },
+  "H2": {
+   "pass": true,
+   "returncode": 2,
+   "stderr": "tunnelscope: tshark timed out after 2s on /private/tmp/claude-501/-Users-bala-Documents-SIH-2026/e3f6599f-2303-45b7-bef2-2b467bd971c1/scratchpad/exp49/H2.pcap \u2014 raise TUNNELSCOPE_TSHARK_TIMEOUT if this capture is genuinely large",
+   "stdout_bytes": 0
+  },
+  "H3": {
+   "cases": [
+    {
+     "cut": "inside last packet",
+     "error": null,
+     "esp_in_records": 99999,
+     "n_esp_summary": 99999,
+     "truncated": true,
+     "whole_packets_before_cut": 99999
+    },
+    {
+     "cut": "inside last record header",
+     "error": null,
+     "esp_in_records": 99999,
+     "n_esp_summary": 99999,
+     "truncated": true,
+     "whole_packets_before_cut": 99999
+    }
+   ],
+   "pass": true
+  },
+  "H5_derived": {
+   "assumption": "windows analysed one after another in one process; per-packet cost as measured at 10^6 packets; memory for that window (rss 1772 MB) fits; not measured on a live interface",
+   "packets_per_30s_window": 996795.0436382631,
+   "represented_gbps_at_1400B": 0.3721368162916182,
+   "sustainable_pps_at_1e6_rate": 33226.50145460877,
+   "window_s": 30
+  }
+ },
+ "hardware": {
+  "commit": "d2bd25081ea215cafec7f3add2a6efd39e7509b5",
+  "cores": 10,
+  "cpu": "Apple M4",
+  "mac": "27.0.1",
+  "machine": "arm64",
+  "python": "3.13.5",
+  "ram_bytes": 17179869184,
+  "tshark": "TShark (Wireshark) 4.6.4 (Git commit f7c4a74874d9)."
+ },
+ "predictions": {
+  "P1": {
+   "held": true,
+   "per_packet_time_ratio_1e6_over_1e5": 1.2265225279611673
+  },
+  "P2": {
+   "held": true,
+   "pps": [
+    40753.05255941214,
+    33226.50145460877,
+    32279.355440988867
+   ],
+   "represented_gbps": [
+    0.4564341886654161,
+    0.37213681629161816,
+    0.3615287809390753
+   ]
+  },
+  "P3": {
+   "held": true,
+   "kb_per_packet_at_largest": 1.241726976,
+   "n": 3000000,
+   "rss_python_mb": 3725.180928
+  },
+  "P4": {
+   "full_over_headers_only_time_at_1e5": 1.2097428353724886,
+   "held": true
+  },
+  "P5": {
+   "held": true,
+   "tshark_share": [
+    0.8399634391430422,
+    0.6041428119975912,
+    0.7437571706402586,
+    0.5133666290264268,
+    0.8530249624499741,
+    0.8501932830287118
+   ]
+  }
+ },
+ "table": [
+  {
+   "exact": true,
+   "file_mb": 0.960024,
+   "file_mb_s_median": 1.7559871464080976,
+   "load_avg_1m_before": [
+    4.22,
+    4.22,
+    4.22
+   ],
+   "n": 10000,
+   "pps_median": 18291.075498196897,
+   "represented_gbps_median": 0.20486004557980525,
+   "reps": 3,
+   "rss_largest_tshark_mb": 97.32096,
+   "rss_python_mb": 54.607872,
+   "scenario": "A",
+   "tshark_passes": 4,
+   "tshark_share": 0.9217078699839261,
+   "wall_s_max": 0.5567323750001378,
+   "wall_s_median": 0.546714707999854,
+   "wall_s_min": 0.5461645830000634
+  },
+  {
+   "exact": true,
+   "file_mb": 9.600024,
+   "file_mb_s_median": 3.91230282643618,
+   "load_avg_1m_before": [
+    4.2,
+    4.2,
+    4.1
+   ],
+   "n": 100000,
+   "pps_median": 40753.05255941214,
+   "represented_gbps_median": 0.4564341886654161,
+   "reps": 3,
+   "rss_largest_tshark_mb": 103.759872,
+   "rss_python_mb": 219.971584,
+   "scenario": "A",
+   "tshark_passes": 4,
+   "tshark_share": 0.8399634391430422,
+   "wall_s_max": 2.4726939579995815,
+   "wall_s_median": 2.4538039170001866,
+   "wall_s_min": 2.43421537499853
+  },
+  {
+   "exact": true,
+   "file_mb": 96.000024,
+   "file_mb_s_median": 3.1897449370784763,
+   "load_avg_1m_before": [
+    6.51
+   ],
+   "n": 1000000,
+   "pps_median": 33226.50145460877,
+   "represented_gbps_median": 0.37213681629161816,
+   "reps": 1,
+   "rss_largest_tshark_mb": 103.776256,
+   "rss_python_mb": 1771.503616,
+   "scenario": "A",
+   "tshark_passes": 4,
+   "tshark_share": 0.6041428119975912,
+   "wall_s_max": 30.09645783400083,
+   "wall_s_median": 30.09645783400083,
+   "wall_s_min": 30.09645783400083
+  },
+  {
+   "exact": true,
+   "file_mb": 288.000024,
+   "file_mb_s_median": 3.098818380569775,
+   "load_avg_1m_before": [
+    5.61
+   ],
+   "n": 3000000,
+   "pps_median": 32279.355440988867,
+   "represented_gbps_median": 0.3615287809390753,
+   "reps": 1,
+   "rss_largest_tshark_mb": 103.71072,
+   "rss_python_mb": 3725.180928,
+   "scenario": "A",
+   "tshark_passes": 4,
+   "tshark_share": 0.7437571706402586,
+   "wall_s_max": 92.93865874999938,
+   "wall_s_median": 92.93865874999938,
+   "wall_s_min": 92.93865874999938
+  },
+  {
+   "exact": true,
+   "file_mb": 96.000024,
+   "file_mb_s_median": 2.339684075809421,
+   "load_avg_1m_before": [
+    5.74
+   ],
+   "n": 1000000,
+   "pps_median": 24371.703030089044,
+   "represented_gbps_median": 0.27296307393699726,
+   "reps": 1,
+   "rss_largest_tshark_mb": 104.431616,
+   "rss_python_mb": 1896.824832,
+   "scenario": "B",
+   "tshark_passes": 4,
+   "tshark_share": 0.5133666290264268,
+   "wall_s_max": 41.03119091699955,
+   "wall_s_median": 41.03119091699955,
+   "wall_s_min": 41.03119091699955
+  },
+  {
+   "exact": true,
+   "file_mb": 9.623084,
+   "file_mb_s_median": 3.242534574428318,
+   "load_avg_1m_before": [
+    5.68,
+    5.68,
+    5.63
+   ],
+   "n": 100000,
+   "pps_median": 33713.57397585337,
+   "represented_gbps_median": 0.37744772604953086,
+   "reps": 3,
+   "rss_largest_tshark_mb": 103.858176,
+   "rss_python_mb": 221.741056,
+   "scenario": "C",
+   "tshark_passes": 4,
+   "tshark_share": 0.8530249624499741,
+   "wall_s_max": 2.976070000000618,
+   "wall_s_median": 2.967766042000221,
+   "wall_s_min": 2.9024412079998
+  },
+  {
+   "exact": true,
+   "file_mb": 141.600024,
+   "file_mb_s_median": 47.70132173346743,
+   "load_avg_1m_before": [
+    5.63,
+    5.66,
+    5.52
+   ],
+   "n": 100000,
+   "pps_median": 33687.368395832644,
+   "represented_gbps_median": 0.37729852603332564,
+   "reps": 3,
+   "rss_largest_tshark_mb": 103.71072,
+   "rss_python_mb": 218.48064,
+   "scenario": "D",
+   "tshark_passes": 4,
+   "tshark_share": 0.8501932830287118,
+   "wall_s_max": 3.0350463329996273,
+   "wall_s_median": 2.9684717079999245,
+   "wall_s_min": 2.9612072090003494
+  }
+ ]
+}

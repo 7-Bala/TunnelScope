@@ -11,7 +11,8 @@ scoped exception (this one file may mention a cloud provider; nothing else may, 
 finding/verdict/risk/anomaly module may import this one).
 
 Off by default, and off unless ALL of:
-  - TUNNELSCOPE_NETWORK=on (DEC-040: the single switch for everything that leaves the machine);
+  - the network is not switched off (TUNNELSCOPE_NETWORK, DEC-040's single switch for everything that leaves the
+    machine; on by default since DEC-045, an air-gapped install sets it off);
   - a Gemini API key is set (never in a committed file; see .env.example). TUNNELSCOPE_KEY_PURPOSE
     (e.g. `dev`, `demo`, `experiment`) picks TUNNELSCOPE_GEMINI_API_KEY_<PURPOSE> if set, else
     TUNNELSCOPE_GEMINI_API_KEY. Keys are separated by job, never rotated to get round a quota
@@ -25,6 +26,11 @@ version lines, and the vocabulary of strongSwan keywords the lab image accepts. 
 and any traffic content are never part of the prompt. This backend is reachable only through the
 generator's existing scope (DEC-034 D-D: the lab-only `t-tun` connection, never a real capture or a
 real gateway) — nothing about a real analysed capture is ever sent here.
+
+DEC-055 (owner, 2026-10-04) adds one more caller: tunnelscope/rephrase/api.py may ask this client to REWORD
+explanation sentences. Those do describe a real analysed capture (rule ids, algorithm names, counts), with every IP
+address replaced by a placeholder before sending; each reworded sentence is kept only if the fact check in
+rephrase.py passes. Off unless the operator sets TUNNELSCOPE_REPHRASE_BACKEND=api.
 """
 from __future__ import annotations
 

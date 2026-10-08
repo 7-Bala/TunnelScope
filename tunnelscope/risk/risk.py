@@ -119,6 +119,13 @@ def threats(record, verdicts, anomaly: dict | None = None) -> list[Threat]:
     rule_threat(Threat("TH-07", "No confidentiality (plaintext payload)", 3,
                        "AH authenticates but does not encrypt: anyone on the path reads the content"),
                 [("RFC4301-CONFIDENTIALITY", 3)])
+    for tt in out:
+        if tt.id == "TH-07" and tt.status == "mitigated":
+            # The rule only tells AH-only from ESP. ESP with NULL encryption (RFC 2410) authenticates without
+            # encrypting, the cipher is negotiated inside encrypted IKE_AUTH, and the size sieve cannot exclude NULL
+            # (its packet geometry fits every AEAD and CBC tunnel too). So ESP in use is "not seen", never "mitigated".
+            tt.status, tt.reason = "not_seen", ("ESP carries this traffic, so it is not AH-only plaintext; whether "
+                                                "ESP itself encrypts (it could be NULL encryption) is not visible passively")
     rule_threat(Threat("TH-08", "Replay of captured packets", 2,
                        "an attacker re-sends recorded packets; only the receiver's anti-replay window stops them"),
                 [("RFC4303-SEQ", 3)])
@@ -169,6 +176,8 @@ def threats(record, verdicts, anomaly: dict | None = None) -> list[Threat]:
         t.evidence, t.reason = ["anomaly"], "; ".join(a["message"] for a in real[:3])
     elif anomaly and anomaly.get("status") == "normal":
         t.status, t.reason, t.evidence = "mitigated", "matches this tunnel's learned normal", ["anomaly"]
+    elif anomaly and anomaly.get("status") == "no_evidence":
+        t.reason = "this SA shows no key exchange or traffic to compare, so drift cannot be judged"
     else:
         t.reason = ("still learning this tunnel's normal" if anomaly else
                     "anomaly history is off (start the engine with --history)")

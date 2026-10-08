@@ -209,9 +209,19 @@ def local_model_available() -> bool:
 
 
 def generator_enabled() -> bool:
-    """DEC-034 D-E: local-model drafts are OFF until EXP-18's H1 and H2 bars pass and a decision
-    row turns them on. Only an explicit TUNNELSCOPE_GENERATOR=1 (lab testing) enables them."""
-    return os.environ.get("TUNNELSCOPE_GENERATOR") == "1"
+    """DEC-064 (replaces DEC-034 D-E): AI drafting is ON by default whenever a cloud model can be called here (an API
+    key is set and the network is not switched off), and never in the public demo. TUNNELSCOPE_GENERATOR=1 forces it
+    on (the on-device model too), TUNNELSCOPE_GENERATOR=0 turns it off. With no key it stays off and the hand-written
+    fix is used. The drafting models are still below the pre-registered ship bar (EXP-18b: 12/16 and 13/16 confirmed);
+    every draft is still checked by code, dry-run, shown for approval and re-verified live with rollback."""
+    if public_demo():
+        return False
+    v = os.environ.get("TUNNELSCOPE_GENERATOR", "").strip()
+    if v == "1":
+        return True
+    if v == "0":
+        return False
+    return cloud_model_available()
 
 
 _CLOUD_MODEL: list[bool] = []
@@ -231,15 +241,50 @@ def cloud_model_available() -> bool:
 
 
 def generator_backend() -> str:
-    """DEC-038: which model drafts, chosen only by this server-side setting — never by a client
-    request. "local" (default, on-device) unless an operator sets
-    TUNNELSCOPE_GENERATOR_BACKEND=cloud (see tunnelscope/remediate/cloud_client.py for which provider)."""
-    b = os.environ.get("TUNNELSCOPE_GENERATOR_BACKEND", "local").strip().lower()
-    return b if b in ("cloud", "chain") else "local"
+    """DEC-038: which model drafts, chosen only by this server-side setting — never by a client request.
+    TUNNELSCOPE_GENERATOR_BACKEND=local|cloud|chain if set. Unset (DEC-064): "chain" (the cloud models in order) when
+    a cloud model can be called here, else "local" (on-device)."""
+    raw = os.environ.get("TUNNELSCOPE_GENERATOR_BACKEND", "").strip().lower()
+    if not raw:
+        return "chain" if cloud_model_available() else "local"
+    return raw if raw in ("cloud", "chain") else "local"
+
+
+# Binding to 127.0.0.1 keeps other MACHINES out, not other web pages in this user's browser: a page can point a
+# hostname it controls at 127.0.0.1 (DNS rebinding) and then read and post to this server as "same origin". So a
+# request must NAME this server as a local host, and a request sent by a page must come from a local page.
+_LOCAL_HOSTS = {"127.0.0.1", "localhost", "[::1]", "::1"}
+
+
+def _hostname(hostport: str) -> str:
+    h = (hostport or "").strip().lower()
+    if h.startswith("["):                       # [::1]:8765
+        return h.split("]", 1)[0] + "]"
+    return h.rsplit(":", 1)[0] if ":" in h else h
+
+
+def request_is_local(headers) -> bool:
+    """False for a request whose Host is not this machine, or whose Origin is another site. Not applied in the public
+    demo (it is served under the platform's own hostname and changes nothing)."""
+    if public_demo():
+        return True
+    if _hostname(headers.get("Host", "")) not in _LOCAL_HOSTS:
+        return False
+    origin = headers.get("Origin")
+    if origin:
+        return urlparse(origin).scheme in ("http", "https") and (urlparse(origin).hostname or "") in {"127.0.0.1", "localhost", "::1"}
+    return True
 
 
 class _Handler(BaseHTTPRequestHandler):
     server_version = "TunnelScope/0.2"
+
+    def _refuse_foreign(self) -> bool:
+        if request_is_local(self.headers):
+            return False
+        self._json(403, {"ok": False, "error": "refused: this server answers only requests made to 127.0.0.1 / "
+                                               "localhost from a local page"})
+        return True
 
     def _json(self, status: int, payload: dict) -> None:
         body = json.dumps(payload, default=str).encode()
@@ -277,6 +322,8 @@ class _Handler(BaseHTTPRequestHandler):
         return True
 
     def do_GET(self):  # noqa: N802 (stdlib method name)
+        if self._refuse_foreign():
+            return
         path = urlparse(self.path).path
         if public_demo() and path in ("/api/remediate/targets", "/api/live", "/api/sites", "/api/history"):
             self._json(403, {"ok": False, "error": DEMO_REFUSAL})
@@ -315,7 +362,7 @@ class _Handler(BaseHTTPRequestHandler):
                                  "sites": sites_status(state)})
         elif path == "/api/intel":
             # T-130 part 2: known vulnerabilities for a fingerprinted implementation, only when the dashboard asks
-            # (a button, never automatic). Online only with TUNNELSCOPE_NETWORK=on; otherwise the cache/bundle.
+            # (a button, never automatic). Online unless TUNNELSCOPE_NETWORK=off (on by default, DEC-045); then the cache/bundle.
             from ..intel.lookup import lookup
             from ..intel.sources import PRODUCTS
             impl = (parse_qs(urlparse(self.path).query).get("implementation") or [""])[0]
@@ -324,8 +371,13 @@ class _Handler(BaseHTTPRequestHandler):
             else:
                 self._json(200, {"ok": True, **lookup(impl)})
         elif path == "/api/remediate/targets":
-            from ..remediate.execute import lab_targets
-            self._json(200, {"ok": True, "targets": lab_targets(), "recommended": "sih26-alice-pq"})
+            from ..remediate.execute import gateway_list, lab_targets
+            self._json(200, {"ok": True, "targets": lab_targets(), "recommended": "sih26-alice-pq",
+                             "gateways": gateway_list(HISTORY_DIR)})
+        elif path == "/api/remediate/terms":
+            # DEC-063: the terms and risks a person must accept before a real gateway can be changed
+            from ..remediate import gateways
+            self._json(200, {"ok": True, **gateways.terms()})
         elif path.startswith("/api/"):
             self._json(404, {"ok": False, "error": "not found"})
         elif path == "/basic" or not self._static(path):
@@ -353,7 +405,15 @@ class _Handler(BaseHTTPRequestHandler):
         if not isinstance(body, dict) or "rule_id" not in body:
             self._json(400, {"ok": False, "error": "missing rule_id"})
             return
-        plan = plan_for(body.get("rule_id"), observed=body.get("observed"), detailed=bool(body.get("detailed", False)))
+        vendor = body.get("vendor")
+        try:
+            plan = plan_for(body.get("rule_id"), observed=body.get("observed"), detailed=bool(body.get("detailed", False)),
+                            vendor=vendor if isinstance(vendor, str) else None)
+            if vendor is not None and not isinstance(vendor, str):
+                raise ValueError("vendor must be a string")
+        except ValueError as e:
+            self._json(400, {"ok": False, "error": str(e)})
+            return
         if plan is None:
             self._json(404, {"ok": False, "error": "unknown rule"})
             return
@@ -404,6 +464,7 @@ class _Handler(BaseHTTPRequestHandler):
                 plan_id=body.get("plan_id"),
                 digest=body.get("digest"),
                 require_digest=True,   # T-104: the dashboard applies only what it previewed
+                risk_ack=body.get("risk_ack") if isinstance(body.get("risk_ack"), str) else None,
             )
             # A refusal is the caller's to fix (400). A change that ran and was rolled back
             # is a real outcome, reported with 200 like a successful one.
@@ -473,14 +534,15 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if not generator_enabled():
             self._json(403, {"ok": False, "stage": "disabled",
-                             "error": "local-model drafts are off until the EXP-18 evaluation passes (DEC-034)"})
+                             "error": "AI drafting is off here: no cloud API key is set (or the network is switched off, or "
+                                      "TUNNELSCOPE_GENERATOR=0). The hand-written fix is used."})
             return
         try:
             from ..remediate import execute, generate
             backend = generator_backend()
             res = generate.generate_plan(body["rule_id"], body["target"], body.get("observed"),
                                          compare_with_handwritten=True, backend=backend,
-                                         **generate.shipped_settings(backend))
+                                         history_dir=HISTORY_DIR, **generate.shipped_settings(backend))
             if res.get("ok"):
                 res["plan_id"] = execute.store_generated_plan(res["plan"], body["target"], HISTORY_DIR)
             plan = res.get("plan") or {}
@@ -495,7 +557,28 @@ class _Handler(BaseHTTPRequestHandler):
             sys.stderr.write(f"[tunnelscope serve] remediate generate error: {e}\n")
             self._json(500, {"ok": False, "stage": "internal", "error": "unexpected server error while drafting"})
 
+    def _remediate_terms(self, action: str) -> None:
+        """DEC-063: accept or withdraw the terms and risks for one registered gateway."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        target = body.get("target")
+        if not isinstance(target, str) or not target:
+            self._json(400, {"ok": False, "error": "target is required"})
+            return
+        from ..remediate import execute
+        if action == "accept":
+            res = execute.accept_terms(target, body.get("typed") if isinstance(body.get("typed"), str) else "",
+                                       body.get("accepted_by") if isinstance(body.get("accepted_by"), str) else "",
+                                       HISTORY_DIR, terms_sha256=body.get("terms_sha256") if isinstance(body.get("terms_sha256"), str) else None)
+        else:
+            res = execute.withdraw_terms(target, body.get("by") if isinstance(body.get("by"), str) else self.address_string(),
+                                         HISTORY_DIR)
+        self._json(200 if res.get("ok") else 400, res)
+
     def do_POST(self):  # noqa: N802
+        if self._refuse_foreign():
+            return
         url = urlparse(self.path)
         if public_demo() and url.path.startswith("/api/remediate/"):
             self._json(403, {"ok": False, "error": DEMO_REFUSAL})
@@ -512,6 +595,9 @@ class _Handler(BaseHTTPRequestHandler):
         self._upload(url)
 
     def _upload(self, url) -> None:
+        if url.path in ("/api/remediate/terms/accept", "/api/remediate/terms/withdraw"):
+            self._remediate_terms("accept" if url.path.endswith("accept") else "withdraw")
+            return
         if url.path == "/api/remediate/plan":
             self._remediate_plan()
             return
@@ -567,14 +653,20 @@ class _Handler(BaseHTTPRequestHandler):
                                   "html": render_sas_html(a)})
         except Exception as e:  # a bad-but-magic-matching file must not crash the server
             print(f"[tunnelscope serve] {name}: {type(e).__name__}: {e}", file=sys.stderr)
-            self._json(200, {"ok": False, "filename": name,
-                              "error": f"tshark could not parse this capture ({type(e).__name__})."})
+            # Only an input/dependency error is the capture's fault; anything else is a fault in TunnelScope and
+            # must not be reported to the analyst as a bad file.
+            from ..errors import TunnelScopeError
+            msg = (f"tshark could not parse this capture ({type(e).__name__})." if isinstance(e, TunnelScopeError)
+                   else f"TunnelScope hit an internal error analysing this capture ({type(e).__name__}); "
+                        "the capture itself may be fine.")
+            self._json(200, {"ok": False, "filename": name, "error": msg})
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
     def log_message(self, fmt, *args):  # keep stderr access logging, just tag it
-        if self.path == "/health":  # start.sh polls this; don't drown the log
+        # http.server logs a malformed request line BEFORE it sets self.path
+        if getattr(self, "path", "") == "/health":  # start.sh polls this; don't drown the log
             return
         sys.stderr.write(f"[tunnelscope serve] {self.address_string()} - {fmt % args}\n")
 

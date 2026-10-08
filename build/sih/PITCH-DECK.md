@@ -59,8 +59,9 @@ _The content is encrypted; the shape of the traffic is not._
 
 ## 7 · It fixes what it finds
 - Every failed check gets a remediation plan: what is wrong, which standard says so, the exact change.
-- For weak strongSwan settings TunnelScope applies the fix itself: allowlisted command, dry run on a
-  copy, apply, capture again to confirm, automatic rollback if anything breaks, full audit log.
+- For weak strongSwan settings TunnelScope applies the fix itself, in the lab or on a real gateway
+  over SSH: allowlisted command, dry run on a copy, apply, capture again to confirm, automatic
+  rollback if anything breaks, full audit log. A real gateway needs accepted written terms first.
 _Demo: a failed rule, the proposed change, "Confirmed fixed"._
 
 ---
@@ -68,7 +69,8 @@ _Demo: a failed rule, the proposed change, "Confirmed fixed"._
 ## 8 · What the user gets
 Dashboard (single tunnel, fleet, live), executive and technical reports, a CycloneDX cryptographic bill
 of materials for post-quantum planning, a tamper-evident evidence ledger, and a config check that
-compares a strongSwan or Libreswan file with what appeared on the wire.
+compares a strongSwan or Libreswan file with what appeared on the wire. Verdicts export to a SIEM as
+Elastic ECS, syslog, Zeek or Suricata EVE-style JSON, and live alerts as ECS, syslog or JSON lines.
 
 ---
 

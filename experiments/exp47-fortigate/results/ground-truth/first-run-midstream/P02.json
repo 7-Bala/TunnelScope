@@ -1,0 +1,27 @@
+{
+ "arm": "P02",
+ "established": true,
+ "ground_truth": {
+  "fortigate_ike_gateway": "vd: root/0\nname: tsc-p1\nversion: 2\ninterface: port2 4\naddr: 10.50.0.1:500 -> 10.50.0.2:500\ntun_id: 10.50.0.2/::10.50.0.2\nremote_location: 0.0.0.0\nnetwork-id: 0\ntransport: UDP\ncreated: 346s ago\npeer-id: 10.50.0.2\npeer-id-auth: no\npending-queue: 0\nPPK: no\nIKE SA: created 1/1  established 1/1  time 10/10/10 ms\nIPsec SA: created 1/4  established 1/4  time 0/5/10 ms\n\n  id/spi: 76 9418a0a0ad485c75/7316d50192cd1c87\n  direction: initiator\n  status: established 346-346s ago = 10ms\n  proposal: des-sha256\n  child: no\n  SK_ei: <redacted>\n  SK_er: <redacted>\n  SK_ai: <redacted>\n  SK_ar: <redacted>\n  PPK: no\n  message-id sent/recv: 8/0\n  QKD: no\n  PQC-KEM (IKE): no\n  PQC-KEM (all IPsec): no\n  lifetime/rekey: 86400/85753\n  DPD sent/recv: 00000000/00000000\n  peer-id: 10.50.0.2",
+  "fortigate_tunnel": "list ipsec tunnel by names in vd 0\n------------------------------------------------------\nname=tsc-p1 ver=2 serial=1 10.50.0.1:0->10.50.0.2:0 nexthop=0.0.0.0 tun_id=10.50.0.2 tun_id6=::10.50.0.2 status=up dst_mtu=1500 weight=1\nbound_if=4 real_if=4 lgwy=static/1 tun=intf mode=auto/1 encap=none/552 options[0228]=npu frag-rfc  run_state=0 role=primary accept_traffic=1 overlay_id=0\n\nproxyid_num=1 child_num=0 refcnt=5 ilast=3 olast=3 ad=/0\nstat: rxp=73 txp=73 rxb=17460 txb=17460\ndpd: mode=on-demand on=1 status=ok idle=20000ms retry=3 count=0 seqno=0\nnatt: mode=none draft=0 interval=0 remote_port=0\nfec: egress=0 ingress=0\nproxyid=tsc-p2 proto=0 sa=1 ref=5 serial=15\n  src: 0:10.61.0.0-10.61.0.255:0\n  dst: 0:10.62.0.0-10.62.0.255:0\n  SA:  ref=3 options=10002 type=00 soft=0 mtu=1446 expire=14/0B replaywin=2048\n       seqno=d esn=0 replaywin_lastseq=00000009 qat=0 rekey=0 hash_search_len=1\n  life: type=01 bytes=0/0 timeout=90/120\n  dec: spi=ade1f735 esp=des key=8 <redacted>\n       ah=sha256 key=32 <redacted>\n  enc: spi=c8924138 esp=des key=8 <redacted>\n       ah=sha256 key=32 <redacted>\n  dec:pkts/bytes=9/756, enc:pkts/bytes=12/1008\n  npu_flag=00 npu_rgwy=0.0.0.0:0 npu_lgwy=0.0.0.0:0 npu_selid=0\n  dec_npuid=0 enc_npuid=0 dec_engid=-1 enc_engid=-1 dec_saidx=-1 enc_saidx=-1",
+  "peer_log": "out|giving up' /var/log/messages 2>/dev/null | tail -5\nOct  3 16:25:43 peer daemon.info : 12[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 16:26:14 peer daemon.info : 14[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 16:26:45 peer daemon.info : 06[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 16:27:16 peer daemon.info : 03[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN\nOct  3 16:27:22 peer daemon.info : 16[IKE] no IKE config found for 10.50.0.2...10.50.0.1, sending NO_PROPOSAL_CHOSEN",
+  "peer_sas": "fgt: #10, ESTABLISHED, IKEv2, 9418a0a0ad485c75_i 7316d50192cd1c87_r*\n  local  '10.50.0.2' @ 10.50.0.2[500]\n  remote '10.50.0.1' @ 10.50.0.1[500]\n  DES_CBC/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/MODP_2048\n  established 348s ago, rekeying in 12918s\n  net: #4, reqid 1, INSTALLED, TUNNEL, ESP:DES_CBC/HMAC_SHA2_256_128\n    installed 77s ago, rekeying in 2695s, expires in 3223s\n    in  c8924138,   1008 bytes,    12 packets,     2s ago\n    out ade1f735,    756 bytes,     9 packets,     2s ago\n    local  10.62.0.0/24\n    remote 10.61.0.0/24"
+ },
+ "params": {
+  "dh": 14,
+  "hash": "sha256",
+  "ike": 2,
+  "keylife": 120,
+  "pfs": false,
+  "record": 330
+ },
+ "pings": {
+  "large": [
+   "12"
+  ],
+  "small": [
+   "28"
+  ]
+ },
+ "seconds": 369
+}

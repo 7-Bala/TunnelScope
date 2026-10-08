@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react"
 import {
   remediationPlan,
+  acceptGatewayTerms,
   applyRemediation,
+  gatewayTerms,
   generateRemediation,
   previewRemediation,
   remediationCapabilities,
   draftingModel,
   isPublicDemo,
   remediationTargets,
+  type GatewayTerms,
   type GenerateResult,
   type LabTarget,
   type RemediationCapabilities,
@@ -22,6 +25,81 @@ const FALLBACK_TARGETS: LabTarget[] = [
   { name: "sih26-alice-pq", running: true },
   { name: "sih26-bob-pq", running: true },
 ]
+
+/** DEC-063: the terms and risks, accepted once per real gateway before anything can change it. */
+function TermsPanel({ target, onAccepted }: { target: LabTarget; onAccepted: () => void }) {
+  const [terms, setTerms] = useState<GatewayTerms | null>(null)
+  const [who, setWho] = useState("")
+  const [typed, setTyped] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
+  useEffect(() => {
+    let live = true
+    gatewayTerms().then((t) => live && setTerms(t))
+    return () => {
+      live = false
+    }
+  }, [])
+  const phrase = target.accept_phrase ?? ""
+  async function accept() {
+    if (!terms) return
+    setSending(true)
+    setError(null)
+    const r = await acceptGatewayTerms(target.name, typed, who, terms.sha256)
+    setSending(false)
+    if (r.ok) onAccepted()
+    else setError(r.error ?? "not accepted")
+  }
+  return (
+    <div className="space-y-2 rounded border border-neg/50 bg-neg/10 p-2.5 text-[12px]" data-testid="gateway-terms">
+      <p className="font-semibold text-neg">
+        {target.name.replace("gw:", "")} is a real gateway ({target.host}). Nothing can be changed on it until you accept
+        these terms and risks.
+      </p>
+      {target.consent_reason && <p className="text-[11.5px] text-muted-foreground">{target.consent_reason}.</p>}
+      {!terms && <p className="text-[11.5px] text-muted-foreground">Loading the terms...</p>}
+      {terms && (
+        <>
+          <p className="text-[11px] text-faint">
+            {terms.title} (version {terms.version})
+          </p>
+          <ol className="list-decimal space-y-1 pl-4 text-[11.5px] text-foreground/90">
+            {terms.clauses.map((c, i) => (
+              <li key={i}>{c}</li>
+            ))}
+          </ol>
+          <label className="block text-[11.5px] text-muted-foreground">
+            Your name
+            <input
+              value={who}
+              onChange={(e) => setWho(e.target.value)}
+              aria-label="Name of the person accepting"
+              className="mt-0.5 block w-full rounded border border-border bg-background px-2 py-0.5 text-[12px] text-foreground"
+            />
+          </label>
+          <label className="block text-[11.5px] text-muted-foreground">
+            To accept, type exactly: <span className="font-mono text-foreground">{phrase}</span>
+            <input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              aria-label="Type the acceptance sentence"
+              className="mt-0.5 block w-full rounded border border-border bg-background px-2 py-0.5 font-mono text-[12px] text-foreground"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={accept}
+            disabled={sending || typed !== phrase || who.trim() === ""}
+            className="rounded border border-neg/60 px-2.5 py-1 text-[11.5px] font-semibold text-neg hover:bg-neg/10 disabled:opacity-50"
+          >
+            {sending ? "Recording..." : "I accept the terms and risks"}
+          </button>
+          {error && <p className="text-[11.5px] text-warn">{error}</p>}
+        </>
+      )}
+    </div>
+  )
+}
 
 function DiffBlock({ diff }: { diff: string }) {
   return (
@@ -134,14 +212,19 @@ function FixControl({
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<RemediationApplyResult | null>(null)
   const [showDetailed, setShowDetailed] = useState(false)
-  // Local-model draft (DEC-034): shown next to the hand-written fix, which stays the default.
+  // AI draft (DEC-064): when the server can draft, the fix is drafted as soon as the change is approved and the draft
+  // is the preselected plan, shown next to the hand-written fix. If drafting is off, fails a check or is refused, the
+  // hand-written fix stays selected. Nothing is applied before the preview, the approval and (gateways) the sentence.
   const [caps, setCaps] = useState<RemediationCapabilities | null>(null)
   const [draft, setDraft] = useState<GenerateResult | null>(null)
   const [drafting, setDrafting] = useState(false)
   const [draftSeconds, setDraftSeconds] = useState(0)
   const [choice, setChoice] = useState<"hand" | "draft">("hand")
   const [concernAcknowledged, setConcernAcknowledged] = useState(false)
+  const [riskAck, setRiskAck] = useState("")
+  const [targetsVersion, setTargetsVersion] = useState(0)
   const draftRequest = useRef(0)
+  const autoDrafted = useRef("") // the rule|target already drafted automatically: one automatic draft per pair
   const busy = useRef(false) // a second click before React re-renders must not send a second request
 
   useEffect(() => {
@@ -151,7 +234,8 @@ function FixControl({
       if (!live || !t || t.targets.length === 0) return
       setTargets(t.targets)
       const rec = t.targets.find((x) => x.name === t.recommended && x.running)
-      if (rec) setTarget(rec.name)
+      // A reload (e.g. after accepting a gateway's terms) keeps a gateway the user chose.
+      if (rec) setTarget((cur) => (cur.startsWith("gw:") && t.targets.some((x) => x.name === cur) ? cur : rec.name))
     })
     remediationCapabilities().then((c) => {
       if (live) setCaps(c)
@@ -159,7 +243,7 @@ function FixControl({
     return () => {
       live = false
     }
-  }, [decision])
+  }, [decision, targetsVersion])
 
   useEffect(() => {
     if (!drafting) return
@@ -192,6 +276,7 @@ function FixControl({
     setDraft(null)
     setChoice("hand")
     setConcernAcknowledged(false)
+    setRiskAck("")
     draftRequest.current++
     setDrafting(false)
   }
@@ -213,7 +298,17 @@ function FixControl({
     if (draftRequest.current !== id) return // cancelled, or the target changed meanwhile
     setDraft(r)
     setDrafting(false)
+    if (r.ok) choosePlan("draft") // the checked draft is the default; a refused one leaves the hand-written fix
   }
+
+  useEffect(() => {
+    if (decision !== "approved" || !caps?.generator_enabled || !draftingModel(caps).available) return
+    if (!targets.some((x) => x.name === target && x.running)) return // wait for the real target, one draft only
+    const key = `${ruleId}|${target}`
+    if (autoDrafted.current === key || drafting || draft || busy.current) return
+    autoDrafted.current = key
+    void handleDraft()
+  })
 
   function cancelDraft() {
     draftRequest.current++
@@ -228,6 +323,7 @@ function FixControl({
     setPreviewing(true)
     setPreview(null)
     setApplyResult(null)
+    setRiskAck("")
     try {
       setPreview(await previewRemediation(ruleId, target, draftPlanId))
     } finally {
@@ -242,7 +338,11 @@ function FixControl({
     setApplying(true)
     setApplyResult(null)
     try {
-      const r = await applyRemediation(ruleId, target, true, { digest: preview?.digest, planId: draftPlanId })
+      const r = await applyRemediation(ruleId, target, true, {
+        digest: preview?.digest,
+        planId: draftPlanId,
+        riskAck: preview?.live ? riskAck : null,
+      })
       setApplyResult(r)
       // What was previewed no longer matches the lab: that preview must not be applied again.
       if (r.stage === "stale_preview") setPreview(null)
@@ -293,8 +393,13 @@ function FixControl({
 
   const automated = plan.auto_applicable && plan.automated_fix_available !== false
   const draftConcern = choice === "draft" && draft?.ok && draft.plan.self_review?.verdict === "concerns"
-  const previewReady = preview?.ok === true && (!draftConcern || concernAcknowledged)
   const targetInfo = targets.find((t) => t.name === target)
+  const isLive = targetInfo?.live === true
+  const needsTerms = isLive && targetInfo?.accepted !== true
+  const previewReady =
+    preview?.ok === true &&
+    (!draftConcern || concernAcknowledged) &&
+    (!preview.live || riskAck === preview.live.ack_phrase)
 
   return (
     <div
@@ -338,10 +443,6 @@ function FixControl({
           className="flex items-center gap-1.5 text-[11.5px] font-medium text-violet transition-colors hover:underline focus:outline-none"
         >
           <span>{showDetailed ? "▾ Hide detailed plan" : "▸ View detailed plan"}</span>
-          {/* Honest label: every plan is written by hand. No language model generates plans or commands. */}
-          <span className="rounded bg-violet/10 px-1.5 py-0.5 font-mono text-[10px] text-violet">
-            Hand-written plan · checked before and after
-          </span>
         </button>
 
         {showDetailed && (
@@ -460,7 +561,7 @@ function FixControl({
               <div className="space-y-2 rounded border border-border/70 bg-secondary/30 p-2.5 text-[12px]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 max-w-full items-center gap-2">
-                    <span className="shrink-0 text-[11px] font-medium uppercase tracking-wider text-faint">Lab target:</span>
+                    <span className="shrink-0 text-[11px] font-medium uppercase tracking-wider text-faint">Target:</span>
                     <select
                       value={target}
                       onChange={(e) => chooseTarget(e.target.value)}
@@ -468,19 +569,34 @@ function FixControl({
                       aria-label={`Select lab container target for ${ruleId}`}
                       className="min-w-0 max-w-full rounded border border-border bg-background px-2 py-0.5 font-mono text-[11.5px] text-foreground"
                     >
-                      {targets.map((t) => (
-                        <option key={t.name} value={t.name}>
-                          {t.name}
-                          {t.running ? "" : " (not running)"}
-                        </option>
-                      ))}
+                      <optgroup label="Test lab">
+                        {targets
+                          .filter((t) => !t.live)
+                          .map((t) => (
+                            <option key={t.name} value={t.name}>
+                              {t.name}
+                              {t.running ? "" : " (not running)"}
+                            </option>
+                          ))}
+                      </optgroup>
+                      {targets.some((t) => t.live) && (
+                        <optgroup label="Real gateways (live)">
+                          {targets
+                            .filter((t) => t.live)
+                            .map((t) => (
+                              <option key={t.name} value={t.name}>
+                                {t.name} ({t.host}){t.accepted ? "" : " - terms not accepted"}
+                              </option>
+                            ))}
+                        </optgroup>
+                      )}
                     </select>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handlePreview}
-                      disabled={applying || previewing || targetInfo?.running === false}
+                      disabled={applying || previewing || targetInfo?.running === false || needsTerms}
                       aria-label={`Preview the real change for ${ruleId}`}
                       className="rounded border border-violet/40 bg-violet-bg px-2.5 py-1 text-[11.5px] font-medium text-violet transition-colors hover:bg-violet/20 disabled:opacity-50"
                     >
@@ -491,13 +607,20 @@ function FixControl({
                       onClick={handleApply}
                       disabled={applying || !previewReady}
                       title={previewReady ? undefined : "Preview the change on this target first"}
-                      aria-label={`Apply remediation in lab for ${ruleId}`}
-                      className="rounded border border-violet/40 bg-violet px-2.5 py-1 text-[11.5px] font-semibold text-primary-foreground transition-colors hover:bg-violet/90 disabled:opacity-50"
+                      aria-label={isLive ? `Apply remediation to real gateway for ${ruleId}` : `Apply remediation in lab for ${ruleId}`}
+                      className={cn(
+                        "rounded border px-2.5 py-1 text-[11.5px] font-semibold text-primary-foreground transition-colors disabled:opacity-50",
+                        isLive ? "border-neg/60 bg-neg hover:bg-neg/90" : "border-violet/40 bg-violet hover:bg-violet/90",
+                      )}
                     >
-                      {applying ? "Applying..." : "Apply in lab"}
+                      {applying ? "Applying..." : isLive ? "Apply to real gateway" : "Apply in lab"}
                     </button>
                   </div>
                 </div>
+
+                {needsTerms && targetInfo && (
+                  <TermsPanel target={targetInfo} onAccepted={() => setTargetsVersion((v) => v + 1)} />
+                )}
 
                 <DraftPanel
                   caps={caps}
@@ -543,16 +666,40 @@ function FixControl({
                   <div className="space-y-1.5">
                     <p className="text-[11.5px] text-muted-foreground">
                       Dry run of the {choice === "draft" ? `${caps ? draftingModel(caps).noun : "local model"}'s draft` : "hand-written fix"} on copies of the real
-                      files in {target}, and strongSwan loaded the result in a throwaway copy of the container. This is exactly
-                      what "Apply in lab" will change:
+                      files in {target}, and strongSwan loaded the result in{" "}
+                      {preview.live ? "an isolated namespace on the gateway itself" : "a throwaway copy of the container"}. This
+                      is exactly what "{preview.live ? "Apply to real gateway" : "Apply in lab"}" will change:
                     </p>
                     {Object.entries(preview.diff ?? {}).map(([file, d]) => (
                       <DiffBlock key={file} diff={d} />
                     ))}
+                    {preview.live && (
+                      <div className="space-y-1.5 rounded border border-neg/50 bg-neg/10 p-2" data-testid="live-risks">
+                        <p className="text-[11.5px] font-semibold text-neg">
+                          Risks of changing the real gateway {preview.live.gateway} ({preview.live.host}):
+                        </p>
+                        <ul className="list-disc space-y-0.5 pl-4 text-[11.5px] text-foreground/90">
+                          {preview.live.risks.map((r, i) => (
+                            <li key={i}>{r}</li>
+                          ))}
+                        </ul>
+                        <label className="block text-[11.5px] text-muted-foreground">
+                          To allow Apply, type exactly:{" "}
+                          <span className="font-mono text-foreground">{preview.live.ack_phrase}</span>
+                          <input
+                            value={riskAck}
+                            onChange={(e) => setRiskAck(e.target.value)}
+                            aria-label={`Type the confirmation sentence for ${ruleId}`}
+                            className="mt-0.5 block w-full rounded border border-border bg-background px-2 py-0.5 font-mono text-[12px] text-foreground"
+                          />
+                        </label>
+                      </div>
+                    )}
                     {preview.peer && Object.keys(preview.peer.diff).length > 0 && (
                       <div>
                         <p className="text-[11.5px] text-muted-foreground">
-                          It also changes the lab peer <span className="font-mono">{preview.peer.container}</span>
+                          It also changes the {preview.live ? "other end of the tunnel" : "lab peer"}{" "}
+                          <span className="font-mono">{preview.peer.container}</span>
                           , because {preview.peer.why}. The peer is snapshotted and undone with the target:
                         </p>
                         {Object.entries(preview.peer.diff).map(([file, d]) => (
@@ -565,7 +712,8 @@ function FixControl({
 
                 {applying && (
                   <p className="animate-pulse text-[11.5px] text-muted-foreground">
-                    Capturing a baseline, applying in {target}, then capturing again to check the result...
+                    Capturing a baseline, applying {isLive ? "on the real gateway" : "in"} {target}, then capturing again to
+                    check the result...
                   </p>
                 )}
 
@@ -697,7 +845,7 @@ function ApplyOutcome({ result, modelNoun }: { result: RemediationApplyResult; m
       )}
       {result.peer && result.peer.commands_run.length > 0 && (
         <p className="text-[11px] text-faint">
-          Also changed on the lab peer {result.peer.container} ({result.peer.commands_run.length} commands), undone
+          Also changed on the {result.peer.container.startsWith("gw:") ? "other end" : "lab peer"} {result.peer.container} ({result.peer.commands_run.length} commands), undone
           with the target when not confirmed.
         </p>
       )}
@@ -737,7 +885,8 @@ function DraftPanel({
   if (!caps.generator_enabled) {
     return (
       <p className="text-[11px] text-faint">
-        Local-model drafts are switched off until their evaluation (EXP-18) passes. The hand-written fix is used.
+        AI drafting is off on this server (no cloud API key, the network is switched off, or it was turned off). The
+        hand-written fix is used.
       </p>
     )
   }
@@ -759,8 +908,8 @@ function DraftPanel({
     <div className="space-y-2 rounded border border-border/60 bg-background/40 p-2">
       {usingCloud && (
         <p className="text-[11px] leading-relaxed text-warn">
-          This draft comes from a cloud model. Drafting a fix below sends the failing rule and the lab connection&apos;s
-          current settings to that service over the network.
+          This fix is drafted by a cloud model. Drafting sends the failing rule and this connection&apos;s current
+          settings to that service over the network. The draft is checked by code and dry-run before you can apply it.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2">

@@ -33,9 +33,9 @@ def cmd_analyze(args):
         print(json.dumps({"summary": summ, "records": [r.to_dict() for r in recs]}, indent=2))
         return
     print(f"# {args.pcap}")
-    print(f"  IKE messages: {summ['n_ike']} | ESP packets: {summ['n_esp']} | exchanges: {', '.join(summ['exchanges']) or 'none'}")
+    print(f"  IKE messages: {summ['n_ike']} | ESP packets: {summ['n_esp']} | AH packets: {summ['n_ah']} | exchanges: {', '.join(summ['exchanges']) or 'none'}")
     for r in recs:
-        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
+        if not (getattr(r, "_ike", []) or getattr(r, "_esp", []) or getattr(r, "_ah", [])):
             continue
         print(f"\n  SA {r.key()}  ({r.src} <-> {r.dst})")
         for attr, f in r.findings.items():
@@ -45,9 +45,47 @@ def cmd_analyze(args):
                 print(f"        └ {f.note}")
 
 
+def cmd_export(args):
+    """T-129/T-128: one SIEM event per verdict -- Elastic ECS JSON, RFC 5424 syslog, a Zeek log or Suricata EVE-shaped JSON. Files and stdout only."""
+    from .siem import ecs, export
+    if args.bulk_index and args.format != "ecs":
+        raise InputError("--bulk-index needs --format ecs")
+    try:
+        at = ecs.timestamp(args.at)        # one assessment time for the whole export (and a clear error for a bad --at)
+    except ValueError:
+        raise InputError(f"--at {args.at!r} is neither an ISO 8601 time nor epoch seconds") from None
+    if args.format == "syslog":
+        lines = export.syslog_lines(args.pcap, args.profile, args.only_fail, at)
+    elif args.format == "eve":
+        lines = export.eve_lines(args.pcap, args.profile, args.only_fail, at)
+    elif args.format == "zeek":
+        text = export.zeek_log(args.pcap, args.profile, args.only_fail, at)
+        lines = text.splitlines() if text else []
+    else:
+        docs = export.ecs_documents(args.pcap, args.profile, args.only_fail, at)
+        lines = []
+        for d in docs:
+            if args.bulk_index:
+                lines.append(json.dumps({"create": {"_index": args.bulk_index}}, separators=(",", ":")))
+            lines.append(ecs.dumps(d))
+    if not lines:
+        print(f"nothing exported from {args.pcap}: no verdicts" + (" with FAIL" if args.only_fail else
+              " (no IKE, ESP or AH traffic found)"), file=sys.stderr)
+    out = "".join(line + "\n" for line in lines)
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as fh:
+            fh.write(out)
+        print(f"export: {len(lines)} line(s) -> {args.out}", file=sys.stderr)
+    else:
+        sys.stdout.write(out)
+    return 0
+
+
 def cmd_ledger(args):
-    from .ledger import build_ledger
+    from .ledger import build_ledger, sign_ledger
     led = build_ledger(args.pcap)
+    if args.key:
+        led = sign_ledger(led, _ledger_key(args.key, create=True))
     out = json.dumps(led, indent=1, ensure_ascii=False)
     if args.out:
         with open(args.out, "w") as fh:
@@ -58,6 +96,19 @@ def cmd_ledger(args):
     return 0
 
 
+def _ledger_key(path: str, create: bool = False) -> bytes:
+    """The signing key (a file readable by its owner only). `ledger --key` creates it on first use."""
+    from pathlib import Path
+    from .sensor.report import ReportError, read_key, write_key
+    if create and not Path(path).exists():
+        write_key(path)
+        print(f"created signing key {path} (keep it secret; the same file verifies the ledger)", file=sys.stderr)
+    try:
+        return read_key(path)
+    except (OSError, ReportError) as e:
+        raise InputError(f"cannot read ledger key {path}: {e}") from None
+
+
 def cmd_ledger_verify(args):
     from .ledger import verify_ledger
     try:
@@ -65,10 +116,23 @@ def cmd_ledger_verify(args):
             led = json.load(fh)
     except (OSError, ValueError) as e:
         raise InputError(f"cannot read ledger {args.ledger}: {e}") from None
-    r = verify_ledger(led, pcap=args.pcap, reanalyse=args.reanalyse)
+    if args.reanalyse and not args.pcap:
+        raise InputError("--reanalyse needs --pcap: there is nothing to re-analyse without the capture")
+    if not isinstance(led, dict):
+        raise InputError(f"{args.ledger} is not a TunnelScope ledger (not a JSON object)")
+    key = _ledger_key(args.key) if args.key else None
+    r = verify_ledger(led, pcap=args.pcap, reanalyse=args.reanalyse, key=key)
     if r["ok"]:
         print(f"OK: {r['count']} entries, head {r['head']}" + (" (capture matches)" if args.pcap else "")
-              + (" (re-analysis matches)" if args.reanalyse else ""))
+              + (" (re-analysis matches)" if args.reanalyse else "") + (" (signature matches)" if key else ""))
+        if key is None and led.get("signature"):
+            print("note: this ledger is signed; pass --key <file> to check the signature.")
+        if not args.reanalyse and key is None:
+            # The chain carries no key or signature: anyone can edit entries and recompute every hash. Only a
+            # re-analysis of the capture (or a head hash kept somewhere else) shows the CONTENT is the original.
+            print("note: this checks the chain is internally consistent. A ledger rebuilt from altered results also "
+                  "passes it; to rule that out run with --pcap <capture> --reanalyse, sign ledgers with --key, or "
+                  "compare the head with one you recorded separately.")
         return 0
     where = "" if r["first_bad"] is None else f" at entry {r['first_bad']}"
     print(f"TAMPERED or MISMATCHED{where}: {r['reason']}")
@@ -88,7 +152,7 @@ def cmd_assess(args):
     recs = build_records(args.pcap)
     all_v = []
     for r in recs:
-        if not getattr(r, "_ike", []) and not getattr(r, "_esp", []):
+        if not (getattr(r, "_ike", []) or getattr(r, "_esp", []) or getattr(r, "_ah", [])):
             continue
         vs = assess_record(r, baselines)
         all_v += [v.to_dict() for v in vs]
@@ -238,7 +302,7 @@ def cmd_watch(args):
     else:
         for r in out:
             tag = {"learning": f"learning ({r['observations']}/{r.get('needed', '?')})",
-                   "normal": "normal", "anomalous": "ANOMALOUS"}[r["status"]]
+                   "normal": "normal", "anomalous": "ANOMALOUS", "no_evidence": "no evidence to compare"}[r["status"]]
             print(f"{os.path.basename(r['source'])}  {r['tunnel']}  {tag}")
             for x in r["anomalies"]:
                 print(f"    [{x['severity']}/{x['layer']}] {x['message']}")
@@ -251,7 +315,7 @@ def cmd_explain(args):
     local_llm = True if getattr(args, "local_llm", False) else None
     a = analyze(args.pcap)
     for sa in analysis_json(a, args.pcap)["sas"]:
-        print(as_text(explain_sa(sa, local_llm=local_llm)))
+        print(as_text(explain_sa(sa, local_llm=local_llm, api_llm=True if getattr(args, "api_llm", False) else None)))
         print()
 
 
@@ -354,7 +418,7 @@ def cmd_intel(args):
 
 
 def cmd_intel_bundle(args):
-    """T-130: fill a directory with the intel sources for an air-gapped install (needs TUNNELSCOPE_NETWORK=on here)."""
+    """T-130: fill a directory with the intel sources for an air-gapped install (needs the network: the default, unless TUNNELSCOPE_NETWORK=off)."""
     from .intel.lookup import bundle
     m = bundle(args.out)
     print(json.dumps(m["report"], indent=2))
@@ -378,6 +442,96 @@ def cmd_fleet(args):
     ):
         return 1
     return 0
+
+
+def cmd_gateway(args):
+    """DEC-063: register real strongSwan gateways, read and accept the terms and risks."""
+    from .remediate import execute, gateways
+    hd = args.history
+    if args.action == "add":
+        entry = {"host": args.host, "user": args.user, "port": args.port, "connection": args.connection,
+                 "child": args.child or args.connection, "capture_interface": args.interface,
+                 "identity_file": args.identity_file, "known_hosts_file": args.known_hosts, "peer": args.peer,
+                 "sudo": args.sudo, "allow_ai_drafts": args.allow_ai_drafts}
+        if args.config_glob:
+            entry["config_globs"] = args.config_glob
+        try:
+            gw = execute.save_gateway(args.name, entry, hd)
+        except ValueError as e:
+            raise TunnelScopeError(str(e))
+        print(f"registered {gateways.PREFIX}{gw['name']} ({gw['user']}@{gw['host']}:{gw['port']}, connection {gw['connection']})")
+        print(f"before any change: tunnelscope gateway terms, then tunnelscope gateway accept {gw['name']}")
+        return 0
+    if args.action == "list":
+        rows = execute.gateway_list(hd)
+        for p in gateways.registry_problems(execute._history_dir(hd)):
+            print(f"  ! {p}")
+        if not rows:
+            print("no gateways registered (tunnelscope gateway add ...)")
+        for r in rows:
+            state = "terms accepted by " + str(r["consent"].get("by")) if r["accepted"] else "NOT accepted: " + r["consent"]["reason"]
+            print(f"{r['name']}  {r['user']}@{r['host']}  connection {r['connection']}"
+                  f"{'  peer ' + r['peer'] if r['peer'] else ''}  AI drafts {'on' if r['allow_ai_drafts'] else 'off'}  {state}")
+        return 0
+    if args.action == "terms":
+        t = gateways.terms()
+        print(f"{t['title']} (version {t['version']}, sha256 {t['sha256'][:16]})\n")
+        for i, c in enumerate(t["clauses"], 1):
+            print(f"{i}. {c}\n")
+        return 0
+    target = args.name if args.name.startswith(gateways.PREFIX) else gateways.PREFIX + args.name
+    if args.action == "accept":
+        by = args.by or _typed("Your name: ", "--by").strip()
+        phrase = gateways.accept_phrase(gateways.name_of(target))
+        typed = args.typed if args.typed is not None else _typed(f"Read `tunnelscope gateway terms` first. To accept, type exactly:\n  {phrase}\n> ", "--typed")
+        res = execute.accept_terms(target, typed, by, hd)
+    else:
+        res = execute.withdraw_terms(target, args.by or "cli", hd)
+    if not res.get("ok"):
+        raise TunnelScopeError(res.get("error", "refused"))
+    print(f"{res['decision']}: {target}")
+    return 0
+
+
+def _typed(prompt: str, flag: str) -> str:
+    """One typed answer. When the input has ended (a script, a closed pipe) nothing was confirmed:
+    say so and name the flag a script should use, instead of ending in a traceback."""
+    try:
+        return input(prompt)
+    except EOFError:
+        raise TunnelScopeError(f"nothing was typed (the input ended), so nothing was changed. In a script, pass {flag}.") from None
+
+
+def cmd_fix(args):
+    """Preview a fix, show the exact change and its risks, then apply it only after the typed
+    confirmation (real gateways) and roll it back automatically if verification fails."""
+    import json as _json
+    from .remediate import execute, gateways
+    pv = execute.preview_remediation(args.rule, args.target, caller="cli", history_dir=args.history, plan_id=args.plan_id)
+    if not pv.get("ok"):
+        raise TunnelScopeError(f"preview refused at {pv.get('stage')}: {pv.get('error')}")
+    for f, d in (pv.get("diff") or {}).items():
+        print(d)
+    if pv.get("peer"):
+        for f, d in (pv["peer"].get("diff") or {}).items():
+            print(f"(other end {pv['peer']['container']})\n{d}")
+    cc = pv.get("clone_check") or {}
+    print(f"load check: {'ok' if cc.get('ok') else 'FAILED'} ({cc.get('image')})")
+    ack = None
+    if gateways.is_gateway(args.target):
+        live = pv["live"]
+        print(f"\nRISKS of changing the real gateway {live['gateway']} ({live['host']}):")
+        for r in live["risks"]:
+            print(f"  - {r}")
+        ack = args.ack if args.ack is not None else _typed(f"\nTo apply, type exactly:\n  {live['ack_phrase']}\n> ", "--ack")
+    elif not args.yes and _typed("Apply this change in the lab? [y/N] ", "--yes").strip().lower() != "y":
+        print("not applied")
+        return 0
+    res = execute.apply_remediation(args.rule, args.target, confirm=True, caller="cli", history_dir=args.history,
+                                    plan_id=args.plan_id, digest=pv["digest"], require_digest=True, risk_ack=ack)
+    print(_json.dumps({k: res.get(k) for k in ("decision", "stage", "error", "verdict_before", "verdict_after",
+                                               "confirmed_fixed", "rolled_back", "rollback_verified", "reason")}, indent=2))
+    return 0 if res.get("confirmed_fixed") else 4
 
 
 def cmd_sensor_key(args):
@@ -483,13 +637,25 @@ def main(argv=None):
                    help="exit 1 if any FAIL verdict is present (for CI/monitoring gates)")
     s.add_argument("--profile", action="append", help="also assess against an opt-in rules profile (e.g. cnsa2-ipsec); repeatable")
     s.set_defaults(func=cmd_assess)
+    xp = sub.add_parser("export", help="SIEM export: one event per verdict as Elastic ECS JSON, RFC 5424 syslog, a Zeek log or Suricata EVE-shaped JSON (files/stdout only)")
+    xp.add_argument("pcap")
+    xp.add_argument("--format", choices=["ecs", "syslog", "zeek", "eve"], default="ecs",
+                    help="ecs = Elastic Common Schema JSON lines (default); zeek = Zeek TSV log tunnelscope.log; eve = Suricata EVE-shaped JSON lines")
+    xp.add_argument("--profile", action="append", help="also assess against an opt-in rules profile; repeatable")
+    xp.add_argument("--only-fail", action="store_true", help="export FAIL verdicts only")
+    xp.add_argument("--at", metavar="TIME", help="assessment time, ISO 8601 or epoch seconds (default: now); for replays")
+    xp.add_argument("--bulk-index", metavar="NAME", help="ecs only: Elasticsearch _bulk format into this index / data stream")
+    xp.add_argument("-o", "--out", help="write here instead of stdout")
+    xp.set_defaults(func=cmd_export)
     lg = sub.add_parser("ledger", help="tamper-evident evidence ledger: every finding and verdict, hash-chained to the capture")
     lg.add_argument("pcap")
     lg.add_argument("-o", "--out", help="write the ledger here instead of printing it")
+    lg.add_argument("--key", metavar="FILE", help="sign the ledger with this key file (created if missing), so a rebuilt ledger is detected")
     lg.set_defaults(func=cmd_ledger)
     lv2 = sub.add_parser("ledger-verify", help="check a ledger's hash chain (exit 1 if anything was changed)")
     lv2.add_argument("ledger")
     lv2.add_argument("--pcap", help="also check it describes this capture")
+    lv2.add_argument("--key", metavar="FILE", help="check the ledger's signature with this key file")
     lv2.add_argument("--reanalyse", action="store_true", help="also re-run the analysis and require the same head (needs --pcap)")
     lv2.set_defaults(func=cmd_ledger_verify)
     cb = sub.add_parser("cbom", help="emit a CycloneDX CBOM for a pcap")
@@ -525,7 +691,7 @@ def main(argv=None):
     lv.add_argument("--json", action="store_true", help="one JSON object per window")
     lv.add_argument("--max-windows", type=int, help="stop after N windows (testing)")
     lv.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
-    lv.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl", help="alert line format (syslog = RFC 5424)")
+    lv.add_argument("--alert-format", choices=["jsonl", "syslog", "ecs"], default="jsonl", help="alert line format (syslog = RFC 5424, ecs = Elastic Common Schema JSON)")
     lv.set_defaults(func=cmd_live)
     wt = sub.add_parser("watch", help="anomaly detection: compare each tunnel with its learned normal, then record it (role D)")
     wt.add_argument("target", help="a capture, or a directory of captures (processed in name order)")
@@ -534,12 +700,15 @@ def main(argv=None):
     wt.add_argument("--json", action="store_true")
     wt.add_argument("--fail-on-anomaly", action="store_true", help="exit 1 if any tunnel is anomalous")
     wt.add_argument("--alerts", metavar="FILE", help="append an alert line for each downgrade / PQ loss / first-time rule failure")
-    wt.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl", help="alert line format (syslog = RFC 5424)")
+    wt.add_argument("--alert-format", choices=["jsonl", "syslog", "ecs"], default="jsonl", help="alert line format (syslog = RFC 5424, ecs = Elastic Common Schema JSON)")
     wt.set_defaults(func=cmd_watch)
     ex = sub.add_parser("explain", help="plain-English explanation of a capture's verdicts, for non-experts")
     ex.add_argument("pcap")
     ex.add_argument("--local-llm", action="store_true",
                     help="rephrase findings locally on-device with MLX (Apple Silicon only, DEC-031)")
+    ex.add_argument("--api-llm", action="store_true",
+                    help="rephrase findings with a hosted model instead (needs a hosted-model key and the network not switched off; "
+                         "IP addresses are masked before anything is sent, DEC-055)")
     ex.set_defaults(func=cmd_explain)
     fl = sub.add_parser("fleet", help="scan a directory of captures: one aggregated view, per-tunnel evidence kept intact (role B/D)")
     fl.add_argument("directory")
@@ -566,6 +735,34 @@ def main(argv=None):
     cf.add_argument("file")
     cf.add_argument("--json", action="store_true")
     cf.set_defaults(func=cmd_config)
+    gwp = sub.add_parser("gateway", help="real strongSwan gateways for live fixes (DEC-063): add, list, terms, accept, withdraw")
+    gwp.add_argument("action", choices=["add", "list", "terms", "accept", "withdraw"])
+    gwp.add_argument("name", nargs="?", default="")
+    gwp.add_argument("--history", default=".tunnelscope-history")
+    gwp.add_argument("--host")
+    gwp.add_argument("--user", default="root")
+    gwp.add_argument("--port", type=int, default=22)
+    gwp.add_argument("--connection", help="the swanctl connection a fix may change")
+    gwp.add_argument("--child", help="child SA name used to restart the tunnel (default: the connection name)")
+    gwp.add_argument("--config-glob", action="append", help="config file(s) on the gateway (repeatable)")
+    gwp.add_argument("--interface", default="any", help="interface tcpdump captures on")
+    gwp.add_argument("--identity-file")
+    gwp.add_argument("--known-hosts")
+    gwp.add_argument("--peer", help="the other end, if it is also a registered gateway")
+    gwp.add_argument("--sudo", action="store_true", help="run commands through sudo -n")
+    gwp.add_argument("--allow-ai-drafts", action=argparse.BooleanOptionalAction, default=True,
+                     help="allow AI-drafted fixes on this gateway (default on, DEC-064; --no-allow-ai-drafts to opt out)")
+    gwp.add_argument("--by", help="who is accepting or withdrawing")
+    gwp.add_argument("--typed", help="the acceptance sentence (non-interactive)")
+    gwp.set_defaults(func=cmd_gateway)
+    fx = sub.add_parser("fix", help="preview, approve and apply one fix to a lab container or a registered gateway, with automatic rollback")
+    fx.add_argument("rule")
+    fx.add_argument("--target", required=True, help="lab container, or gw:<name>")
+    fx.add_argument("--plan-id", help="a stored AI-drafted plan instead of the hand-written fix")
+    fx.add_argument("--history", default=".tunnelscope-history")
+    fx.add_argument("--ack", help="the per-change sentence for a gateway (non-interactive)")
+    fx.add_argument("--yes", action="store_true", help="lab only: skip the y/N question")
+    fx.set_defaults(func=cmd_fix)
     sk = sub.add_parser("sensor-key", help="create a site key for a sensor and the collector (T-139)")
     sk.add_argument("--site", required=True)
     sk.add_argument("--out", required=True, metavar="DIR", help="directory for <site>.key")
@@ -595,7 +792,7 @@ def main(argv=None):
     co.add_argument("--state", required=True, metavar="DIR", help="per-site state and quarantine")
     co.add_argument("--keys", required=True, metavar="DIR", help="directory of <site>.key files")
     co.add_argument("--alerts", metavar="FILE", help="append each site's alerts, tagged with the site")
-    co.add_argument("--alert-format", choices=["jsonl", "syslog"], default="jsonl")
+    co.add_argument("--alert-format", choices=["jsonl", "syslog", "ecs"], default="jsonl")
     co.add_argument("--poll", type=float, default=1.0, help="seconds between inbox checks (default 1)")
     co.add_argument("--once", action="store_true", help="process the inbox once and exit (1 if anything was rejected)")
     co.add_argument("--json", action="store_true")
@@ -611,7 +808,7 @@ def main(argv=None):
     try:
         # Verify the stack before trusting anything derived from it. Cached per
         # process, so a 70-capture fleet scan pays this once, not per capture.
-        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_sensor_key, cmd_sensor_mask, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
+        if args.func not in (cmd_doctor, cmd_config, cmd_intel_bundle, cmd_gateway, cmd_sensor_key, cmd_sensor_mask, cmd_collect, cmd_sites) and not os.environ.get("TUNNELSCOPE_SKIP_PREFLIGHT"):
             preflight()
         return args.func(args) or 0
     except TunnelScopeError as e:

@@ -11,6 +11,9 @@ pace scaled. Measured on lab D (EXP-43), a lab of tools and ciphers nobody train
 it replaced), 11 of 11 gated answers right; still wrong on interactive sessions there. On a whole family held out of
 training (EXP-42) it averages 0.455: traffic unlike all eight families can still be misread, which is what the abstain
 rule and the out-of-distribution check are for.
+EXP-45 (DEC-057) tested it on a second unseen lab, lab F: macro-F1 0.60 ungated, and 4 of its 6 gated answers right (two bulk
+transfers confidently read as video). So a gated answer is usually, not always, right on traffic from tools it never saw; a nine-family
+candidate did better ungated (0.72) but answered too few sessions to replace it.
 
 What it reports for a capture (DEC-027, superseding DEC-021's "never a label"):
   - attacker_exposure: how SURE and how CONSISTENT the attacker is, 0-100;
@@ -55,6 +58,8 @@ KNOWN_CONFUSION = {"web": "video streaming mixed with an interactive session als
 # the dashboard shows. An earlier version said "96%", which no experiment produced.
 MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (in testing it caught 92.9% "
               "of mixed sessions and wrongly flagged 8.3% of single ones)")
+MIXED_NOT_RUN = ("the mixed-traffic check could not run here (it needs at least three in-distribution windows), "
+                 "so two kinds of traffic sharing this tunnel are not ruled out")
 # abstain rule (set from EXP-15's leave-one-repetition-out analysis; see RESULT.md)
 TAU = 0.60              # minimum mean top-class probability
 MIN_CONSISTENCY = 0.70  # minimum share of windows agreeing with the session's top class
@@ -266,7 +271,7 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
                         "label": LABEL.get(guess) if answer else None, "probability": round(p_guess, 3),
                         "alternatives": [{"class": str(rf.classes_[i]), "label": LABEL.get(str(rf.classes_[i])),
                                           "probability": round(float(mean_p[i]), 3)} for i in order[:3]],
-                        "mixed": mixed, "mixed_probability": p_mixed,
+                        "mixed": mixed, "mixed_probability": p_mixed, "mixed_checked": mx is not None,
                         "dominant": {"class": guess, "label": LABEL.get(guess), "probability": round(p_guess, 3)},
                         "why_not": None if answer else (
                             f"two or more kinds of traffic are sharing this tunnel ({p_mixed:.0%} confidence); "
@@ -314,7 +319,7 @@ def extract_attacker(rec) -> None:
                              "tunnels (MIT VNAT), not from app fingerprints; traffic unlike anything in that training "
                              "set can be misread (EXP-16: a synthetic-only model scored 0.46 on real applications; "
                              "EXP-19: 0.74 on real public tunnels it never saw); "
-                             + MIXED_NOTE
+                             + (MIXED_NOTE if t.get("mixed_checked") else MIXED_NOT_RUN)
                              + (f"; caution: {KNOWN_CONFUSION[t['class']]}" if t["class"] in KNOWN_CONFUSION else "")
                              + "."))
     else:

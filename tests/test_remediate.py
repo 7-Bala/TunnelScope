@@ -333,13 +333,17 @@ def test_execute_module_has_strict_safety_bounds():
             if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
                 func_name = f"{node.func.value.id}.{node.func.attr}"
             if func_name in ("subprocess.run", "subprocess.Popen", "subprocess.call", "subprocess.check_output"):
-                # First arg must be a list starting with 'docker'
+                # First arg must be a list starting with 'docker' (lab) or 'ssh' (a registered real
+                # gateway, DEC-063: owner-approved change to this guard, 2026-09-27)
                 first_arg = node.args[0] if node.args else None
                 assert isinstance(first_arg, ast.List), f"subprocess call must take a list of args: {ast.dump(node)}"
                 first_elem = first_arg.elts[0]
-                assert isinstance(first_elem, ast.Constant) and first_elem.value == "docker", (
-                    f"subprocess call must invoke 'docker', got {ast.dump(first_elem)}"
+                assert isinstance(first_elem, ast.Constant) and first_elem.value in ("docker", "ssh"), (
+                    f"subprocess call must invoke 'docker' or 'ssh', got {ast.dump(first_elem)}"
                 )
+    # DEC-063: the SSH path never turns host key checking off and never asks for a password
+    assert "stricthostkeychecking=no" not in src_lower.replace(" ", "")
+    assert '"stricthostkeychecking=yes"' in src_lower and '"batchmode=yes"' in src_lower
 
 
 def test_get_allowed_targets_runtime_parsing(tmp_path):

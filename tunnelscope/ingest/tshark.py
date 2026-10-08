@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from collections import OrderedDict
 from pathlib import Path
 
@@ -267,6 +268,7 @@ def is_truncated(pcap: str) -> bool:
 # --------------------------------------------------------------------------- #
 _CACHE_CAPTURES = int(os.environ.get("TUNNELSCOPE_CACHE_CAPTURES", "8"))
 _CACHE: "OrderedDict[tuple, object]" = OrderedDict()
+_CACHE_LOCK = threading.Lock()    # `serve` analyses uploads on several threads; an OrderedDict is not safe to reorder/evict concurrently
 _MISS = object()
 
 
@@ -291,16 +293,18 @@ def _memo(fn):
             key = (fn.__name__, _fingerprint(pcap))
         except OSError:
             return fn(pcap)   # missing/unstattable: let the reader raise the real error
-        hit = _CACHE.get(key, _MISS)
-        if hit is not _MISS:
+        with _CACHE_LOCK:
+            hit = _CACHE.get(key, _MISS)
+            if hit is not _MISS:
+                _CACHE.move_to_end(key)
+                return hit
+        val = fn(pcap)                 # tshark runs outside the lock
+        with _CACHE_LOCK:
+            _CACHE[key] = val
             _CACHE.move_to_end(key)
-            return hit
-        val = fn(pcap)
-        _CACHE[key] = val
-        _CACHE.move_to_end(key)
-        # three readers per capture, so cap entries at 3x the capture budget
-        while len(_CACHE) > _CACHE_CAPTURES * 3:
-            _CACHE.popitem(last=False)
+            # three readers per capture, so cap entries at 3x the capture budget
+            while len(_CACHE) > _CACHE_CAPTURES * 3:
+                _CACHE.popitem(last=False)
         return val
     return wrapper
 
@@ -540,7 +544,10 @@ def capture_summary(pcap: str) -> dict:
 # IKEv2 Encryption (Transform Type 1) and Integrity (Type 3) id -> name (IANA)
 IKE_ENCR = {12: "AES-CBC", 13: "AES-CTR", 14: "AES-CCM-8", 15: "AES-CCM-12",
             16: "AES-CCM-16", 18: "AES-GCM-8", 19: "AES-GCM-12", 20: "AES-GCM-16",
-            28: "ChaCha20-Poly1305", 3: "3DES", 11: "NULL"}
+            28: "ChaCha20-Poly1305", 3: "3DES", 11: "NULL",
+            # EXP-47: names from IANA's "IKEv2 Parameters" registry, Transform Type 1 (checked 2026-10-03); a FortiGate
+            # evaluation image offers only DES, which used to print as the unnamed 'encr-2'
+            1: "DES-IV64", 2: "DES", 4: "RC5", 5: "IDEA", 6: "CAST", 7: "Blowfish", 8: "3IDEA", 9: "DES-IV32"}
 IKE_INTEG = {0: "NONE", 1: "HMAC-MD5-96", 2: "HMAC-SHA1-96", 5: "AES-XCBC-96",
              12: "HMAC-SHA2-256-128", 13: "HMAC-SHA2-384-192", 14: "HMAC-SHA2-512-256"}
 IKE_PRF = {1: "PRF-HMAC-MD5", 2: "PRF-HMAC-SHA1", 5: "PRF-HMAC-SHA2-256",
