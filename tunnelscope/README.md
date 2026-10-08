@@ -1,34 +1,41 @@
-# TunnelScope
+# tunnelscope (the analysis engine)
 
-**Evidence-tiered IPsec/IKE posture and post-quantum migration assessment.**
-The NTRO problem statement. Selected design: `research/12-DEVELOP.md` (DEC-023).
+**AI-powered IPsec VPN protocol analysis and security assessment.** The engine behind the dashboard,
+the command line and the local server. Project overview: [`../README.md`](../README.md).
 
-TunnelScope reads an IPsec packet capture and produces a security assessment in which **every
-finding declares what it is (observed / inferred / measured / unknown / not-observable /
-contradictory), from which vantage point, and with which evidence**, and **every compliance verdict
-names the standard it is judged against**. It reports what a capture actually supports and never
-scores absence of evidence as compliance.
+TunnelScope reads an IPsec packet capture, or a live stream, and tells you what each tunnel
+negotiated, how it measures up against written security standards, and what to change. Every finding
+says how it is known (observed, inferred or measured) and from which vantage point, and every verdict
+names the rule and the standard behind it.
 
 ## What it does
 
-| Capability | Method | Validated by |
-|---|---|---|
-| IKE version, exchanges, IKE-SA crypto suite | plaintext IKE parse (T1) | reuse |
-| ESP cipher family | one-directional CBC-vs-AEAD sieve | EXP-01 |
-| **Post-quantum key exchange + downgrade** | ADDKE transform + IKE_INTERMEDIATE presence | EXP-04, EXP-07 |
-| PFS | CREATE_CHILD_SA rekey length gap | EXP-03 |
-| Negotiation-failure diagnosis | structural signatures | EXP-06 |
-| Tunnel/transport mode | **reports NOT-OBSERVABLE at T0** (honest) | EXP-08 |
-| Metadata leakage | size/timing entropy in bits (never a traffic label) | EXP-05 |
-| CVE-2026-78135 pattern | vantage-aware early-Child-SA detector (0 FP on 67 judgeable legit captures + 2 UNKNOWN, 95% upper bound ≈4.4%; fires on synthetic and live-lab positives) | EXP-09 |
-| Cross-tier consistency (T2 vs wire) | reconcile endpoint telemetry → escalate / confirm / **CONTRADICTORY** | Stage 3, `build/02-CROSSTIER.md` |
-| Multi-baseline compliance | rules as versioned data | RFC 8221/8247/9395, NIST SP 800-77r1, DISA VPN SRG, DST/NQM |
-| CBOM export | CycloneDX 1.6 | DST/NQM |
+| Capability | How |
+|---|---|
+| IKE version, exchanges, IKE-SA cipher, integrity, PRF and DH group | plaintext IKE parse |
+| ESP cipher family | packet-length structure (IV, ICV and alignment rules) |
+| Post-quantum key exchange and downgrade | ADDKE transform and IKE_INTERMEDIATE exchange |
+| Perfect forward secrecy | size of the CREATE_CHILD_SA rekey |
+| Rekey cadence | time between observed rekeys |
+| Tunnel or transport mode | AH next-header field; ESP packet-size analysis |
+| Replay behaviour | per-SPI ESP/AH sequence numbers |
+| Negotiation-failure diagnosis | message sizes and notify codes |
+| Metadata exposure | size and timing entropy, in bits |
+| Traffic type inside the tunnel | Random Forest over packet size and timing, with a confidence |
+| Mixed-traffic detection | second Random Forest over the first model's per-window probabilities |
+| Change and downgrade detection | per-tunnel anomaly model over the tunnel's own history |
+| Known-vulnerability patterns | rules over IKE message order and payloads |
+| Endpoint cross-check | endpoint telemetry reconciled with the wire findings (`build/02-CROSSTIER.md`) |
+| Compliance | versioned YAML baselines: DISA VPN SRG, RFC 8247, RFC 8221/4303, DST/NQM post-quantum |
+| Threat matrix and risk score | threats rated by likelihood and impact, one 0-100 score |
+| Fixes | remediation plan for every failed rule; automatic apply and verify for strongSwan settings |
+| CBOM | CycloneDX 1.6 |
+| Evidence ledger | hash-chained findings and verdicts, verifiable later |
 
 ## Install
 
 ```bash
-pip install -e .        # needs Python 3.11+, and tshark on PATH (ADR-001)
+pip install -e .        # needs Python 3.11+, and tshark on PATH
 ```
 
 ## Use
@@ -36,81 +43,80 @@ pip install -e .        # needs Python 3.11+, and tshark on PATH (ADR-001)
 ```bash
 tunnelscope analyze  capture.pcap          # evidence records (what was seen, from where)
 tunnelscope assess   capture.pcap          # verdicts vs named baselines
+tunnelscope explain  capture.pcap          # the verdicts in plain English
 tunnelscope cbom     capture.pcap          # CycloneDX CBOM (JSON)
 tunnelscope report   capture.pcap          # executive + technical report
-tunnelscope dashboard capture.pcap -o d.html  # self-contained offline HTML
-tunnelscope crosstier capture.pcap t2.json    # reconcile T2 endpoint telemetry (Stage 3)
+tunnelscope ledger   capture.pcap          # tamper-evident evidence ledger
+tunnelscope ledger-verify ledger.json      # check the ledger's hash chain
+tunnelscope dashboard capture.pcap -o d.html  # self-contained HTML dashboard
+tunnelscope crosstier capture.pcap t2.json    # reconcile endpoint telemetry with the wire
 tunnelscope fleet captures/ -o fleet.html     # scan a directory: one view, per-tunnel evidence kept
+tunnelscope watch capture.pcap --history DIR  # compare a tunnel with its own normal
+tunnelscope live --follow DIR              # analyse a live stream window by window
+tunnelscope config swanctl.conf            # read a config file: its crypto in the same names as the wire findings
+tunnelscope reconcile capture.pcap swanctl.conf --conn NAME   # does the traffic match the config?
 tunnelscope analyze  capture.pcap --json   # machine-readable
-tunnelscope doctor                         # check the stack before trusting its output
+tunnelscope doctor                         # check the stack
+tunnelscope serve                          # local dashboard at http://127.0.0.1:8765
 ```
+
+`tunnelscope --help` lists every command, including the multi-site `sensor`, `collect` and `sites`.
 
 ## Running it unattended
 
-`doctor` verifies tshark is present and still exposes every field the
-extractors read. That check also runs automatically before any analysis
-command (once per process; set `TUNNELSCOPE_SKIP_PREFLIGHT=1` to skip it).
-It exists because a renamed tshark field does not raise — it silently yields
-an empty finding, which is the one failure this tool refuses to ship.
+`doctor` verifies tshark is present and exposes every field the extractors read. The same check runs
+automatically before any analysis command (once per process; set `TUNNELSCOPE_SKIP_PREFLIGHT=1` to skip it).
 
 Exit codes let a monitoring job tell the cases apart:
 
 | Code | Meaning |
 |---|---|
 | 0 | ran; nothing to report |
-| 1 | ran; FAIL verdicts present — only with `--fail-on-findings` |
+| 1 | ran; FAIL verdicts present (only with `--fail-on-findings`) |
 | 2 | input error: capture missing, path absent, no captures in the directory |
-| 3 | dependency error: tshark missing, or drifted from a field we read |
+| 3 | dependency error: tshark missing or changed |
 
 ```bash
-tunnelscope fleet captures/ --json --fail-on-findings || alert   # 1 = findings, 2/3 = never scanned
+tunnelscope fleet captures/ --json --fail-on-findings || alert   # 1 = findings, 2/3 = not scanned
 ```
 
-`--fail-on-findings` is opt-in so default behaviour (and the demo script) is
-unchanged. On `fleet` it also trips on captures that failed to parse: a file
-that was never read has not been cleared. Pointing `fleet` at a path that
-does not exist, or one holding no captures, is an error rather than an empty
-clean report — "scanned nothing" must never render as "found nothing wrong".
-`TUNNELSCOPE_TSHARK_TIMEOUT` (default 120s) bounds each tshark call so one
-pathological capture cannot hang a whole fleet scan.
+`--fail-on-findings` is opt-in. On `fleet` it also trips on captures that failed to parse, and a path
+with no captures is an error, so an empty scan is never mistaken for a clean one.
+`TUNNELSCOPE_TSHARK_TIMEOUT` (default 120 s) bounds each tshark call. Reads of a capture are cached
+on `(path, mtime, size)`; `TUNNELSCOPE_CACHE_CAPTURES` sets how many captures to keep (default 8, `0`
+disables), and a capture that changes on disk is re-read.
 
-Reads of a capture are memoised on `(path, mtime, size)`, because the IKE
-crypto read happens once per SA and each read re-parses the whole file: a
-capture carrying 10 tunnels cost 10 tshark spawns (1.86s) and now costs 1
-(0.19s). A capture that changes on disk is re-read, not served stale.
-`TUNNELSCOPE_CACHE_CAPTURES` sets how many captures to keep (default 8, `0`
-disables). This does **not** speed up `fleet`, which analyses each capture
-exactly once — measured 19.7s vs 19.3s over 35 captures, i.e. noise.
+## Design
 
-## Design in one paragraph
+A capture goes to **ingest** (tshark), which feeds **extractors** that build one **EvidenceRecord** per
+Security Association. Every fact is a `Finding` with a mandatory status (observed, inferred or
+measured) and a vantage. The **assessment engine** runs versioned YAML baselines against the records
+and produces a verdict per rule. **Scoring**, the **threat matrix**, the **reports**, the **CBOM** and
+the **ledger** are all generated from the evidence records. The **remediation** module turns failed
+verdicts into plans and, for strongSwan settings, applies and verifies them. Architecture and design
+decisions: [`../build/00-ARCHITECTURE.md`](../build/00-ARCHITECTURE.md).
 
-A capture goes to **ingest** (tshark, reused not rebuilt), which feeds deterministic **extractors**
-that build one **EvidenceRecord** per Security Association. Every fact is a `Finding` whose `status`
-is structurally mandatory — there is no code path that yields a bare value, so "we didn't see it" and
-"it isn't there" stay distinct. The **assessment engine** evaluates versioned YAML baselines against
-the records; a finding that is UNKNOWN/NOT-OBSERVABLE yields an UNKNOWN/NOT-OBSERVABLE verdict, never
-PASS/FAIL. **Scoring** is per-baseline and coverage-aware. **Reports** and the **CBOM** are generated
-from the evidence graph only. Full architecture and ADRs: `build/00-ARCHITECTURE.md`.
+## The models
 
-## The one ML component
+All models are trained by us and ship as plain arrays; no pretrained or third-party model is used.
 
-Only metadata-leakage measurement uses ML, and it is used as a **measuring instrument** (bits of
-exposure), never as a traffic-type oracle (DEC-021). Every other capability is deterministic —
-several that the design phase expected to need ML were tested and shown not to (PFS, failure
-diagnosis, fingerprinting, mode).
+- **Traffic type**: Random Forest over 31 numbers per 2-second window (packet counts, sizes, timing
+  gaps, size histogram, direction). Predicts voip, web, bulk file transfer, interactive shell, video,
+  e-mail, messaging or icmp, with a confidence.
+- **Mixed traffic**: Random Forest that picks out tunnels carrying more than one kind of traffic.
+- **Tunnel or transport mode**: Random Forest over the share of ACK-sized packets.
+- **Change detection**: Isolation Forest plus rules and robust statistics, per tunnel.
 
-## Trust and limits
+## Vantage tiers
 
-- **Vantage tiers** T0 (passive ESP) → T1 (+IKE) → T2 (endpoint) → T3 (keys) → T4 (active). The tool
-  is fully useful at T0/T1 and marks what only higher tiers can answer.
-- Validated on strongSwan 5.9.8/6.1.0 and Libreswan 5.4. Vendor stacks (Cisco/Palo Alto/Fortinet)
-  are untested. Mode inference and receiver-side replay enforcement are NOT-OBSERVABLE passively.
-- End-to-end validation: `python3 build/validate_e2e.py` (69/69 captures match ground truth).
+Each finding states the vantage that produced it: T0 (the encrypted packets), T1 (plus the plaintext
+handshake), T2 (endpoint telemetry), T3 (keys), T4 (active probing). T0 and T1 need nothing but a
+capture; T2 adds the endpoint cross-check.
 
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -q        # unit + ground-truth tests
+python3 -m pytest tests/ -q        # unit and ground-truth tests
 python3 dataset/validate.py        # dataset integrity (hashes, provenance, splits)
-python3 build/validate_e2e.py      # end-to-end vs ground truth
+python3 build/validate_e2e.py      # every capture against its ground truth
 ```

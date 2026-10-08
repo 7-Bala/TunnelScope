@@ -1,99 +1,95 @@
-# TunnelScope — Pitch Deck
+# TunnelScope: pitch deck
 
-One section = one slide. Speaker notes in _italics_.
+One section is one slide. Speaker notes are in _italics_.
 
 ---
 
 ## 1 · Title
-**TunnelScope** — Evidence-tiered IPsec/IKE posture & post-quantum migration assessment.
-NTRO · Blockchain & Cybersecurity.
-_An analyzer that tells you what your VPN actually negotiated — and is honest about what it can't see._
+**TunnelScope**: AI-powered IPsec VPN analysis and security assessment.
+SIH 2026 · SIH26160 · NTRO · Blockchain & Cybersecurity.
+_It tells you what your VPN actually negotiated, how strong that is, and how to fix it._
 
 ---
 
-## 2 · The problem, precisely
-Traditional tools give packet-level visibility that needs an expert to interpret. But the real gap
-isn't parsing — it's **assessment**:
-- The ESP cipher, mode, and PFS are inside the **encrypted** part of IKE.
-- IKEv2 doesn't even negotiate a lifetime.
-- No tool tells an operator: *is this tunnel compliant, against which standard, and is it
-  post-quantum — or was PQ offered but classical negotiated?*
-_We spent the research phase proving where the gap really is (research/ docs 01–11)._
+## 2 · The problem
+- A tunnel is only as strong as what it negotiated: the cipher, the key-exchange group, forward secrecy,
+  key refresh, replay protection and, now, post-quantum key exchange.
+- The configuration file says one thing; the wire can say another.
+- Wireshark shows the fields, but an expert still has to read them and know which standard they break.
+- India's post-quantum guidance (DST / National Quantum Mission, February 2026) asks critical
+  infrastructure for a cryptographic inventory by 2027 and names VPNs.
+_Nobody can build that inventory without knowing what each tunnel is really using._
 
 ---
 
 ## 3 · What we built
-A pipeline: **capture → per-SA evidence records → verdicts against named standards → score →
-reports + CBOM + dashboard.** Every finding declares its **status** (observed / inferred / measured /
-**unknown** / **not-observable** / **contradictory**), its **vantage tier**, and its **evidence**.
-Every verdict **cites the standard** it's judged against.
+A pipeline: **capture or live stream → tshark → evidence records → rule engine and AI models → threat
+matrix and risk score → reports, CBOM, ledger, dashboard and fixes.**
+Passive: no VPN keys, nothing decrypted. Every finding says how it is known (observed, inferred or
+measured) and every verdict cites its rule.
 
 ---
 
-## 4 · The one idea that makes it different
-**We never overclaim.** "We didn't see it" and "it isn't there" are different answers, structurally.
-- A capture that starts mid-tunnel → the tool says UNKNOWN, not a guess.
-- Tunnel vs transport mode from passive traffic → **NOT-OBSERVABLE** (we proved it, EXP-08).
-- Absence of evidence is **never** scored as compliance.
-_Competing submissions we found hardcode "Mode: Tunnel" and default to "AES-256-GCM + PFS" when they
-can't see the handshake. That's a confident lie. We refuse to._
+## 4 · What it reads
+IKE v1 and v2, ESP and AH, security-association lifecycle, handshake cipher, integrity and DH group,
+ESP cipher family, tunnel or transport mode, perfect forward secrecy, rekey timing, replay behaviour,
+ML-KEM post-quantum key exchange and post-quantum downgrades, known-vulnerability patterns.
+_Live demo: the downgrade capture. The verdict reads DOWNGRADED and names the failed rule._
 
 ---
 
-## 5 · The headline capability: post-quantum downgrade detection
-strongSwan negotiates hybrid ML-KEM IPsec today. India's DST/National Quantum Mission mandates
-crypto inventory and downgrade prevention for critical infrastructure by 2027.
-**TunnelScope detects, from plaintext IKE, whether a tunnel is post-quantum, classical, or was
-offered PQ but negotiated classical** (the cause is not attributable passively) — and emits a
-CycloneDX CBOM.
-_Live demo: the downgrade capture → posture DOWNGRADED, DST verdict FAIL._
+## 5 · How it judges
+- Rules live in YAML files, one set per standard: DISA VPN SRG, RFC 8247, RFC 8221 and RFC 4303, and a
+  post-quantum readiness baseline from the DST report.
+- A threat matrix rates each threat by likelihood and impact and links it to its evidence.
+- One 0-100 risk score comes with its drivers.
+- Per-standard scores stay separate: the same tunnel can pass one baseline and fail another, and the
+  auditor sees both.
 
 ---
 
-## 6 · It's mostly deterministic — and that's a strength
-The PS says "AI-driven." We use ML in exactly **one** place — measuring metadata leakage, and even
-there we report **bits of exposure, never a traffic label**. Four capabilities the design *expected*
-to need ML (PFS, failure diagnosis, fingerprinting, mode) we tested and showed to be **exact
-structural signatures** — no ML needed. Honest AI beats decorative AI in front of a technical jury.
+## 6 · The AI
+- Random Forest models we trained ourselves read packet size and timing to predict what kind of
+  traffic is inside an encrypted tunnel, with a confidence for each prediction.
+- A second model detects tunnels that carry a mix of traffic.
+- Anomaly detection compares each tunnel with its own history, so a cipher change or a downgrade stands out.
+_The content is encrypted; the shape of the traffic is not._
 
 ---
 
-## 7 · Everything is validated
-- 9 experiments, each **pre-registered** (predictions before data). 18/18 predictions held.
-- On **two independent implementations** (strongSwan + Libreswan).
-- **69/69** captures pass end-to-end validation against causal ground truth.
-- IPsec dataset with ground truth taken from the endpoint's own log, one-factor-at-a-time arms, two implementations and a locked cross-implementation test.
-_We can show the pre-registrations and the git history: weights and predictions committed before results._
+## 7 · It fixes what it finds
+- Every failed check gets a remediation plan: what is wrong, which standard says so, the exact change.
+- For weak strongSwan settings TunnelScope applies the fix itself: allowlisted command, dry run on a
+  copy, apply, capture again to confirm, automatic rollback if anything breaks, full audit log.
+_Demo: a failed rule, the proposed change, "Confirmed fixed"._
 
 ---
 
-## 8 · Multi-baseline compliance (the honest verdict)
-The same tunnel scores **100 on RFC 8247** and **38 on DISA** — because MODP-2048 meets one baseline
-and not the other. We show **both**, each citing its authority (RFC 8221/8247/9395, NIST SP 800-77r1,
-DISA VPN SRG, DST/NQM). A single "87/100" would hide exactly the thing an auditor needs.
+## 8 · What the user gets
+Dashboard (single tunnel, fleet, live), executive and technical reports, a CycloneDX cryptographic bill
+of materials for post-quantum planning, a tamper-evident evidence ledger, and a config check that
+compares a strongSwan or Libreswan file with what appeared on the wire.
 
 ---
 
-## 9 · Architecture & deployment
-Python + tshark (reused, not rebuilt), rules as versioned YAML data, SQLite, offline by default —
-no cloud, air-gap-friendly for an NTRO context. Runs as a CLI; dashboard is a single self-contained
-HTML file. Vantage ladder T0→T4: fully useful passively, more with endpoint access.
+## 9 · Built and validated
+- A Docker testbed with three IPsec implementations: strongSwan, Libreswan and OpenBSD iked.
+- Tunnel and transport mode, AES-128/256 in CBC, CTR and GCM, ChaCha20-Poly1305, MODP and
+  elliptic-curve groups, ML-KEM-768, PFS on and off, IPv4 and IPv6, AH, real applications.
+- Hash-verified captures whose correct answers come from the endpoints' own logs.
+- Every experiment pre-registered: predictions committed to git before the data existed.
 
 ---
 
-## 10 · Honest limits (we say these first)
-- Traffic in the leakage experiment is synthetic — we report **measured leakage on your own tunnel**,
-  so no synthetic number is inherited.
-- Validated on two open-source stacks; **vendor appliances untested**.
-- The CVE-2026-78135 detector: 0 false positives on 67 judgeable legitimate lab captures (2 more
-  were correctly UNKNOWN); 95% upper bound ≈ 4.4%. Reproduced live in an isolated lab with a
-  patched strongSwan (EXP-09), where the detector fired; the lab responder still rejected the Child
-  SA, so a successful exploit isn't shown.
+## 10 · Architecture and deployment
+Python and tshark, rules as versioned YAML, scikit-learn models, SQLite, React and TypeScript
+dashboard. Runs on one analyst machine or server inside the organisation. Open source (Apache 2.0).
+Adding a standard or a rule is a file change.
 
 ---
 
-## 11 · Impact & ask
-A defensible, deployable assessment tool aligned to a **dated national mandate**. It fills the gap
-no surveyed open-source tool or commercial product covers: **assessing third-party IPsec, including
-post-quantum posture, from the wire, with cited evidence.**
-_Ask: [scale-up / pilot with an NTRO deployment / dataset publication]._
+## 11 · Impact
+Defence and NTRO teams, CERT-In, banks, telecom operators and critical infrastructure can check their
+own tunnels, and tunnels shared with partners, without asking for keys. Hours of expert Wireshark work
+become a cited report and a fix anyone on the team can act on, and a clear start for post-quantum
+migration.
