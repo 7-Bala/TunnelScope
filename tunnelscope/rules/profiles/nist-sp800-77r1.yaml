@@ -1,0 +1,134 @@
+baseline: NIST-SP-800-77r1
+authority: "NIST SP 800-77 Rev. 1, Guide to IPsec VPNs (June 2020), Table 1 'Approved Algorithms and Options' and sections 2-7"
+url: "https://csrc.nist.gov/pubs/sp/800/77/r1/final"
+# T-122 part 2 / EXP-35 (pre-registered 654e2ff). Opt-in: `tunnelscope assess --profile nist-sp800-77r1`.
+# Every `quote` is verbatim from NIST.SP.800-77r1.pdf (SHA-256 bc2a36dc...74bd70), checked by
+# experiments/exp35-nist-800-77r1-profile/analyze.py; `page` is the printed page label. Severity follows the text:
+# shall / not NIST-approved -> high; should / Recommended column -> medium; "should ... unless" -> informational.
+# A value outside Table 1's Recommended column FAILs; an absent/UNKNOWN attribute is UNKNOWN, never PASS.
+# Not made into rules (FIPS-validated modules, lifetimes, PFS group, NULL auth, PSK strength, manual keying, IKEv1
+# Aggressive Mode, mode/IPComp/key lengths): see the PREREG for why.
+rules:
+  - id: NIST77-IKE-VERSION
+    title: "IKE version: IKEv2 (Table 1 Recommended; IKEv1 is Legacy, sec 3.11)"
+    attribute: ike_version
+    assert: {op: equals, value: "IKEv2"}
+    severity: medium
+    fail_message: "IKEv1 is in Table 1's Legacy column; NIST SP 800-77r1 says IKEv1 deployments should be converted to IKEv2"
+    section: "Table 1; 3.11"
+    page: "vii; 35"
+    quote:
+      - "IKEv1 should not be used for new deployments, and existing deployments using IKEv1 should be converted to IKEv2 when possible."
+  - id: NIST77-IKE-ENCR
+    title: "IKE encryption: AES-GCM, AES-CTR, AES-CBC or AES-CCM (Table 1 Recommended; TDEA is Legacy)"
+    attribute: ike_encr
+    assert: {op: matches_any, value: ["AES-GCM", "AES-CTR", "AES-CBC", "AES-CCM"]}
+    severity: medium
+    fail_message: "IKE encryption is not in Table 1's Recommended column (AES-GCM/CTR/CBC/CCM); 3DES (TDEA) is Legacy, anything else is not listed"
+    section: "Table 1, footnote 3"
+    page: "vii"
+    quote:
+      - "AES-GCM, AES-CTR, AES-CBC, AES-CCM (128, 192, 256-bit keys)"
+      - "NIST recommends upgrading all Triple Data Encryption Algorithm (TDEA) use to the Advanced Encryption Standard (AES)."
+  - id: NIST77-IKE-PRF
+    title: "IKE PRF: HMAC-SHA256, HMAC-SHA384 or HMAC-SHA512 (Table 1 Recommended; HMAC-SHA-1 is Legacy)"
+    attribute: ike_prf
+    assert: {op: in, value: ["PRF-HMAC-SHA2-256", "PRF-HMAC-SHA2-384", "PRF-HMAC-SHA2-512"]}
+    severity: medium
+    fail_message: "IKE PRF is not HMAC-SHA-2 (Table 1 Recommended); HMAC-SHA-1 is Legacy and HMAC-MD5 shall not be used"
+    section: "Table 1; 7.2.3"
+    page: "vii; 70"
+    quote:
+      - "HMAC-SHA256, HMAC-SHA384, HMAC-SHA512"
+      - "HMAC-MD5 has never been a NIST-approved algorithm and shall not be used."
+  - id: NIST77-IKE-INTEG
+    title: "IKE integrity: HMAC-SHA256, HMAC-SHA384 or HMAC-SHA512 (Table 1 Recommended)"
+    attribute: ike_integ
+    assert: {op: in, value: ["HMAC-SHA2-256-128", "HMAC-SHA2-384-192", "HMAC-SHA2-512-256"]}
+    severity: medium
+    fail_message: "IKE integrity is not HMAC-SHA-2 (Table 1 Recommended); HMAC-SHA-1 is Legacy"
+    section: "Table 1; 7.2.3"
+    page: "vii; 70"
+    quote:
+      - "HMAC-SHA256, HMAC-SHA384, HMAC-SHA512"
+      - "Even though HMAC-SHA-1 is still a NIST-approved option, the HMAC-SHA-2 algorithms are recommended because they have stronger security than HMAC-SHA-1."
+  - id: NIST77-DH-APPROVED
+    title: "IKE key exchange must not use DH group 1, 2, 5 or 22 (not NIST-approved, sec 7.2.4.2)"
+    attribute: ike_dh_group
+    assert: {op: dh_group_not_in, value: [1, 2, 5, 22]}
+    severity: high
+    fail_message: "the IKE SA uses a DH group NIST says is not approved (below 112 bits of security)"
+    section: "7.2.4.2"
+    page: "72"
+    quote:
+      - "DH groups 1, 2, 5, and 22 are not NIST-approved because these groups do not supply the minimum of 112 bits of security."
+  - id: NIST77-DH-RECOMMENDED
+    title: "IKE key exchange: DH group 14 to 21 (Table 1 Recommended; groups 31/32 are Expected)"
+    attribute: ike_dh_group
+    assert: {op: in, value: ["MODP-2048", "MODP-3072", "MODP-4096", "MODP-6144", "MODP-8192", "ECP-256", "ECP-384", "ECP-521"]}
+    severity: medium
+    fail_message: "the IKE DH group is outside Table 1's Recommended 'DH 14 to DH 21' (Curve25519/Curve448 = DH 31/32 are in the Expected column, not yet recommended)"
+    section: "Table 1; 7.2.6"
+    page: "vii; 76"
+    quote:
+      - "DH 14 to DH 21"
+      - "DH 31 and DH 32, RFC 8031"
+      - "DH group numbers 14, 15, 16, 17, 18 [15], 19, 20, and 21 [65] are NIST-approved groups."
+  - id: NIST77-PFS
+    title: "PFS should be used unless its extra DH cost is a problem (sec 2.2, 7.2.6)"
+    attribute: pfs
+    assert: {op: equals, value: true}
+    severity: informational
+    fail_message: "the observed rekey carried no new key exchange (no PFS); NIST SP 800-77r1 says PFS should be used unless the extra DH cost would pose a problem"
+    section: "2.2; 7.2.6"
+    page: "7; 76"
+    quote:
+      - "When resources allow, PFS should be used."
+      - "Because the PFS option provides stronger security, it should be used unless the additional computational requirements of the additional DH key exchanged would pose a problem."
+  - id: NIST77-AH
+    title: "AH should not be deployed; use ESP (Table 1: AH is Legacy; sec 4.5)"
+    attribute: ipsec_protocols
+    assert: {op: not_contains, value: AH}
+    severity: medium
+    fail_message: "the tunnel uses AH, which NIST SP 800-77r1 calls obsolete; ESP (or ESP-NULL / AES-GMAC without encryption) should be used instead"
+    section: "Table 1; 4.5"
+    page: "viii; 46"
+    quote:
+      - "AH has been obsoleted and should not be implemented or deployed."
+      - "If encryption is undesirable, ESP with null encryption (ESP-NULL) or AES-GMAC should be used instead of AH."
+  - id: NIST77-ESP-ENCR
+    title: "ESP encryption: AES (GCM, CTR, CBC, CCM) (Table 1 Recommended); fails only if every cipher that fits the packets is non-AES"
+    attribute: esp_cipher_family
+    applies_to_protocol: ESP
+    assert: {op: candidates_none_in, value: ["3DES-CBC+HMAC-SHA1-96", "DES-CBC+HMAC-96", "Blowfish-CBC+HMAC-96", "Twofish-CBC+HMAC-96", "CAST-CBC+HMAC-96", "ChaCha20-Poly1305"]}
+    severity: medium
+    fail_message: "every cipher family consistent with the ESP packet sizes is outside Table 1's Recommended AES modes (3DES is deprecated)"
+    section: "Table 1; 4.1.4"
+    page: "viii; 39"
+    quote:
+      - "AES-GCM, AES-CTR, AES-CBC, AES-CCM (128, 192, 256-bit keys)"
+      - "Triple DES has been deprecated since 2019 and will be disallowed after 2023."
+  - id: NIST77-ESP-INTEG
+    title: "ESP integrity: HMAC-SHA-2 or AES-GMAC (Table 1 Recommended); fails only if every family that fits has a 96-bit legacy ICV"
+    attribute: esp_cipher_family
+    applies_to_protocol: ESP
+    assert: {op: candidates_none_in, value: ["AES-CBC+HMAC-SHA1-96", "3DES-CBC+HMAC-SHA1-96", "AES-CTR+HMAC-SHA1-96", "DES-CBC+HMAC-96", "Blowfish-CBC+HMAC-96", "Twofish-CBC+HMAC-96", "CAST-CBC+HMAC-96", "NULL+HMAC-96"]}
+    severity: medium
+    fail_message: "every family consistent with the ESP packet sizes carries a 96-bit legacy integrity check (SHA-1/MD5 based), outside Table 1's Recommended list"
+    section: "Table 1; 4.1.4"
+    page: "viii; 39"
+    quote:
+      - "HMAC-SHA256, HMAC-SHA384, HMAC-SHA512, AES-GMAC"
+      - "The HMAC-MD5 and HMAC-SHA-1 integrity algorithms are also no longer NIST-approved."
+  # peer_auth_method is NOT_OBSERVABLE today (encrypted IKE_AUTH, EXP-11), so this rule reports that and is never
+  # judged; the value labels below are placeholders to revisit if endpoint (T2) data ever supplies the method.
+  - id: NIST77-AUTH
+    title: "Peer authentication: RSA, DSA or ECDSA with 128-bit security strength (Table 1 Recommended); not observable"
+    attribute: peer_auth_method
+    assert: {op: in, value: ["RSA-3072+", "ECDSA-P256+", "DSA-3072+"]}
+    severity: medium
+    fail_message: "peer authentication is not a 128-bit-strength signature as Table 1 recommends"
+    section: "Table 1"
+    page: "vii"
+    quote:
+      - "RSA, DSA, and ECDSA with 128-bit security strength (for example, RSA with 3072-bit or larger key)"

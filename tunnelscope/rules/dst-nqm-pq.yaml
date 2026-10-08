@@ -1,0 +1,16 @@
+baseline: DST-NQM-2026
+authority: "DST/National Quantum Mission - Implementation of Quantum Safe Ecosystem in India, Task Force Report, Feb 2026"
+url: "https://dst.gov.in/sites/default/files/Report_TaskForce_PQMigration_4Feb26%20(v1).pdf"
+rules:
+  - id: DST-PQ-KE
+    title: "CII cryptographic assets should negotiate a post-quantum key exchange (assess quantum risk)"
+    attribute: pq_key_exchange
+    assert: {op: pq_present}
+    severity: informational
+    fail_message: "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)"
+  - id: DST-PQ-DOWNGRADE
+    title: "A proposed PQ key exchange must not fall back to classical (prevent insecure fallback)"
+    attribute: pq_key_exchange
+    assert: {op: not_equals, value: "offered-but-not-used"}
+    severity: high
+    fail_message: "PQ key exchange offered, classical selected - an insecure fallback under DST policy (cause not attributable passively)"

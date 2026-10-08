@@ -1,0 +1,40 @@
+baseline: RFC-8221/4303
+authority: "RFC 8221 (ESP and AH algorithm requirements), RFC 4301 (IPsec architecture), RFC 4303 (ESP), RFC 4302 (AH)"
+url: "https://www.rfc-editor.org/rfc/rfc8221.html"
+# Data-plane rules (T-083). `applies_to_protocol` limits a rule to SAs that
+# actually carry that protocol: an ESP tunnel is not "missing" an AH verdict.
+# RFC 8221 text checked 2026-09-20 (sections 5 and 6 tables, quoted in the titles).
+rules:
+  - id: RFC4301-CONFIDENTIALITY
+    title: "Traffic should be protected by ESP; AH alone authenticates but does not encrypt (RFC 4301 sec 3.2)"
+    attribute: ipsec_protocols
+    assert: {op: contains, value: ESP}
+    severity: medium
+    fail_message: "only AH protects this traffic: it is authenticated but NOT encrypted, so payloads are readable on the wire"
+  - id: RFC8221-AH-INTEG
+    title: "AH integrity must not be HMAC-MD5-96 (RFC 8221 sec 6: MUST NOT; HMAC-SHA1-96 is MUST-, HMAC-SHA2-256-128 MUST)"
+    attribute: ah_integrity
+    applies_to_protocol: AH
+    assert: {op: candidates_not_all_in, value: ["HMAC-MD5-96"]}
+    severity: high
+    fail_message: "AH integrity is HMAC-MD5-96, which RFC 8221 marks MUST NOT"
+  - id: RFC8221-AH-LEGACY
+    title: "AH integrity should be HMAC-SHA2 (RFC 8221 sec 6 marks HMAC-SHA1-96 MUST-, i.e. expected to be demoted)"
+    attribute: ah_integrity
+    applies_to_protocol: AH
+    assert: {op: candidates_none_in, value: ["HMAC-MD5-96", "HMAC-SHA1-96", "AES-XCBC-96"]}
+    severity: informational
+    fail_message: "a 12-byte AH ICV means a 96-bit legacy algorithm (HMAC-MD5-96 MUST NOT, HMAC-SHA1-96 MUST-, AES-XCBC-96 SHOULD/MAY for IoT); the wire cannot tell which"
+  - id: RFC8221-ESP-3DES
+    title: "ESP encryption should not be 3DES (RFC 8221 sec 5: ENCR_3DES SHOULD NOT)"
+    attribute: esp_cipher_family
+    applies_to_protocol: ESP
+    assert: {op: candidates_not_all_in, value: ["3DES-CBC+HMAC-SHA1-96"]}
+    severity: medium
+    fail_message: "the only cipher family consistent with this traffic is 3DES, which RFC 8221 marks SHOULD NOT"
+  - id: RFC4303-SEQ
+    title: "A sequence number must not repeat on one SA (RFC 4303 sec 3.3.3 / RFC 4302 sec 3.3.2: the counter increases and MUST NOT cycle)"
+    attribute: sequence_integrity
+    assert: {op: seq_clean}
+    severity: high
+    fail_message: "a sequence number was used twice on one SA: a replayed packet on this path, or a sender violating RFC 4303; receiver-side anti-replay enforcement is not visible passively"

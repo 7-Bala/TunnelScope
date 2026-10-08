@@ -1,0 +1,1536 @@
+"""Remediation execution engine (Stage 3: lab-only, confirm-gated, re-verified).
+
+SECURITY NOTICE:
+This module is the single permitted location in the codebase allowed to run
+`docker exec` against project lab containers. Static checks for other modules (such as
+`plan.py` and `tunnelscope/rephrase/`) must NOT be weakened or broadened to cover this file.
+
+What happens on apply, in order. Every step that can refuse runs before anything changes.
+ 1. Validate: confirm is True, the target is a container named in testbed/docker-compose.yml
+    and currently running, the rule has an automated fix.
+ 2. Command check (plan.validate_command_safety): an allowlist. Plan commands are never given
+    to a shell: sed runs with an argument list, and the reload is swanctl with an argument list.
+ 3. Dry run: the sed scripts run on scratch copies of the real config files in the container,
+    and the actual resulting diff is checked (it must change something, and only proposals /
+    version settings). Then the changed files are loaded by strongSwan in a throwaway clone of
+    the container's image with no network (clone_load_check): every connection that loaded
+    before must still load, so an invented or misspelt algorithm is refused. Nothing is loaded
+    into the running daemon. Fails closed.
+ 4. Baseline: capture a handshake and record every rule's verdict BEFORE the change. The target
+    rule must be FAIL; otherwise nothing is applied (already fixed, or not observable).
+ 5. Snapshot every config file (target, and the lab peer if the peer step applies), then arm a
+    commit-confirmed watchdog inside the container that restores the snapshot by itself after
+    WATCHDOG_TIMEOUT_S unless disarmed.
+ 6. Apply the commands.
+ 7. Verify: capture again. Confirmed fixed only if the target rule is PASS, the tunnel
+    negotiated, and no rule that was not failing before is failing now.
+ 8. Otherwise roll back immediately and check the restored files byte for byte. The watchdog's
+    own restores are recorded in the audit log the next time this module runs (reconcile).
+Every attempt, refusal, rollback and watchdog restore is appended to remediate.jsonl.
+
+Real gateways (DEC-063, owner decision 2026-09-27). A target named "gw:<name>" is a real strongSwan
+gateway from the registry (gateways.py), reached with `ssh` (argument list, BatchMode, strict host
+key checking; the remote command is built from shell-quoted arguments). The same eight steps run,
+with these differences: the connection, its config files and the capture interface come from the
+registry; the plan's lab connection range is rewritten to the gateway's connection (and the dry run
+still refuses any change outside it); the load check runs on the gateway itself inside a private
+network and mount namespace (`unshare -n -m`), so it tests the gateway's own strongSwan version
+without touching the running daemon; the capture is taken on the gateway (tcpdump, IKE/ESP/AH only)
+and copied back. Two gates exist only for gateways: the terms and risks must be accepted for this
+gateway (gateways.consent_status), and apply needs the exact per-change acknowledgement sentence the
+preview showed, plus the preview digest.
+"""
+from __future__ import annotations
+
+import base64
+import difflib
+import hashlib
+import io
+import json
+import os
+import re
+import shlex
+import subprocess
+import tarfile
+import threading
+import time
+import uuid
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from . import gateways as gwmod
+from .plan import (
+    _CONNECTION_RANGE,
+    CONFIG_GLOBS,
+    LAB_CONNECTION,
+    LAB_PEERS,
+    PEER_PREP_TARGETS,
+    is_reload_command,
+    parse_sed_script,
+    peer_commands_for,
+    plan_for,
+    sed_script_of,
+    validate_command_safety,
+)
+
+
+_DEFAULT_HISTORY_DIR = Path(".tunnelscope-history")
+SNAP_SUFFIX = ".ts_snapshot"
+MANIFEST = "/tmp/.tunnelscope_snapshot_manifest"
+WATCHDOG_MARKER = "/tmp/.tunnelscope_watchdog_fired"
+DRYRUN_DIR = "/tmp/.tunnelscope_dryrun"
+# Longer than the worst case of steps 6-8 (command timeouts plus the verification capture),
+# so the watchdog never races a verification that is still running.
+WATCHDOG_TIMEOUT_S = 180
+CAPTURE_PACKETS = "80"   # the handshake plus the ping traffic
+
+_ALLOWED_DIFF_LINE = re.compile(r"^\s*(proposals|esp_proposals|ah_proposals|version)\s*=")
+_BAD = ("FAIL", "CONTRADICTORY")
+# Strongest evidence wins when a rule is judged on several SAs of one capture.
+_RANK = {"FAIL": 3, "CONTRADICTORY": 2, "PASS": 1, "NOT_OBSERVABLE": 0, "UNKNOWN": 0}
+
+_LIST_CONFIGS_SCRIPT = f"ls -1 {CONFIG_GLOBS} 2>/dev/null"
+_WRITE_MANIFEST_SCRIPT = 'printf "%s\\n" "$@" > "$0"'
+# $1 = seconds, $2 = token, $3 = connection, $4 = child SA. Restores only if the manifest still belongs to this apply.
+_WATCHDOG_SCRIPT = (
+    'sleep "$1"; m="' + MANIFEST + '"; '
+    '[ -f "$m" ] || exit 0; [ "$(head -n 1 "$m")" = "$2" ] || exit 0; '
+    'tail -n +2 "$m" | while IFS= read -r f; do [ -f "$f' + SNAP_SUFFIX + '" ] && cp -p "$f' + SNAP_SUFFIX + '" "$f"; done; '
+    'first=$(tail -n +2 "$m" | head -n 1); '
+    '{ [ -n "$first" ] && swanctl --load-all --file "$first"; } || swanctl --load-all; '
+    'swanctl --terminate --ike "$3" --timeout 3; swanctl --initiate --child "$4" --timeout 5; '
+    'tail -n +2 "$m" | while IFS= read -r f; do rm -f "$f' + SNAP_SUFFIX + '"; done; rm -f "$m"; '
+    'printf "%s %s\\n" "$2" "$(date +%s)" > "' + WATCHDOG_MARKER + '"'
+)
+_LAB_ALIAS_SCRIPT = 'for j in 0 1 2 3 4; do ip addr add "10.10.$1.$((210+j))/32" dev eth0 2>/dev/null; done; true'
+_LAB_SIDE = {"sih26-alice-pq": "1", "sih26-bob-pq": "2"}
+# ESP/AH algorithms are only inferred from data packets, so every verification capture carries a few
+# pings through the tunnel (t-tun's traffic selectors: 10.10.1.210 <-> 10.10.2.210). Fixed argv.
+TRAFFIC_PINGS = "8"
+# What the last capture on this thread observed per rule (for honest refusal messages).
+_LAST_CAPTURE = threading.local()
+# Gateways: config files are listed from the registry's globs (expanded by the gateway's shell, as
+# arguments to this fixed script); captures carry only IKE/ESP/AH, never the traffic of other services.
+_LIST_GLOBS_SCRIPT = "ls -1 $@ 2>/dev/null"
+GW_CAPTURE = "/tmp/.tunnelscope_capture.pcap"
+GW_CAPTURE_FILTER = "udp port 500 or udp port 4500 or esp or ah"
+# Which history dir (registry, consents) the current preview/apply uses.
+_CTX = threading.local()
+
+
+def _traffic_argv(target: str) -> list[str] | None:
+    side = _LAB_SIDE.get(target)
+    if side is None:
+        return None
+    other = "2" if side == "1" else "1"
+    return ["ping", "-c", TRAFFIC_PINGS, "-i", "0.2", "-W", "1", "-I", f"10.10.{side}.210", f"10.10.{other}.210"]
+
+_APPLY_LOCK = threading.Lock()
+# What the last dry run on this thread found beyond its (ok, error, diffs) result (the clone
+# check). Kept out of the return value so the dry run's call shape stays the same.
+_DRY_RUN_REPORT = threading.local()
+
+
+def _take_dry_run_report() -> dict[str, Any]:
+    rep = getattr(_DRY_RUN_REPORT, "last", None) or {}
+    _DRY_RUN_REPORT.last = {}
+    return rep
+
+
+class _Refusal(Exception):
+    def __init__(self, stage: str, error: str):
+        super().__init__(error)
+        self.stage = stage
+        self.error = error
+
+
+# ------------------------------------------------------------------ container access
+
+def _gw(target: str) -> dict[str, Any] | None:
+    """The registry entry for a "gw:<name>" target (None for a lab container or an unknown gateway)."""
+    if not gwmod.is_gateway(target):
+        return None
+    return gwmod.get(target, _history_dir(getattr(_CTX, "history_dir", None)))
+
+
+def connection_of(target: str) -> str:
+    gw = _gw(target)
+    return gw["connection"] if gw else LAB_CONNECTION
+
+
+def child_of(target: str) -> str:
+    gw = _gw(target)
+    return gw["child"] if gw else LAB_CONNECTION
+
+
+def _ssh_options(gw: dict[str, Any]) -> list[str]:
+    opts = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=yes",
+            "-o", "ServerAliveInterval=5", "-o", "ServerAliveCountMax=3", "-p", str(gw["port"])]
+    if gw.get("identity_file"):
+        opts += ["-i", os.path.expanduser(gw["identity_file"]), "-o", "IdentitiesOnly=yes"]
+    if gw.get("known_hosts_file"):
+        opts += ["-o", "UserKnownHostsFile=" + os.path.expanduser(gw["known_hosts_file"])]
+    return opts
+
+
+def remote_command(gw: dict[str, Any], argv: list[str], detach: bool = False) -> str:
+    """The command line the gateway's login shell runs: every argument shell-quoted, so what the
+    engine means as one argument stays one argument. Detached runs only redirect and background."""
+    words = (["sudo", "-n"] if gw.get("sudo") else []) + [str(a) for a in argv]
+    cmd = " ".join(shlex.quote(w) for w in words)
+    return f"nohup {cmd} >/dev/null 2>&1 </dev/null &" if detach else cmd
+
+
+def _exec(target: str, argv: list[str], timeout: float = 10, detach: bool = False,
+          stdin: bytes | None = None) -> subprocess.CompletedProcess:
+    """The one way this module touches a target: `docker exec` into a lab container, or `ssh` to a
+    registered gateway (DEC-063), always with an argument list, never through a local shell."""
+    if gwmod.is_gateway(target):
+        gw = _gw(target)
+        if gw is None:
+            return subprocess.CompletedProcess([], 255, "", f"{target} is not a registered gateway")
+        dest = f"{gw['user']}@{gw['host']}"
+        remote = remote_command(gw, argv, detach)
+        if stdin is not None:
+            r = subprocess.run(["ssh", *_ssh_options(gw), "--", dest, remote],
+                               input=stdin, capture_output=True, check=False, timeout=timeout)
+            return subprocess.CompletedProcess(["ssh"], r.returncode, (r.stdout or b"").decode(errors="replace"),
+                                               (r.stderr or b"").decode(errors="replace"))
+        # stdin is closed on purpose: ssh forwards whatever it can read to the remote command, so an
+        # inherited stdin would swallow the confirmation sentence the operator pipes or types next.
+        return subprocess.run(["ssh", *_ssh_options(gw), "--", dest, remote], stdin=subprocess.DEVNULL,
+                              capture_output=True, text=True, check=False, timeout=timeout)
+    flags = ["-d"] if detach else []
+    return subprocess.run(
+        ["docker", "exec", *flags, target, *argv],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=timeout,
+    )
+
+
+def list_config_files(target: str) -> list[str]:
+    """Config files present in the container, in `ls` order (the reload uses the first)."""
+    gw = _gw(target)
+    if gw is not None:
+        res = _exec(target, ["sh", "-c", _LIST_GLOBS_SCRIPT, "ls", *gw["config_globs"]], timeout=5)
+    else:
+        res = _exec(target, ["sh", "-c", _LIST_CONFIGS_SCRIPT], timeout=5)
+    seen: list[str] = []
+    for line in (res.stdout or "").splitlines():
+        line = line.strip()
+        if line and line not in seen:
+            seen.append(line)
+    return seen
+
+
+def read_file(target: str, path: str) -> str | None:
+    res = _exec(target, ["cat", path], timeout=5)
+    return res.stdout if res.returncode == 0 else None
+
+
+def _reload(target: str, files: list[str]) -> subprocess.CompletedProcess:
+    """plan.RELOAD_COMMAND, run without a shell."""
+    if files:
+        res = _exec(target, ["swanctl", "--load-all", "--file", files[0]], timeout=15)
+        if res.returncode == 0:
+            return res
+    return _exec(target, ["swanctl", "--load-all"], timeout=15)
+
+
+def _gateway_range(target: str) -> str:
+    """The sed range for the gateway's connection, built from how the connection is actually
+    written in its config (indent of its opening and closing lines). Raises if it is not found, or
+    if two files write it differently."""
+    conn = connection_of(target)
+    shapes = set()
+    for f in list_config_files(target):
+        text = read_file(target, f)
+        if text is None:
+            continue
+        lines = text.splitlines()
+        span = _connection_span(lines, conn)
+        if span is None:
+            continue
+        open_indent = re.match(r"^[ \t]*", lines[span[0]]).group(0)
+        close_indent = re.match(r"^[ \t]*", lines[span[1]]).group(0)
+        if lines[span[1]].strip() != "}":
+            raise RuntimeError(f"the {conn} connection does not end with a line holding only '}}'")
+        shapes.add((open_indent, close_indent))
+    if not shapes:
+        raise RuntimeError(f"the connection {conn!r} was not found in the gateway's configuration")
+    if len(shapes) > 1:
+        raise RuntimeError(f"the connection {conn!r} is written differently in two config files")
+    open_indent, close_indent = shapes.pop()
+    name = conn.replace(".", "\\.")
+    return "/^" + open_indent + name + "[[:space:]]*\\{/,/^" + close_indent + "\\}/"
+
+
+def _script_for(target: str, script: str) -> str:
+    """A plan's sed script as it runs on this target. Lab: unchanged. Gateway: every automated fix
+    is limited to the lab connection's range; that range is replaced by the gateway connection's.
+    A script not limited to the lab connection is refused for a gateway."""
+    if not gwmod.is_gateway(target):
+        return script
+    if not script.startswith(_CONNECTION_RANGE + " "):
+        raise RuntimeError("only fixes limited to one connection can run on a real gateway")
+    out = _gateway_range(target) + script[len(_CONNECTION_RANGE):]
+    parse_sed_script(out)   # the rewritten script must still be inside the allowed grammar
+    return out
+
+
+def _as_run(target: str, cmd: str, files: list[str]) -> str:
+    """The command as it really runs on this target (recorded and shown). Lab: the plan's command
+    string, unchanged. Gateway: the rewritten sed script and the real files, or the real reload."""
+    if not gwmod.is_gateway(target):
+        return cmd
+    script = sed_script_of(cmd)
+    if script is not None:
+        return " ".join(shlex.quote(w) for w in ["sed", "-i", "-E", _script_for(target, script), *files])
+    return "swanctl --load-all" + (f" --file {shlex.quote(files[0])}" if files else "")
+
+
+def _run_plan_command(target: str, cmd: str, files: list[str]) -> subprocess.CompletedProcess:
+    script = sed_script_of(cmd)
+    if script is not None:
+        script = _script_for(target, script)
+        return _exec(target, ["sed", "-i", "-E", script, *files], timeout=15)
+    if is_reload_command(cmd):
+        return _reload(target, files)
+    raise RuntimeError(f"no executor for command {cmd!r}")  # unreachable after validate_command_safety
+
+
+def _captures_dir() -> Path:
+    """Host side of the ./captures:/captures volume every lab container mounts."""
+    return _repo_root() / "testbed" / "captures"
+
+
+# ------------------------------------------------------------------ validation helpers
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def get_allowed_targets(compose_path: Path | None = None) -> set[str]:
+    """Parse testbed/docker-compose.yml at runtime to extract valid container names.
+    Never hardcoded to prevent configuration drift."""
+    path = compose_path or (_repo_root() / "testbed" / "docker-compose.yml")
+    if not path.is_file():
+        return set()
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = yaml.safe_load(fh)
+        if not isinstance(data, dict):
+            return set()
+        services = data.get("services", {})
+        targets: set[str] = set()
+        if isinstance(services, dict):
+            for svc_name, svc_conf in services.items():
+                if isinstance(svc_conf, dict) and "container_name" in svc_conf:
+                    targets.add(str(svc_conf["container_name"]))
+                else:
+                    targets.add(str(svc_name))
+        return targets
+    except Exception:
+        return set()
+
+
+def running_containers() -> set[str]:
+    try:
+        res = subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+        if res.returncode != 0:
+            return set()
+        return {line.strip() for line in res.stdout.splitlines() if line.strip()}
+    except Exception:
+        return set()
+
+
+def is_container_running(target: str) -> bool:
+    """Return True if `target` is currently listed in `docker ps`."""
+    return target in running_containers()
+
+
+def lab_targets(compose_path: Path | None = None) -> list[dict[str, Any]]:
+    """Allowed targets with their running state, for the dashboard's target picker."""
+    running = running_containers()
+    return [{"name": t, "running": t in running} for t in sorted(get_allowed_targets(compose_path))]
+
+
+def record_audit(entry: dict[str, Any], history_dir: str | Path | None = None) -> None:
+    """Append a single record to .tunnelscope-history/remediate.jsonl."""
+    hdir = Path(history_dir) if history_dir else (_repo_root() / _DEFAULT_HISTORY_DIR)
+    try:
+        hdir.mkdir(parents=True, exist_ok=True)
+        with open(hdir / "remediate.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, sort_keys=True, default=str) + "\n")
+    except Exception:
+        pass  # logging must never stop a rollback
+
+
+def _peer_for(target: str) -> str | None:
+    if gwmod.is_gateway(target):
+        gw = _gw(target)
+        return gwmod.PREFIX + gw["peer"] if gw and gw.get("peer") else None
+    return LAB_PEERS.get(target) if target in PEER_PREP_TARGETS else None
+
+
+# ------------------------------------------------------------------ gateways: consent (DEC-063)
+
+def save_gateway(name: str, entry: dict[str, Any], history_dir: str | Path | None = None) -> dict[str, Any]:
+    """Add or replace one gateway in the registry file. Validated first; a changed definition
+    invalidates its earlier acceptance (the fingerprint changes)."""
+    gw = gwmod.validate_entry(name, entry)
+    path = gwmod.registry_path(_history_dir(history_dir))
+    data: dict[str, Any] = {}
+    if path.is_file():
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    gws = data.setdefault("gateways", {})
+    gws[name] = {k: v for k, v in entry.items() if v is not None}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data, sort_keys=True), encoding="utf-8")
+    record_audit({"timestamp": time.time(), "at": time.time(), "decision": "gateway_registered", "ok": True,
+                  "target": gwmod.PREFIX + name, "gateway": {k: gw[k] for k in ("host", "port", "user", "connection", "peer")},
+                  "gateway_fingerprint": gwmod.fingerprint(gw)}, history_dir)
+    return gw
+
+
+def gateway_list(history_dir: str | Path | None = None) -> list[dict[str, Any]]:
+    """Registered gateways with their consent state, for the dashboard and the CLI."""
+    hd = _history_dir(history_dir)
+    out = []
+    for name, gw in sorted(gwmod.load_registry(hd).items()):
+        st = gwmod.consent_status(gw, hd)
+        out.append({"name": gwmod.PREFIX + name, "host": gw["host"], "user": gw["user"], "connection": gw["connection"],
+                    "peer": gw["peer"], "allow_ai_drafts": gw["allow_ai_drafts"], "accepted": st["accepted"],
+                    "consent": st, "accept_phrase": gwmod.accept_phrase(name)})
+    return out
+
+
+def _append_consent(entry: dict[str, Any], history_dir) -> None:
+    hd = _history_dir(history_dir)
+    hd.mkdir(parents=True, exist_ok=True)
+    with open(hd / gwmod.CONSENT_FILE, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, sort_keys=True) + "\n")
+
+
+def accept_terms(target: str, typed: str, accepted_by: str, history_dir: str | Path | None = None,
+                 terms_sha256: str | None = None) -> dict[str, Any]:
+    """Record acceptance of the terms and risks for one gateway. Refused unless `typed` is exactly
+    the acceptance sentence, `accepted_by` names a person, and (when given) the terms the person
+    saw are the current terms."""
+    hd = _history_dir(history_dir)
+    gw = gwmod.get(target, hd)
+    if gw is None:
+        return {"ok": False, "error": f"{target!r} is not a registered gateway"}
+    phrase = gwmod.accept_phrase(gw["name"])
+    if typed != phrase:
+        return {"ok": False, "error": f"type exactly: {phrase}"}
+    if not isinstance(accepted_by, str) or not accepted_by.strip() or len(accepted_by) > 120:
+        return {"ok": False, "error": "say who is accepting (a name)"}
+    if terms_sha256 is not None and terms_sha256 != gwmod.TERMS_SHA256:
+        return {"ok": False, "error": "the terms changed while you were reading them; read the new version"}
+    now = time.time()
+    entry = {"at": now, "decision": "accepted", "gateway": gw["name"], "gateway_fingerprint": gwmod.fingerprint(gw),
+             "terms_version": gwmod.TERMS_VERSION, "terms_sha256": gwmod.TERMS_SHA256,
+             "accepted_by": accepted_by.strip(), "typed": typed}
+    _append_consent(entry, hd)
+    record_audit({"timestamp": now, **entry, "ok": True, "target": target, "decision": "terms_accepted"}, hd)
+    return {"ok": True, **entry}
+
+
+def withdraw_terms(target: str, by: str, history_dir: str | Path | None = None) -> dict[str, Any]:
+    hd = _history_dir(history_dir)
+    gw = gwmod.get(target, hd)
+    if gw is None:
+        return {"ok": False, "error": f"{target!r} is not a registered gateway"}
+    now = time.time()
+    entry = {"at": now, "decision": "withdrawn", "gateway": gw["name"], "by": str(by)[:120]}
+    _append_consent(entry, hd)
+    record_audit({"timestamp": now, **entry, "ok": True, "target": target, "decision": "terms_withdrawn"}, hd)
+    return {"ok": True, **entry}
+
+
+def _validate_gateway(target: str, plan: dict[str, Any], generated: bool) -> str | None:
+    """Gateway checks before anything is touched. Returns the peer target or None; raises _Refusal."""
+    hd = _history_dir(getattr(_CTX, "history_dir", None))
+    gw = gwmod.get(target, hd)
+    if gw is None:
+        problems = gwmod.registry_problems(hd)
+        raise _Refusal("validate", f"{target!r} is not a registered gateway" + (f" ({'; '.join(problems[:3])})" if problems else ""))
+    peer = _peer_for(target)
+    for t in [target] + ([peer] if peer else []):
+        g = gwmod.get(t, hd)
+        st = gwmod.consent_status(g, hd)
+        if not st["accepted"]:
+            raise _Refusal("consent", f"{t}: {st['reason']}. Nothing was changed.")
+        if generated and not g["allow_ai_drafts"]:
+            raise _Refusal("consent", f"{t}: AI-drafted fixes are not allowed on this gateway (allow_ai_drafts is false)")
+        r = _exec(t, ["swanctl", "--stats"], timeout=10)
+        if r.returncode != 0:
+            raise _Refusal("validate", f"{t}: cannot reach the gateway or run swanctl over SSH "
+                                       f"({(r.stderr or r.stdout or '').strip()[:200]})")
+    return peer
+
+
+def _validate(rule_id: Any, target: Any, compose_path: Path | None,
+              plan: dict[str, Any] | None = None) -> tuple[dict, str | None]:
+    """Steps 1-2 (no container is touched). Returns (plan, peer) or raises _Refusal. `plan` is a
+    stored generated plan (T-104); otherwise the hand-written plan for the rule is used."""
+    if gwmod.is_gateway(target):
+        if plan is None:
+            plan = plan_for(rule_id, include_exec=True)
+        if plan is None:
+            raise _Refusal("validate", f"Unknown rule_id {rule_id!r}")
+        if not plan.get("auto_applicable") or not plan.get("exec_commands"):
+            raise _Refusal("validate", f"Rule {rule_id} has no automated fix")
+        for cmd in plan["exec_commands"]:
+            safe, reason = validate_command_safety(cmd)
+            if not safe:
+                raise _Refusal("lint", f"Command safety check failed: {reason}")
+        return plan, _validate_gateway(target, plan, generated=plan.get("source") == "generated" or "raw_output" in plan)
+    allowed = get_allowed_targets(compose_path)
+    if not isinstance(target, str) or target not in allowed:
+        raise _Refusal("validate", f"Target {target!r} is not an allowed lab container ({sorted(allowed)})")
+    if not is_container_running(target):
+        raise _Refusal("validate", f"Container {target!r} is not currently running in Docker")
+    if plan is None:
+        plan = plan_for(rule_id, include_exec=True)
+    if plan is None:
+        raise _Refusal("validate", f"Unknown rule_id {rule_id!r}")
+    if not plan.get("auto_applicable"):
+        raise _Refusal("validate", f"Rule {rule_id} is advisory-only (auto_applicable: false) and cannot be executed")
+    if not plan.get("exec_commands"):
+        raise _Refusal("validate", "no safe automated fix exists for this rule yet")
+    peer = _peer_for(target)
+    if peer and not is_container_running(peer):
+        raise _Refusal("validate", f"Lab peer {peer!r} must be running so the tunnel can be re-negotiated and verified")
+    for cmd in plan["exec_commands"] + (peer_commands_for(plan) if peer else []):
+        safe, reason = validate_command_safety(cmd)
+        if not safe:
+            raise _Refusal("lint", f"Command safety check failed: {reason}")
+    return plan, peer
+
+
+# ------------------------------------------------------------------ dry run (Layer 4)
+
+def _connection_span(lines: list[str], name: str = LAB_CONNECTION) -> tuple[int, int] | None:
+    """Line indices (first, last) of the top-level connection `name` in a swanctl.conf, found by
+    brace matching, independently of the sed range the plan uses."""
+    opener = re.compile(r"^\s*" + re.escape(name) + r"\s*\{\s*$")
+    depth, start = 0, None
+    for i, line in enumerate(lines):
+        code = line.split("#", 1)[0]
+        if start is None and depth == 1 and opener.match(code):
+            start = i
+        depth += code.count("{") - code.count("}")
+        if start is not None and depth == 1:
+            return start, i
+    return None
+
+
+def perform_sandboxed_dry_run(target: str, commands: list[str], allow_no_change: bool = False,
+                              report: dict[str, Any] | None = None) -> tuple[bool, str | None, dict[str, str]]:
+    """Run the plan's sed scripts on scratch copies of the container's real config files and
+    check the actual diff, then load the changed files in a clone of the image. Returns
+    (ok, error, {file: unified diff}); `report`, if given, receives the clone check result.
+    Never loads anything into the running daemon; fails closed on any error."""
+    _DRY_RUN_REPORT.last = {}
+    try:
+        files = list_config_files(target)
+        if not files:
+            return False, "no swanctl configuration file was found in the container, so the change cannot be checked", {}
+        _exec(target, ["rm", "-rf", DRYRUN_DIR], timeout=5)
+        if _exec(target, ["mkdir", "-p", DRYRUN_DIR], timeout=5).returncode != 0:
+            return False, "could not create the dry-run scratch directory", {}
+        scratch = {}
+        for i, f in enumerate(files):
+            s = f"{DRYRUN_DIR}/{i}.conf"
+            if _exec(target, ["cp", "-p", f, s], timeout=5).returncode != 0:
+                return False, f"could not copy {f} for the dry run", {}
+            scratch[f] = s
+        for cmd in commands:
+            script = sed_script_of(cmd)
+            if script is None:
+                continue  # the reload would touch the live daemon; it is not dry-run
+            script = _script_for(target, script)
+            res = _exec(target, ["sed", "-i", "-E", script, *scratch.values()], timeout=15)
+            if res.returncode != 0:
+                return False, f"sed rejected the script: {(res.stderr or '').strip()}", {}
+        diffs: dict[str, str] = {}
+        changed: dict[str, tuple[str, str]] = {}
+        problems: list[str] = []
+        for f, s in scratch.items():
+            before, after = read_file(target, f), read_file(target, s)
+            if before is None or after is None:
+                return False, f"could not read {f} back during the dry run", {}
+            if before == after:
+                continue
+            changed[f] = (before, after)
+            b, a = before.splitlines(), after.splitlines()
+            if len(b) != len(a):
+                problems.append(f"{f}: the change adds or removes lines")
+            span = _connection_span(b, connection_of(target))
+            outside = [i + 1 for i, (bl, al) in enumerate(zip(b, a))
+                       if bl != al and (span is None or not span[0] <= i <= span[1])]
+            if outside:
+                problems.append(f"{f}: the change reaches outside the {connection_of(target)} connection "
+                                f"(line {', '.join(map(str, outside[:5]))}), which would not be verified")
+            if before.count("{") != after.count("{") or before.count("}") != after.count("}"):
+                problems.append(f"{f}: the change alters the block structure")
+            for bl, al in zip(b, a):
+                if bl != al:
+                    for line in (bl, al):
+                        if not _ALLOWED_DIFF_LINE.match(line):
+                            problems.append(f"{f}: the change touches a line that is not a proposals/version setting: {line.strip()!r}")
+            diffs[f] = "".join(difflib.unified_diff(
+                before.splitlines(True), after.splitlines(True), fromfile=f, tofile=f + " (after)"))
+        if problems:
+            return False, "; ".join(problems[:5]), diffs
+        if not diffs and not allow_no_change:
+            return False, ("the commands would change nothing in this container's configuration "
+                           "(the setting may already be compliant, or the plan does not match this config)"), {}
+        if changed:
+            clone = clone_load_check(target, {f: b for f, (b, _) in changed.items()},
+                                     {f: a for f, (_, a) in changed.items()})
+            _DRY_RUN_REPORT.last = {"clone_check": clone}
+            if report is not None:
+                report["clone_check"] = clone
+            if not clone["ok"]:
+                return False, f"the changed configuration does not load in a clone of {target}: {clone['reason']}", diffs
+        return True, None, diffs
+    except Exception as e:
+        return False, f"the dry run could not complete: {e}", {}
+    finally:
+        try:
+            _exec(target, ["rm", "-rf", DRYRUN_DIR], timeout=5)
+        except Exception:
+            pass
+
+
+# ------------------------------------------------------------------ generated plans and the preview digest (T-104)
+
+PLAN_STORE = "generated_plans"
+_PLAN_ID = re.compile(r"^[0-9a-f]{64}$")
+_PLAN_ID_FIELDS = ("rule_id", "target", "exec_commands", "model_revision", "prompt_sha256", "raw_output")
+
+
+def _history_dir(history_dir: str | Path | None) -> Path:
+    return Path(history_dir) if history_dir else (_repo_root() / _DEFAULT_HISTORY_DIR)
+
+
+def plan_id_of(record: dict[str, Any]) -> str:
+    """Content address of a generated plan: what it will run, where, and which model draft it
+    came from. Any change to these gives a different id."""
+    core = {k: record.get(k) for k in _PLAN_ID_FIELDS}
+    return hashlib.sha256(json.dumps(core, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def store_generated_plan(plan: dict[str, Any], target: str, history_dir: str | Path | None = None) -> str:
+    """Save a checked generated plan, write-once, under its content address. Returns the id."""
+    record = {**plan, "target": target}
+    pid = plan_id_of(record)
+    d = _history_dir(history_dir) / PLAN_STORE
+    d.mkdir(parents=True, exist_ok=True)
+    path = d / f"{pid}.json"
+    if path.exists():
+        return pid                     # write-once: the same id is the same plan
+    tmp = d / f".{pid}.{uuid.uuid4().hex[:8]}.tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump({**record, "plan_id": pid, "stored_at": time.time()}, fh, sort_keys=True, default=str)
+    os.replace(tmp, path)
+    return pid
+
+
+def load_generated_plan(plan_id: Any, history_dir: str | Path | None = None) -> dict[str, Any]:
+    """Read a stored plan and re-check its content address. Raises _Refusal."""
+    if not isinstance(plan_id, str) or not _PLAN_ID.match(plan_id):
+        raise _Refusal("validate", "plan_id is not a generated plan id")
+    path = _history_dir(history_dir) / PLAN_STORE / f"{plan_id}.json"
+    try:
+        with open(path, encoding="utf-8") as fh:
+            record = json.load(fh)
+    except FileNotFoundError:
+        raise _Refusal("validate", "no generated plan with this id")
+    except Exception:
+        raise _Refusal("plan_integrity", "the stored plan could not be read")
+    if not isinstance(record, dict) or plan_id_of(record) != plan_id:
+        raise _Refusal("plan_integrity", "the plan file was changed after it was generated; draft it again")
+    return record
+
+
+def preview_digest(ident: str, target: str, diff: dict[str, str], peer_diff: dict[str, str] | None,
+                   clone: dict[str, Any] | None, peer_clone: dict[str, Any] | None) -> str:
+    """What the human approved: which plan, where, and the exact dry-run result on both ends.
+    Apply recomputes it from a fresh dry run and refuses if anything differs."""
+    doc = {"plan": ident, "target": target, "diff": diff, "peer_diff": peer_diff or {},
+           "clone": (clone or {}).get("files"), "peer_clone": (peer_clone or {}).get("files")}
+    return hashlib.sha256(json.dumps(doc, sort_keys=True).encode()).hexdigest()
+
+
+def _load_generated_for(rule_id: Any, target: Any, plan_id: Any, history_dir) -> dict[str, Any]:
+    """A stored generated plan, re-checked against the target's current config. Raises _Refusal."""
+    record = load_generated_plan(plan_id, history_dir)
+    if record.get("rule_id") != rule_id:
+        raise _Refusal("validate", "this plan was drafted for a different rule")
+    if record.get("target") != target:
+        raise _Refusal("validate", "this plan was drafted for a different container")
+    from .generate import recheck           # imported here: generate imports this module
+    why = recheck(record, target)
+    if why:
+        raise _Refusal("recheck", f"the stored draft no longer passes its checks: {why}")
+    return record
+
+
+# ------------------------------------------------------------------ clone load check (Layer 4, T-100)
+
+CLONE_LABEL = "tunnelscope.clone=1"
+CLONE_TIMEOUT_S = 60
+CLONE_MAX_AGE_S = 180
+# Fixed script run in the clone. The files arrive as a tar on stdin; nothing is interpolated.
+# Exit codes are never used (a pipe once hid swanctl's): the output text is parsed instead.
+_CLONE_SCRIPT = (
+    "mkdir -p /probe /var/run/charon && tar -x -C /probe || { echo TS_ERR tar; exit 0; }; "
+    "C=/usr/libexec/ipsec/charon; [ -x $C ] || C=/usr/lib/ipsec/charon; $C >/tmp/charon.log 2>&1 & "
+    "i=0; until swanctl --stats >/dev/null 2>&1; do i=$((i+1)); [ $i -gt 100 ] && { echo TS_ERR charon; exit 0; }; sleep 0.1; done; "
+    "for f in $(ls /probe/c | sort); do echo \"TS_FILE $f\"; swanctl --load-conns --file /probe/c/$f 2>&1; "
+    "echo TS_END; swanctl --load-conns --file /probe/empty.conf >/dev/null 2>&1; done; "
+    "echo TS_LOG; grep -E 'not recognized|invalid' /tmp/charon.log; echo TS_DONE"
+)
+_CLONE_NAME = re.compile(r"tunnelscope-clone-(\d+)-[0-9a-f]+")
+_LOADED = re.compile(r"^loaded connection '([^']+)'", re.M)
+_LOAD_FAILED = re.compile(r"^loading connection '([^']+)' failed", re.M)
+_NOT_RECOGNIZED = re.compile(r"algorithm '([^']+)' not recognized")
+
+
+def _docker(argv: list[str], stdin: bytes | None = None, timeout: float = 10) -> subprocess.CompletedProcess:
+    """Docker commands that are not `docker exec` into a lab container: image lookup and the
+    throwaway clone. Argument lists only."""
+    return subprocess.run(["docker", *argv], input=stdin, capture_output=True, check=False, timeout=timeout)
+
+
+def image_of(target: str) -> str | None:
+    """The image id (not the tag) the running container was created from."""
+    try:
+        r = _docker(["inspect", "--format", "{{.Image}}", target])
+    except Exception:
+        return None
+    out = (r.stdout or b"").decode(errors="replace").strip()
+    return out if r.returncode == 0 and out.startswith("sha256:") else None
+
+
+def sweep_clones(max_age_s: int = CLONE_MAX_AGE_S) -> list[str]:
+    """Remove clones left behind by a crash (their names carry their start time)."""
+    removed = []
+    try:
+        r = _docker(["ps", "-a", "--filter", "label=" + CLONE_LABEL, "--format", "{{.Names}}"])
+        now = int(time.time())
+        for name in (r.stdout or b"").decode(errors="replace").split():
+            m = _CLONE_NAME.fullmatch(name)
+            if m and now - int(m.group(1)) > max_age_s:
+                _docker(["rm", "-f", name])
+                removed.append(name)
+    except Exception:
+        pass
+    return removed
+
+
+def _clone_tar(pairs: list[tuple[str, str]]) -> bytes:
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        def add(name: str, text: str) -> None:
+            data = text.encode()
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+        add("empty.conf", "connections {\n}\n")
+        for i, (before, after) in enumerate(pairs):
+            add(f"c/{i:03d}-a-before", before)
+            add(f"c/{i:03d}-b-after", after)
+    return buf.getvalue()
+
+
+def _parse_clone_output(out: str) -> dict[str, Any] | None:
+    if "TS_DONE" not in out or "TS_ERR" in out:
+        return None
+    body, _, log = out.partition("TS_LOG")
+    blocks = {}
+    for chunk in body.split("TS_FILE ")[1:]:
+        head, _, rest = chunk.partition("\n")
+        text, ended, _ = rest.partition("TS_END")
+        if not ended:
+            return None
+        blocks[head.strip()] = {"loaded": _LOADED.findall(text), "failed": _LOAD_FAILED.findall(text)}
+    return {"blocks": blocks, "rejected_keywords": sorted(set(_NOT_RECOGNIZED.findall(log)))}
+
+
+# Gateways: the same probe, run on the gateway in a private network and mount namespace (no network,
+# a private /run, so a second charon with its own control channel) and removed afterwards. The gateway's
+# running daemon is never contacted. Fixed script; the files arrive as a tar on stdin.
+_GW_LOAD_INNER = (
+    "d=$(mktemp -d) && mount -t tmpfs none /run && mkdir -p /run/charon \"$d/probe\" "
+    "&& tar -x -C \"$d/probe\" || { echo TS_ERR prep; exit 0; }; "
+    "C=/usr/libexec/ipsec/charon; [ -x $C ] || C=/usr/lib/ipsec/charon; $C >\"$d/charon.log\" 2>&1 & pid=$!; "
+    "i=0; until swanctl --stats >/dev/null 2>&1; do i=$((i+1)); [ $i -gt 100 ] && { echo TS_ERR charon; kill $pid; exit 0; }; sleep 0.1; done; "
+    "for f in $(ls \"$d/probe/c\" | sort); do echo \"TS_FILE $f\"; swanctl --load-conns --file \"$d/probe/c/$f\" 2>&1; "
+    "echo TS_END; swanctl --load-conns --file \"$d/probe/empty.conf\" >/dev/null 2>&1; done; "
+    "echo TS_LOG; grep -E 'not recognized|invalid' \"$d/charon.log\"; kill $pid; wait $pid 2>/dev/null; rm -rf \"$d\"; echo TS_DONE"
+)
+GW_LOAD_ARGV = ["unshare", "-n", "-m", "--propagation", "private", "sh", "-c", _GW_LOAD_INNER]
+
+
+def clone_load_check(target: str, before: dict[str, str], after: dict[str, str]) -> dict[str, Any]:
+    """Load the before and after version of every changed config file in a throwaway clone of
+    the target's image (no network, removed afterwards) and compare. ok only if, for every file,
+    each connection that loaded before still loads, none newly fails, and the lab connection
+    loads. Never touches the running daemon. Fails closed."""
+    t0 = time.monotonic()
+    res: dict[str, Any] = {"ok": False, "reason": None, "image": None, "files": {}, "rejected_keywords": []}
+    changed = [f for f in after if before.get(f) != after[f]]
+    if not changed:
+        res.update(ok=True, note="nothing changed, so nothing was loaded")
+        return res
+    if gwmod.is_gateway(target):
+        res["image"] = "gateway (isolated namespace)"
+        try:
+            r = _exec(target, GW_LOAD_ARGV, timeout=CLONE_TIMEOUT_S,
+                      stdin=_clone_tar([(before.get(f, ""), after[f]) for f in changed]))
+            out = r.stdout or ""
+        except subprocess.TimeoutExpired:
+            res["reason"] = f"the load check on the gateway did not finish within {CLONE_TIMEOUT_S} s"
+            return res
+        except Exception as e:
+            res["reason"] = f"the load check could not be started on the gateway: {e}"
+            return res
+        finally:
+            res["seconds"] = round(time.monotonic() - t0, 2)
+        return _judge_load(res, out, changed, after, connection_of(target))
+    image = image_of(target)
+    res["image"] = image
+    if not image:
+        res["reason"] = f"could not identify the image of {target} (is Docker running?)"
+        return res
+    sweep_clones()
+    name = f"tunnelscope-clone-{int(time.time())}-{uuid.uuid4().hex[:8]}"
+    try:
+        r = _docker(["run", "--rm", "-i", "--name", name, "--network", "none", "--cap-add", "NET_ADMIN",
+                     "--label", CLONE_LABEL, "--entrypoint", "sh", image, "-c", _CLONE_SCRIPT],
+                    stdin=_clone_tar([(before.get(f, ""), after[f]) for f in changed]), timeout=CLONE_TIMEOUT_S)
+        out = (r.stdout or b"").decode(errors="replace")
+    except subprocess.TimeoutExpired:
+        _docker(["rm", "-f", name])
+        res["reason"] = f"the clone did not finish within {CLONE_TIMEOUT_S} s"
+        return res
+    except Exception as e:
+        res["reason"] = f"the clone could not be started: {e}"
+        return res
+    finally:
+        res["seconds"] = round(time.monotonic() - t0, 2)
+    return _judge_load(res, out, changed, after, LAB_CONNECTION)
+
+
+def _judge_load(res: dict[str, Any], out: str, changed: list[str], after: dict[str, str], conn: str) -> dict[str, Any]:
+    parsed = _parse_clone_output(out)
+    if parsed is None:
+        res["reason"] = "the clone did not report a complete result, so the change is not trusted"
+        return res
+    res["rejected_keywords"] = parsed["rejected_keywords"]
+    problems = []
+    for i, f in enumerate(changed):
+        b = parsed["blocks"].get(f"{i:03d}-a-before")
+        a = parsed["blocks"].get(f"{i:03d}-b-after")
+        if b is None or a is None:
+            res["reason"] = "the clone did not report a complete result, so the change is not trusted"
+            return res
+        res["files"][f] = {"before": {"loaded": len(b["loaded"]), "failed": len(b["failed"])},
+                           "after": {"loaded": len(a["loaded"]), "failed": len(a["failed"])}}
+        lost = sorted(set(b["loaded"]) - set(a["loaded"]))
+        if lost:
+            problems.append(f"{f}: connection(s) {', '.join(lost[:5])} loaded before the change and do not load after it")
+        if len(a["failed"]) > len(b["failed"]):
+            problems.append(f"{f}: {len(a['failed']) - len(b['failed'])} more connection(s) fail to load after the change")
+        if _connection_span(after[f].splitlines(), conn) is not None and conn not in a["loaded"]:
+            problems.append(f"{f}: the connection {conn} does not load after the change")
+    if problems:
+        rk = res["rejected_keywords"]
+        res["reason"] = "; ".join(problems[:5]) + (f" (strongSwan did not recognise: {', '.join(rk)})" if rk else "")
+        return res
+    res["ok"] = True
+    return res
+
+
+# ------------------------------------------------------------------ snapshot, watchdog, rollback
+
+def snapshot_configs(target: str, token: str) -> dict[str, str]:
+    """Copy every config file to <file>.ts_snapshot and write the manifest (token, files).
+    Returns {file: original content}. Raises if anything fails, before any change is made."""
+    if read_file(target, MANIFEST) is not None:
+        raise RuntimeError("a previous remediation on this container is still pending "
+                           "(snapshot manifest present, watchdog may be armed); resolve it before another change")
+    files = list_config_files(target)
+    if not files:
+        raise RuntimeError("no config files to snapshot")
+    originals: dict[str, str] = {}
+    for f in files:
+        content = read_file(target, f)
+        if content is None:
+            raise RuntimeError(f"could not read {f}")
+        originals[f] = content
+        if _exec(target, ["cp", "-p", f, f + SNAP_SUFFIX], timeout=5).returncode != 0:
+            raise RuntimeError(f"could not snapshot {f}")
+    if _exec(target, ["sh", "-c", _WRITE_MANIFEST_SCRIPT, MANIFEST, token, *files], timeout=5).returncode != 0:
+        raise RuntimeError("could not write the snapshot manifest")
+    manifest = read_file(target, MANIFEST)
+    if not manifest or manifest.splitlines()[0] != token:
+        raise RuntimeError("snapshot manifest did not read back correctly")
+    return originals
+
+
+def arm_commit_confirmed_watchdog(target: str, token: str, timeout_s: int = WATCHDOG_TIMEOUT_S) -> None:
+    """Detached timer inside the container: restores the snapshot unless disarmed first."""
+    _exec(target, ["sh", "-c", _WATCHDOG_SCRIPT, "tunnelscope-watchdog", str(int(timeout_s)), token,
+                   connection_of(target), child_of(target)], timeout=5, detach=True)
+
+
+def disarm_watchdog(target: str, token: str) -> bool:
+    """Accept the change: drop the manifest (the watchdog then does nothing) and the snapshots.
+    False if the manifest is gone or belongs to another apply (the watchdog already acted)."""
+    manifest = read_file(target, MANIFEST)
+    if not manifest or manifest.splitlines()[0] != token:
+        return False
+    _exec(target, ["rm", "-f", MANIFEST], timeout=5)
+    for f in [x for x in manifest.splitlines()[1:] if x]:
+        _exec(target, ["rm", "-f", f + SNAP_SUFFIX], timeout=5)
+    return True
+
+
+def _manifest_token(target: str) -> str | None:
+    manifest = read_file(target, MANIFEST)
+    return manifest.splitlines()[0] if manifest else None
+
+
+def watchdog_fired(target: str, token: str) -> bool:
+    marker = read_file(target, WATCHDOG_MARKER)
+    return bool(marker) and marker.split()[0] == token
+
+
+def rollback_snapshot(target: str, expected: dict[str, str] | None = None) -> dict[str, Any]:
+    """Restore every file in the manifest from its snapshot and reload. If `expected` is given,
+    read the files back and compare them byte for byte. Snapshots are deleted only when the
+    restore is verified (or cannot be checked); a failed restore keeps them for the watchdog."""
+    manifest = read_file(target, MANIFEST)
+    if not manifest:
+        return {"restored": False, "verified": False, "detail": "no snapshot manifest (nothing to restore)"}
+    files = [x for x in manifest.splitlines()[1:] if x]
+    copied = all(_exec(target, ["cp", "-p", f + SNAP_SUFFIX, f], timeout=5).returncode == 0 for f in files)
+    _reload(target, files)
+    verified = None
+    if expected is not None:
+        verified = copied and all(read_file(target, f) == expected.get(f) for f in files)
+    if verified is not False:
+        _exec(target, ["rm", "-f", MANIFEST], timeout=5)
+        for f in files:
+            _exec(target, ["rm", "-f", f + SNAP_SUFFIX], timeout=5)
+    return {"restored": copied, "verified": verified, "files": files,
+            "detail": "restored" if verified is not False else "restore could not be verified; snapshot kept for the watchdog"}
+
+
+def _started_entry(token: str, history_dir: str | Path | None) -> dict[str, Any]:
+    """The "started" audit line of the apply this token belongs to, and whether that apply ever wrote
+    its outcome (False means the process stopped mid-apply). {} if the log has no such line."""
+    log = _history_dir(history_dir) / "remediate.jsonl"
+    found: dict[str, Any] = {}
+    finished = False
+    try:
+        for line in log.read_text(encoding="utf-8").splitlines():
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            if e.get("token") != token:
+                continue
+            if e.get("decision") == "started":
+                found = e
+            elif e.get("decision") in ("applied", "failed"):
+                finished = True
+    except OSError:
+        return {}
+    return {**found, "finished": finished} if found else {}
+
+
+def reconcile_watchdog_events(history_dir: str | Path | None = None, compose_path: Path | None = None) -> list[dict]:
+    """Record watchdog restores (which happen inside a container, outside this process) in the
+    audit log, then clear their markers."""
+    events = []
+    _CTX.history_dir = history_dir
+    gws = [gwmod.PREFIX + n for n in sorted(gwmod.load_registry(_history_dir(history_dir)))]
+    for t in sorted(get_allowed_targets(compose_path)) + gws:
+        if not gwmod.is_gateway(t) and not is_container_running(t):
+            continue
+        try:
+            marker = read_file(t, WATCHDOG_MARKER)
+        except Exception:
+            continue    # an unreachable gateway is checked again next time
+        if not marker or not marker.strip():
+            continue
+        parts = marker.split()
+        now = time.time()
+        started = _started_entry(parts[0], history_dir)
+        entry = {
+            "timestamp": now, "at": now, "ok": True, "decision": "watchdog_rollback", "stage": "watchdog",
+            "rule_id": started.get("rule_id", ""), "target": t, "token": parts[0],
+            "fired_at": parts[1] if len(parts) > 1 else None,
+            "undid_apply_by": started.get("target"), "apply_finished": started.get("finished"),
+            "caller": "watchdog", "confirm": None, "commands_run": [], "verdict_before": None,
+            "verdict_after": None, "confirmed_fixed": False, "rolled_back": True,
+        }
+        record_audit(entry, history_dir)
+        _exec(t, ["rm", "-f", WATCHDOG_MARKER], timeout=5)
+        events.append(entry)
+    return events
+
+
+# ------------------------------------------------------------------ capture and verdicts
+
+def _verdicts_of(sas: list[Any]) -> dict[str, str]:
+    agg: dict[str, str] = {}
+    for sa in sas:
+        vs = sa.get("verdicts", []) if isinstance(sa, dict) else getattr(sa, "verdicts", [])
+        for v in vs:
+            rid = v.get("rule_id") if isinstance(v, dict) else getattr(v, "rule_id", None)
+            val = v.get("verdict") if isinstance(v, dict) else getattr(v, "verdict", None)
+            val = str(getattr(val, "value", val) or "UNKNOWN").upper()
+            if not rid:
+                continue
+            if rid not in agg or _RANK.get(val, 0) > _RANK.get(agg[rid], 0):
+                agg[rid] = val
+    return agg
+
+
+def _observed_of(sas: list[Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for sa in sas:
+        vs = sa.get("verdicts", []) if isinstance(sa, dict) else getattr(sa, "verdicts", [])
+        for v in vs:
+            rid = v.get("rule_id") if isinstance(v, dict) else getattr(v, "rule_id", None)
+            obs = v.get("observed") if isinstance(v, dict) else getattr(v, "observed", None)
+            if rid and rid not in out:
+                out[rid] = obs
+    return out
+
+
+def why_not_judged(rule_id: str, verdict: str | None) -> str:
+    """Plain reason a rule was not FAIL/PASS on the last capture: the wire narrowed the algorithm
+    to several candidates (a passive limit), or the attribute was not seen at all."""
+    obs = (getattr(_LAST_CAPTURE, "observed", None) or {}).get(rule_id)
+    if isinstance(obs, list) and len(obs) > 1:
+        return (f"{rule_id} is {verdict} because a passive capture cannot tell which of these the tunnel uses: "
+                f"{', '.join(map(str, obs))}. It cannot be judged from the wire, so a fix cannot be verified "
+                "here (change it by hand and check on the endpoint); nothing was changed")
+    if obs is None:
+        return (f"{rule_id} is {verdict or 'not judged'}: the capture did not contain what it judges (for ESP/AH "
+                "rules, no protected data packets were seen), so a fix could not be proven; nothing was changed")
+    return f"{rule_id} is {verdict} on a fresh capture (it must be FAIL), so a fix could not be proven; nothing was changed"
+
+
+def _prepare_lab_network(target: str, peer: str | None) -> list[str]:
+    """Lab-only: the t-tun connection uses extra addresses that a container restart drops."""
+    done = []
+    for c in (target, peer):
+        if c in _LAB_SIDE:
+            _exec(c, ["sh", "-c", _LAB_ALIAS_SCRIPT, "lab-alias", _LAB_SIDE[c]], timeout=5)
+            done.append(f"{c}: ensured 10.10.{_LAB_SIDE[c]}.210-214 addresses")
+    return done
+
+
+def _analyse_pcap(path: Path) -> tuple[dict[str, str], int]:
+    from ..report import report as _report
+    sas = _report.analyze(str(path)).get("sas", [])
+    _LAST_CAPTURE.observed = _observed_of(sas)
+    return _verdicts_of(sas), len(sas)
+
+
+def _capture_gateway(target: str, phase: str) -> tuple[dict[str, str], int]:
+    """Gateway: capture IKE/ESP/AH on the gateway while the connection re-negotiates, copy the file
+    back (base64 over the same SSH login), analyse it locally, delete both copies."""
+    import tempfile
+    gw = _gw(target)
+    conn, child, peer = gw["connection"], gw["child"], _peer_for(target)
+    local = Path(tempfile.mkdtemp(prefix="tunnelscope-gw-")) / f"remediate_{phase}.pcap"
+    try:
+        _exec(target, ["rm", "-f", GW_CAPTURE], timeout=5)
+        _exec(target, ["swanctl", "--terminate", "--ike", conn, "--timeout", "3"], timeout=8)
+        time.sleep(1)
+        _exec(target, ["tcpdump", "-i", gw["capture_interface"], "-U", "-w", GW_CAPTURE, "-c", CAPTURE_PACKETS,
+                       GW_CAPTURE_FILTER], timeout=5, detach=True)
+        time.sleep(1.5)
+        r = _exec(target, ["swanctl", "--initiate", "--child", child, "--timeout", "8"], timeout=12)
+        if r.returncode != 0 and peer:
+            # this end may be responder-only: let the other registered end start the tunnel
+            _exec(peer, ["swanctl", "--initiate", "--child", _gw(peer)["child"], "--timeout", "8"], timeout=12)
+        time.sleep(1.5)
+        _exec(target, ["pkill", "-f", GW_CAPTURE], timeout=5)
+        time.sleep(0.5)
+        data = _exec(target, ["base64", GW_CAPTURE], timeout=20)
+        if data.returncode != 0 or not (data.stdout or "").strip():
+            return {}, 0
+        local.write_bytes(base64.b64decode(data.stdout))
+        return _analyse_pcap(local)
+    finally:
+        try:
+            _exec(target, ["rm", "-f", GW_CAPTURE], timeout=5)
+        except Exception:
+            pass
+        try:
+            local.unlink(missing_ok=True)
+            local.parent.rmdir()
+        except OSError:
+            pass
+
+
+def _capture_verdicts(target: str, phase: str) -> tuple[dict[str, str], int]:
+    """Re-negotiate the lab tunnel while capturing on the router, then analyse the capture.
+    Returns ({rule_id: verdict}, number of SAs)."""
+    if gwmod.is_gateway(target):
+        return _capture_gateway(target, phase)
+    host = _captures_dir() / f"remediate_{phase}.pcap"
+    inside = f"/captures/remediate_{phase}.pcap"
+    capture_on = "sih26-router" if is_container_running("sih26-router") else target
+    try:
+        if host.exists():
+            host.unlink()
+        _exec(target, ["swanctl", "--terminate", "--ike", LAB_CONNECTION, "--timeout", "3"], timeout=8)
+        time.sleep(1)
+        _exec(capture_on, ["tcpdump", "-i", "any", "-w", inside, "-c", CAPTURE_PACKETS], timeout=5, detach=True)
+        time.sleep(1)
+        _exec(target, ["swanctl", "--initiate", "--child", LAB_CONNECTION, "--timeout", "5"], timeout=10)
+        traffic = _traffic_argv(target)
+        if traffic:
+            _exec(target, traffic, timeout=10)
+        time.sleep(1)
+        _exec(capture_on, ["pkill", "tcpdump"], timeout=5)
+        time.sleep(1)
+        if not host.is_file() or host.stat().st_size == 0:
+            return {}, 0
+        from ..report import report as _report
+        sas = _report.analyze(str(host)).get("sas", [])
+        _LAST_CAPTURE.observed = _observed_of(sas)
+        return _verdicts_of(sas), len(sas)
+    finally:
+        if host.exists():
+            try:
+                host.unlink()
+            except OSError:
+                pass
+
+
+_REKEY_ARGV = (["swanctl", "--rekey", "--ike", LAB_CONNECTION], ["swanctl", "--rekey", "--child", LAB_CONNECTION])
+
+
+def _rekey_argv(target: str) -> tuple[list[str], list[str]]:
+    if not gwmod.is_gateway(target):
+        return _REKEY_ARGV
+    return (["swanctl", "--rekey", "--ike", connection_of(target)], ["swanctl", "--rekey", "--child", child_of(target)])
+_SA_FIELD = re.compile(r"([\w-]+)=([^\s{}\[\]]+)")
+REKEY_NOTE = ("A rekey (CREATE_CHILD_SA) is encrypted under the IKE SA, so a passive capture cannot show which "
+              "algorithms it chose: passive result NOT_OBSERVABLE. The algorithms below are what the target's own "
+              "daemon reports (endpoint vantage), shown for information, never as evidence.")
+
+
+def _sa_fields(target: str) -> dict[str, Any] | None:
+    """The lab connection's IKE SA as the daemon reports it (`swanctl --list-sas --raw`):
+    {fields..., "child_installed": bool}, or None if there is no such SA."""
+    conn = connection_of(target)
+    out = _exec(target, ["swanctl", "--list-sas", "--ike", conn, "--raw"], timeout=10).stdout or ""
+    m = re.search(r"\b" + re.escape(conn) + r" \{(.*)", out, re.S)
+    if not m:
+        return None
+    ike_part, _, child_part = m.group(1).partition("child-sas {")
+    fields = dict(_SA_FIELD.findall(ike_part))
+    fields["child_installed"] = "state=INSTALLED" in child_part
+    return fields
+
+
+def _endpoint_algorithms(f: dict[str, Any]) -> list[str]:
+    """strongSwan algorithm names of an IKE SA, in the keyword list's naming (AES_CBC_256, MODP_4096, ...)."""
+    names = []
+    if f.get("encr-alg"):
+        names.append(f"{f['encr-alg']}_{f['encr-keysize']}" if f.get("encr-keysize") else f["encr-alg"])
+    for k in ("integ-alg", "prf-alg", "dh-group"):
+        if f.get(k):
+            names.append(f[k])
+    for k, v in f.items():
+        m = re.fullmatch(r"ke(\d)(?:-group)?", k)
+        if m:
+            names.append(f"KE{m.group(1)}_{v}")
+    return names
+
+
+def _endpoint_rule_verdict(rule_id: str, f: dict[str, Any]) -> str:
+    """The rule's own predicate on the endpoint-reported algorithms, through the wire values the
+    keyword list learned from captures. UNKNOWN when the rule judges something else, or an
+    algorithm was never observed on a capture."""
+    from ..assess.engine import _assert, load_baselines
+    from .vocab import load_vocab
+    rule = next((r for b in load_baselines() for r in b["rules"] if r["id"] == rule_id), None)
+    if rule is None:
+        return "UNKNOWN"
+    ev = load_vocab()["evidence"]
+    if rule["attribute"] == "ike_version":
+        values = [e["value"] for e in ev.get("version", {}).get(str(f.get("version")), [])]
+    else:
+        values = [e["value"] for n in _endpoint_algorithms(f)
+                  for e in ([ev["ike"][n]] if n in ev["ike"] else []) if e["attribute"] == rule["attribute"]]
+    if not values:
+        return "UNKNOWN"
+    results = [_assert(rule["assert"]["op"], rule["assert"].get("value"), v) for v in values]
+    return "FAIL" if False in results else "PASS" if all(r is True for r in results) else "UNKNOWN"
+
+
+def rekey_check(target: str, rule_id: str) -> dict[str, Any]:
+    """Known limit of build/12, closed as far as the evidence allows (T-107): force an IKE and a
+    CHILD rekey after a confirmed fix. The tunnel must still be established and installed
+    afterwards (endpoint-reported); the rekey's algorithms are reported, not judged as evidence."""
+    res: dict[str, Any] = {"passive": "NOT_OBSERVABLE", "note": REKEY_NOTE, "tunnel_after_rekey": None,
+                           "rekeyed": None, "endpoint_reported": None}
+    try:
+        before = _sa_fields(target)
+        for argv in _rekey_argv(target):
+            _exec(target, argv, timeout=15)
+        time.sleep(2)
+        after = _sa_fields(target)
+    except Exception as e:
+        res["error"] = f"the rekey could not be checked: {e}"
+        return res
+    if after is None or after.get("state") != "ESTABLISHED" or not after.get("child_installed"):
+        res["tunnel_after_rekey"] = False
+        return res
+    res["tunnel_after_rekey"] = True
+    res["rekeyed"] = bool(before) and (before.get("initiator-spi"), before.get("responder-spi")) != \
+        (after.get("initiator-spi"), after.get("responder-spi"))
+    res["endpoint_reported"] = {"algorithms": _endpoint_algorithms(after),
+                                "rule_verdict": _endpoint_rule_verdict(rule_id, after)}
+    return res
+
+
+def _check_service_restored(target: str, before: dict[str, str]) -> dict[str, Any]:
+    """Restoring the files and reloading is not enough: an SA negotiated with the bad settings
+    keeps them until it is re-negotiated. Re-negotiate now, capture, and compare with the
+    baseline: the tunnel must be up and no rule may be worse than before the change."""
+    try:
+        verdicts, n = _capture_verdicts(target, "post_rollback")
+    except Exception as e:
+        return {"tunnel_up": False, "matches_baseline": False, "detail": f"post-rollback capture failed: {e}"}
+    worse = sorted(r for r, v in verdicts.items() if v in _BAD and before.get(r) not in _BAD)
+    return {"tunnel_up": n > 0, "matches_baseline": n > 0 and not worse, "worse_than_baseline": worse}
+
+
+# ------------------------------------------------------------------ preview and apply
+
+def _live_info(rule_id: str, target: str, peer: str | None, stored: dict[str, Any] | None) -> dict[str, Any]:
+    """What the operator must read and type before a real gateway is changed."""
+    hd = _history_dir(getattr(_CTX, "history_dir", None))
+    gw = gwmod.get(target, hd)
+    pg = gwmod.get(peer, hd) if peer else None
+    generated = stored is not None
+    return {"gateway": gw["name"], "host": gw["host"], "connection": gw["connection"],
+            "peer": pg["name"] if pg else None,
+            "risks": gwmod.change_risks(gw, str(rule_id), generated=generated,
+                                        cloud_backend=bool(stored and stored.get("backend") == "cloud"), peer=pg),
+            "ack_phrase": gwmod.ack_phrase(str(rule_id), gw["name"]),
+            "consent": gwmod.consent_status(gw, hd), "watchdog_timeout_s": WATCHDOG_TIMEOUT_S}
+
+
+def preview_remediation(rule_id: str, target: str, caller: str | None = None,
+                        compose_path: Path | None = None, history_dir: str | Path | None = None,
+                        plan_id: str | None = None) -> dict[str, Any]:
+    """Validate and dry-run only: the real diff the operator sees before approving, and its
+    digest (T-104), which Apply must send back. No config file, running daemon or tunnel is
+    changed. `plan_id` previews a stored generated plan instead of the hand-written one."""
+    now = time.time()
+    base = {"timestamp": now, "at": now, "rule_id": str(rule_id), "target": str(target),
+            "caller": caller or "unknown", "decision": "preview",
+            "source": "generated" if plan_id else "hand-written", "plan_id": plan_id}
+    _CTX.history_dir = history_dir
+    try:
+        stored = _load_generated_for(rule_id, target, plan_id, history_dir) if plan_id is not None else None
+        plan, peer = _validate(rule_id, target, compose_path, plan=stored)
+        _take_dry_run_report()
+        ok, err, diffs = perform_sandboxed_dry_run(target, plan["exec_commands"])
+        report = _take_dry_run_report()
+        if not ok:
+            raise _Refusal("dry_run", f"Dry run failed: {err}")
+        peer_info = None
+        if peer:
+            pok, perr, pdiffs = perform_sandboxed_dry_run(peer, peer_commands_for(plan), allow_no_change=True)
+            preport = _take_dry_run_report()
+            if not pok:
+                raise _Refusal("dry_run", f"Dry run failed on the lab peer {peer}: {perr}")
+            peer_info = {"container": peer, "diff": pdiffs, "clone_check": preport.get("clone_check"),  # noqa: E501
+                         "why": "both ends of a tunnel must agree on a proposal, so the other end gets the same change"}
+        digest = preview_digest(plan_id or str(rule_id), target, diffs, peer_info["diff"] if peer_info else None,
+                                report.get("clone_check"), peer_info["clone_check"] if peer_info else None)
+        res = {"ok": True, "rule_id": rule_id, "target": target, "diff": diffs, "peer": peer_info,
+               "clone_check": report.get("clone_check"), "digest": digest,
+               "source": base["source"], "plan_id": plan_id}
+        if gwmod.is_gateway(target):
+            res["live"] = _live_info(rule_id, target, peer, stored)
+        record_audit({**base, "ok": True, "digest": digest, "files_changed": sorted(diffs),
+                      "peer_files_changed": sorted(peer_info["diff"]) if peer_info else []}, history_dir)
+        return res
+    except _Refusal as r:
+        record_audit({**base, "ok": False, "stage": r.stage, "error": r.error}, history_dir)
+        return {"ok": False, "stage": r.stage, "error": r.error, "decision": "refused"}
+
+
+def apply_remediation(
+    rule_id: str,
+    target: str,
+    confirm: bool,
+    caller: str | None = None,
+    compose_path: Path | None = None,
+    history_dir: str | Path | None = None,
+    watchdog_timeout_s: int = WATCHDOG_TIMEOUT_S,
+    plan_id: str | None = None,
+    digest: str | None = None,
+    require_digest: bool = False,
+    risk_ack: str | None = None,
+) -> dict[str, Any]:
+    """Execute a remediation in a lab container or on a registered gateway, then prove it or undo it
+    (see module doc). A gateway also needs `risk_ack`: the exact sentence its preview showed.
+
+    Returns ok/decision/rule_id/target/commands_run/verdict_before/verdict_after/confirmed_fixed/
+    rolled_back plus token, reason, regressions, dry_run_diff, peer, rollback_verified;
+    or on refusal {ok: False, stage, error, decision: "refused"}."""
+    token = uuid.uuid4().hex[:12]
+    now = time.time()
+    audit_base = {
+        "timestamp": now,
+        "at": now,
+        "token": token,
+        "rule_id": str(rule_id) if rule_id is not None else "",
+        "target": str(target) if target is not None else "",
+        "caller": caller or "unknown",
+        "confirm": confirm,
+        "commands_run": [],
+        "verdict_before": None,
+        "verdict_after": None,
+        "confirmed_fixed": False,
+        "source": "generated" if plan_id else "hand-written",
+        "plan_id": plan_id,
+        "digest": digest,
+    }
+
+    def refuse(stage: str, err: str, **extra: Any) -> dict[str, Any]:
+        record_audit({**audit_base, **extra, "ok": False, "decision": "refused", "stage": stage, "error": err}, history_dir)
+        return {"ok": False, "stage": stage, "error": err, "decision": "refused", **extra}
+
+    if confirm is not True:
+        return refuse("validate", "Confirmation required (confirm must be True)")
+    _CTX.history_dir = history_dir
+    if gwmod.is_gateway(target):
+        audit_base["live"] = True
+        if not digest:
+            return refuse("validate", "a real gateway is changed only after a preview: send the digest of the preview you approved")
+        gname = gwmod.name_of(target)
+        if risk_ack != gwmod.ack_phrase(str(rule_id), gname):
+            return refuse("consent", f"type exactly: {gwmod.ack_phrase(str(rule_id), gname)}. Nothing was changed.")
+        audit_base["risk_ack"] = risk_ack
+    try:
+        stored = _load_generated_for(rule_id, target, plan_id, history_dir) if plan_id is not None else None
+        plan, peer = _validate(rule_id, target, compose_path, plan=stored)
+    except _Refusal as r:
+        return refuse(r.stage, r.error)
+    if stored is not None:
+        audit_base.update(model_revision=stored.get("model_revision"), prompt_sha256=stored.get("prompt_sha256"))
+    if require_digest and not digest:
+        return refuse("validate", "preview the change first: Apply must carry the digest of the preview you approved")
+
+    if not _APPLY_LOCK.acquire(blocking=False):
+        return refuse("validate", "another remediation is already running; try again when it finishes")
+    try:
+        return _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
+                             history_dir, compose_path, watchdog_timeout_s,
+                             digest=digest, ident=plan_id or str(rule_id))
+    finally:
+        _APPLY_LOCK.release()
+
+
+def _apply_locked(rule_id, target, plan, peer, token, audit_base, refuse,
+                  history_dir, compose_path, watchdog_timeout_s, digest=None, ident=None) -> dict[str, Any]:
+    reconcile_watchdog_events(history_dir, compose_path)
+    exec_commands = plan["exec_commands"]
+    peer_commands = peer_commands_for(plan) if peer else []
+
+    # 3. Dry run on scratch copies of the real files
+    _take_dry_run_report()
+    ok, err, dry_diff = perform_sandboxed_dry_run(target, exec_commands)
+    dry_report = _take_dry_run_report()
+    if not ok:
+        return refuse("dry_run", f"Pre-flight sandbox dry-run validation failed: {err}")
+    peer_dry_diff: dict[str, str] = {}
+    if peer:
+        ok, err, peer_dry_diff = perform_sandboxed_dry_run(peer, peer_commands, allow_no_change=True)
+        dry_report["peer"] = _take_dry_run_report()
+        if not ok:
+            return refuse("dry_run", f"Pre-flight sandbox dry-run validation failed on the lab peer {peer}: {err}")
+    # 3b. The change about to run must be the one the human previewed and approved
+    if digest is not None:
+        now_digest = preview_digest(ident or str(rule_id), target, dry_diff, peer_dry_diff if peer else None,
+                                    dry_report.get("clone_check"), (dry_report.get("peer") or {}).get("clone_check"))
+        if now_digest != digest:
+            return refuse("stale_preview", "the configuration (or the change) is not what you previewed; preview "
+                                           "again before applying. Nothing was changed.")
+
+    # 4. Baseline: what fails before anything changes
+    lab_prep = _prepare_lab_network(target, peer)
+    try:
+        before, n_before = _capture_verdicts(target, "baseline")
+    except Exception as e:
+        return refuse("baseline", f"Could not capture a baseline; nothing was changed: {e}")
+    if n_before == 0:
+        return refuse("baseline", f"No IKE SA was negotiated on {connection_of(target)} before the change, so the fix "
+                                  "could not be verified afterwards; nothing was changed")
+    vb = before.get(rule_id)
+    if vb == "PASS":
+        return refuse("baseline", f"{rule_id} already passes on a fresh capture; nothing to fix", verdict_before=vb)
+    if vb != "FAIL":
+        return refuse("baseline", why_not_judged(rule_id, vb), verdict_before=vb)
+
+    # 5. Snapshot and arm the watchdogs
+    try:
+        originals = snapshot_configs(target, token)
+    except Exception as e:
+        return refuse("snapshot", f"Could not take a pre-change snapshot; nothing was changed: {e}", verdict_before=vb)
+    peer_originals: dict[str, str] = {}
+    if peer:
+        try:
+            peer_originals = snapshot_configs(peer, token)
+        except Exception as e:
+            disarm_watchdog(target, token)
+            return refuse("snapshot", f"Could not snapshot the lab peer {peer}; nothing was changed: {e}", verdict_before=vb)
+    arm_commit_confirmed_watchdog(target, token, watchdog_timeout_s)
+    if peer:
+        arm_commit_confirmed_watchdog(peer, token, watchdog_timeout_s)
+    # Written before anything changes: if this process dies mid-apply (found in the 2026-09-25 E2E
+    # test by killing the engine), the log still says which rule, where and which commands the
+    # token stands for; the watchdog's later restore is then matched to it by token.
+    record_audit({**audit_base, "ok": None, "decision": "started", "stage": "apply", "verdict_before": vb,
+                  "planned_commands": list(exec_commands), "peer": peer, "planned_peer_commands": list(peer_commands),
+                  "watchdog_timeout_s": watchdog_timeout_s}, history_dir)
+
+    def undo() -> dict[str, Any]:
+        rb = {"target": rollback_snapshot(target, originals)}
+        if peer:
+            rb["peer"] = rollback_snapshot(peer, peer_originals)
+        rb["verified"] = all(x.get("verified") is True for x in rb.values() if isinstance(x, dict))
+        rb["service"] = _check_service_restored(target, before)
+        return rb
+
+    # 6. Apply
+    commands_run: list[str] = []
+    peer_commands_run: list[str] = []
+    try:
+        for cmd in peer_commands:
+            peer_commands_run.append(_as_run(peer, cmd, list(peer_originals)))
+            res = _run_plan_command(peer, cmd, list(peer_originals))
+            if res.returncode != 0:
+                raise RuntimeError(f"peer command failed ({res.returncode}): {(res.stderr or '').strip()}")
+        for cmd in exec_commands:
+            commands_run.append(_as_run(target, cmd, list(originals)))
+            res = _run_plan_command(target, cmd, list(originals))
+            if res.returncode != 0:
+                raise RuntimeError(f"command failed ({res.returncode}): {(res.stderr or '').strip()}")
+    except Exception as e:
+        rb = undo()
+        result = {"ok": False, "stage": "execute", "decision": "failed", "error": f"Failed executing on {target}: {e}",
+                  "commands_run": commands_run, "rolled_back": rb["target"]["restored"],
+                  "rollback_verified": rb["verified"], "service_restored": rb["service"], "verdict_before": vb}
+        record_audit({**audit_base, **result, "peer_commands_run": peer_commands_run, "rollback": rb}, history_dir)
+        return result
+
+    # 7. Verify against the baseline
+    verify_error = None
+    try:
+        after, n_after = _capture_verdicts(target, "verify")
+    except Exception as e:
+        after, n_after, verify_error = {}, 0, str(e)
+    va = after.get(rule_id)
+    regressions = sorted(r for r, v in after.items() if r != rule_id and v in _BAD and before.get(r) not in _BAD)
+
+    confirmed = False
+    rb: dict[str, Any] | None = None
+    rekey: dict[str, Any] | None = None
+    if n_after == 0:
+        verdict_after = "REGRESSION"
+        reason = f"no IKE SA was negotiated after the change (tunnel outage){': ' + verify_error if verify_error else ''}"
+    elif va != "PASS":
+        verdict_after = va or "UNKNOWN"
+        reason = f"{rule_id} is {verdict_after} after the change, not PASS"
+    elif regressions:
+        verdict_after = "REGRESSION"
+        reason = f"{rule_id} passes, but these rules were not failing before and are now: {', '.join(regressions)}"
+    else:
+        rekey = rekey_check(target, rule_id)
+        verdict_after = "PASS"
+        reason = f"{rule_id} passes on a fresh capture and no other rule got worse"
+    if rekey is not None and rekey.get("tunnel_after_rekey") is False:
+        verdict_after = "REGRESSION"
+        reason = (f"{rule_id} passes on the first handshake, but the tunnel did not survive a forced rekey "
+                  "(reported by the endpoint)")
+    elif verdict_after == "PASS":
+        # Check both snapshots are intact BEFORE disarming either: if one watchdog already
+        # restored its side, disarming the other would delete the snapshot we need to undo it.
+        intact = _manifest_token(target) == token and (not peer or _manifest_token(peer) == token)
+        if intact and disarm_watchdog(target, token) and (not peer or disarm_watchdog(peer, token)) \
+                and not watchdog_fired(target, token) and not (peer and watchdog_fired(peer, token)):
+            confirmed = True
+        else:
+            verdict_after = "REVERTED_BY_WATCHDOG"
+            reason = "the watchdog restored the snapshot before the change could be confirmed"
+
+    # 8. Roll back anything not confirmed
+    if not confirmed:
+        rb = undo()
+        if verdict_after == "REVERTED_BY_WATCHDOG":
+            rb["verified"] = (all(read_file(target, f) == c for f, c in originals.items())
+                              and all(read_file(peer, f) == c for f, c in peer_originals.items()))
+    reconcile_watchdog_events(history_dir, compose_path)
+
+    result = {
+        "ok": True,
+        "decision": "applied",
+        "rule_id": rule_id,
+        "target": target,
+        "token": token,
+        "commands_run": commands_run,
+        "verdict_before": vb,
+        "verdict_after": verdict_after,
+        "confirmed_fixed": confirmed,
+        "reason": reason,
+        "regressions": regressions,
+        "rolled_back": not confirmed,
+        "rollback_verified": None if confirmed else bool(rb and rb.get("verified")),
+        # after a rollback: the tunnel re-negotiated on the restored settings and no rule is worse than the baseline
+        "service_restored": None if confirmed else (rb or {}).get("service"),
+        "dry_run_diff": dry_diff,
+        "clone_check": dry_report.get("clone_check"),
+        "rekey": rekey,
+        "peer": ({"container": peer, "commands_run": peer_commands_run, "dry_run_diff": peer_dry_diff,
+                  "clone_check": dry_report.get("peer", {}).get("clone_check")}
+                 if peer else None),
+        "lab_prep": lab_prep,
+        "watchdog_timeout_s": watchdog_timeout_s,
+        "source": audit_base.get("source"),
+        "plan_id": audit_base.get("plan_id"),
+    }
+    record_audit({**audit_base, **result, "rollback": rb, "verdicts_before": before, "verdicts_after": after}, history_dir)
+    return result
