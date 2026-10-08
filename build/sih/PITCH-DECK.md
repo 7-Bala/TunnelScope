@@ -49,7 +49,7 @@ _Live demo: the downgrade capture. The verdict reads DOWNGRADED and names the fa
 ---
 
 ## 6 · The AI
-- Random Forest models we trained ourselves read packet size and timing to predict what kind of
+- Random Forest and ExtraTrees models we trained ourselves read packet size and timing to predict what kind of
   traffic is inside an encrypted tunnel, with a confidence for each prediction.
 - A second model detects tunnels that carry a mix of traffic.
 - Anomaly detection compares each tunnel with its own history, so a cipher change or a downgrade stands out.

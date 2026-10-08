@@ -21,7 +21,7 @@ names the rule and the standard behind it.
 | Replay behaviour | per-SPI ESP/AH sequence numbers |
 | Negotiation-failure diagnosis | message sizes and notify codes |
 | Metadata exposure | size and timing entropy, in bits |
-| Traffic type inside the tunnel | Random Forest over packet size and timing, with a confidence |
+| Traffic type inside the tunnel | Random Forest and ExtraTrees forest, averaged, over packet size and timing, with a confidence |
 | Mixed-traffic detection | second Random Forest over the first model's per-window probabilities |
 | Change and downgrade detection | per-tunnel anomaly model over the tunnel's own history |
 | Known-vulnerability patterns | rules over IKE message order and payloads |
@@ -104,7 +104,7 @@ decisions: [`../build/00-ARCHITECTURE.md`](../build/00-ARCHITECTURE.md).
 
 All models are trained by us and ship as plain arrays; no pretrained or third-party model is used.
 
-- **Traffic type**: Random Forest over 31 numbers per 2-second window (packet counts, sizes, timing
+- **Traffic type**: a Random Forest and an ExtraTrees forest, averaged, over numbers per 2-second window (packet counts, sizes, timing
   gaps, size histogram, direction). Predicts voip, web, bulk file transfer, interactive shell, video,
   e-mail, messaging or icmp, with a confidence.
 - **Mixed traffic**: Random Forest that picks out tunnels carrying more than one kind of traffic.

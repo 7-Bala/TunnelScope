@@ -1,0 +1,1 @@
+qdisc netem 800b: root refcnt 11 limit 120 rate 20Mbit

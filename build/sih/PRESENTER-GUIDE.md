@@ -172,7 +172,7 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 ### Traffic type inside the tunnel  (`traffic_type`)
 
 - **What it is:** The predicted kind of traffic inside the tunnel, with a probability and runners-up.
-- **How we get it:** Random Forest over 31 numbers per 2-second window; a second model checks for mixed traffic.
+- **How we get it:** A Random Forest and an ExtraTrees forest, averaged, over numbers per 2-second window; a second model checks for mixed traffic.
 - **Label:** INFERRED
 - **Why it matters:** The brief's 'predict the type of traffic'.
 
@@ -230,7 +230,7 @@ Each threat has an impact (1 to 3). It is *present* if a rule that tests for it 
 
 | Model | Method | Input | Output | Trained on |
 |---|---|---|---|---|
-| Traffic type | Random Forest (scikit-learn) | 31 numbers per 2-second window: packet counts, sizes, timing gaps, size histogram, direction | 1 of 8 types + confidence | lab sessions (synthetic shapes, real applications, a second implementation, delayed and lossy links) plus public VPN traffic |
+| Traffic type | Random Forest + ExtraTrees, averaged (scikit-learn) | Numbers per 2-second window: packet counts, sizes, timing gaps, size histogram, direction | 1 of 8 types + confidence | lab sessions (synthetic shapes, real applications, a second implementation, delayed and lossy links) plus public VPN traffic |
 | Mixed traffic | Random Forest | The pattern of the first model's per-window probabilities | single vs mixed | The project's own mixed and single sessions |
 | Tunnel or transport | Random Forest | Shares of ACK-sized packets | mode + confidence | Tunnel and transport sessions |
 | Change detection | Isolation Forest, plus rules and robust statistics | A tunnel's posture and traffic profile over time | normal, changed, learning | Each tunnel's own history |
@@ -260,7 +260,7 @@ No pretrained or third-party AI model is used, and a test fails if one is ever a
 
 ## 7. Questions judges ask
 
-- **Is it really AI?** Yes. Random Forest models we trained ourselves predict the type of traffic inside the tunnel, detect mixed traffic and estimate tunnel or transport mode, and anomaly detection flags changes in a tunnel's behaviour. Plaintext fields are read exactly, because that is the right tool for fields sitting in the clear.
+- **Is it really AI?** Yes. Random Forest and ExtraTrees models we trained ourselves predict the type of traffic inside the tunnel, detect mixed traffic and estimate tunnel or transport mode, and anomaly detection flags changes in a tunnel's behaviour. Plaintext fields are read exactly, because that is the right tool for fields sitting in the clear.
 - **How can it tell the traffic type through encryption?** Encryption hides content, not shape. Packet sizes, timing and direction differ between browsing, video, voice, chat and file transfer, and the model learns those shapes.
 - **Do you decrypt anything?** No. Headers, sizes and timing are enough.
 - **Why several scores instead of one?** DISA and RFC 8247 sometimes rate the same tunnel differently. Each standard keeps its own score so the auditor sees both, and one 0-100 risk score summarises the threats.

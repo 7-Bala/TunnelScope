@@ -78,6 +78,8 @@ def test_mixed_traffic_is_flagged_as_mixed(mux_sessions=None):
         if f.value is None:
             flagged += 1
             assert "mixed" in f.note or "unlike the lab traffic" in f.note   # either abstain path
+            # Since DEC-066 the second path is gone (no out-of-distribution status), so the note must name mixed traffic.
+            assert "mixed" in f.note and "unlike the lab traffic" not in f.note
         elif f.value["class"] not in parts:
             # the detector misses ~7% of mixed sessions (EXP-16 D); when the label
             # that slips through is one of the measured confusions, it must say so
@@ -279,15 +281,19 @@ def test_traffic_type_note_reads_as_one_sentence():
     assert "Classes are traffic classes" not in note and "classes are learned from our lab traffic" in note
 
 
-def test_mixed_note_quotes_only_the_measured_exp16_numbers():
-    """The note shown with every traffic-type answer must carry EXP-16's measured detector numbers
-    (P16-5: 92.9% caught, 8.3% wrongly flagged), not an unsourced figure (it once said 96%)."""
+def test_mixed_note_quotes_only_the_measured_exp51_numbers():
+    """The note shown with every traffic-type answer must carry a measured number, not an unsourced one (it once said 96%).
+    Until DEC-066 it quoted EXP-16's in-lab detector figures (92.9% / 8.3%); the shipped check and gate are now EXP-51's, so it
+    quotes what EXP-51 measured on lab G, and those older figures must not come back for a check they no longer describe."""
     from pathlib import Path
     from tunnelscope.leakage.attacker import MIXED_NOTE
     result = (Path(__file__).resolve().parents[1] / "experiments/exp16-real-apps-cross-impl/RESULT.md").read_text()
     assert "92.9% caught, 8.3% wrongly flagged" in result
-    assert "92.9%" in MIXED_NOTE and "8.3%" in MIXED_NOTE
+    result51 = (Path(__file__).resolve().parents[1] / "experiments/exp51-rate-invariance/RESULT.md").read_text()
+    assert "**14 of 16**" in result51
+    assert "14 of 16" in MIXED_NOTE
     assert "96%" not in MIXED_NOTE
+    assert "92.9%" not in MIXED_NOTE and "8.3%" not in MIXED_NOTE
 
 
 def test_network_code_is_never_imported_by_fact_producing_code():

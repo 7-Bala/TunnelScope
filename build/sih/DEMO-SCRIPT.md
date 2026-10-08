@@ -21,7 +21,7 @@ PS e) risk score and threat matrix, computed from cited verdicts.
 ## 2 · Traffic type inside the tunnel (45s) — PS c)
 Open `exp15-tun-messaging-rep4.pcap` → **Traffic & exposure**.
 **Point:** "Messaging (WhatsApp-like)" with the model's confidence and the next alternatives, from
-packet sizes and timing only, through AES-GCM. Our own Random Forest, trained on traffic we sent
+packet sizes and timing only, through AES-GCM. Our own tree-ensemble model, trained on traffic we sent
 through real IPsec tunnels in our lab and on public VPN traffic. The content is encrypted; the shape
 of the traffic is not.
 

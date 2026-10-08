@@ -7,6 +7,10 @@ EXP-43 tested on lab D (DEC-054).
   time scale in [0.8, 1.25]); at most CAP (30) windows per session and per copy, chosen with a per-session seed; values rounded to 3 significant
   digits so the file stays under 5 MB (cap and rounding chosen from size alone, before lab D was looked at for this artifact).
 
+Since DEC-066 (EXP-51's R6) the file holds TEN families: the eight above plus lab E's single sessions (EXP-45) and lab H's (EXP-51),
+same features and copies. The product trains a RandomForest and an ExtraTrees forest on it and averages them. The cap is whatever keeps
+the file under 5 MB (chosen from size alone).
+
 Stored: X (float32), y (class), family. The family/class-balanced weights are recomputed from y and family when the product trains
 (tunnelscope.leakage.attacker._model), so the file holds data, never a model (no pickles). Deterministic.
 
@@ -15,6 +19,7 @@ Stored: X (float32), y (class), family. The family/class-balanced weights are re
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import importlib.util
 import os
@@ -52,8 +57,22 @@ def significant(X, digits):
     return out.astype(np.float32)
 
 
+def extra_families():
+    """DEC-066 (EXP-51's R6): lab E's single sessions (EXP-45) and lab H's (EXP-51) join the eight corpus families."""
+    out = []
+    for folder, lab, fam in (("exp45", "E", "lab-e"), ("exp51", "H", "lab-h")):
+        cap = ROOT / "testbed/captures" / folder
+        rows = {}
+        for r in csv.DictReader(open(cap / "manifest.csv")):
+            if r["lab"] == lab and r["class"] != "mixed":
+                rows[r["tag"]] = r                      # a tag captured twice keeps its last row, as the experiments read it
+        for tag, r in sorted(rows.items()):
+            out.append(corpus._mk(fam, f"{fam}:{tag}", r["class"], *corpus._table(cap / f"{tag}.pkts.csv.gz")))
+    return out
+
+
 def build(cap: int):
-    ss = corpus.load()
+    ss = corpus.load() + extra_families()
     data = E42.Data("v2", ss, aug=True)
     import re
     rep_of = lambda sid: int(m[1]) if (m := re.search(r"rep(\d+)", sid)) else 0     # lab repetitions; 0 elsewhere

@@ -5,7 +5,7 @@ Questions a technical jury is likely to ask, with short answers.
 ## About the AI
 
 **Q: Where is the AI in this?**
-Three places. Random Forest models we trained ourselves predict the type of traffic inside an encrypted
+Three places. Random Forest and ExtraTrees models we trained ourselves predict the type of traffic inside an encrypted
 tunnel from packet size and timing, with a confidence for each prediction. A second model detects
 tunnels that carry mixed traffic. And anomaly detection learns each tunnel's normal behaviour and flags
 a cipher change or a downgrade. Reading the plaintext IKE fields is done by exact parsing, which is the
