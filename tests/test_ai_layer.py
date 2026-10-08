@@ -78,6 +78,8 @@ def test_mixed_traffic_is_flagged_as_mixed(mux_sessions=None):
         if f.value is None:
             flagged += 1
             assert "mixed" in f.note or "unlike the lab traffic" in f.note   # either abstain path
+            # Since DEC-066 the second path is gone (no out-of-distribution status), so the note must name mixed traffic.
+            assert "mixed" in f.note and "unlike the lab traffic" not in f.note
         elif f.value["class"] not in parts:
             # the detector misses ~7% of mixed sessions (EXP-16 D); when the label
             # that slips through is one of the measured confusions, it must say so

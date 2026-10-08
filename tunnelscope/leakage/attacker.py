@@ -31,22 +31,26 @@ What it reports for a capture (DEC-027, superseding DEC-021's "never a label"):
   - attacker_exposure: how SURE and how CONSISTENT the attacker is, 0-100;
   - traffic_type: the predicted type of traffic inside the tunnel (PS c), with
     its calibrated confidence, ONLY when the prediction clears the abstain rule
-    (confident, consistent across windows, in distribution); otherwise the
+    (confident, consistent across windows, not flagged as mixed); otherwise the
     finding is UNKNOWN "uncertain" and says why. EXP-05's failure (a confident
     single label on mixed traffic) is the case the abstain rule exists for, and
     EXP-15 measures how often it catches it.
 
 Trust limits, reported with every result:
-  - the attacker learned five lab traffic types; traffic unlike anything it saw
-    is flagged "outside the training data" and its confidence is not used;
+  - the attacker learned eight traffic types from ten families of generators. Traffic unlike all of
+    them is NOT filtered out (since DEC-066): how much of a session lies far from the training windows
+    is reported as in_distribution_share, and the model's confidence is still used. Such traffic usually
+    gets low confidence and therefore "uncertain", but a confident wrong answer is possible (lab F: 4 of 22);
   - a capture needs enough ESP traffic for at least MIN_WINDOWS full windows.
 
 No pickled model ships (pickles are version-fragile and a code-execution risk):
-the training windows ship as a plain .npz (build/models/make_traffic_data.py)
-and the forest is trained on first use, then cached. The fit runs in parallel
-(n_jobs=-1): measured at 0.68 s on today's ~20,000 windows, versus 5.0 s single-threaded
-(EXP-20) with numerically identical predictions (same random_state; the only
-difference is floating-point summation order, ~2e-16).
+the training windows ship as a plain .npz (build/models/make_traffic_data_v2.py)
+and the two forests are trained on first use, then cached. The fits run in parallel
+(n_jobs=-1), with predictions numerically identical to single-threaded ones (same random_state; the
+only difference is floating-point summation order, ~2e-16; EXP-20). First-use cost since DEC-066,
+measured on an Apple M4 on 2026-10-08: 5.9 to 9.1 s for the whole setup (two forests and the distance
+index over 63,865 windows), three runs. EXP-20's 0.68 s was one forest on about 20,000 windows and no
+longer describes this model; the first capture analysed after a start waits for this once.
 """
 from __future__ import annotations
 

@@ -14,7 +14,6 @@ fewer windows per session and three significant digits, so small differences fro
 from __future__ import annotations
 
 import csv
-import gzip
 import json
 import pickle
 import sys
@@ -26,7 +25,9 @@ from sklearn.metrics import f1_score
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "build" / "models"))
+import corpus  # noqa: E402
+
 RES = HERE / "results"
 CAP = ROOT / "testbed/captures/exp51"
 
@@ -50,9 +51,7 @@ def check():
             rows[r["tag"]] = r
     out = []
     for tag, r in sorted(rows.items()):
-        with gzip.open(CAP / f"{tag}.pkts.csv.gz", "rt") as f:
-            next(f)
-            pk = [(float(t), d, int(n)) for t, d, n in (line.strip().split(",") for line in f) if n]
+        pk = corpus.packets(CAP / f"{tag}.pkts.csv.gz")
         W = np.array(A.window_features_v2(pk))
         res = A.assess_exposure([{"t": t, "src": d, "ip_len": n} for t, d, n in pk], "out")
         ans = res["status"] == "measured" and res["traffic"]["answered"]

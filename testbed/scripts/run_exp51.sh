@@ -44,7 +44,10 @@ cleanup_gens() {
 
 capture_one() {   # $1 tag, $2 suite, $3 profile, $4 class, $5 variant(s), $6 rep, then the generator arguments
     local tag="$1" suite="$2" prof="$3" cls="$4" var="$5" rep="$6"; shift 6
-    [ -s "$OUT/$tag.pkts.csv.gz" ] && return 0
+    # Done means BOTH the table and its manifest row exist. The table is written to a temporary name and renamed, so an
+    # interrupted run leaves no half-written table, and a table without a manifest row is captured again.
+    [ -s "$OUT/$tag.pkts.csv.gz" ] && grep -q "^$tag," "$OUT/manifest.csv" 2>/dev/null && return 0
+    rm -f "$OUT/$tag.pkts.csv.gz" "$OUT/$tag.pkts.csv.gz.tmp"
     local attempt npk sha
     for attempt in 1 2; do
         docker exec $R pkill tcpdump >/dev/null 2>&1
@@ -57,7 +60,8 @@ capture_one() {   # $1 tag, $2 suite, $3 profile, $4 class, $5 variant(s), $6 re
         echo "    retry $tag (only $npk packets on attempt $attempt)"; sleep 3
     done
     tshark -r "$OUT/$tag.pcap" -T fields -e frame.time_relative -e ip.src -e ip.len 2>/dev/null \
-      | awk -v a="10.10.1.20" 'BEGIN{OFS=","; print "t","dir","len"} {print $1, ($2==a?"out":"in"), $3}' | gzip -9 > "$OUT/$tag.pkts.csv.gz"
+      | awk -v a="10.10.1.20" 'BEGIN{OFS=","; print "t","dir","len"} {print $1, ($2==a?"out":"in"), $3}' | gzip -9 > "$OUT/$tag.pkts.csv.gz.tmp"
+    mv "$OUT/$tag.pkts.csv.gz.tmp" "$OUT/$tag.pkts.csv.gz"
     npk=$(($(gzip -dc "$OUT/$tag.pkts.csv.gz" | wc -l) - 1)); sha=$(shasum -a 256 "$OUT/$tag.pcap" | cut -d' ' -f1)
     [ -s "$OUT/manifest.csv" ] || echo "tag,lab,suite,profile,class,variant,rep,packets,attempts,pcap_sha256" > "$OUT/manifest.csv"
     echo "$tag,$LAB,$suite,$prof,$cls,$var,$rep,$npk,$attempt,$sha" >> "$OUT/manifest.csv"

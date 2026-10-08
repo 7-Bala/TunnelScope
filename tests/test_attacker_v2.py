@@ -1,7 +1,6 @@
 """DEC-054 / EXP-42-43: the shipped traffic classifier is K4 (v2 features, family/class-balanced, eight families).
 
 These pin what EXP-43 measured, so a later change cannot quietly undo it."""
-import gzip
 import re
 import sys
 from pathlib import Path
@@ -14,6 +13,7 @@ from tunnelscope.leakage import attacker as A
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "build" / "models"))
+import corpus  # noqa: E402
 
 
 def _tables(folder, pattern):
@@ -22,10 +22,7 @@ def _tables(folder, pattern):
         m = re.match(pattern, p.name)
         if not m:
             continue
-        with gzip.open(p, "rt") as f:
-            next(f)
-            pk = [(float(t), d, int(n)) for t, d, n in (l.strip().split(",") for l in f) if n]
-        out.append((m["cls"], m.groupdict().get("suite"), pk))
+        out.append((m["cls"], m.groupdict().get("suite"), corpus.packets(p)))
     return out
 
 

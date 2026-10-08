@@ -1,8 +1,8 @@
 """DEC-066 / EXP-51: the shipped traffic classifier is R6 (two forests averaged, ten families) behind the gate that EXP-51 set on
 whole families held out of training. These pin what was measured on lab G, so a later change cannot quietly undo it."""
 import csv
-import gzip
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +13,9 @@ from tunnelscope.leakage import attacker as A
 from tunnelscope.leakage import mixed as MX
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "build" / "models"))
+import corpus  # noqa: E402
+
 CAP = ROOT / "testbed" / "captures" / "exp51"
 
 
@@ -23,9 +26,7 @@ def _lab_g():
             rows[r["tag"]] = r
     out = []
     for tag, r in sorted(rows.items()):
-        with gzip.open(CAP / f"{tag}.pkts.csv.gz", "rt") as f:
-            next(f)
-            out.append((r["class"], [(float(t), d, int(n)) for t, d, n in (line.strip().split(",") for line in f) if n]))
+        out.append((r["class"], corpus.packets(CAP / f"{tag}.pkts.csv.gz")))
     return out
 
 

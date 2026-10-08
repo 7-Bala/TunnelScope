@@ -71,6 +71,12 @@ def _table(path):
     return t, o, s
 
 
+def packets(path) -> list[tuple[float, str, int]]:
+    """A capture's per-packet table as [(t, 'out'|'in', ip_len)], the form the product's window features take."""
+    t, o, s = _table(path)
+    return [(a, "out" if d else "in", n) for a, d, n in zip(t, o, s)]
+
+
 def lab_sessions() -> list[Session]:
     out = []
     for tag, rel, arms in LAB_SOURCES:
