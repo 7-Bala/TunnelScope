@@ -14,6 +14,18 @@ rule and the out-of-distribution check are for.
 EXP-45 (DEC-057) tested it on a second unseen lab, lab F: macro-F1 0.60 ungated, and 4 of its 6 gated answers right (two bulk
 transfers confidently read as video). So a gated answer is usually, not always, right on traffic from tools it never saw; a nine-family
 candidate did better ungated (0.72) but answered too few sessions to replace it.
+Since DEC-066 (EXP-51, the owner's decision below that experiment's own bar) the model is EXP-51's R6: the same v2 features and
+weights, an ExtraTrees and a RandomForest whose probabilities are averaged, trained on TEN families (the eight above, lab E of
+EXP-45 and lab H of EXP-51: 23 tools at three link speeds, with real-browser page loads). The gate was set on whole families held
+out of training, not inside them: answer when the top probability is at least 0.65, at least 70% of windows agree and the
+mixed-traffic check (score below 0.65) sees one kind of traffic; the nearest-neighbour distance cut no longer stops an answer
+(it is still reported). Measured once on lab G, a lab nobody trained on (64 single and 16 mixed sessions): macro-F1 0.855 ungated
+(0.631 for the model it replaced), 20 of 64 single sessions answered and all 20 right (the model it replaced answered none), 14 of 16
+mixed sessions kept from a single label (2 named after their louder half). It answers about one session in three: EXP-51's bar was
+one in two, which it missed. A whole family held out averages 0.561; USBVPN's scripted web visits are still not recognised (0.03).
+The shipped files (16 windows per session, 3 significant digits) were checked on lab G once: 0.871, 21 of 64 answered, all right.
+On lab F, which EXP-45 and EXP-51 had already looked at, they answer 22 of 46 and 18 of those are right: a confident answer can
+still be wrong on tools the model has not seen.
 
 What it reports for a capture (DEC-027, superseding DEC-021's "never a label"):
   - attacker_exposure: how SURE and how CONSISTENT the attacker is, 0-100;
@@ -56,12 +68,16 @@ KNOWN_CONFUSION = {"web": "video streaming mixed with an interactive session als
                           "mixed-traffic check (EXP-16) catches that case, but it is the known weak spot"}
 # Numbers from EXP-16 Part D (experiments/exp16-real-apps-cross-impl/RESULT.md, P16-5), the same ones
 # the dashboard shows. An earlier version said "96%", which no experiment produced.
-MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (in testing it caught 92.9% "
-              "of mixed sessions and wrongly flagged 8.3% of single ones)")
-MIXED_NOT_RUN = ("the mixed-traffic check could not run here (it needs at least three in-distribution windows), "
+# Since DEC-066 the numbers are EXP-51's (experiments/exp51-rate-invariance/RESULT.md): the check and the confidence rule
+# together, on lab G. Earlier versions quoted EXP-16's in-lab figures (92.9% / 8.3%), and before that an unsourced "96%".
+MIXED_NOTE = ("a mixed-traffic check ran first and found one kind of traffic here (on a lab it had never seen, the check and "
+              "the confidence rule together kept 14 of 16 mixed sessions from getting a single label)")
+MIXED_NOT_RUN = ("the mixed-traffic check could not run here (it needs at least three windows and its data file), "
                  "so two kinds of traffic sharing this tunnel are not ruled out")
-# abstain rule (set from EXP-15's leave-one-repetition-out analysis; see RESULT.md)
-TAU = 0.60              # minimum mean top-class probability
+# abstain rule (DEC-066): thresholds set in EXP-51 on whole families held out of training, the loosest at which held-out
+# answers were at least 90% right and at least 80% of held-out mixed sessions got no single label. The mixed check's own
+# threshold (0.65) ships inside tunnelscope/models/mixed_windows.npz.
+TAU = 0.65              # minimum mean top-class probability
 MIN_CONSISTENCY = 0.70  # minimum share of windows agreeing with the session's top class
 WIN = 2.0                  # seconds per window (EXP-05)
 MIN_PKTS = 3               # a window with fewer packets carries no usable signal
@@ -85,7 +101,10 @@ REFERENCE = {"f1_unpadded": 0.995, "f1_tfc_padded": 0.958, "f1_real_apps_loro": 
              "f1_lab_only_on_real_public": 0.472, "f1_real_public_heldout": 0.741,
              "f1_before_real_ipsec": 0.174, "f1_with_real_ipsec_and_people": 0.757,
              # DEC-054: EXP-42 (a whole family held out, mean of eight) and EXP-43 (lab D, nobody trained on it)
-             "f1_unseen_family_mean": 0.455, "f1_lab_d_unseen": 0.833, "f1_lab_d_previous_model": 0.417,
+             "f1_unseen_family_mean_k4": 0.455, "f1_lab_d_unseen": 0.833, "f1_lab_d_previous_model": 0.417,
+             # DEC-066: EXP-51 (lab G, nobody trained on it; a whole family held out, mean of the original eight)
+             "f1_unseen_family_mean": 0.561, "f1_lab_g_unseen": 0.855, "f1_lab_g_previous_model": 0.631,
+             "lab_g_answered": "20 of 64", "lab_g_answers_right": "20 of 20", "lab_g_mixed_not_answered": "14 of 16",
              "chance": round(1 / len(CLASSES), 3)}
 
 
@@ -200,21 +219,33 @@ def balanced_weights(y, family):
     return w * len(y)
 
 
+class SoftVote:
+    """EXP-45's K8 / EXP-51's R6: a RandomForest and an ExtraTrees forest, their class probabilities averaged with equal weight."""
+
+    def __init__(self, a, b):
+        assert list(a.classes_) == list(b.classes_)
+        self.a, self.b, self.classes_ = a, b, a.classes_
+
+    def predict_proba(self, X):
+        return (self.a.predict_proba(X) + self.b.predict_proba(X)) / 2
+
+
 @lru_cache(maxsize=1)
 def _model():
-    """Train once per process on the shipped training windows (build/models/make_traffic_data.py).
-    n_jobs=-1 (EXP-20/DEC-037): parallel fit, 0.68 s measured vs 5.0 s single-threaded on today's
-    data, predictions identical to n_jobs=1 up to floating-point noise (same random_state)."""
-    from sklearn.ensemble import RandomForestClassifier
+    """Train once per process on the shipped training windows (build/models/make_traffic_data_v2.py).
+    n_jobs=-1 (EXP-20/DEC-037): parallel fit, predictions identical to n_jobs=1 up to floating-point noise (same random_state)."""
+    from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
     from sklearn.neighbors import NearestNeighbors
     from sklearn.preprocessing import StandardScaler
 
     d = np.load(DATA, allow_pickle=False)
     X, y = d["X"], d["y"]
     w = balanced_weights(y, d["family"]) if "family" in d.files else None
-    rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=-1, min_samples_leaf=2).fit(X, y, sample_weight=w)
-    # out-of-distribution gate: how far is a window from the nearest training
-    # window, compared with how far training windows are from each other
+    kw = dict(n_estimators=200, random_state=0, n_jobs=-1, min_samples_leaf=2)
+    rf = SoftVote(RandomForestClassifier(**kw).fit(X, y, sample_weight=w), ExtraTreesClassifier(**kw).fit(X, y, sample_weight=w))
+    # how far is a window from the nearest training window, compared with how far training windows are from each other.
+    # Reported as in_distribution_share; since DEC-066 it no longer stops an answer (EXP-51: on held-out families the
+    # best gate used no distance cut, and on lab F the cut had stopped sessions whose guess was right)
     sc = StandardScaler().fit(X)
     Xs = sc.transform(X)
     nn = NearestNeighbors(n_neighbors=2).fit(Xs)
@@ -230,7 +261,7 @@ def _packets(esp: list[dict], out_src: str | None) -> list[tuple[float, str, int
 
 def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     """Run the attacker on one tunnel's ESP packets. Returns a JSON-safe dict:
-    status 'measured' | 'insufficient' | 'out_of_distribution'."""
+    status 'measured' | 'insufficient'. ('out_of_distribution' was a third status until DEC-066.)"""
     if out_src is None and esp:
         out_src = esp[0]["src"]
     feats = window_features_v2(_packets(esp, out_src))
@@ -245,11 +276,7 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
     dist = nn.kneighbors(sc.transform(X), n_neighbors=1)[0][:, 0]
     in_dist = dist <= ood_cut
     base.update(n_train_windows=n_train, in_distribution_share=round(float(in_dist.mean()), 3))
-    if in_dist.mean() < 0.5:
-        return {**base, "status": "out_of_distribution", "level": None,
-                "note": "this traffic looks unlike the lab traffic and real traffic (eight families) the attacker was trained on, "
-                        "so its confidence would mean nothing here; the size/timing bits still apply"}
-    P = rf.predict_proba(X[in_dist])
+    P = rf.predict_proba(X)
     top = P.max(axis=1)
     picks = P.argmax(axis=1)
     consistency = Counter(picks).most_common(1)[0][1] / len(picks)
@@ -277,7 +304,9 @@ def assess_exposure(esp: list[dict], out_src: str | None = None) -> dict:
                             f"two or more kinds of traffic are sharing this tunnel ({p_mixed:.0%} confidence); "
                             f"the loudest one looks like {LABEL.get(guess)}" if mixed else
                             f"windows disagree (only {consistency:.0%} agree): likely mixed traffic"
-                            if consistency < MIN_CONSISTENCY else f"top probability {p_guess:.0%} is below {TAU:.0%}")},
+                            if consistency < MIN_CONSISTENCY else
+                            f"top probability {p_guess:.0%} is below {TAU:.0%}: traffic from tools the model has not "
+                            "seen, or mixed traffic, reads like this")},
             "note": _note(level, confidence, consistency, len(picks))}
 
 
@@ -285,7 +314,7 @@ def _note(level: str, conf: float, cons: float, n: int) -> str:
     what = {"high": "can reliably tell what kind of traffic this tunnel carries",
             "medium": "can partly tell what kind of traffic this tunnel carries",
             "low": "cannot reliably tell what kind of traffic this tunnel carries"}[level]
-    return (f"A passive attacker model trained on eight families of lab and real traffic {what}, from packet sizes and timing alone "
+    return (f"A passive attacker model trained on ten families of lab and real traffic {what}, from packet sizes and timing alone "
             f"(average confidence {conf:.0%}, same guess in {cons:.0%} of {n} windows). "
             "Encryption hides the content, not the shape.")
 

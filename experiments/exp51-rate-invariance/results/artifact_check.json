@@ -1,0 +1,25 @@
+{
+ "singles": 64,
+ "ungated_macro_f1": 0.871,
+ "ungated_right": 56,
+ "answered": 21,
+ "answers_right": 21,
+ "answers_wrong": [],
+ "mixed": 16,
+ "mixed_answered": [
+  [
+   "bulk.pyhttp+interactive.sshbc",
+   "bulk"
+  ],
+  [
+   "bulk.pyhttp+interactive.sshbc",
+   "bulk"
+  ]
+ ],
+ "exp51_r6_for_comparison": {
+  "ungated_macro_f1": 0.8553,
+  "answered": 20,
+  "answers_right": 20,
+  "mixed_answered": 2
+ }
+}

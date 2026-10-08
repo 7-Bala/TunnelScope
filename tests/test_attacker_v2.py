@@ -57,7 +57,7 @@ def test_shipped_training_file_is_plain_arrays_under_5_mb():
     d = np.load(A.DATA, allow_pickle=False)
     assert {"X", "y", "family", "rep"} <= set(d.files) and d["X"].shape[1] == 46
     assert Path(A.DATA).stat().st_size < 5 * 1024 * 1024
-    assert len(set(d["family"].tolist())) == 8
+    assert len(set(d["family"].tolist())) == 10            # DEC-066: the eight of DEC-054, lab E and lab H
 
 
 def test_shipped_model_keeps_its_lab_d_accuracy():
@@ -77,14 +77,17 @@ def test_shipped_model_keeps_its_lab_d_accuracy():
 
 def test_the_product_trains_with_the_balanced_weights(monkeypatch):
     """EXP-42's K4 is balanced by family and class; a model fitted without the weights is a different model."""
-    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
     seen = {}
-    real_fit = RandomForestClassifier.fit
 
-    def spy(self, X, y, sample_weight=None):
-        seen["w"] = sample_weight
-        return real_fit(self, X[:200], y[:200], sample_weight=None if sample_weight is None else sample_weight[:200])
-    monkeypatch.setattr(RandomForestClassifier, "fit", spy)
+    def spy_on(cls, name):
+        real_fit = cls.fit
+
+        def spy(self, X, y, sample_weight=None):
+            seen[name] = sample_weight
+            return real_fit(self, X[:200], y[:200], sample_weight=None if sample_weight is None else sample_weight[:200])
+        monkeypatch.setattr(cls, "fit", spy)
+    spy_on(RandomForestClassifier, "w"); spy_on(ExtraTreesClassifier, "et")     # DEC-066: both forests of the soft vote
     A._model.cache_clear()
     try:
         A._model()
@@ -92,3 +95,4 @@ def test_the_product_trains_with_the_balanced_weights(monkeypatch):
         A._model.cache_clear()
     d = np.load(A.DATA, allow_pickle=False)
     assert seen["w"] is not None and np.allclose(seen["w"], A.balanced_weights(d["y"], d["family"]))
+    assert seen["et"] is not None and np.allclose(seen["et"], A.balanced_weights(d["y"], d["family"]))
