@@ -31,10 +31,6 @@ works passively: it needs no VPN keys and decrypts nothing.
   transfer, interactive sessions and more) from packet size and timing, with a confidence for each
   prediction.
 - A second model detects tunnels that carry a mix of traffic.
-- The traffic model names a type only when it is confident and says "uncertain" otherwise. On a lab
-  built after training, with tools it had never seen, it named the traffic in 20 of 64 sessions and
-  was right in all 20; on an older test lab 18 of its 22 answers were right. The full numbers and
-  limits are in [EXP-51's result](experiments/exp51-rate-invariance/RESULT.md) and decision DEC-066.
 - Anomaly detection compares each tunnel with its own history and flags cipher changes and downgrades.
 
 **Fixes what it finds**
