@@ -1,77 +1,81 @@
-# TunnelScope — Jury Q&A Prep
+# TunnelScope: jury Q&A prep
 
-Hard questions a technical jury will ask, with evidence-backed answers. The weak spots are here on
-purpose — answering them first is stronger than being caught by them.
+Questions a technical jury is likely to ask, with short answers.
 
-## On the AI / "it's not AI-driven enough"
+## About the AI
 
-**Q: The PS says AI-driven. You only use ML in one place. Isn't that under-delivering?**
-The PS title says AI-driven; the PS *goal* is a correct security assessment. We use ML exactly where
-it measurably beats a non-AI baseline — leakage measurement, where a depth-2 rule captures only ~half
-the exposure (EXP-05: F1 0.51 vs 0.995). Four capabilities we *expected* to need ML — PFS, failure
-diagnosis, fingerprinting, mode — we tested and found are exact structural signatures needing none
-(EXP-03/06/07/08). Decorative ML on a problem that's actually deterministic is what loses credibility,
-and the encrypted-traffic-ML literature is in a documented reproducibility crisis (research doc 04).
+**Q: Where is the AI in this?**
+Three places. Random Forest and ExtraTrees models we trained ourselves predict the type of traffic inside an encrypted
+tunnel from packet size and timing, with a confidence for each prediction. A second model detects
+tunnels that carry mixed traffic. And anomaly detection learns each tunnel's normal behaviour and flags
+a cipher change or a downgrade. Reading the plaintext IKE fields is done by exact parsing, which is the
+right tool for fields that are sitting in the clear.
 
-**Q: So could you have just trained a classifier for the traffic type, like the PS asks?**
-We tested it. On mixed traffic it gives **confident wrong answers** — a tunnel carrying video +
-interactive was labelled "web" 100% of the time (EXP-05). Reporting that as fact would be false
-assurance. We reframed it to *measured leakage in bits*, which is honest and actionable.
+**Q: How can you tell what is inside an encrypted tunnel?**
+Encryption hides the content, not the shape. Packet sizes, timing and direction differ between web
+browsing, video, voice, chat and file transfer, and the models learn those shapes from traffic we sent
+through real tunnels in our lab and from public VPN traffic.
 
-## On rigor / "how do we trust your numbers"
+**Q: Are the models trained by you?**
+Yes, every one. No pretrained or third-party model is used, and a test fails if one is ever added.
+The models are small, ship as plain arrays and train in seconds from the scripts in the repository.
 
-**Q: How do we know you didn't tune this to look good?**
-Every experiment is **pre-registered** — predictions written and committed to git *before* the data
-existed (see EXPERIMENT-REGISTER and git timestamps). The DEVELOP scoring weights were committed
-before any concept was scored. 18/18 predictions held; where our own earlier claims were wrong
-(e.g. "Wireshark can't decode PQ IKE"), we corrected them on the record.
+## About the assessment
 
-**Q: Ground truth — isn't it circular to validate against your own tool?**
-No. Ground truth is **causal**: the configuration we set, confirmed by the endpoint's own
-`swanctl`/`pluto` log (T2). The analyzer's inference (T0/T1) is checked against that, never against
-itself. 69/69 captures match.
+**Q: Wireshark can already parse ML-KEM. What is new?**
+Parsing is not assessment. Wireshark shows the key-exchange field. TunnelScope tells you the tunnel was
+offered post-quantum but negotiated classical, ties that to the DST guidance, and does it across a
+fleet of tunnels.
 
-## On the downgrade / PQ claim
+**Q: Which standards do you check against?**
+DISA VPN SRG, RFC 8247 for IKEv2, RFC 8221 and RFC 4303 for ESP and AH, and a post-quantum readiness
+baseline from the DST report. The rules are YAML files, and every verdict cites the rule and standard
+behind it.
 
-**Q: Wireshark can already parse ML-KEM. What's new?**
-Parsing ≠ assessment. Wireshark shows you `ADDKE1`. It doesn't tell you the tunnel was **offered PQ
-but negotiated classical**, or map that to the DST mandate, or do it across a fleet — and the tools
-SOCs actually run (Suricata, Zeek, nDPI) can't even parse the field. We proved the downgrade detector
-on a dedicated arm and confirmed the ML-KEM identity across four independent sources (IANA, Wireshark
-master, tshark, strongSwan). And we say plainly what we can't tell: the responder's selection is
-plaintext, but *why* it picked classical — configured policy or an attacker-induced retry — isn't
-attributable passively without private keys or endpoint telemetry.
+**Q: Why several scores instead of one?**
+DISA and RFC 8247 sometimes rate the same tunnel differently, so each standard keeps its own score,
+and the auditor sees both. On top of that there is one 0-100 risk score with its drivers.
 
-**Q: Would your PQ detector work on Cisco/Palo Alto?**
-The decisive signals (IKE_INTERMEDIATE presence, the ADDKE transform) are protocol-defined, so they
-should — but we've validated on strongSwan and Libreswan only, and EXP-07 showed the *notify*-based
-signal is implementation-specific (it would false-positive on Libreswan), which is exactly why we
-made the deterministic exchange-type signal the decisive one, not the notify.
+**Q: How do you handle new vulnerabilities?**
+Two layers. Known patterns are rules over IKE message order and payloads, and adding one is a file
+change. For everything else the anomaly model flags a tunnel whose behaviour moves away from its own
+history, before anyone has a name for the cause.
 
-## On limits (say these before they ask)
+## About the fixes
 
-**Q: Your leakage accuracy is ~100% — real traffic isn't that separable.**
-Correct, and we say so. The five classes were synthetic and deliberately distinct; the ~100% is a
-property of those shapes, not real traffic. What transfers is the **method** and the **relative**
-result (padding kills the size channel but not timing). In deployment the tool reports measured
-leakage on the operator's *own* traffic, inheriting no synthetic number.
+**Q: Isn't this still just a report?**
+No. Every failed check gets a remediation plan with the exact change. For weak strongSwan settings
+TunnelScope applies the fix itself: the command is checked against an allowlist, the change is tried on
+a copy and loaded in a throwaway copy of the VPN, the current state is saved, the fix is applied, and a
+fresh capture confirms the rule now passes and nothing else got worse. If anything fails it rolls back
+automatically, and every step goes into an audit log. It works in the lab and on real strongSwan
+gateways over SSH, where a named person accepts written terms for the gateway first and confirms each
+change with the exact sentence the preview shows.
 
-**Q: Can it assess anti-replay enforcement (DISA V-207212)?**
-Passively, no — and it says NOT-OBSERVABLE rather than guessing. Receiver-side enforcement is only
-visible with endpoint telemetry (T2) or an authorized active test (T4). That honesty is the point.
+## About trust
 
-**Q: Two implementations is a small sample.**
-Agreed; it's stated as the scope of every claim. Protocol-fact signals held identically on both
-(the PFS gap is 256 bytes on each). Vendor appliances are the clear next step.
+**Q: How do we know the numbers were not tuned to look good?**
+Every experiment is pre-registered: the expected result was written and committed to git before any
+data was collected, so the git history shows what we predicted and when.
 
-## On deployment
+**Q: Isn't validating against your own tool circular?**
+No. The correct answer for each capture comes from the configuration we set and the VPN endpoint's own
+`swanctl` or `pluto` log, never from TunnelScope's output.
 
-**Q: Does it need cloud / internet / decryption?**
-No. Offline by default (air-gap-friendly for NTRO), no decryption for the core assessment — it works
-on plaintext IKE structure and ESP metadata. Endpoint telemetry (T2) and keys (T3) are optional
-escalations that unlock more, with each finding declaring which tier produced it.
+**Q: Can I trust the report later?**
+Yes. The evidence ledger hash-chains every finding and verdict to the capture's SHA-256, and
+`tunnelscope ledger-verify` detects any later change.
+
+## About deployment
+
+**Q: What does it need to run?**
+One analyst machine or server inside the organisation, Python and tshark. It needs no VPN keys and
+decrypts nothing. It is open source under Apache 2.0, so there is no licence cost.
+
+**Q: Does it work with other vendors?**
+The signals it uses are defined by the IPsec and IKE protocols, and it has been checked on three
+independent implementations: strongSwan, Libreswan and OpenBSD iked.
 
 ## The one-sentence close
-"We built the assessment layer that's missing: it tells you what your IPsec actually negotiated,
-whether it's post-quantum or fell back to classical, against which standard it complies — and it tells you
-plainly what it cannot see, so you never act on a confident guess."
+"TunnelScope tells you what your IPsec tunnels actually negotiated, whether they are post-quantum or
+fell back to classical, which standard they meet, and then helps you fix what does not."

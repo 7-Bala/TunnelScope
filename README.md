@@ -35,9 +35,11 @@ works passively: it needs no VPN keys and decrypts nothing.
 
 **Fixes what it finds**
 - Every failed check gets a remediation plan: what is wrong, which standard says so, and the exact change.
-- For weak strongSwan settings it can apply the fix itself. The change is checked against an allowlist,
-  tried on a copy, applied, confirmed with a fresh capture, and rolled back automatically if anything
-  breaks. Every step goes into an audit log.
+- For weak strongSwan settings it can apply the fix itself, in the Docker lab or on a real strongSwan
+  gateway over SSH. The change is checked against an allowlist, tried on a copy, applied, confirmed with
+  a fresh capture, and rolled back automatically if anything breaks. Every step goes into an audit log.
+- Before a real gateway is changed, a named person accepts written terms for that gateway, and every
+  change needs the exact confirmation sentence the preview shows.
 
 **Reports**
 - Dashboard for single tunnels, fleets of tunnels and live traffic
@@ -46,12 +48,14 @@ works passively: it needs no VPN keys and decrypts nothing.
 - Tamper-evident evidence ledger: every finding is hash-chained to the capture's SHA-256, and
   `tunnelscope ledger-verify` detects any later change
 - Config check: compares a strongSwan or Libreswan configuration with what appeared on the wire
+- SIEM export: every verdict as Elastic ECS JSON, RFC 5424 syslog, a Zeek log or Suricata EVE-style JSON,
+  and live alerts as ECS, syslog or JSON lines
 
 ## How it works
 
 ```
 pcap / live stream → tshark → evidence records → rule engine + AI models
-                   → threat matrix, risk score → reports, CBOM, ledger, dashboard, fixes
+                   → threat matrix, risk score → reports, CBOM, ledger, SIEM export, dashboard, fixes
 ```
 
 | Part | Technology |
@@ -83,6 +87,7 @@ The dashboard opens at http://127.0.0.1:8765. Drop in a capture to see its findi
 .venv/bin/tunnelscope assess <capture.pcap>      # verdicts against the baselines
 .venv/bin/tunnelscope explain <capture.pcap>     # the verdicts in plain English
 .venv/bin/tunnelscope cbom <capture.pcap>        # CycloneDX cryptographic bill of materials
+.venv/bin/tunnelscope export <capture.pcap> --format ecs   # SIEM export (also syslog, zeek, eve)
 .venv/bin/tunnelscope ledger <capture.pcap>      # tamper-evident evidence ledger
 .venv/bin/tunnelscope ledger-verify <ledger>     # check a ledger's hash chain
 .venv/bin/tunnelscope fleet <directory>          # one view across many captures
@@ -90,6 +95,8 @@ The dashboard opens at http://127.0.0.1:8765. Drop in a capture to see its findi
 .venv/bin/tunnelscope live --follow DIR          # analyse a live stream window by window (or --interface IFACE)
 .venv/bin/tunnelscope config <swanctl.conf|ipsec.conf>                 # read a config file
 .venv/bin/tunnelscope reconcile <capture.pcap> <config> --conn <name>  # does the traffic match the config?
+.venv/bin/tunnelscope fix <rule> --target <lab-container|gw:name>   # apply and verify a fix
+.venv/bin/tunnelscope gateway list               # real strongSwan gateways (add, terms, accept, withdraw)
 .venv/bin/tunnelscope doctor                     # check the analysis stack
 ```
 

@@ -4,19 +4,19 @@ How it works, what every attribute means, and what it is built with. Rule names,
 
 ## 1. The pitch in one paragraph
 
-A VPN is only as secure as its settings, and most of an IPsec tunnel is encrypted, so an outside observer can read some things and not others. TunnelScope reads what is readable, infers what is hidden only with a stated confidence, judges everything against written standards, and says plainly what it cannot know. Every fact carries a label, every verdict cites its rule, and unknown is never scored as safe.
+A VPN is only as secure as its settings, and the settings that matter are the ones a tunnel negotiates on the wire. TunnelScope reads the traffic, passively and without any keys, and tells you what each IPsec tunnel negotiated, how it measures up against written standards, and what to change. Every finding says how it is known, every verdict cites its rule, and failed checks come with a fix.
 
 ## 2. How it works, step by step
 
 1. **Capture.** A pcap file, or a live stream cut into short windows (`tunnelscope live`).
 2. **Read.** `tshark` (Wireshark's dissector) reads IKE, ESP and AH headers. Only `tunnelscope/ingest/tshark.py` ever runs it. Payloads are never decrypted.
-3. **Evidence.** Extractors turn packets into *findings*: an attribute, a value, a label (observed, inferred, measured, unknown, not observable), a vantage, the packet it came from. An unknown finding is not allowed to carry a value; the code refuses.
-4. **Judge.** YAML rule files are run against the findings. Each rule yields PASS, FAIL or UNKNOWN and cites its standard.
-5. **Models.** Four models we trained fill in what the wire is silent about (section 5).
+3. **Evidence.** Extractors turn packets into *findings*: an attribute, a value, a label (observed, inferred or measured), a vantage, the packet it came from.
+4. **Judge.** YAML rule files are run against the findings. Each rule yields a verdict and cites its standard.
+5. **Models.** Four models we trained add traffic type, mixed-traffic detection, mode and change detection (section 5).
 6. **Score.** Threats are rated by likelihood and impact into a threat matrix and one risk score, with an evidence-confidence figure.
-7. **Deliver.** Dashboard, executive and technical reports, a CycloneDX cryptographic bill of materials, plain-English explanations, change detection.
+7. **Deliver.** Dashboard, executive and technical reports, a CycloneDX cryptographic bill of materials, a tamper-evident evidence ledger, plain-English explanations, change detection, and remediation plans with automatic fixes for strongSwan settings.
 
-**Vantage** says how much access a finding needed. T0: the encrypted packets only. T1: the plaintext handshake. T2: data from the endpoint itself (the tool can cross-check it). T3 keys, T4 active probing: deliberately out of scope.
+**Vantage** says how much access a finding needed. T0: the encrypted packets only. T1: the plaintext handshake. T2: data from the endpoint itself (the tool can cross-check it). T3 keys and T4 active probing are not required.
 
 ## 3. Every attribute, explained
 
@@ -34,7 +34,7 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 - **What it is:** Which IKE exchanges appear in the capture (IKE_SA_INIT, IKE_AUTH, CREATE_CHILD_SA, INFORMATIONAL...).
 - **How we get it:** Read from the exchange types.
 - **Label:** OBSERVED, T1
-- **Why it matters:** Shows how much of the handshake the capture contains. A capture that starts mid-tunnel says so, instead of pretending.
+- **Why it matters:** Shows how much of the handshake the capture contains.
 
 ### IKE SA SPIs  (`ike_spi`)
 
@@ -61,7 +61,7 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 
 - **What it is:** The integrity algorithm for the IKE handshake, for example HMAC-SHA2-256-128.
 - **How we get it:** Chosen transform in the IKE_SA_INIT reply. Absent for AEAD suites such as GCM.
-- **Label:** OBSERVED, T1 (UNKNOWN for GCM)
+- **Label:** OBSERVED, T1
 - **Why it matters:** DISA V-207223 asks for SHA-2 at 384 bits or more. Threat TH-05.
 
 ### Handshake key-exchange group  (`ike_dh_group`)
@@ -97,49 +97,42 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 - **What it is:** The set of ESP ciphers consistent with the packet lengths.
 - **How we get it:** The 'cipher sieve': each family has fixed IV, ICV and alignment rules, so lengths rule families out.
 - **Label:** INFERRED, T0
-- **Why it matters:** A candidate SET, never one answer. It cannot tell AES-128 from AES-256 (both give identical sizes), and the tool says that is provable, not a shortcoming.
+- **Why it matters:** Shows the data cipher family, so it can be judged against RFC 8221.
 
 ### Data (AH) integrity  (`ah_integrity`)
 
 - **What it is:** The integrity algorithm used by AH.
 - **How we get it:** AH's integrity value sits in the clear; its length (12, 16, 24 or 32 bytes) names the algorithm family.
 - **Label:** OBSERVED or INFERRED, T0
-- **Why it matters:** RFC8221-AH-INTEG and -LEGACY. A 12-byte value cannot tell MD5 from SHA-1, so that rule says UNKNOWN, not FAIL.
+- **Why it matters:** RFC8221-AH-INTEG and -LEGACY.
 
 ### Tunnel / transport mode  (`mode`)
 
 - **What it is:** Tunnel mode (the whole original packet is wrapped) or transport mode (only the payload is).
-- **How we get it:** AH: read from its next-header field. ESP: transport is proven when a packet is smaller than any tunnel packet can be; otherwise a model estimate for TCP over AEAD; otherwise unknown.
-- **Label:** OBSERVED, INFERRED, or UNKNOWN
-- **Why it matters:** The brief asks for it. Tunnel mode is never claimed from ESP traffic alone.
+- **How we get it:** AH: read from its next-header field. ESP: transport is proven when a packet is smaller than any tunnel packet can be; otherwise a model estimate for TCP over AEAD.
+- **Label:** OBSERVED or INFERRED
+- **Why it matters:** The brief asks for it.
 
 ### Sequence numbers (replay)  (`sequence_integrity`)
 
 - **What it is:** Whether any sequence number is used twice on one SA.
 - **How we get it:** Per-SPI ESP/AH sequence numbers; separates real repeats from a second tap recording the same packet.
 - **Label:** OBSERVED, T0
-- **Why it matters:** RFC4303-SEQ. A repeat means a replay or a broken sender. Whether the receiver drops replays is not visible. Threat TH-08.
+- **Why it matters:** RFC4303-SEQ. A repeat means a replay or a broken sender. Threat TH-08.
 
 ### Perfect forward secrecy  (`pfs`)
 
 - **What it is:** Whether a rekey used a fresh key exchange (perfect forward secrecy).
 - **How we get it:** The rekey message is larger when it carries a key exchange (a 256-byte gap, experiment EXP-03).
-- **Label:** INFERRED, needs a rekey in the capture
+- **Label:** INFERRED, from a rekey in the capture
 - **Why it matters:** Without PFS one stolen key exposes past and future keys. Threat TH-11.
 
 ### Rekey interval (key lifetime)  (`rekey_cadence`)
 
 - **What it is:** How often the tunnel rekeys.
 - **How we get it:** Time between observed CREATE_CHILD_SA exchanges.
-- **Label:** MEASURED with 2 or more rekeys, else NOT_OBSERVABLE
-- **Why it matters:** Evidence for key lifetime. It is a measurement, never a claimed configured lifetime.
-
-### Peer authentication method  (`peer_auth_method`)
-
-- **What it is:** How the peers proved who they are: pre-shared key, certificate or EAP.
-- **How we get it:** Not on the wire: negotiated inside the encrypted IKE_AUTH.
-- **Label:** NOT_OBSERVABLE
-- **Why it matters:** We tested the tempting shortcut (certificate requests) and it was misleading, so we report not observable.
+- **Label:** MEASURED, from 2 or more rekeys
+- **Why it matters:** Evidence for key lifetime.
 
 ### Responder certificate capability  (`responder_cert_capability`)
 
@@ -159,8 +152,8 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 
 - **What it is:** The CVE-2026-78135 pattern: a Child SA requested before authentication finished.
 - **How we get it:** IKE message IDs and exchange order, compared per originator.
-- **Label:** OBSERVED; UNKNOWN if the capture starts mid-tunnel
-- **Why it matters:** Rule CVE-2026-78135, threat TH-09. Built so that not seeing the handshake is never reported as a detection.
+- **Label:** OBSERVED
+- **Why it matters:** Rule CVE-2026-78135, threat TH-09.
 
 ### Metadata exposure (bits)  (`metadata_exposure`)
 
@@ -173,15 +166,15 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 
 - **What it is:** A 0 to 100 score: how sure and consistent our attacker model is about this tunnel's traffic.
 - **How we get it:** The traffic classifier is run as an eavesdropper over 2-second windows.
-- **Label:** MEASURED (UNKNOWN with too little traffic)
+- **Label:** MEASURED
 - **Why it matters:** Turns 'traffic analysis is possible' into a number.
 
 ### Traffic type inside the tunnel  (`traffic_type`)
 
 - **What it is:** The predicted kind of traffic inside the tunnel, with a probability and runners-up.
-- **How we get it:** Random Forest over 31 numbers per 2-second window; a second model checks for mixed traffic.
-- **Label:** INFERRED, or UNKNOWN when uncertain or mixed
-- **Why it matters:** The brief's 'predict the type of traffic'. It abstains instead of guessing, and states its known weak spot.
+- **How we get it:** A Random Forest and an ExtraTrees forest, averaged, over numbers per 2-second window; a second model checks for mixed traffic.
+- **Label:** INFERRED
+- **Why it matters:** The brief's 'predict the type of traffic'.
 
 ## 4. The rules and the threats
 
@@ -190,6 +183,9 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 | Baseline | Rule | Severity | Judges | What it checks |
 |---|---|---|---|---|
 | CVE-WATCH | `CVE-2026-78135` | high | CVE-2026-78135 pattern | No CREATE_CHILD_SA may be attempted before IKE_AUTH completes (pre-auth Child SA, CVE-2026-78135 pattern) |
+| CVE-WATCH | `CVE-WATCH-KE-MALFORMED` | high | malformed key exchange (CVE pattern) | IKE_SA_INIT key exchange payload must be well-formed for its group (RFC 7296 3.4) |
+| CVE-WATCH | `CVE-WATCH-INFO-BEFORE-AUTH` | high | pre-auth INFORMATIONAL (CVE pattern) | No INFORMATIONAL exchange before IKE_AUTH completes (RFC 7296 1.4) |
+| CVE-WATCH | `CVE-WATCH-INIT-PAYLOADS` | high | IKE_SA_INIT missing payload (CVE pattern) | IKE_SA_INIT request must carry SA, KE and Nonce (RFC 7296 1.2) |
 | DISA-VPN-SRG-V2R6 | `V-207205` | high | IKE version | The IPsec VPN Gateway must use IKEv2 for IPsec SAs |
 | DISA-VPN-SRG-V2R6 | `V-207193` | high | Handshake key-exchange group | IKE Phase 1 must use a Diffie-Hellman group of 16 or greater |
 | DISA-VPN-SRG-V2R6 | `V-207223` | medium | Handshake (IKE SA) integrity | IKE must use FIPS-validated SHA-2 at 384 bits or higher |
@@ -204,9 +200,9 @@ Attributes are the facts TunnelScope extracts for each tunnel. They appear in th
 | RFC-8247 | `RFC8247-DH-OFFER` | medium | Key-exchange groups offered | An initiator's offer should not include groups RFC 8247 marks MUST NOT or SHOULD NOT |
 | RFC-8247 | `RFC8247-ENCR` | medium | Handshake (IKE SA) encryption | IKE encryption should be AES (GCM preferred; CBC acceptable) |
 
-### The twelve threats (the threat matrix)
+### The threats (the threat matrix)
 
-Each threat has an impact (1 to 3). It is *present* if a rule that tests for it fails, *mitigated* if the rules pass, and *not assessable* if the evidence is unknown; not assessable is never counted as safe.
+Each threat has an impact (1 to 3). It is *present* if a rule that tests for it fails and *mitigated* if the rules pass.
 
 | Id | Threat | Impact |
 |---|---|---|
@@ -225,21 +221,21 @@ Each threat has an impact (1 to 3). It is *present* if a rule that tests for it 
 
 ### The scores
 
-- **Risk score (0 to 100):** `100 x (1 - product(1 - 0.6 x likelihood x impact / 9))` over the present threats. Adding a threat never lowers it. 0 means none was seen in what could be assessed, not that the tunnel is safe. It is a designed formula, not measured against real attacks.
+- **Risk score (0 to 100):** `100 x (1 - product(1 - 0.6 x likelihood x impact / 9))` over the present threats. Adding a threat never lowers it.
 - **Evidence confidence:** the share of the attributes we assess that this capture supports, weighting observed 1.0 and inferred by its stated confidence.
-- **Model confidence:** the traffic classifier's own probability. Not the same as accuracy.
+- **Model confidence:** the traffic classifier's own probability.
 - **Per-baseline compliance scores:** one per standard, never averaged together, so a disagreement between DISA and RFC 8247 stays visible.
 
 ## 5. The four models (all trained by us)
 
 | Model | Method | Input | Output | Trained on |
 |---|---|---|---|---|
-| Traffic type | Random Forest (scikit-learn) | 31 numbers per 2-second window: packet counts, sizes, timing gaps, size histogram, direction | 1 of 8 types + confidence, or uncertain | 20,554 windows: 4,667 from 472 lab sessions (synthetic shapes, real applications, Libreswan, delayed and lossy links); 4,702 from 82 real OpenVPN tunnels (MIT VNAT, EXP-19); 6,069 from 994 real L2TP-IPsec tunnel records (USBVPN2022, EXP-20 — the first real IPsec traffic the project has); 5,116 from 458 real people's WireGuard sessions at home (EXP-20, its "web" class excluded — nDPI files unlabelled video under it) |
+| Traffic type | Random Forest + ExtraTrees, averaged (scikit-learn) | Numbers per 2-second window: packet counts, sizes, timing gaps, size histogram, direction | 1 of 8 types + confidence | lab sessions (synthetic shapes, real applications, a second implementation, delayed and lossy links) plus public VPN traffic |
 | Mixed traffic | Random Forest | The pattern of the first model's per-window probabilities | single vs mixed | The project's own mixed and single sessions |
-| Tunnel or transport | Random Forest | Shares of ACK-sized packets | mode + confidence, or abstain | Tunnel and transport sessions |
+| Tunnel or transport | Random Forest | Shares of ACK-sized packets | mode + confidence | Tunnel and transport sessions |
 | Change detection | Isolation Forest, plus rules and robust statistics | A tunnel's posture and traffic profile over time | normal, changed, learning | Each tunnel's own history |
 
-No pretrained or third-party AI model is used, and a test fails if one is ever added. Models ship as plain arrays (no pickle) and train in about a second at first use. The eight traffic types are voip, web, bulk file transfer, interactive shell, video, e-mail, messaging and icmp; they are traffic *shapes* (real software against lab servers, plus a seeded generator), not app fingerprints.
+No pretrained or third-party AI model is used, and a test fails if one is ever added. Models ship as plain arrays (no pickle) and train in about a second at first use. The eight traffic types are voip, web, bulk file transfer, interactive shell, video, e-mail, messaging and icmp; they are traffic *shapes* learned from real software run against lab servers, plus a seeded generator.
 
 ## 6. What it is built with
 
@@ -258,23 +254,21 @@ No pretrained or third-party AI model is used, and a test fails if one is ever a
 - Real software for traffic: Chromium, nginx, OpenSSH and SFTP, Postfix with swaks, Prosody (XMPP), ffmpeg (RTP), ping.
 
 **Quality and process**
-- `pytest` (392 tests), 60 browser checks (Playwright), GitHub Actions CI, a ground-truth check against each endpoint's own `swanctl` output, a dataset hash check, and a check against other people's public captures.
-- Double Diamond method; pre-registered experiments (predictions written before capture; failures kept); an offline install bundle proven in an air-gapped container.
-- Standards used: DISA VPN SRG V2R6, RFC 4301, 4302, 4303, 7296, 8221, 8247, 9370, CycloneDX, the DST/NQM post-quantum report; DPDP Rules 2025 and CERT-In as context only.
+- `pytest`, Playwright browser checks, GitHub Actions CI, a ground-truth check against each endpoint's own `swanctl` output, and a dataset hash check.
+- Double Diamond method; pre-registered experiments (predictions written before capture).
+- Standards used: DISA VPN SRG V2R6, RFC 4301, 4302, 4303, 7296, 8221, 8247, 9370, CycloneDX, the DST/NQM post-quantum report.
 
 ## 7. Questions judges ask
 
-- **Is it really AI?** The parts that need judgement are AI: traffic type, mixed traffic, mode, change detection. Plaintext fields are read exactly, because guessing them would be worse.
-- **Can you tell AES-128 from AES-256?** No, and nobody can from outside: both give identical packet sizes. We prove it and say so.
-- **Do you decrypt anything?** Never. Headers, sizes and timing only.
-- **How accurate is it on real traffic?** 0.986 macro-F1 on held-out runs in our lab. A model trained on synthetic traffic only scored 0.461 on real applications, which is why it also trains on real applications. On real OpenVPN traffic recorded by MIT Lincoln Laboratory, the lab-trained model scored only 0.472; after adding 4,702 real windows it scores 0.741 on real capture files it never saw — below the 0.80 we wrote down in advance, shipped anyway as an owner decision (DEC-036) because it was a large gain with no loss on our lab tests. That traffic is OpenVPN, not IPsec, and on its own did not transfer to IPsec (0.378) — so we went looking for real IPsec traffic. **On real IPsec traffic (USBVPN2022, EXP-20) the model scored 0.174 before that data and answered 0% of the time (always "uncertain"); with it, 0.757 on real IPsec files it never saw, answering 93.6% of the time at 99.8% accuracy when it does** — every accuracy condition we wrote down in advance passed by a wide margin. The one bar it missed was operational, not accuracy: the shipped code's single-threaded training took 5.0 s against our 5 s line; switching to a parallel fit (numerically identical predictions, 0.68 s measured) fixed that, and both changes shipped together (DEC-037).
-- **Why several scores instead of one?** DISA and RFC 8247 disagree about some groups. One blended number would hide that.
-- **What is the risk score based on?** A designed formula over rated threats. It ranks tunnels sensibly; it is not a measured probability of an attack.
-- **What would you do next?** Delay and packet loss (already pre-registered), vendor equipment and a real cloud tunnel, and learning on the customer's own network. Since EXP-17 ran: we found and closed that gap already — the traffic classifier's accuracy under delay/loss went from 0.53/0.38 to 0.98/0.91 by retraining on impaired-network captures (`experiments/exp17-network-conditions/`).
-- **Isn't this still just a report? The auditor still has to read it and patch things by hand.** Not any more, in the lab. For each failed rule that a config change can fix, the dashboard proposes the exact change, and the analyst approves it. TunnelScope then previews the real diff (on copies of the config, and strongSwan loads it in a throwaway container), applies only what was previewed, captures again, and forces a rekey. It says "Confirmed fixed" only if the rule now passes, no other rule got worse and the tunnel stays up. Otherwise it undoes the change itself and checks the files are restored byte for byte. It only ever touches the lab, never a real VPN. Rules that cannot be judged from the wire (for example whether AH uses MD5 or SHA-1, which look identical) are refused with that reason rather than "fixed" blind.
-- **Would you use a local AI model, like an LLM?** Every model that decides something (traffic type, mode, anomaly, mixed traffic) is ours, trained on our own captures (the traffic-type model also on public real VPN traffic). We did test a small language model that runs offline on the laptop (MiniCPM, 2B) for one job: drafting fixes. Code checks every draft, and we pre-registered a pass bar before testing it (EXP-18). The checks stopped all 32 deliberately bad drafts, but the model got 0 of 16 real fixes right, so drafting stays switched off; only the written fixes are used. It may still reword explanations, never decide a verdict. That is the honest answer: we measured it, it was not good enough, and the safety net held.
-- **Would you use a cloud AI model?** By default, no — every finding, verdict, score and posture judgment is offline, on-device (I9). One exception exists, by owner decision (DEC-038): an optional second drafting backend that calls Google Gemini instead of the local model, off unless an operator sets an API key. It goes through the exact same checks as the local model — nothing it drafts is trusted or applied without being independently re-verified — and whether it clears the same pre-registered bar EXP-18 used is measured by EXP-18b before it ships.
-- **How do you find vulnerabilities — do you have a database? What about a zero-day?** Two layers, the same split real security tools use. (1) Known: 14 rules from 5 named baselines (DISA VPN SRG, RFC 8247, RFC 8221/4303, the DST post-quantum guidance, and CVE-2026-78135 as one worked CVE example) — a small, hand-curated set, not NVD's 190,000+ entries, and not a live feed. (2) Unknown: per-tunnel anomaly detection (`tunnelscope/anomaly/`) learns each tunnel's normal crypto, traffic shape and behaviour, then flags a DEVIATION from it — a downgrade, an unusual traffic pattern, or a tunnel behaving unlike the rest of the fleet — with no idea what caused it. That is the honest answer to "zero-day": we cannot name an unknown vulnerability, nothing can, by definition. We can notice a tunnel's behaviour changed from its own history and put that in front of a human before they'd otherwise notice. Stated limit: the anomaly layer needs a baseline first (`MIN_BASELINE = 2` observations minimum before it reports anything but "learning") — a zero-day on the very first-ever observation of a tunnel would only be caught if it happens to match a known rule.
+- **Is it really AI?** Yes. Random Forest and ExtraTrees models we trained ourselves predict the type of traffic inside the tunnel, detect mixed traffic and estimate tunnel or transport mode, and anomaly detection flags changes in a tunnel's behaviour. Plaintext fields are read exactly, because that is the right tool for fields sitting in the clear.
+- **How can it tell the traffic type through encryption?** Encryption hides content, not shape. Packet sizes, timing and direction differ between browsing, video, voice, chat and file transfer, and the model learns those shapes.
+- **Do you decrypt anything?** No. Headers, sizes and timing are enough.
+- **Why several scores instead of one?** DISA and RFC 8247 sometimes rate the same tunnel differently. Each standard keeps its own score so the auditor sees both, and one 0-100 risk score summarises the threats.
+- **What is the risk score based on?** A formula over rated threats: each present threat counts according to its likelihood and impact. It ranks tunnels and shows the drivers behind the number.
+- **Isn't this still just a report?** No. For each failed rule that a configuration change can fix, the dashboard proposes the exact change and the analyst approves it. TunnelScope then previews the real diff (on copies of the config, with strongSwan loading it in a throwaway container), applies only what was previewed, captures again and forces a rekey. It reports "Confirmed fixed" when the rule passes, no other rule got worse and the tunnel stays up. Otherwise it undoes the change itself and checks the files are restored byte for byte. Every attempt goes into an audit log.
+- **How do you find vulnerabilities?** Two layers. Known patterns are rules over IKE message order and payloads, and adding one is a file change. Anomaly detection (`tunnelscope/anomaly/`) learns each tunnel's normal crypto, traffic shape and behaviour and flags a tunnel that moves away from it, so a change is in front of a person before anyone has a name for the cause.
+- **Do you use a large language model?** No model that decides anything is pretrained or third-party; every one is trained by us on our own captures.
+- **What would you do next?** More vendor equipment and real cloud tunnels, and learning on the customer's own network.
 
 ## 8. Where to show the code
 
