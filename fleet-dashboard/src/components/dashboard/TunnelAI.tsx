@@ -55,7 +55,7 @@ const MEASURED_POINTS = [
   "Result on runs it had not seen: 0.986, from 1,964 two-second windows across 216 sessions (synthetic traffic shapes, real applications, and a second IPsec implementation).",
   "Different VPN software: trained on strongSwan traffic, it scored 1.000 on Libreswan traffic.",
   "The warning that matters: a model trained only on synthetic traffic scored 0.461 on real applications. A model is only as good as how closely its training traffic resembles yours.",
-  "Mixed traffic: a second check flags tunnels carrying several kinds of traffic at once. It catches 92.9% of mixed sessions and wrongly flags 8.3% of single-type sessions.",
+  "Mixed traffic: a second check flags tunnels carrying several kinds of traffic at once. On a lab it had never seen, this check and the confidence rule together kept 14 of 16 mixed sessions from getting a single label; 2 were named after their louder half.",
   "Lab only: one lab network, no internet delay or packet loss, our own servers. Read these scores as evidence that the method works, not as accuracy in the field.",
 ] as const
 

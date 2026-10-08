@@ -1,0 +1,1620 @@
+{
+ "chosen": "R6",
+ "gate": {
+  "tau_c": 0.65,
+  "tau_m": 0.65,
+  "tau_o": 1.0,
+  "weighted_answered_share": 0.3239,
+  "weighted_accuracy_among_answered": 0.9341,
+  "mixed_not_answered": 0.8152,
+  "answered_by_family": {
+   "lab-a": "20/153",
+   "lab-b": "36/72",
+   "lab-c": "18/32",
+   "lab-e": "16/55",
+   "lab-h": "18/138",
+   "lab-real-apps": "65/160",
+   "lab-tgen": "119/311",
+   "usbvpn": "0/994",
+   "vnat": "59/82",
+   "wireguard": "53/458"
+  }
+ },
+ "candidates": {
+  "R0": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.7056,
+     "accuracy": 0.717,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.591,
+      "email": 0.744,
+      "icmp": 1.0,
+      "interactive": 0.526,
+      "messaging": 0.732,
+      "video": 0.695,
+      "voip": 0.866,
+      "web": 0.491
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.7163,
+     "accuracy": 0.75,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.286,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 1.0,
+      "video": 0.444,
+      "voip": 1.0,
+      "web": 0.0
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.5639,
+     "accuracy": 0.8049,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.615,
+      "interactive": 0.0,
+      "messaging": 0.966,
+      "video": 0.571,
+      "voip": 0.667
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.0362,
+     "accuracy": 0.0483,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.145,
+      "voip": 0.0,
+      "web": 0.0
+     },
+     "web_recall": 0.0,
+     "web_called": {
+      "video": 521,
+      "bulk": 365,
+      "interactive": 5,
+      "messaging": 3
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.2638,
+     "accuracy": 0.2948,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.213,
+      "email": 0.0,
+      "messaging": 0.671,
+      "voip": 0.172
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.5204,
+     "accuracy": 0.5294,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.074,
+      "email": 0.98,
+      "icmp": 0.345,
+      "messaging": 0.0,
+      "video": 0.686,
+      "voip": 0.625,
+      "web": 0.933
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.5,
+     "accuracy": 0.5,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.0
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.8042,
+     "accuracy": 0.8125,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.667,
+      "email": 0.8,
+      "icmp": 1.0,
+      "interactive": 0.8,
+      "messaging": 0.5,
+      "video": 0.667,
+      "voip": 1.0,
+      "web": 1.0
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.7185,
+     "accuracy": 0.7091,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 0.5,
+      "icmp": 1.0,
+      "interactive": 0.774,
+      "messaging": 0.429,
+      "video": 0.545,
+      "voip": 1.0,
+      "web": 0.5
+     }
+    }
+   },
+   "lofo_mean_eight": 0.5138,
+   "lofo_mean_all": 0.5365,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e"
+   ],
+   "grouped_by_session": 0.9871,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.8333,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 1.0,
+      "video": 1.0,
+      "voip": 0.667,
+      "web": 1.0
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.7235,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 0.5,
+      "email": 1.0,
+      "icmp": 0.8,
+      "interactive": 0.75,
+      "messaging": 0.5,
+      "video": 0.571,
+      "voip": 0.667,
+      "web": 1.0
+     }
+    }
+   },
+   "scored_sessions": 2317
+  },
+  "R1": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.4688,
+     "accuracy": 0.508,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.182,
+      "email": 0.604,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 0.885,
+      "video": 0.364,
+      "voip": 0.542,
+      "web": 0.174
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.6841,
+     "accuracy": 0.7188,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.333,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 0.792,
+      "video": 0.372,
+      "voip": 0.976,
+      "web": 0.0
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.4551,
+     "accuracy": 0.7561,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.364,
+      "interactive": 0.0,
+      "messaging": 0.912,
+      "video": 0.0,
+      "voip": 1.0
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.0382,
+     "accuracy": 0.0493,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.15,
+      "voip": 0.0,
+      "web": 0.002
+     },
+     "web_recall": 0.0011,
+     "web_called": {
+      "video": 496,
+      "bulk": 307,
+      "messaging": 90,
+      "web": 1
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.255,
+     "accuracy": 0.3537,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.091,
+      "email": 0.0,
+      "messaging": 0.547,
+      "voip": 0.382
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.4755,
+     "accuracy": 0.4837,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.0,
+      "email": 1.0,
+      "icmp": 0.286,
+      "messaging": 0.0,
+      "video": 0.531,
+      "voip": 0.636,
+      "web": 0.875
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.6,
+     "accuracy": 0.5556,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.2
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.7604,
+     "accuracy": 0.8125,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 0.889,
+      "video": 0.667,
+      "voip": 0.8,
+      "web": 0.727
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.6143,
+     "accuracy": 0.6364,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 0.4,
+      "email": 0.4,
+      "icmp": 1.0,
+      "interactive": 0.833,
+      "messaging": 0.625,
+      "video": 0.333,
+      "voip": 0.923,
+      "web": 0.4
+     }
+    }
+   },
+   "lofo_mean_eight": 0.4671,
+   "lofo_mean_all": 0.4835,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e"
+   ],
+   "grouped_by_session": 0.9857,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.8333,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 1.0,
+      "video": 0.667,
+      "voip": 1.0,
+      "web": 1.0
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.5563,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 0.5,
+      "email": 0.4,
+      "icmp": 0.8,
+      "interactive": 0.857,
+      "messaging": 0.333,
+      "video": 0.5,
+      "voip": 0.615,
+      "web": 0.444
+     }
+    }
+   },
+   "scored_sessions": 2317
+  },
+  "R2": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.6297,
+     "accuracy": 0.6399,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.444,
+      "email": 0.744,
+      "icmp": 1.0,
+      "interactive": 0.444,
+      "messaging": 0.732,
+      "video": 0.167,
+      "voip": 0.84,
+      "web": 0.667
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.7103,
+     "accuracy": 0.7375,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.286,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 0.976,
+      "video": 0.421,
+      "voip": 1.0,
+      "web": 0.0
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.4496,
+     "accuracy": 0.7805,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.615,
+      "interactive": 0.0,
+      "messaging": 0.966,
+      "video": 0.0,
+      "voip": 0.667
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.0344,
+     "accuracy": 0.0473,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.138,
+      "voip": 0.0,
+      "web": 0.0
+     },
+     "web_recall": 0.0,
+     "web_called": {
+      "video": 542,
+      "bulk": 343,
+      "interactive": 2,
+      "messaging": 7
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.3439,
+     "accuracy": 0.3166,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.491,
+      "email": 0.0,
+      "messaging": 0.667,
+      "voip": 0.218
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.2872,
+     "accuracy": 0.281,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.083,
+      "email": 0.958,
+      "icmp": 0.345,
+      "messaging": 0.0,
+      "video": 0.235,
+      "voip": 0.0,
+      "web": 0.389
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.5,
+     "accuracy": 0.5,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.0
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.6376,
+     "accuracy": 0.7188,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.667,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.545,
+      "messaging": 0.0,
+      "video": 0.0,
+      "voip": 1.0,
+      "web": 0.889
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.6382,
+     "accuracy": 0.6545,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 0.727,
+      "email": 0.5,
+      "icmp": 1.0,
+      "interactive": 0.69,
+      "messaging": 0.667,
+      "video": 0.0,
+      "voip": 1.0,
+      "web": 0.522
+     }
+    }
+   },
+   "lofo_mean_eight": 0.4491,
+   "lofo_mean_all": 0.4701,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e"
+   ],
+   "grouped_by_session": 0.987,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.8333,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 1.0,
+      "video": 1.0,
+      "voip": 0.667,
+      "web": 1.0
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.6706,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 0.364,
+      "email": 0.857,
+      "icmp": 0.8,
+      "interactive": 0.545,
+      "messaging": 0.667,
+      "video": 0.571,
+      "voip": 0.727,
+      "web": 0.833
+     }
+    }
+   },
+   "scored_sessions": 2317
+  },
+  "R3": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.5266,
+     "accuracy": 0.5466,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.182,
+      "email": 0.604,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 0.885,
+      "video": 0.41,
+      "voip": 0.632,
+      "web": 0.5
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.6624,
+     "accuracy": 0.725,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.479,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 0.844,
+      "video": 0.0,
+      "voip": 0.976,
+      "web": 0.0
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.53,
+     "accuracy": 0.7805,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.5,
+      "interactive": 0.4,
+      "messaging": 0.95,
+      "video": 0.0,
+      "voip": 0.8
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.0327,
+     "accuracy": 0.0362,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.131,
+      "voip": 0.0,
+      "web": 0.0
+     },
+     "web_recall": 0.0,
+     "web_called": {
+      "video": 421,
+      "bulk": 305,
+      "messaging": 168
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.3996,
+     "accuracy": 0.3886,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.286,
+      "email": 0.316,
+      "messaging": 0.55,
+      "voip": 0.447
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.4662,
+     "accuracy": 0.4248,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.122,
+      "email": 1.0,
+      "icmp": 0.286,
+      "messaging": 0.0,
+      "video": 0.24,
+      "voip": 0.615,
+      "web": 1.0
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.78,
+     "accuracy": 0.6944,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.56
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.7667,
+     "accuracy": 0.8125,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.8,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 1.0,
+      "video": 0.667,
+      "voip": 1.0,
+      "web": 0.667
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.6161,
+     "accuracy": 0.6,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 0.667,
+      "email": 0.4,
+      "icmp": 1.0,
+      "interactive": 0.6,
+      "messaging": 0.571,
+      "video": 0.333,
+      "voip": 0.857,
+      "web": 0.5
+     }
+    }
+   },
+   "lofo_mean_eight": 0.5205,
+   "lofo_mean_all": 0.5311,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e"
+   ],
+   "grouped_by_session": 0.9855,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.8333,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 1.0,
+      "video": 0.0,
+      "voip": 0.667,
+      "web": 1.0
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.5595,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 0.5,
+      "email": 0.4,
+      "icmp": 0.8,
+      "interactive": 0.857,
+      "messaging": 0.444,
+      "video": 0.5,
+      "voip": 0.667,
+      "web": 0.308
+     }
+    }
+   },
+   "scored_sessions": 2317
+  },
+  "R4": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.2902,
+     "accuracy": 0.3023,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.02,
+      "email": 0.682,
+      "icmp": 0.624,
+      "interactive": 0.0,
+      "messaging": 0.73,
+      "video": 0.0,
+      "voip": 0.015,
+      "web": 0.25
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.5448,
+     "accuracy": 0.6125,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.489,
+      "email": 0.755,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 0.645,
+      "video": 0.276,
+      "voip": 1.0,
+      "web": 0.194
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.1686,
+     "accuracy": 0.1463,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.182,
+      "interactive": 0.0,
+      "messaging": 0.217,
+      "video": 0.0,
+      "voip": 0.444
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.0627,
+     "accuracy": 0.0372,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.246,
+      "voip": 0.0,
+      "web": 0.004
+     },
+     "web_recall": 0.0022,
+     "web_called": {
+      "messaging": 443,
+      "bulk": 292,
+      "video": 156,
+      "interactive": 1,
+      "web": 2
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.4057,
+     "accuracy": 0.4083,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.576,
+      "email": 0.0,
+      "messaging": 0.447,
+      "voip": 0.599
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.4845,
+     "accuracy": 0.5556,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.543,
+      "email": 0.81,
+      "icmp": 0.933,
+      "messaging": 0.0,
+      "video": 0.0,
+      "voip": 0.906,
+      "web": 0.2
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.78,
+     "accuracy": 0.6944,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.56
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.827,
+     "accuracy": 0.875,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 1.0,
+      "video": 1.0,
+      "voip": 0.889,
+      "web": 0.727
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.4714,
+     "accuracy": 0.4545,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 0.615,
+      "email": 0.5,
+      "icmp": 0.727,
+      "interactive": 0.0,
+      "messaging": 0.429,
+      "video": 0.4,
+      "voip": 0.5,
+      "web": 0.6
+     }
+    }
+   },
+   "lofo_mean_eight": 0.4454,
+   "lofo_mean_all": 0.4483,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e"
+   ],
+   "grouped_by_session": 0.6091,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.5992,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.0,
+      "email": 0.727,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 1.0,
+      "video": 0.0,
+      "voip": 0.667,
+      "web": 0.4
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.583,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 0.444,
+      "icmp": 0.667,
+      "interactive": 0.444,
+      "messaging": 0.571,
+      "video": 0.667,
+      "voip": 0.471,
+      "web": 0.4
+     }
+    }
+   },
+   "scored_sessions": 2317
+  },
+  "R6": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.745,
+     "accuracy": 0.746,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.571,
+      "email": 0.744,
+      "icmp": 0.907,
+      "interactive": 0.783,
+      "messaging": 0.938,
+      "video": 0.652,
+      "voip": 0.875,
+      "web": 0.491
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.7946,
+     "accuracy": 0.8,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.286,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 1.0,
+      "video": 0.5,
+      "voip": 1.0,
+      "web": 0.571
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.5993,
+     "accuracy": 0.8293,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.8,
+      "interactive": 0.222,
+      "messaging": 0.974,
+      "video": 0.333,
+      "voip": 0.667
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.03,
+     "accuracy": 0.0433,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.12,
+      "voip": 0.0,
+      "web": 0.0
+     },
+     "web_recall": 0.0,
+     "web_called": {
+      "video": 579,
+      "bulk": 303,
+      "interactive": 3,
+      "messaging": 5,
+      "email": 4
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.2599,
+     "accuracy": 0.2969,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.133,
+      "email": 0.167,
+      "messaging": 0.567,
+      "voip": 0.172
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.6226,
+     "accuracy": 0.5948,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.176,
+      "email": 0.98,
+      "icmp": 0.979,
+      "messaging": 0.0,
+      "video": 0.557,
+      "voip": 0.791,
+      "web": 0.875
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.5,
+     "accuracy": 0.5,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.0
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.9333,
+     "accuracy": 0.9375,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.667,
+      "email": 0.8,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 1.0,
+      "video": 1.0,
+      "voip": 1.0,
+      "web": 1.0
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.7105,
+     "accuracy": 0.6909,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 0.857,
+      "email": 0.909,
+      "icmp": 1.0,
+      "interactive": 0.71,
+      "messaging": 0.308,
+      "video": 0.4,
+      "voip": 1.0,
+      "web": 0.5
+     }
+    },
+    "lab-h": {
+     "macro_f1": 0.4673,
+     "accuracy": 0.5145,
+     "sessions": 138,
+     "per_class_f1": {
+      "bulk": 0.619,
+      "email": 0.364,
+      "icmp": 0.0,
+      "interactive": 0.773,
+      "messaging": 0.529,
+      "video": 0.343,
+      "voip": 0.667,
+      "web": 0.444
+     }
+    }
+   },
+   "lofo_mean_eight": 0.5606,
+   "lofo_mean_all": 0.5662,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e",
+    "lab-h"
+   ],
+   "grouped_by_session": 0.9879,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.8333,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 1.0,
+      "video": 1.0,
+      "voip": 0.667,
+      "web": 1.0
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.7743,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 0.5,
+      "email": 1.0,
+      "icmp": 0.8,
+      "interactive": 0.8,
+      "messaging": 0.8,
+      "video": 0.571,
+      "voip": 0.8,
+      "web": 0.923
+     }
+    }
+   },
+   "scored_sessions": 2455
+  },
+  "R7": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.6048,
+     "accuracy": 0.5981,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.18,
+      "email": 0.604,
+      "icmp": 1.0,
+      "interactive": 0.6,
+      "messaging": 0.921,
+      "video": 0.375,
+      "voip": 0.743,
+      "web": 0.415
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.7157,
+     "accuracy": 0.7562,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.333,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 0.884,
+      "video": 0.0,
+      "voip": 0.976,
+      "web": 0.533
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.6026,
+     "accuracy": 0.8049,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.364,
+      "interactive": 0.667,
+      "messaging": 0.983,
+      "video": 0.0,
+      "voip": 1.0
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.0284,
+     "accuracy": 0.0412,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.113,
+      "voip": 0.0,
+      "web": 0.0
+     },
+     "web_recall": 0.0,
+     "web_called": {
+      "video": 588,
+      "email": 173,
+      "messaging": 45,
+      "bulk": 87,
+      "interactive": 1
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.4099,
+     "accuracy": 0.3253,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.286,
+      "email": 0.636,
+      "messaging": 0.484,
+      "voip": 0.233
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.3775,
+     "accuracy": 0.3464,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.355,
+      "email": 1.0,
+      "icmp": 0.4,
+      "messaging": 0.0,
+      "video": 0.054,
+      "voip": 0.0,
+      "web": 0.833
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.78,
+     "accuracy": 0.6944,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.56
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.8333,
+     "accuracy": 0.875,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 1.0,
+      "video": 1.0,
+      "voip": 1.0,
+      "web": 0.667
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.7308,
+     "accuracy": 0.7455,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 0.4,
+      "email": 0.857,
+      "icmp": 1.0,
+      "interactive": 0.769,
+      "messaging": 0.727,
+      "video": 0.462,
+      "voip": 1.0,
+      "web": 0.632
+     }
+    },
+    "lab-h": {
+     "macro_f1": 0.4446,
+     "accuracy": 0.4928,
+     "sessions": 138,
+     "per_class_f1": {
+      "bulk": 0.577,
+      "email": 0.645,
+      "icmp": 0.0,
+      "interactive": 0.8,
+      "messaging": 0.533,
+      "video": 0.087,
+      "voip": 0.571,
+      "web": 0.343
+     }
+    }
+   },
+   "lofo_mean_eight": 0.544,
+   "lofo_mean_all": 0.5528,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e",
+    "lab-h"
+   ],
+   "grouped_by_session": 0.9865,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.8242,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.667,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.4,
+      "messaging": 0.727,
+      "video": 0.8,
+      "voip": 1.0,
+      "web": 1.0
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.7143,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 0.667,
+      "email": 0.857,
+      "icmp": 0.8,
+      "interactive": 0.857,
+      "messaging": 0.8,
+      "video": 0.533,
+      "voip": 0.8,
+      "web": 0.4
+     }
+    }
+   },
+   "scored_sessions": 2455
+  },
+  "R5": {
+   "lofo": {
+    "lab-tgen": {
+     "macro_f1": 0.3906,
+     "accuracy": 0.4019,
+     "sessions": 311,
+     "per_class_f1": {
+      "bulk": 0.184,
+      "email": 0.682,
+      "icmp": 0.648,
+      "interactive": 0.0,
+      "messaging": 0.714,
+      "video": 0.0,
+      "voip": 0.08,
+      "web": 0.817
+     }
+    },
+    "lab-real-apps": {
+     "macro_f1": 0.7319,
+     "accuracy": 0.7562,
+     "sessions": 160,
+     "per_class_f1": {
+      "bulk": 0.522,
+      "email": 0.833,
+      "icmp": 1.0,
+      "interactive": 0.872,
+      "messaging": 0.919,
+      "video": 0.16,
+      "voip": 0.93,
+      "web": 0.619
+     }
+    },
+    "vnat": {
+     "macro_f1": 0.2541,
+     "accuracy": 0.3049,
+     "sessions": 82,
+     "per_class_f1": {
+      "bulk": 0.2,
+      "interactive": 0.545,
+      "messaging": 0.476,
+      "video": 0.0,
+      "voip": 0.049
+     }
+    },
+    "usbvpn": {
+     "macro_f1": 0.2246,
+     "accuracy": 0.3843,
+     "sessions": 994,
+     "per_class_f1": {
+      "email": 0.0,
+      "video": 0.377,
+      "voip": 0.0,
+      "web": 0.521
+     },
+     "web_recall": 0.3523,
+     "web_called": {
+      "web": 315,
+      "bulk": 142,
+      "video": 193,
+      "messaging": 120,
+      "email": 121,
+      "voip": 2,
+      "interactive": 1
+     }
+    },
+    "wireguard": {
+     "macro_f1": 0.4486,
+     "accuracy": 0.4258,
+     "sessions": 458,
+     "per_class_f1": {
+      "bulk": 0.708,
+      "email": 0.069,
+      "messaging": 0.446,
+      "voip": 0.571
+     }
+    },
+    "lab-a": {
+     "macro_f1": 0.5493,
+     "accuracy": 0.5621,
+     "sessions": 153,
+     "per_class_f1": {
+      "bulk": 0.524,
+      "email": 0.571,
+      "icmp": 1.0,
+      "messaging": 0.0,
+      "video": 0.0,
+      "voip": 0.98,
+      "web": 0.769
+     }
+    },
+    "lab-b": {
+     "macro_f1": 0.7653,
+     "accuracy": 0.6806,
+     "sessions": 72,
+     "per_class_f1": {
+      "icmp": 1.0,
+      "web": 0.531
+     }
+    },
+    "lab-c": {
+     "macro_f1": 0.827,
+     "accuracy": 0.875,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 0.0,
+      "messaging": 0.889,
+      "video": 1.0,
+      "voip": 1.0,
+      "web": 0.727
+     }
+    },
+    "lab-e": {
+     "macro_f1": 0.5955,
+     "accuracy": 0.6182,
+     "sessions": 55,
+     "per_class_f1": {
+      "bulk": 0.5,
+      "email": 0.545,
+      "icmp": 0.889,
+      "interactive": 0.8,
+      "messaging": 0.5,
+      "video": 0.333,
+      "voip": 0.571,
+      "web": 0.625
+     }
+    },
+    "lab-h": {
+     "macro_f1": 0.5136,
+     "accuracy": 0.558,
+     "sessions": 138,
+     "per_class_f1": {
+      "bulk": 0.737,
+      "email": 0.429,
+      "icmp": 0.0,
+      "interactive": 0.774,
+      "messaging": 0.5,
+      "video": 0.681,
+      "voip": 0.632,
+      "web": 0.357
+     }
+    }
+   },
+   "lofo_mean_eight": 0.5239,
+   "lofo_mean_all": 0.5301,
+   "families": [
+    "lab-tgen",
+    "lab-real-apps",
+    "vnat",
+    "usbvpn",
+    "wireguard",
+    "lab-a",
+    "lab-b",
+    "lab-c",
+    "lab-e",
+    "lab-h"
+   ],
+   "grouped_by_session": 0.7601,
+   "guard": {
+    "lab-d": {
+     "macro_f1": 0.8333,
+     "sessions": 32,
+     "per_class_f1": {
+      "bulk": 0.0,
+      "email": 1.0,
+      "icmp": 1.0,
+      "interactive": 1.0,
+      "messaging": 1.0,
+      "video": 0.667,
+      "voip": 1.0,
+      "web": 1.0
+     }
+    },
+    "lab-f": {
+     "macro_f1": 0.7685,
+     "sessions": 46,
+     "per_class_f1": {
+      "bulk": 1.0,
+      "email": 0.857,
+      "icmp": 0.8,
+      "interactive": 0.667,
+      "messaging": 0.667,
+      "video": 0.857,
+      "voip": 0.8,
+      "web": 0.5
+     }
+    }
+   },
+   "scored_sessions": 2455
+  }
+ },
+ "choice": {
+  "eligible": [
+   "R0",
+   "R6",
+   "R7"
+  ],
+  "chosen": "R6",
+  "P51-1": {
+   "R1": 0.4671,
+   "R0": 0.5138,
+   "gain": -0.0467,
+   "pass": false
+  },
+  "P51-2": {
+   "R2_usbvpn": 0.0344,
+   "web_recall": 0.0,
+   "pass": false
+  },
+  "P51-3": {
+   "chosen_mean_eight": 0.5606,
+   "pass": false
+  },
+  "P51-4": {
+   "grouped_by_session": 0.9879,
+   "pass": true
+  },
+  "guard": {
+   "lab-d": 0.8333,
+   "lab-f": 0.7743
+  },
+  "gate": {
+   "tau_c": 0.65,
+   "tau_m": 0.65,
+   "tau_o": 1.0,
+   "weighted_answered_share": 0.3239,
+   "weighted_accuracy_among_answered": 0.9341,
+   "mixed_not_answered": 0.8152,
+   "answered_by_family": {
+    "lab-a": "20/153",
+    "lab-b": "36/72",
+    "lab-c": "18/32",
+    "lab-e": "16/55",
+    "lab-h": "18/138",
+    "lab-real-apps": "65/160",
+    "lab-tgen": "119/311",
+    "usbvpn": "0/994",
+    "vnat": "59/82",
+    "wireguard": "53/458"
+   }
+  },
+  "gate_inputs": {
+   "single": 2455,
+   "mixed": 92
+  }
+ },
+ "lab_g": {
+  "single_captured": 64,
+  "single_scored": 64,
+  "mixed_captured": 16,
+  "S_ungated_macro_f1": 0.6312,
+  "C_ungated_macro_f1": 0.8553,
+  "S_per_class_f1": {
+   "bulk": 0.8,
+   "email": 0.857,
+   "icmp": 0.4,
+   "interactive": 0.778,
+   "messaging": 0.706,
+   "video": 0.381,
+   "voip": 0.842,
+   "web": 0.286
+  },
+  "C_per_class_f1": {
+   "bulk": 0.889,
+   "email": 1.0,
+   "icmp": 0.933,
+   "interactive": 0.889,
+   "messaging": 0.857,
+   "video": 0.667,
+   "voip": 0.941,
+   "web": 0.667
+  },
+  "by_profile_C": {
+   "g5": 0.9016,
+   "g50": 0.8042
+  },
+  "gated_single": {
+   "S": {
+    "sessions": 64,
+    "answered": 0,
+    "correct": 0,
+    "answered_share": 0.0,
+    "accuracy_among_answered": null,
+    "stages": {
+     "abstained": 47,
+     "out_of_distribution": 17
+    }
+   },
+   "C": {
+    "sessions": 64,
+    "answered": 20,
+    "correct": 20,
+    "answered_share": 0.3125,
+    "accuracy_among_answered": 1.0,
+    "stages": {
+     "not_answered": 44,
+     "answered": 20
+    }
+   }
+  },
+  "gated_mixed": {
+   "S": {
+    "sessions": 16,
+    "answered": 0,
+    "correct": 0,
+    "answered_share": 0.0,
+    "accuracy_among_answered": null,
+    "stages": {
+     "abstained": 12,
+     "out_of_distribution": 4
+    }
+   },
+   "C": {
+    "sessions": 16,
+    "answered": 2,
+    "correct": 0,
+    "answered_share": 0.125,
+    "accuracy_among_answered": 0.0,
+    "stages": {
+     "not_answered": 14,
+     "answered": 2
+    }
+   }
+  }
+ },
+ "P51-5": {
+  "chosen": 0.8553,
+  "shipped": 0.6312,
+  "gain": 0.2241,
+  "pass": true
+ },
+ "P51-6": {
+  "sessions": 64,
+  "answered": 20,
+  "correct": 20,
+  "answered_share": 0.3125,
+  "accuracy_among_answered": 1.0,
+  "stages": {
+   "not_answered": 44,
+   "answered": 20
+  },
+  "pass": false
+ },
+ "P51-7": {
+  "not_answered": 14,
+  "n": 16,
+  "pass": true
+ },
+ "ship": false
+}
