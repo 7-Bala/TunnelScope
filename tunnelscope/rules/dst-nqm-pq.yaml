@@ -1,6 +1,12 @@
 baseline: DST-NQM-2026
 authority: "DST/National Quantum Mission - Implementation of Quantum Safe Ecosystem in India, Task Force Report, Feb 2026"
 url: "https://dst.gov.in/sites/default/files/Report_TaskForce_PQMigration_4Feb26%20(v1).pdf"
+# T-122 part 3 / EXP-53 (pre-registered bad7fdf). The original address above returned HTTP 404 on 2026-10-15 and DST's page
+# https://www.dst.gov.in/quantum-safe-ecosystem-in-india lists no document. The quotes below were checked (analyze.py of
+# experiments/exp53-nsa-dst-profile) against the Internet Archive's copy of that address taken on 2026-09-26:
+#   https://web.archive.org/web/20260926154852id_/https://dst.gov.in/sites/default/files/Report_TaskForce_PQMigration_4Feb26%20%28v1%29.pdf
+# 128 pages, 1,982,388 bytes, SHA-256 461d8b42aea3847a3f9083e369065eff7985b03f8e4b1e9974f236ce93d99f31. `page` is the PDF page.
+# Only these provenance fields were added; no id, attribute, assertion, severity or message changed.
 rules:
   - id: DST-PQ-KE
     title: "CII cryptographic assets should negotiate a post-quantum key exchange (assess quantum risk)"
@@ -8,9 +14,22 @@ rules:
     assert: {op: pq_present}
     severity: informational
     fail_message: "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)"
+    section: "9.0 Recommendations of the Task Force"
+    page: "20"
+    quote:
+      - "recognising the risk of “Harvest Now, Decrypt Later” (HNDL) attacks"
+      - "CII sectors such as defence, power, and telecom follow accelerated timelines — Foundations by 2027, High-Priority Migration by 2028, and Full PQC Adoption by 2029."
+    note: "The report sets migration timelines and names the harvest-now-decrypt-later risk; it does not name a key-exchange mechanism for IPsec. This rule is an informational reading of those timelines at the key exchange, the part such attacks target; the words 'should negotiate' in the title are the project's reading, not a quoted requirement."
   - id: DST-PQ-DOWNGRADE
     title: "A proposed PQ key exchange must not fall back to classical (prevent insecure fallback)"
     attribute: pq_key_exchange
     assert: {op: not_equals, value: "offered-but-not-used"}
     severity: high
     fail_message: "PQ key exchange offered, classical selected - an insecure fallback under DST policy (cause not attributable passively)"
+    section: "Key challenges in post-quantum migration; protocol conformance and interoperability validation; testing framework"
+    page: "17; 34; 39"
+    quote:
+      - "Coexistence of classical and quantum-safe cryptography increases complexity and introduces risks of downgrade or insecure fallback."
+      - "without introducing downgrade vulnerabilities or interoperability failures"
+      - "Resistance to PQC Parameter Downgrade Attacks"
+    note: "The report names downgrade and insecure fallback as a risk and as something to test; it does not rank it. The severity 'high' is the project's earlier choice and is not re-decided here."
