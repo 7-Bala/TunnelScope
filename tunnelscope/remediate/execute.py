@@ -1118,7 +1118,13 @@ def _capture_verdicts(target: str, phase: str) -> tuple[dict[str, str], int]:
         time.sleep(1)
         _exec(capture_on, ["pkill", "tcpdump"], timeout=5)
         time.sleep(1)
-        if not host.is_file() or host.stat().st_size == 0:
+        if not host.exists():
+            # Never written where we look: not "the tunnel did not come up". The lab containers write to their own
+            # /captures, a bind mount of the checkout they were started from, and this server reads _captures_dir(),
+            # the checkout it runs from. If those are different folders (or tcpdump never started) the file is not here.
+            raise RuntimeError(f"the capture file was not found at {host}. The lab writes captures to the testbed/captures "
+                               "folder of the checkout it was started from; run this server from that checkout")
+        if host.stat().st_size == 0:
             return {}, 0
         from ..report import report as _report
         sas = _report.analyze(str(host)).get("sas", [])

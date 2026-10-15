@@ -520,6 +520,35 @@ def test_apply_remediation_mocked_success_and_fail(tmp_path, monkeypatch):
         assert not list(lab.captures_dir.glob("*.pcap"))
 
 
+def test_a_capture_that_was_never_written_is_named_not_reported_as_a_dead_tunnel(monkeypatch, tmp_path):
+    """Found 2026-10-05: the server ran from a git worktree while the lab containers wrote captures into the original checkout's
+    testbed/captures. The file was not where the server looked, and the refusal said "No IKE SA was negotiated", pointing at the
+    tunnel. A capture file that does not exist is now its own, specific refusal; nothing is changed."""
+    lab = FakeLab(baseline=sas(**{"V-207193": "FAIL"}), verify=sas(**{"V-207193": "PASS"})).install(monkeypatch, tmp_path)
+    lab.fail["no_capture"] = True
+    before = dict(lab.fs["sih26-alice-pq"])
+    res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="tester", history_dir=tmp_path / "h")
+    assert res["decision"] == "refused" and res["stage"] == "baseline"
+    assert "capture file was not found" in res["error"] and "No IKE SA" not in res["error"]
+    assert "run this server from that checkout" in res["error"]
+    assert lab.fs["sih26-alice-pq"] == before                       # nothing was changed
+
+
+def test_an_empty_capture_still_means_no_ike_sa(monkeypatch, tmp_path):
+    """The other case stays as it was: tcpdump ran and caught nothing, so no tunnel came up."""
+    lab = FakeLab(baseline=sas(**{"V-207193": "FAIL"}), verify=sas(**{"V-207193": "PASS"})).install(monkeypatch, tmp_path)
+    real_run = lab.run
+
+    def run(cmd, *a, **k):
+        r = real_run(cmd, *a, **k)
+        for f in lab.captures_dir.glob("*.pcap"):
+            f.write_bytes(b"")                                       # tcpdump started, saw no IKE or ESP
+        return r
+    monkeypatch.setattr(subprocess, "run", run)
+    res = apply_remediation("V-207193", "sih26-alice-pq", confirm=True, caller="tester", history_dir=tmp_path / "h")
+    assert res["decision"] == "refused" and "No IKE SA was negotiated" in res["error"]
+
+
 def test_server_remediate_apply_e2e():
     """End-to-end test hitting POST /api/remediate/apply:
     refuses missing confirm, refuses invalid target, handles malformed JSON, and calls apply_remediation."""
