@@ -1,0 +1,52 @@
+{
+ "H1_nothing_the_engine_reads_changed": {
+  "captures_compared": 1223,
+  "main": "7820c65",
+  "pass": true,
+  "rule_files_compared": 8,
+  "rule_view_differences": [],
+  "verdict_differences": []
+ },
+ "H2_quotes_verbatim": {
+  "differ_from_prereg": [],
+  "missing": [],
+  "pass": true,
+  "quotes": 50,
+  "source_hashes_ok": {
+   "cnsa2-draft-04": true,
+   "disa-vpn-srg-v2r6": true,
+   "nvd-CVE-2008-4551": true,
+   "nvd-CVE-2013-6467": true,
+   "nvd-CVE-2013-7294": true,
+   "nvd-CVE-2015-3240": true,
+   "nvd-CVE-2019-12312": true,
+   "nvd-CVE-2023-41913": true,
+   "nvd-CVE-2026-78135": true,
+   "rfc4301": true,
+   "rfc4302": true,
+   "rfc4303": true,
+   "rfc7296": true,
+   "rfc8221": true,
+   "rfc8247": true,
+   "rfc9395": true,
+   "strongswan-6.1.0": true
+  },
+  "sources_map_violations": [],
+  "too_short": []
+ },
+ "H3_pages": {
+  "meta_violations": [],
+  "pass": true,
+  "violations": []
+ },
+ "H4_coverage": {
+  "pass": true,
+  "rules": 43,
+  "without_source": []
+ },
+ "H5_notes": {
+  "notes_registered": 12,
+  "pass": true,
+  "problems": []
+ }
+}

@@ -111,11 +111,16 @@ def test_disclosed_gaps_stay_written_down(rid):
         assert w in rule.get("note", ""), (rid, w)
 
 
-@pytest.mark.skipif(not SRC.is_dir(), reason="the hashed source files live outside the repository (~/Datasets/sources/part4)")
-@pytest.mark.parametrize("rel", FILES)
-def test_source_files_on_disk_match_the_recorded_hashes(rel):
-    for key, ent in _load(rel)["sources"].items():
-        assert hashlib.sha256((SRC / ent["file"]).read_bytes()).hexdigest() == ent["sha256"], key
+# The next two tests need the hashed source files, which are kept outside the repository (RFCs, a mirror of DISA's STIG,
+# NVD records, a vendor page: not ours to redistribute). They are defined only where those files exist (the owner's machine);
+# CI does not have them and does not run them. experiments/exp54-rule-sources/analyze.py applies the same checks.
+HAVE_SOURCES = SRC.is_dir()
+
+if HAVE_SOURCES:
+    @pytest.mark.parametrize("rel", FILES)
+    def test_source_files_on_disk_match_the_recorded_hashes(rel):
+        for key, ent in _load(rel)["sources"].items():
+            assert hashlib.sha256((SRC / ent["file"]).read_bytes()).hexdigest() == ent["sha256"], key
 
 
 def _analyze():
@@ -126,23 +131,23 @@ def _analyze():
     return mod
 
 
-@pytest.mark.skipif(not SRC.is_dir(), reason="the hashed source files live outside the repository (~/Datasets/sources/part4)")
-@pytest.mark.parametrize("rel", FILES)
-def test_quotes_are_verbatim_and_on_the_declared_pages(rel):
-    """The same rule the scorer applies (H2, H3), so a changed quote or page fails here when the sources are on disk."""
-    a = _analyze()
-    doc = _load(rel)
-    cache = {k: a.pages(a.kind_of(e["file"]), str(SRC / e["file"])) for k, e in doc["sources"].items()}
-    for r in doc["rules"]:
-        declared = set() if r["page"] == "n/a" else {(s.split(":")[0].strip(), int(n)) for s in r["page"].split(";") for n in s.split(":")[1].split(",")}
-        reached = set()
-        for q in r["quote"]:
-            hits = {(k, p) for k in r["source"] for p, t in cache[k] if a.normalise(q) in t}
-            assert hits, (r["id"], "quote not found in its sources", q[:60])
-            paged = {h for h in hits if h[1] is not None}
-            if not declared:
-                assert not paged, (r["id"], "page is n/a but the quote is in a paged source")
-            else:
-                assert paged & declared or len(paged) < len(hits), (r["id"], "no hit on a declared page", q[:60])
-            reached |= paged & declared
-        assert reached == declared, (r["id"], sorted(declared - reached))
+if HAVE_SOURCES:
+    @pytest.mark.parametrize("rel", FILES)
+    def test_quotes_are_verbatim_and_on_the_declared_pages(rel):
+        """The same rule the scorer applies (H2, H3), so a changed quote or page fails here when the sources are on disk."""
+        a = _analyze()
+        doc = _load(rel)
+        cache = {k: a.pages(a.kind_of(e["file"]), str(SRC / e["file"])) for k, e in doc["sources"].items()}
+        for r in doc["rules"]:
+            declared = set() if r["page"] == "n/a" else {(s.split(":")[0].strip(), int(n)) for s in r["page"].split(";") for n in s.split(":")[1].split(",")}
+            reached = set()
+            for q in r["quote"]:
+                hits = {(k, p) for k in r["source"] for p, t in cache[k] if a.normalise(q) in t}
+                assert hits, (r["id"], "quote not found in its sources", q[:60])
+                paged = {h for h in hits if h[1] is not None}
+                if not declared:
+                    assert not paged, (r["id"], "page is n/a but the quote is in a paged source")
+                else:
+                    assert paged & declared or len(paged) < len(hits), (r["id"], "no hit on a declared page", q[:60])
+                reached |= paged & declared
+            assert reached == declared, (r["id"], sorted(declared - reached))
