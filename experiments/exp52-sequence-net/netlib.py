@@ -55,7 +55,9 @@ def make_net():
 
 def _dev():
     import torch
-    return torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    if torch.cuda.is_available():                       # Colab
+        return torch.device("cuda")
+    return torch.device("mps" if torch.backends.mps.is_available() else "cpu")   # this Mac, else CPU
 
 
 def train_one(Xtr, Ltr, ytr, wtr, Xva, Lva, yva, wva, seed, use_gap, aug_scale):
