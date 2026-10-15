@@ -26,6 +26,9 @@ dev = ["pytest>=8.0"]
 # TUNNELSCOPE_GENERATOR_BACKEND=cloud plus an API key (tunnelscope/remediate/cloud_client.py). A
 # base `pip install tunnelscope` stays exactly as offline as before this decision.
 cloud = ["google-genai>=1.0"]
+# EXP-52 (owner approval 2026-10-15): PyTorch trains the sequence network only (experiments/exp52-sequence-net). The tunnelscope
+# package never imports it; if the network ships, its inference is NumPy (tests/test_no_torch_in_package.py).
+train = ["torch>=2.5"]
 
 [project.scripts]
 tunnelscope = "tunnelscope.cli:main"
