@@ -3,6 +3,8 @@
     TUNNELSCOPE_LAB_A=... TUNNELSCOPE_LAB_B=... .venv/bin/python experiments/exp52-sequence-net/analyze.py check
     ... analyze.py lofo           (S0, N1, N2, E1, E2 leave-one-family-out, grouped, guard)
     ... analyze.py choose         (choice rule and the gate for the chosen candidate; BEFORE lab I exists)
+    ... analyze.py export DIR     (windows + folds for a Colab GPU; colab_train.py trains every fold there)
+    ... analyze.py ingest FILE    (probabilities from Colab -> the cache `lofo` reads; FILE sits next to folds.json)
 
 The forest (S0 = R6) is EXP-51's own code (`experiments/exp51-rate-invariance/analyze.py`, imported, not copied): same sessions, same
 windows, same leave-one-family-out models and their cached window probabilities. The network scores exactly the windows the forest
@@ -39,7 +41,7 @@ from sklearn.model_selection import GroupKFold
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "build" / "models"))
+sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "build" / "models")); sys.path.insert(0, str(HERE))
 
 
 def _load(name, rel):
@@ -51,13 +53,49 @@ def _load(name, rel):
 E51 = _load("exp51", "experiments/exp51-rate-invariance/analyze.py")
 corpus, featurize, E42 = E51.corpus, E51.featurize, E51.E42
 
+# Labs A and B (public data sets, not redistributed here). Their pcap clones are gone and GitHub was too slow to clone them again, so
+# their sessions are rebuilt from the packet streams EXP-51 extracted and cached (`.corpus_cache/lab-a.pkl`, `lab-b.pkl`: the same
+# (t, out, size) arrays the corpus loader builds), with the labels read from the two small files at the pinned commits:
+#   lab A: naman9271/ipsec-pcap-lab c0cf256  metadata.csv  ->  ~/Datasets/labs/lab-a-metadata.csv  (column canonical_label)
+#   lab B: ashwin02-cyber/SIH_2026 ef0ffe9   manifest.csv  ->  ~/Datasets/labs/lab-b-manifest.csv  (column traffic_class)
+# Same session ids, same class mapping (file_transfer -> bulk), same order as `build/models/corpus.py`; the counts are checked
+# (175 and 180 sessions, none unlabelled), and `check` still compares every window with the forest's.
+LABELS = Path(os.environ.get("EXP52_LABELS", Path.home() / "Datasets" / "labs"))
+
+
+def _lab_from_cache(name, family, labeller):
+    import csv as _csv
+    c = pickle.load(open(corpus.CACHE / f"{name}.pkl", "rb"))
+    out = []
+    for (path, _size), r in zip(c["sig"], c["res"]):
+        if "error" in r:
+            continue
+        out.append(corpus._mk(family, f"{family}:{os.path.basename(path)}", labeller(path), r["t"], r["out"], r["size"]))
+    return out
+
+
+def _lab_a():
+    import csv as _csv
+    meta = {r["pcap_path"]: r["canonical_label"] for r in _csv.DictReader(open(LABELS / "lab-a-metadata.csv"))}
+    m = {"file_transfer": "bulk"}
+    cut = "ipsec-pcap-lab/"
+    return _lab_from_cache("lab-a", "lab-a", lambda p: m.get(meta[p.split(cut, 1)[1]], meta[p.split(cut, 1)[1]]))
+
+
+def _lab_b():
+    import csv as _csv
+    man = {r["filename"]: r["traffic_class"] for r in _csv.DictReader(open(LABELS / "lab-b-manifest.csv"))}
+    m = {"file_transfer": "bulk"}
+    return _lab_from_cache("lab-b", "lab-b", lambda p: m.get(man[os.path.basename(p)], man[os.path.basename(p)]))
+
+
+corpus.LOADERS["lab-a"], corpus.LOADERS["lab-b"] = _lab_a, _lab_b
+
 RES = HERE / "results"
 NCACHE = corpus.CACHE / "exp52-net"
 CLS = E51.CLS
 EIGHT = E51.EIGHT
-L = 256                       # packets per window seen by the network (PREREG section 4)
-SEEDS = (0, 1, 2)
-EPOCHS, PATIENCE, BATCH, LR = 30, 5, 256, 1e-3
+from netlib import L, EPOCHS, PATIENCE, BATCH, LR, SEEDS, encode, make_net, _dev, train_one, predict  # noqa: E402
 WEIGHTS = (0.25, 0.5, 0.75)
 
 
@@ -91,104 +129,6 @@ def seq_windows(s) -> tuple[np.ndarray, np.ndarray]:
     if not rows:
         return np.zeros((0, L, 3), np.float32), np.zeros(0, int)
     return np.stack(rows), np.array(lens)
-
-
-def encode(X, lens, use_gap=True, scale=None):
-    """Raw windows -> network input [n, 3, L] and mask [n, L]. Gap: log10(max(gap * scale, 1e-6)) / 6, first packet 0."""
-    X = X.copy()
-    mask = np.arange(L)[None, :] < lens[:, None]
-    g = X[:, :, 2] * (scale[:, None] if scale is not None else 1.0)
-    first = np.zeros_like(mask); first[:, 0] = True
-    X[:, :, 2] = np.where(mask & ~first, np.log10(np.maximum(g, 1e-6)) / 6.0, 0.0) if use_gap else 0.0
-    X[~mask] = 0.0
-    return np.ascontiguousarray(X.transpose(0, 2, 1)), mask.astype(np.float32)
-
-
-# ------------------------------------------------------------------ the network (PREREG section 5)
-def make_net():
-    import torch
-    from torch import nn
-
-    class Block(nn.Module):
-        def __init__(self, a, b):
-            super().__init__()
-            self.c, self.n = nn.Conv1d(a, b, 5, padding=2), nn.BatchNorm1d(b)
-
-        def forward(self, x):
-            return torch.relu(self.n(self.c(x)))
-
-    class Net(nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.b = nn.Sequential(Block(3, 64), Block(64, 64), Block(64, 128))
-            self.h, self.o = nn.Linear(256, 64), nn.Linear(64, len(CLS))
-
-        def forward(self, x, m):
-            z = self.b(x)                                  # [n, 128, L]
-            mm = m[:, None, :]
-            mean = (z * mm).sum(-1) / mm.sum(-1).clamp(min=1)
-            mx = z.masked_fill(mm == 0, float("-inf")).max(-1).values
-            return self.o(torch.relu(self.h(torch.cat([mean, mx], 1))))
-    return Net()
-
-
-def _dev():
-    import torch
-    return torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-
-
-def train_one(Xtr, Ltr, ytr, wtr, Xva, Lva, yva, wva, seed, use_gap, aug_scale):
-    import torch
-    torch.manual_seed(seed); np.random.seed(seed)
-    dev = _dev()
-    xa, ma = encode(Xtr, Ltr, use_gap)
-    xb, mb = encode(Xtr, Ltr, use_gap, scale=aug_scale)               # the one augmented copy per training window
-    x = np.concatenate([xa, xb]); m = np.concatenate([ma, mb])
-    y = np.concatenate([ytr, ytr]); w = np.concatenate([wtr, wtr]).astype(np.float32)
-    xv, mv = encode(Xva, Lva, use_gap)
-    T = lambda a, dt=torch.float32: torch.as_tensor(a, dtype=dt)
-    x, m, y, w = T(x), T(m), T(y, torch.long), T(w)
-    xv, mv, yv, wv = T(xv).to(dev), T(mv).to(dev), T(yva, torch.long).to(dev), T(wva.astype(np.float32)).to(dev)
-    net = make_net().to(dev)
-    opt = torch.optim.Adam(net.parameters(), lr=LR)
-    best, best_state, bad, epochs = float("inf"), None, 0, 0
-    g = torch.Generator().manual_seed(seed)
-    for ep in range(EPOCHS):
-        net.train()
-        perm = torch.randperm(len(x), generator=g)
-        for i in range(0, len(x), BATCH):
-            j = perm[i:i + BATCH]
-            loss = (torch.nn.functional.cross_entropy(net(x[j].to(dev), m[j].to(dev)), y[j].to(dev), reduction="none")
-                    * w[j].to(dev)).sum() / w[j].sum().to(dev)
-            opt.zero_grad(); loss.backward(); opt.step()
-        net.eval()
-        with torch.no_grad():
-            vl = 0.0
-            for i in range(0, len(xv), 2048):
-                vl += float((torch.nn.functional.cross_entropy(net(xv[i:i + 2048], mv[i:i + 2048]), yv[i:i + 2048], reduction="none")
-                             * wv[i:i + 2048]).sum())
-            vl /= float(wv.sum())
-        epochs = ep + 1
-        if vl < best - 1e-4:
-            best, bad = vl, 0
-            best_state = {k: v.detach().cpu().clone() for k, v in net.state_dict().items()}
-        else:
-            bad += 1
-            if bad >= PATIENCE:
-                break
-    net.load_state_dict(best_state)
-    net.eval()
-    return net.cpu(), {"epochs": epochs, "best_val_loss": round(best, 5)}
-
-
-def predict(net, X, lens, use_gap):
-    import torch
-    x, m = encode(X, lens, use_gap)
-    out = []
-    with torch.no_grad():
-        for i in range(0, len(x), 4096):
-            out.append(torch.softmax(net(torch.as_tensor(x[i:i + 4096]), torch.as_tensor(m[i:i + 4096])), 1).numpy())
-    return np.concatenate(out) if out else np.zeros((0, len(CLS)), np.float32)
 
 
 # ------------------------------------------------------------------ data
@@ -350,6 +290,11 @@ def build():
 
 
 def stage_check():
+    import netlib
+    rng = np.random.default_rng(0)
+    f = rng.choice(["a", "b", "c"], 500); y = rng.choice(CLS, 500)
+    assert np.allclose(netlib.weights(f, y), E42.weights(f, y)), "netlib.weights differs from EXP-42's"
+    assert netlib.CLASSES == CLS
     pool, seqs = build()
     bad = seqs.check()
     n = len(pool.ok) + sum(len(v) for v in pool.extra.values())
@@ -411,6 +356,80 @@ def stage_choose():
     print(json.dumps(C, indent=1))
 
 
+def _folds(pool):
+    """Every training fold `evaluate` uses, as (tag, train session indices into pool.s, score session ids)."""
+    out = []
+    for fam in pool.fams:
+        sids = [pool.s[i].sid for i in pool.ok if pool.s[i].family == fam] + [s.sid for s, _ in pool.extra.get(f"mixed:{fam}", [])]
+        out.append((f"lofo-{fam}", [i for i in pool.ok if pool.s[i].family != fam], sids))
+    g = np.arange(len(pool.ok))
+    for k, (tr, te) in enumerate(GroupKFold(5).split(g, g, g)):
+        out.append((f"grouped-{k}", [pool.ok[j] for j in tr], [pool.s[pool.ok[j]].sid for j in te]))
+    out.append(("all", list(pool.ok), [s.sid for k in ("lab-d", "lab-f") for s, _ in pool.extra[k]]))
+    return out
+
+
+def stage_export(outdir):
+    """Write what a Colab GPU needs to train every fold: the window sequences and the folds. No forest probabilities, no gate,
+    no scoring code: those stay here. Raw pcaps and configs are never involved; this is packet direction, size and gap per window."""
+    out = Path(outdir); out.mkdir(parents=True, exist_ok=True)
+    pool, seqs = build()
+    if seqs.check():
+        sys.exit("windows do not line up with the forest's; nothing exported")
+    sid_list = sorted(seqs.by_sid)
+    sid_id = {sid: j for j, sid in enumerate(sid_list)}
+    meta_s = {}
+    for i in pool.ok:
+        meta_s[pool.s[i].sid] = (pool.s[i].label, pool.s[i].family)
+    X, Ln, y, fam, sidw, sc = [], [], [], [], [], []
+    fams = sorted({f for _, f in meta_s.values()})
+    for sid in sid_list:
+        Xi, Li = seqs.by_sid[sid]
+        lab, fm = meta_s.get(sid, (None, None))
+        X.append(Xi); Ln.append(Li)
+        y += [CLS.index(lab) if lab else -1] * len(Li)
+        fam += [fams.index(fm) if fm else -1] * len(Li)
+        sidw += [sid_id[sid]] * len(Li)
+        for k in range(len(Li)):
+            r = np.random.default_rng(int(hashlib.sha256(f"{sid}#gap{k}".encode()).hexdigest()[:8], 16))
+            sc.append(float(np.exp(r.uniform(np.log(0.8), np.log(1.25)))))
+    np.savez_compressed(out / "windows.npz", X=np.concatenate(X), lens=np.concatenate(Ln).astype(np.int16), y=np.array(y, np.int8),
+                        fam=np.array(fam, np.int8), sid=np.array(sidw, np.int32), scale=np.array(sc, np.float32))
+    folds = {tag: {"train": sorted(sid_id[pool.s[i].sid] for i in tr), "score": [sid_id[x] for x in sc_sids]}
+             for tag, tr, sc_sids in _folds(pool)}
+    is_val = [int(_is_val(sid)) for sid in sid_list]
+    json.dump({"classes": CLS, "families": fams, "sids": sid_list, "is_val": is_val, "folds": folds,
+               "settings": {"L": L, "epochs": EPOCHS, "patience": PATIENCE, "batch": BATCH, "lr": LR, "seeds": list(SEEDS)}},
+              open(out / "folds.json", "w"))
+    import shutil
+    shutil.copy(HERE / "netlib.py", out / "netlib.py"); shutil.copy(HERE / "colab_train.py", out / "colab_train.py")
+    mb = sum(f.stat().st_size for f in out.iterdir()) / 1e6
+    print(f"exported {len(sid_list)} sessions, {len(sidw)} windows, {len(folds)} folds, {mb:.1f} MB to {out}")
+
+
+def stage_ingest(path):
+    """Read the probabilities `colab_train.py` wrote and store them where `net_probs` looks, so `lofo` finds every fold cached."""
+    z = np.load(path, allow_pickle=False)
+    meta = json.load(open(Path(path).parent / "folds.json"))
+    sids, sidw = meta["sids"], z["sid"]
+    NCACHE.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for key in [k for k in z.files if k.startswith("P|")]:
+        _, tag, variant = key.split("|")
+        P, widx = z[key], z[f"I|{tag}"]
+        out = {}
+        for sid_j in np.unique(sidw[widx]):
+            out[sids[sid_j]] = P[sidw[widx] == sid_j].astype(np.float32)
+        pickle.dump(out, open(NCACHE / f"{tag}-{variant}.pkl", "wb"))
+        n += 1
+    print(f"stored {n} (fold, variant) probability files in {NCACHE}")
+
+
 if __name__ == "__main__":
     stage = sys.argv[1] if len(sys.argv) > 1 else ""
-    {"check": stage_check, "lofo": stage_lofo, "choose": stage_choose}.get(stage, lambda: sys.exit(__doc__))()
+    if stage == "export":
+        stage_export(sys.argv[2])
+    elif stage == "ingest":
+        stage_ingest(sys.argv[2])
+    else:
+        {"check": stage_check, "lofo": stage_lofo, "choose": stage_choose}.get(stage, lambda: sys.exit(__doc__))()
