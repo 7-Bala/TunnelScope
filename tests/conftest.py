@@ -36,3 +36,8 @@ def _hermetic_env(monkeypatch, tmp_path_factory):
     # a test that needs either sets it itself (monkeypatch.setenv overrides these).
     monkeypatch.setenv("TUNNELSCOPE_NETWORK", "off")
     monkeypatch.setenv("TUNNELSCOPE_INTEL_DIR", str(tmp_path_factory.mktemp("intel-cache")))
+    # The intel lookup remembers a failed fetch for 300 s in a module global. Left alone, a failure recorded by one test makes the
+    # next lookup in the same process "unavailable" instead of calling its fake, so five tests passed or failed with the order
+    # and the timing of the run (CI, 2026-10-15). Each test starts with no remembered failures.
+    from tunnelscope.intel import lookup as _intel_lookup
+    monkeypatch.setattr(_intel_lookup, "_FAILED", {})

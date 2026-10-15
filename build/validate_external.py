@@ -27,6 +27,7 @@ import os
 import re
 import sys
 import subprocess
+import time
 import tarfile
 from pathlib import Path
 
@@ -74,8 +75,18 @@ def fetch(cache: Path) -> None:
     for name, url in SOURCES.items():
         p = cache / name
         if not p.exists():
-            # curl, not urllib: the system CA store is what these hosts expect
-            subprocess.run(["curl", "-sSLf", "--max-time", "120", "-o", str(p), url], check=True)
+            # curl, not urllib: the system CA store is what these hosts expect. The wiki answers HTTP 429 when two CI runs
+            # (a pull request and the push that follows its merge) download at the same moment, so a failed fetch is
+            # retried after a pause; a persistent failure still stops the run.
+            for attempt in range(1, 5):
+                try:
+                    subprocess.run(["curl", "-sSLf", "--max-time", "120", "-o", str(p), url], check=True)
+                    break
+                except subprocess.CalledProcessError:
+                    p.unlink(missing_ok=True)
+                    if attempt == 4:
+                        raise
+                    time.sleep(15 * attempt)
         if p.suffix == ".tgz":
             with tarfile.open(p) as t:
                 t.extractall(cache, filter="data")
