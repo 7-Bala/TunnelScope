@@ -1,0 +1,115 @@
+baseline: NSA-IPsec-Config-v1.3
+authority: "NSA Cybersecurity Information, Configuring IPsec Virtual Private Networks (U/OO/148260-20, PP-20-0712), February 2025 ver. 1.3; its examples are per CNSSP 15 as of June 2020"
+url: "https://media.defense.gov/2020/Jul/02/2002355501/-1/-1/0/CONFIGURING_IPSEC_VIRTUAL_PRIVATE_NETWORKS_2020_07_01_FINAL_RELEASE.PDF"
+# T-122 part 3 / EXP-53 (pre-registered bad7fdf). Opt-in: `tunnelscope assess --profile nsa-ipsec-config`.
+# Every `quote` is verbatim from the guide (SHA-256 5b972578...ff56, 11 pages), checked by
+# experiments/exp53-nsa-dst-profile/analyze.py; `page` is the PDF page number. Severity follows the text: a value tested against
+# the guide's "an example of a recommended ... setting" is informational (an example, not a ban on other choices); the outdated
+# algorithms the guide names (DES, 3DES, DH groups 1, 2, 5) and the downgrade warning are medium ("recommends", "should").
+# An absent/UNKNOWN attribute is UNKNOWN, never PASS. ESP rules use the cipher candidate set and never confirm a key length.
+# Not made into rules (gateway ACLs and IPS, FIPS validation, patching, defaults, PSK replacement, offered encryption/integrity
+# lists, vendor appendices): see the PREREG for why.
+rules:
+  - id: NSA-IKE-DH-EXAMPLE
+    title: "IKE key exchange: Diffie-Hellman group 16 (the guide's CNSSP 15 example)"
+    attribute: ike_dh_group
+    assert: {op: in, value: ["MODP-4096"]}
+    severity: informational
+    fail_message: "The IKE key exchange is not DH group 16, the example in NSA's guide; the guide does not say other groups are non-compliant"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "1"
+    quote:
+      - "an example of a recommended ISAKMP/IKE setting per CNSSP 15 as of June 2020"
+      - "Diffie-Hellman Group: 16"
+  - id: NSA-IKE-ENCR-EXAMPLE
+    title: "IKE encryption: AES with a 256-bit key (the guide's CNSSP 15 example)"
+    attribute: ike_encr
+    assert: {op: in, value: ["AES-CBC-256", "AES-CTR-256", "AES-GCM-16-256", "AES-GCM-12-256", "AES-GCM-8-256", "AES-CCM-16-256", "AES-CCM-12-256", "AES-CCM-8-256"]}
+    severity: informational
+    fail_message: "The IKE encryption is not AES-256, the example in NSA's guide; the guide does not say other algorithms are non-compliant"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "1"
+    quote:
+      - "an example of a recommended ISAKMP/IKE setting per CNSSP 15 as of June 2020"
+      - "Encryption: AES-256"
+  - id: NSA-IKE-PRF-EXAMPLE
+    title: "IKE hash (PRF): SHA-384 (the guide's CNSSP 15 example)"
+    attribute: ike_prf
+    assert: {op: equals, value: "PRF-HMAC-SHA2-384"}
+    severity: informational
+    fail_message: "The IKE pseudorandom function is not HMAC-SHA2-384, the example in NSA's guide; the guide does not say other hashes are non-compliant"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "1"
+    quote:
+      - "an example of a recommended ISAKMP/IKE setting per CNSSP 15 as of June 2020"
+      - "Hash: SHA-384"
+  - id: NSA-IKE-INTEG-EXAMPLE
+    title: "IKE integrity hash: SHA-384 (the guide's CNSSP 15 example)"
+    attribute: ike_integ
+    assert: {op: equals, value: "HMAC-SHA2-384-192"}
+    severity: informational
+    fail_message: "The IKE integrity algorithm is not HMAC-SHA2-384, the example in NSA's guide; the guide does not say other hashes are non-compliant"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "1"
+    quote:
+      - "an example of a recommended ISAKMP/IKE setting per CNSSP 15 as of June 2020"
+      - "Hash: SHA-384"
+  - id: NSA-ESP-SUITE-EXAMPLE
+    title: "ESP: AES-256 with SHA-384 in CBC mode (the guide's CNSSP 15 example); a pass is never claimed, the key length cannot be seen"
+    attribute: esp_cipher_family
+    applies_to_protocol: ESP
+    assert: {op: candidate_required, value: "AES-CBC+HMAC-SHA384-192"}
+    severity: informational
+    fail_message: "The ESP packet geometry rules out AES-CBC with HMAC-SHA2-384, the IPsec example in NSA's guide; the guide does not say other suites are non-compliant"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "2"
+    quote:
+      - "an example of a recommended IPsec setting per CNSSP 15 as of June 2020"
+      - "Encryption: AES-256"
+      - "Hash: SHA-384"
+      - "Block Cipher Mode: CBC"
+  - id: NSA-IKE-OUTDATED-ENCR
+    title: "IKE encryption must not be DES or 3DES (named as outdated)"
+    attribute: ike_encr
+    assert: {op: not_in, value: ["DES", "DES-CBC", "3DES"]}
+    severity: medium
+    fail_message: "The IKE SA negotiated DES or 3DES, which NSA's guide names as outdated; it says SAs with non-compliant algorithms should be investigated immediately"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "2"
+    quote:
+      - "such as the Data Encryption Standard (DES), Triple DES (3DES) and Diffie-Hellman groups 1, 2, and 5"
+      - "If SAs are identified with non-compliant algorithms, administrators should immediately investigate"
+  - id: NSA-IKE-OUTDATED-DH
+    title: "IKE key exchange must not be DH group 1, 2 or 5 (named as outdated)"
+    attribute: ike_dh_group
+    assert: {op: dh_group_not_in, value: [1, 2, 5]}
+    severity: medium
+    fail_message: "The IKE SA negotiated DH group 1, 2 or 5, which NSA's guide names as outdated; it says SAs with non-compliant algorithms should be investigated immediately"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "2"
+    quote:
+      - "such as the Data Encryption Standard (DES), Triple DES (3DES) and Diffie-Hellman groups 1, 2, and 5"
+      - "If SAs are identified with non-compliant algorithms, administrators should immediately investigate"
+  - id: NSA-OFFER-OUTDATED-DH
+    title: "The IKE proposal must not still offer DH group 1, 2 or 5 (extra weak suites enable a downgrade attack)"
+    attribute: ike_offered_dh
+    assert: {op: dh_groups_none_in, value: [1, 2, 5]}
+    severity: medium
+    fail_message: "The initiator still offers DH group 1, 2 or 5; NSA's guide says leaving such extra policies acceptable creates a downgrade-attack vulnerability and that they should be removed"
+    section: "Remove unused or non-compliant cryptography suites; Verify only CNSSP 15-compliant algorithms are in use"
+    page: "3; 1"
+    quote:
+      - "Leaving extra ISAKMP/IKE and IPsec policies as acceptable ISAKMP/IKE and IPsec policies creates a vulnerability known as a downgrade attack."
+      - "NSA recommends only configuring policies that strictly use CNSSP 15-compliant algorithms, and removing all others."
+  - id: NSA-ESP-OUTDATED
+    title: "ESP: not every cipher that fits the packets is DES or 3DES (named as outdated)"
+    attribute: esp_cipher_family
+    applies_to_protocol: ESP
+    assert: {op: candidates_none_in, value: ["3DES-CBC+HMAC-SHA1-96", "DES-CBC+HMAC-96", "DES-CBC+HMAC-SHA256-128", "DES-CBC+HMAC-SHA384-192", "DES-CBC+HMAC-SHA512-256"]}
+    severity: medium
+    fail_message: "Every cipher family consistent with the ESP packet sizes is DES or 3DES, which NSA's guide names as outdated"
+    section: "Verify only CNSSP 15-compliant algorithms are in use"
+    page: "2"
+    quote:
+      - "such as the Data Encryption Standard (DES), Triple DES (3DES) and Diffie-Hellman groups 1, 2, and 5"
+      - "If SAs are identified with non-compliant algorithms, administrators should immediately investigate"
