@@ -733,3 +733,5 @@ Capture-side drops are silent by code reading (T-165). DEC-062. `experiments/exp
 
 **EXP-52 (2026-10-15, T-172)** — A 1D-CNN that reads each window's packet sequence, trained by us with PyTorch (training only; NumPy inference if shipped), alone (N1, N2 without timing) and averaged with the shipped forest R6 (E1, E2). Bars: E beats R6 by >= 0.03 leave-one-family-out, and on a new lab I by >= 0.05 ungated with >= 90% of gated answers right and no fewer answered. PRE-REGISTRATION: `experiments/exp52-sequence-net/PREREG.md`. Status: pre-registered, nothing trained.
 
+**EXP-52 RESULT (2026-10-15, T-172, DEC-067)** — NOTHING SHIPS. P52-0 held (scorer reproduces R6: 0.5606 vs 0.561). P52-1 failed: the network alone 0.4789 held-out mean (bar 0.50), 0.5191 without packet timing. P52-2 failed: best combination 0.5633 vs R6 0.5606 (+0.0027, bar +0.03). Lab I not built. Size-only network better on USBVPN (0.170 vs 0.030), WireGuard and lab H, worse elsewhere. `experiments/exp52-sequence-net/RESULT.md`.
+

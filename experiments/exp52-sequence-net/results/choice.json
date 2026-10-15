@@ -1,0 +1,54 @@
+{
+ "P52-0": {
+  "S0": 0.5606,
+  "R6_exp51": 0.561,
+  "pass": true
+ },
+ "P52-1": {
+  "N1": 0.4789,
+  "pass": false
+ },
+ "weights": {
+  "E1": 0.25,
+  "E2": 0.5
+ },
+ "eligible": [
+  "E1",
+  "E2"
+ ],
+ "chosen": "S0",
+ "P52-2": {
+  "chosen_eight": 0.5606,
+  "S0": 0.5606,
+  "gain": 0.0,
+  "pass": false
+ },
+ "P52-3": {
+  "grouped_by_session": 0.9879,
+  "pass": true
+ },
+ "guard": {
+  "lab-d": 0.8333,
+  "lab-f": 0.7743
+ },
+ "gate": {
+  "tau_c": 0.65,
+  "tau_m": 0.65,
+  "tau_o": 1.0,
+  "weighted_answered_share": 0.3239,
+  "weighted_accuracy_among_answered": 0.9341,
+  "mixed_not_answered": 0.8152,
+  "answered_by_family": {
+   "lab-a": "20/153",
+   "lab-b": "36/72",
+   "lab-c": "18/32",
+   "lab-e": "16/55",
+   "lab-h": "18/138",
+   "lab-real-apps": "65/160",
+   "lab-tgen": "119/311",
+   "usbvpn": "0/994",
+   "vnat": "59/82",
+   "wireguard": "53/458"
+  }
+ }
+}

@@ -94,5 +94,6 @@ demo-video/
 video_generator/
 brag-output/
 experiments/exp51-rate-invariance/results/*.pkl
+experiments/exp52-sequence-net/results/*.pkl
 # EXP-47 FortiGate raw run files (T-118): results are recorded in the experiment's RESULT.md; raw captures are not committed
 testbed/captures/exp47/
