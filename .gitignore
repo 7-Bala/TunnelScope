@@ -89,8 +89,10 @@ handoff/reviews/
 !testbed/captures/exp17/ike/*.pcap
 testbed/captures/exp17/exp17-*.pcap
 .corpus_cache/
-# generated demo media (large video/audio; not source)
-demo-video/out/
+# demo video project: scripts, scenes, build files and generated media (local material, not product source; `git add -f` a file to track it)
+demo-video/
 video_generator/
 brag-output/
 experiments/exp51-rate-invariance/results/*.pkl
+# EXP-47 FortiGate raw run files (T-118): results are recorded in the experiment's RESULT.md; raw captures are not committed
+testbed/captures/exp47/
