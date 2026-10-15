@@ -180,6 +180,9 @@ def net_probs(seqs, train_idx, score_sids, tag, use_gap):
     key = NCACHE / f"{tag}-{'gap' if use_gap else 'nogap'}.pkl"
     if key.exists():
         return pickle.load(open(key, "rb"))
+    if os.environ.get("EXP52_ALLOW_LOCAL_TRAIN") != "1":     # the scored run trains on Colab; a missing file is a mistake, not a job
+        sys.exit(f"{key.name} is missing: ingest the Colab probabilities first (analyze.py ingest probs.npz). "
+                 "Set EXP52_ALLOW_LOCAL_TRAIN=1 only to train this fold on this Mac on purpose.")
     pool = seqs.pool
     tr = [i for i in train_idx if not _is_val(pool.s[i].sid)]
     va = [i for i in train_idx if _is_val(pool.s[i].sid)]
@@ -410,8 +413,13 @@ def stage_export(outdir):
 def stage_ingest(path):
     """Read the probabilities `colab_train.py` wrote and store them where `net_probs` looks, so `lofo` finds every fold cached."""
     z = np.load(path, allow_pickle=False)
-    meta = json.load(open(Path(path).parent / "folds.json"))
-    sids, sidw = meta["sids"], z["sid"]
+    here = Path(path).parent
+    meta = json.load(open(here / "folds.json"))
+    if not (here / "windows.npz").exists():                  # the upload was split into 7 MB parts; join them back
+        with open(here / "windows.npz", "wb") as out:
+            for part in sorted(here.glob("windows.npz.part_*")):
+                out.write(part.read_bytes())
+    sids, sidw = meta["sids"], np.load(here / "windows.npz")["sid"]      # window -> session index lives with the windows
     NCACHE.mkdir(parents=True, exist_ok=True)
     n = 0
     for key in [k for k in z.files if k.startswith("P|")]:
