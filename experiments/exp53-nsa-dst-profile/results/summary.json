@@ -1,0 +1,404 @@
+{
+ "H1_defaults_unchanged": {
+  "captures_compared": 1223,
+  "differences": [],
+  "main": "be79356",
+  "pass": true
+ },
+ "H2_quotes_verbatim": {
+  "dst": {
+   "found": 5,
+   "missing": [],
+   "pass": true,
+   "pdf_sha256": "461d8b42aea3847a3f9083e369065eff7985b03f8e4b1e9974f236ce93d99f31",
+   "quotes": 5
+  },
+  "nsa": {
+   "found": 20,
+   "missing": [],
+   "pass": true,
+   "pdf_sha256": "5b972578242cca5c49233863754b5bea9493ef416380434a0f08c68030ecff56",
+   "quotes": 20
+  },
+  "pass": true
+ },
+ "H3_preregistered_verdicts": {
+  "matched": 10,
+  "of": 10,
+  "pass": true,
+  "rows": [
+   {
+    "capture": "exp15/s-ecp256.pcap",
+    "got": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ]
+   },
+   {
+    "capture": "exp15/s-3des.pcap",
+    "got": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN"
+    ]
+   },
+   {
+    "capture": "exp15/s-x25519.pcap",
+    "got": [
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ]
+   },
+   {
+    "capture": "exp15/s-modp1536.pcap",
+    "got": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN"
+    ]
+   },
+   {
+    "capture": "exp15/s-modp4096.pcap",
+    "got": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ]
+   },
+   {
+    "capture": "cloud/c-v1.pcap",
+    "got": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN",
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "UNKNOWN",
+     "UNKNOWN"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN",
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "UNKNOWN",
+     "UNKNOWN"
+    ]
+   },
+   {
+    "capture": "cloud/c-w.pcap",
+    "got": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "UNKNOWN"
+    ]
+   },
+   {
+    "capture": "exp15/a-tra-sha1.pcap",
+    "got": [
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     null,
+     "PASS",
+     "PASS",
+     "PASS",
+     null
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     null,
+     "PASS",
+     "PASS",
+     "PASS",
+     null
+    ]
+   },
+   {
+    "capture": "exp07/e7-pfs-on.pcap",
+    "got": [
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "FAIL",
+     "PASS",
+     "FAIL",
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "PASS",
+     "PASS",
+     "PASS"
+    ]
+   },
+   {
+    "capture": "a7-cs-aes256gcm16.pcap",
+    "got": [
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "FAIL",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "PASS"
+    ],
+    "match": true,
+    "sas": 1,
+    "want": [
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "FAIL",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "PASS"
+    ]
+   }
+  ]
+ },
+ "H4_no_pass_without_evidence": {
+  "pass": true,
+  "violations": {}
+ },
+ "H5_dst_rules_unchanged": {
+  "branch": [
+   [
+    "DST-PQ-KE",
+    "pq_key_exchange",
+    {
+     "op": "pq_present"
+    },
+    "informational",
+    "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)",
+    "CII cryptographic assets should negotiate a post-quantum key exchange (assess quantum risk)"
+   ],
+   [
+    "DST-PQ-DOWNGRADE",
+    "pq_key_exchange",
+    {
+     "op": "not_equals",
+     "value": "offered-but-not-used"
+    },
+    "high",
+    "PQ key exchange offered, classical selected - an insecure fallback under DST policy (cause not attributable passively)",
+    "A proposed PQ key exchange must not fall back to classical (prevent insecure fallback)"
+   ]
+  ],
+  "main": [
+   [
+    "DST-PQ-KE",
+    "pq_key_exchange",
+    {
+     "op": "pq_present"
+    },
+    "informational",
+    "No post-quantum key exchange negotiated - quantum-vulnerable to Harvest-Now-Decrypt-Later (HNDL)",
+    "CII cryptographic assets should negotiate a post-quantum key exchange (assess quantum risk)"
+   ],
+   [
+    "DST-PQ-DOWNGRADE",
+    "pq_key_exchange",
+    {
+     "op": "not_equals",
+     "value": "offered-but-not-used"
+    },
+    "high",
+    "PQ key exchange offered, classical selected - an insecure fallback under DST policy (cause not attributable passively)",
+    "A proposed PQ key exchange must not fall back to classical (prevent insecure fallback)"
+   ]
+  ],
+  "pass": true
+ },
+ "captures": 1223,
+ "sas": 1462,
+ "verdict_counts_per_rule": {
+  "NSA-ESP-OUTDATED": {
+   "PASS": 723,
+   "UNKNOWN": 411,
+   "no verdict": 328
+  },
+  "NSA-ESP-SUITE-EXAMPLE": {
+   "FAIL": 1102,
+   "UNKNOWN": 32,
+   "no verdict": 328
+  },
+  "NSA-IKE-DH-EXAMPLE": {
+   "FAIL": 435,
+   "PASS": 2,
+   "UNKNOWN": 1025
+  },
+  "NSA-IKE-ENCR-EXAMPLE": {
+   "FAIL": 273,
+   "PASS": 164,
+   "UNKNOWN": 1025
+  },
+  "NSA-IKE-INTEG-EXAMPLE": {
+   "FAIL": 376,
+   "PASS": 45,
+   "UNKNOWN": 1041
+  },
+  "NSA-IKE-OUTDATED-DH": {
+   "FAIL": 13,
+   "PASS": 424,
+   "UNKNOWN": 1025
+  },
+  "NSA-IKE-OUTDATED-ENCR": {
+   "FAIL": 263,
+   "PASS": 174,
+   "UNKNOWN": 1025
+  },
+  "NSA-IKE-PRF-EXAMPLE": {
+   "FAIL": 388,
+   "PASS": 49,
+   "UNKNOWN": 1025
+  },
+  "NSA-OFFER-OUTDATED-DH": {
+   "FAIL": 11,
+   "PASS": 439,
+   "UNKNOWN": 1012
+  }
+ }
+}
