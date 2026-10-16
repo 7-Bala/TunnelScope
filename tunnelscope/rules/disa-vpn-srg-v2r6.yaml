@@ -1,6 +1,13 @@
 baseline: DISA-VPN-SRG-V2R6
 authority: "DISA Virtual Private Network (VPN) Security Requirements Guide, V2R6"
 url: "https://cyber.trackr.live/stig/Virtual_Private_Network_(VPN)_Security_Requirements_Guide/2/6"
+# T-122 part 4 / EXP-54 (pre-registered a28b90c). Every `quote` below is verbatim from the source file(s) named in `source`
+# (keys, file names and SHA-256 in `sources`; the files are kept outside the repository), checked by
+# experiments/exp54-rule-sources/analyze.py. `page` reads `source:N,N` using the [Page N] numbers of the plain-text RFC or draft;
+# "n/a" means no source of the rule has page numbers. `note` records where the source and the rule differ; the rule is as it was.
+sources:
+  disa-vpn-srg-v2r6: {file: disa-v2r6-index.html, url: "https://cyber.trackr.live/stig/Virtual_Private_Network_(VPN)_Security_Requirements_Guide/2/6", sha256: 6ee29b0be3cddefadc9ef4f0382686e9b373f949bab604e691a671a628897f45}
+  rfc9395: {file: rfc9395.txt, url: "https://www.rfc-editor.org/rfc/rfc9395.txt", sha256: 24b4079e09cc222e8353b31ba9cd4d80fbaf3fe1434884553df80e20f2e55b0a}
 rules:
   - id: V-207205
     title: "The IPsec VPN Gateway must use IKEv2 for IPsec SAs"
@@ -8,12 +15,27 @@ rules:
     assert: {op: equals, value: "IKEv2"}
     severity: high
     fail_message: "IKEv1 (Historic per RFC 9395) or unknown IKE version"
+    section: "DISA VPN SRG V2R6, V-207205 (SRG-NET-000132-VPN-000460); RFC 9395 1"
+    page: "n/a"
+    source: [disa-vpn-srg-v2r6, rfc9395]
+    quote:
+      - "The IPsec VPN Gateway must use IKEv2 for IPsec VPN security associations."
+      - "Use of IKEv2 leverages DoS protections because of improved bandwidth management and leverages more secure encryption algorithms."
+      - "IKEv1 has been moved to Historic status."
+    note: "DISA rates this requirement Medium (CAT II); this rule's severity is high, the project's choice, and is left as it was. DISA's check text contains an apparent slip ('If the IPsec VPN Gateway must use IKEv2 ... this is a finding'); the requirement sentence above is unambiguous. The DISA text was read from the cyber.trackr.live mirror, not DISA's own download."
   - id: V-207193
     title: "IKE Phase 1 must use a Diffie-Hellman group of 16 or greater"
     attribute: ike_dh_group
     assert: {op: dh_group_ge, value: 16}
     severity: high
     fail_message: "DH group below 16 for the IKE SA (DISA baseline; note RFC 8247 permits group 14)"
+    section: "DISA VPN SRG V2R6, V-207193 (SRG-NET-000074-VPN-000250)"
+    page: "n/a"
+    source: [disa-vpn-srg-v2r6]
+    quote:
+      - "Verify all IKE proposals are set to use DH Group of 16 or greater for IKE Phase 1."
+      - "If the IKE option is not set to use DH Group of 16 or greater for IKE Phase 1, this is a finding."
+    note: "DISA says all IKE proposals; this rule judges only the group that was negotiated, not every group offered. Severity High matches DISA's. The requirement is stricter than RFC 8247, which allows group 14 (said in the rule's message). Judged by IANA group number, as the file's comment says."
     # Literal text (SRG, "DH Group of 16 or greater", checked 2026-09-18): judged by IANA number,
     # so groups 22-24 pass THIS rule despite being weak; RFC8247-DH-MUST fails them.
   - id: V-207223
@@ -22,3 +44,10 @@ rules:
     assert: {op: in, value: ["HMAC-SHA2-384-192", "HMAC-SHA2-512-256"]}
     severity: medium
     fail_message: "IKE integrity below SHA2-384"
+    section: "DISA VPN SRG V2R6, V-207223 (SRG-NET-000230-VPN-000780)"
+    page: "n/a"
+    source: [disa-vpn-srg-v2r6]
+    quote:
+      - "Verify the IPsec VPN Gateway uses IKE with SHA-2 at 384 bits or greater to protect the authenticity of communications sessions."
+      - "If the IPsec VPN Gateway is not configured to use IKE with SHA-2 at 384 bits or greater to protect the authenticity of communications sessions, this is a finding."
+    note: "DISA rates this requirement High (CAT I); this rule's severity is medium, the project's choice, and is left as it was. 'FIPS-validated' in DISA's title cannot be seen on the wire. The DISA discussion text says 'should not be configured to use SHA-2' where it evidently means SHA-1. The DISA text was read from the cyber.trackr.live mirror."

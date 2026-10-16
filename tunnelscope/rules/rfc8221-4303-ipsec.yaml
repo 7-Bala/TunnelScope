@@ -4,6 +4,15 @@ url: "https://www.rfc-editor.org/rfc/rfc8221.html"
 # Data-plane rules (T-083). `applies_to_protocol` limits a rule to SAs that
 # actually carry that protocol: an ESP tunnel is not "missing" an AH verdict.
 # RFC 8221 text checked 2026-09-20 (sections 5 and 6 tables, quoted in the titles).
+# T-122 part 4 / EXP-54 (pre-registered a28b90c). Every `quote` below is verbatim from the source file(s) named in `source`
+# (keys, file names and SHA-256 in `sources`; the files are kept outside the repository), checked by
+# experiments/exp54-rule-sources/analyze.py. `page` reads `source:N,N` using the [Page N] numbers of the plain-text RFC or draft;
+# "n/a" means no source of the rule has page numbers. `note` records where the source and the rule differ; the rule is as it was.
+sources:
+  rfc4301: {file: rfc4301.txt, url: "https://www.rfc-editor.org/rfc/rfc4301.txt", sha256: a2411e90515f59665e1059b1bb66d8123bd9e384ccfc8b7ccca65db85d5d7736}
+  rfc4302: {file: rfc4302.txt, url: "https://www.rfc-editor.org/rfc/rfc4302.txt", sha256: c9de28181a78bb85ec6d1e6bda86da133307310de736632f26aa890e1f08e56b}
+  rfc4303: {file: rfc4303.txt, url: "https://www.rfc-editor.org/rfc/rfc4303.txt", sha256: d22f9d4120e5645525b63ac7bbf8ef78c334fe003a2c48bf1e25ac25f6e7dc58}
+  rfc8221: {file: rfc8221.txt, url: "https://www.rfc-editor.org/rfc/rfc8221.txt", sha256: e070689e9b8828a2a7ac309ad4d94c1bd0e00ea2cc14bf1a2714bf4243029f1e}
 rules:
   - id: RFC4301-CONFIDENTIALITY
     title: "Traffic should be protected by ESP; AH alone authenticates but does not encrypt (RFC 4301 sec 3.2)"
@@ -11,6 +20,13 @@ rules:
     assert: {op: contains, value: ESP}
     severity: medium
     fail_message: "only AH protects this traffic: it is authenticated but NOT encrypted, so payloads are readable on the wire"
+    section: "RFC 4301 3.2"
+    page: "rfc4301:9"
+    source: [rfc4301]
+    quote:
+      - "The IP Authentication Header (AH) [Ken05b] offers integrity and data origin authentication, with optional (at the discretion of the receiver) anti-replay features."
+      - "The Encapsulating Security Payload (ESP) protocol [Ken05a] offers the same set of services, and also offers confidentiality."
+    note: "RFC 4301 does not forbid AH-only protection (implementations MAY support AH and ESP can also be used for integrity only); that AH-only traffic 'should' be ESP is this project's judgement, medium."
   - id: RFC8221-AH-INTEG
     title: "AH integrity must not be HMAC-MD5-96 (RFC 8221 sec 6: MUST NOT; HMAC-SHA1-96 is MUST-, HMAC-SHA2-256-128 MUST)"
     attribute: ah_integrity
@@ -18,6 +34,14 @@ rules:
     assert: {op: candidates_not_all_in, value: ["HMAC-MD5-96"]}
     severity: high
     fail_message: "AH integrity is HMAC-MD5-96, which RFC 8221 marks MUST NOT"
+    section: "RFC 8221 6"
+    page: "rfc8221:9"
+    source: [rfc8221]
+    quote:
+      - "AUTH_HMAC_MD5_96 | MUST NOT"
+      - "As MD5 is known to be vulnerable to collisions, these algorithms MUST NOT be used."
+      - "AUTH_HMAC_SHA1_96 | MUST-"
+      - "AUTH_HMAC_SHA2_256_128 | MUST"
   - id: RFC8221-AH-LEGACY
     title: "AH integrity should be HMAC-SHA2 (RFC 8221 sec 6 marks HMAC-SHA1-96 MUST-, i.e. expected to be demoted)"
     attribute: ah_integrity
@@ -25,6 +49,14 @@ rules:
     assert: {op: candidates_none_in, value: ["HMAC-MD5-96", "HMAC-SHA1-96", "AES-XCBC-96"]}
     severity: informational
     fail_message: "a 12-byte AH ICV means a 96-bit legacy algorithm (HMAC-MD5-96 MUST NOT, HMAC-SHA1-96 MUST-, AES-XCBC-96 SHOULD/MAY for IoT); the wire cannot tell which"
+    section: "RFC 8221 6"
+    page: "rfc8221:9,10"
+    source: [rfc8221]
+    quote:
+      - "AUTH_HMAC_SHA1_96 has been downgraded from MUST in [RFC7321] to MUST- as there is an industry-wide trend to deprecate its usage."
+      - "AUTH_AES_XCBC_96 | SHOULD / MAY"
+      - "AUTH_AES_XCBC_96 is set as SHOULD only in the scope of IoT"
+    note: "RFC 8221 does not say HMAC-SHA1-96 or AES-XCBC-96 should not be used; 'informational' is this project's severity. That a 12-byte AH ICV means a 96-bit algorithm is packet geometry, not RFC 8221 text."
   - id: RFC8221-ESP-3DES
     title: "ESP encryption should not be 3DES (RFC 8221 sec 5: ENCR_3DES SHOULD NOT)"
     attribute: esp_cipher_family
@@ -32,9 +64,22 @@ rules:
     assert: {op: candidates_not_all_in, value: ["3DES-CBC+HMAC-SHA1-96"]}
     severity: medium
     fail_message: "the only cipher family consistent with this traffic is 3DES, which RFC 8221 marks SHOULD NOT"
+    section: "RFC 8221 5"
+    page: "rfc8221:7,8"
+    source: [rfc8221]
+    quote:
+      - "ENCR_3DES | SHOULD NOT | No | [RFC2451]"
+      - "ENCR_3DES status has been downgraded from MAY in [RFC7321] to SHOULD NOT."
   - id: RFC4303-SEQ
     title: "A sequence number must not repeat on one SA (RFC 4303 sec 3.3.3 / RFC 4302 sec 3.3.2: the counter increases and MUST NOT cycle)"
     attribute: sequence_integrity
     assert: {op: seq_clean}
     severity: high
     fail_message: "a sequence number was used twice on one SA: a replayed packet on this path, or a sender violating RFC 4303; receiver-side anti-replay enforcement is not visible passively"
+    section: "RFC 4303 2.2 and 3.3.3; RFC 4302 3.3.2"
+    page: "rfc4303:12,25; rfc4302:8,12"
+    source: [rfc4303, rfc4302]
+    quote:
+      - "the transmitted sequence number must never be allowed to cycle."
+      - "In other words, the sender MUST NOT send a packet on an SA if doing so would cause the sequence number to cycle."
+    note: "The RFC text is about the sender's counter not cycling. The rule observes a number used twice on one SA, which is a symptom of a cycled counter but also of a replayed or duplicated packet; its message says so. Receiver-side anti-replay is not visible passively."
