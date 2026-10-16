@@ -16,6 +16,7 @@ from __future__ import annotations
 import collections
 import os
 import shutil
+import struct
 import subprocess
 import threading
 import time
@@ -44,6 +45,59 @@ def capture_command(dumpcap: str, interface: str, out: str, window: int, headers
     ring = ["-b", f"duration:{window}", "-b", f"files:{ring_files}"] if window else []
     return [dumpcap, "-q", *src, *ring, "-w", out]
 EXTS = (".pcap", ".pcapng")
+
+_ISB = 5                                  # pcapng Interface Statistics Block
+_ISB_IFRECV, _ISB_IFDROP = 4, 5           # its option codes: packets received / dropped by the capture
+
+
+def capture_stats(path) -> dict | None:
+    """What the capture process says it received and dropped, read from the Interface Statistics Blocks dumpcap
+    writes at the end of each pcapng file (T-165). Returns {"received": n, "dropped": m} summed over the file's
+    interfaces, or None when the file has no usable counters (a classic .pcap such as tcpdump writes, a file cut
+    short, an ISB without both counters). None means *unknown*: it is never reported as zero drops.
+
+    The counters are the file's own; they are not added up across windows, because whether a ring-buffer file
+    counts from the start of the capture or from the start of the file is not something this code has verified.
+    Only the tail of the file is read (the blocks end with their own length, so they are walked backwards)."""
+    try:
+        with open(path, "rb") as fh:
+            head = fh.read(12)
+            if len(head) < 12 or head[:4] != b"\n\r\r\n":
+                return None
+            end = {b"\x4d\x3c\x2b\x1a": "<", b"\x1a\x2b\x3c\x4d": ">"}.get(head[8:12])
+            if end is None:
+                return None
+            pos = os.fstat(fh.fileno()).st_size
+            recv = drop = blocks = 0
+            for _ in range(64):               # a file ends with one ISB per interface; never walk the whole file
+                if pos < 12 + 12:
+                    break
+                fh.seek(pos - 4)
+                (tl,) = struct.unpack(end + "I", fh.read(4))
+                if tl < 32 or tl % 4 or tl > pos - 24:
+                    break
+                fh.seek(pos - tl)
+                blk = fh.read(tl)
+                typ, l1 = struct.unpack(end + "II", blk[:8])
+                if typ != _ISB or l1 != tl or struct.unpack(end + "I", blk[-4:])[0] != tl:
+                    break
+                opts, o, got = blk[20:-4], 0, {}
+                while o + 4 <= len(opts):
+                    code, ln = struct.unpack(end + "HH", opts[o:o + 4])
+                    if code == 0:
+                        break
+                    if ln == 8:
+                        got[code] = struct.unpack(end + "Q", opts[o + 4:o + 12])[0]
+                    o += 4 + (ln + 3) // 4 * 4
+                if _ISB_IFRECV not in got or _ISB_IFDROP not in got:
+                    return None
+                recv += got[_ISB_IFRECV]
+                drop += got[_ISB_IFDROP]
+                blocks += 1
+                pos -= tl
+            return {"received": recv, "dropped": drop} if blocks else None
+    except (OSError, struct.error):
+        return None
 
 
 class LiveMonitor:
@@ -128,6 +182,8 @@ class LiveMonitor:
         except OSError:
             at = time.time()
         row = {"file": path.name, "at": at, "ok": True}
+        row["capture"] = capture_stats(path)      # T-165: None = the file carries no drop counters (unknown, not zero)
+        row["capture_incomplete"] = None if row["capture"] is None else row["capture"]["dropped"] > 0
         try:
             a = analyze(str(path))
             anomalies = observe(History(self.history), a["sas"], f"live:{path.name}") if self.history else None
@@ -171,7 +227,12 @@ class LiveMonitor:
         with self.lock:
             ws = list(self.windows)
         last = ws[-1]["at"] if ws else None
-        return {"enabled": True, "source": f"interface {self.interface}" if self.interface else f"folder {self.dir}",
+        # T-165: windows whose capture process reported dropped packets are incomplete evidence. Windows with no
+        # counters (classic pcap, tcpdump -G) are counted separately: their loss is unknown, not zero.
+        capture = {"windows_with_drops": sum(1 for w in ws if w.get("capture_incomplete") is True),
+                   "windows_without_counters": sum(1 for w in ws if w.get("capture_incomplete") is None),
+                   "last": ws[-1].get("capture") if ws else None}
+        return {"enabled": True, "capture_stats": capture, "source": f"interface {self.interface}" if self.interface else f"folder {self.dir}",
                 "window_s": self.window, "started": self.started, "windows": ws[::-1],
                 "last_at": last, "errors": list(self.errors)[-5:],
                 "capturing": bool(self.proc and self.proc.poll() is None) if self.interface else None}

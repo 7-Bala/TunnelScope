@@ -81,6 +81,8 @@ export function LiveView() {
         .forEach((a) => t.alerts.push({ severity: a.severity, message: a.message, file: w.file, at: w.at }))
     }),
   )
+  const dropped = st.capture_stats?.windows_with_drops ?? 0
+  const unknownLoss = windows.length > 0 && (st.capture_stats?.windows_without_counters ?? 0) === windows.length
   const stale = st.last_at && now / 1000 - st.last_at > 3 * (st.window_s ?? 30)
 
   return (
@@ -94,6 +96,13 @@ export function LiveView() {
         <span className="text-muted-foreground">Window: <span className="font-mono text-foreground/85">{st.window_s}s</span></span>
         <span className="text-muted-foreground">Windows analysed: <span className="font-mono text-foreground/85 tnum">{windows.length}</span></span>
         <span className="text-muted-foreground">Last window: <span className="text-foreground/85">{ago(now, st.last_at)}</span></span>
+        {dropped > 0 ? (
+          <span className="rounded-full bg-neg-bg px-2 py-px text-[11px] font-medium text-neg">
+            packets dropped in {dropped} window{dropped === 1 ? "" : "s"}: findings there may be incomplete
+          </span>
+        ) : unknownLoss ? (
+          <span className="text-faint">Packet loss: unknown (these capture files carry no counters)</span>
+        ) : null}
       </section>
 
       <section className="glass rounded-2xl">

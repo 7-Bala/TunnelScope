@@ -111,6 +111,10 @@ export interface LiveWindow {
   n_sas?: number
   seconds?: number
   sas?: AnalyzedSA[]
+  /** what the capture process counted in this file (null: the file has no counters, so loss is unknown, not zero) */
+  capture?: { received: number; dropped: number } | null
+  /** true when the capture process dropped packets, so this window may be incomplete; null when unknown */
+  capture_incomplete?: boolean | null
 }
 
 export interface LiveStatus {
@@ -127,6 +131,8 @@ export interface LiveStatus {
   windows?: LiveWindow[]
   errors?: LiveWindow[]
   capturing?: boolean | null
+  /** T-165: windows whose capture dropped packets, and windows with no counters at all */
+  capture_stats?: { windows_with_drops: number; windows_without_counters: number; last: { received: number; dropped: number } | null }
 }
 
 export async function liveStatus(): Promise<LiveStatus> {

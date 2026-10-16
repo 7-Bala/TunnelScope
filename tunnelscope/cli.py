@@ -254,6 +254,10 @@ def cmd_live(args):
         if args.json:
             print(json.dumps(row, default=str), flush=True)
             return
+        if row.get("capture_incomplete"):           # T-165: the capture process dropped packets in this file
+            cs = row["capture"]
+            print(f"{row['file']}: WARNING the capture dropped {cs['dropped']} of {cs['received']} packets in this file; "
+                  "what follows may be incomplete", flush=True)
         if not row["ok"]:
             print(f"{row['file']}: ERROR {row['error']}", flush=True)
             return
