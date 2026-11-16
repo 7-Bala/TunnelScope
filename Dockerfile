@@ -19,7 +19,7 @@ RUN echo "wireshark-common wireshark-common/install-setuid boolean false" | debc
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY tunnelscope/ tunnelscope/
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir ".[cloud]"
 COPY --from=dashboard /src/fleet-dashboard/dist /app/dashboard
 RUN useradd --create-home --uid 10001 tunnelscope
 USER tunnelscope
